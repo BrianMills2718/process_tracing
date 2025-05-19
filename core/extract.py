@@ -1,6 +1,22 @@
 """
 ADVANCED PROCESS‑TRACING GRAPH – VERSION 3.0
 Robust Gemini streaming → JSON → Visualization with comprehensive ontology
+
+Expected JSON structure for LLM output (based on advanced ontology):
+
+{
+  "nodes": [
+    {"id": "evt1", "type": "Event", "properties": {"description": "Tea Act passed", "timestamp": "1773-05-10", "certainty": 0.9}},
+    {"id": "hyp1", "type": "Hypothesis", "properties": {"description": "Taxation without representation causes unrest", "prior_probability": 0.6, "status": "active"}},
+    {"id": "evd1", "type": "Evidence", "properties": {"description": "Public protests against Tea Act", "type": "straw_in_the_wind", "source": "doc1"}},
+    {"id": "ds1", "type": "Data_Source", "properties": {"type": "document", "credibility": 0.8}}
+  ],
+  "edges": [
+    {"source_id": "evd1", "target_id": "hyp1", "type": "tests_hypothesis", "properties": {"probative_value": 0.3, "test_result": "passed"}},
+    {"source_id": "ds1", "target_id": "evd1", "type": "provides_evidence", "properties": {}}
+  ]
+}
+
 """
 
 import os, glob, re, json, ast, sys, textwrap, time
@@ -191,144 +207,55 @@ NODE_COLORS = {
 # GEMINI PROMPT WITH EXPANDED ONTOLOGY
 # ────────────────────────────────────────────────────────────────────
 PROMPT_TEMPLATE = """
-You are an expert in causal process tracing methodology. Extract a structured causal graph
-from the provided text using this comprehensive ontology:
+You are an expert in causal process tracing methodology. Extract a structured causal graph from the provided text using the following ontology subset. Output your answer as a JSON object with two arrays: 'nodes' and 'edges'.
 
-### Node Types (with Properties)
-1. Event (id, description, timestamp, location, certainty, type)
-   - Observable occurrences in the causal sequence
-   - Type can be: triggering, intermediate, outcome
+Each node must have:
+- id: unique string
+- type: one of [Event, Hypothesis, Evidence]
+- properties: a dictionary of the node's properties (see below)
 
-2. Causal_Mechanism (id, description, confidence, status, level_of_detail)
-   - Pathways through which causal influence is transmitted
-   - Status can be: verified, contested, hypothetical
-   - Level_of_detail can be: abstract, concrete
+Each edge must have:
+- source_id: id of the source node
+- target_id: id of the target node
+- type: one of [causes, tests_hypothesis]
+- properties: a dictionary of the edge's properties (see below)
 
-3. Hypothesis (id, description, prior_probability, posterior_probability, status, scope)
-   - Proposed causal explanations being evaluated
-   - Status can be: active, confirmed, refuted
-   - Scope can be: general, case-specific
+Node Types (with Properties):
+1. Event
+   - description (string, required)
+   - timestamp (string, optional)
+   - certainty (float 0-1, optional)
+   - type (string: triggering, intermediate, outcome, optional)
+2. Hypothesis
+   - description (string, required)
+   - prior_probability (float 0-1, optional)
+   - status (string: active, confirmed, refuted, optional)
+3. Evidence
+   - description (string, required)
+   - type (string: hoop, smoking_gun, straw_in_the_wind, optional)
+   - source (string, optional)
+   - certainty (float 0-1, optional)
 
-4. Evidence (id, description, type, probative_value, certainty, source, credibility)
-   - Observations used to evaluate hypotheses/mechanisms
-   - Type can be: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, bayesian
-
-5. Condition (id, description, necessity, certainty, type)
-   - Factors affecting causal sequences without being events
-   - Type can be: background, enabling, facilitating, constraining
-
-6. Actor (id, name, role, intentions, beliefs, credibility)
-   - Entities whose decisions/actions shape events or provide evidence
-   - Role can be: causal_agent, source_of_evidence, decision_maker
-
-7. Inference_Rule (id, description, type)
-   - Formal rules guiding logical inference
-   - Type can be: bayesian_updating, abductive, deductive, inductive, heuristic
-
-8. Inferential_Test (id, description, type, conditions)
-   - Evaluation frameworks for interpreting evidence
-   - Type can be: hoop, smoking_gun, doubly_decisive, bayesian
-
-9. Alternative_Explanation (id, description, probability, status)
-   - Rival causal hypotheses
-   - Status can be: active, refuted
-
-10. Data_Source (id, type, credibility, bias_risk)
-    - Origin of evidence
-    - Type can be: interview, document, observation, artifact
-
-### Edge Types (Connections between Nodes)
+Edge Types (with Properties):
 1. causes (Event → Event)
-   - Direct/indirect causal relationship between events
-   - Properties: certainty, mechanism_id, type
+   - certainty (float 0-1, optional)
+   - type (string: direct, indirect, optional)
+2. tests_hypothesis (Evidence → Hypothesis)
+   - probative_value (float 0-1, optional)
+   - test_result (string: passed, failed, ambiguous, optional)
 
-2. part_of_mechanism (Event → Causal_Mechanism)
-   - Event is component of a causal mechanism
-   - Properties: role (trigger, intermediate, outcome)
-
-3. tests_hypothesis (Evidence → Hypothesis)
-   - Evaluation results against hypotheses
-   - Properties: inferential_test_id, probative_value, test_result
-
-4. tests_mechanism (Evidence → Causal_Mechanism)
-   - Evaluates existence/operation of mechanisms
-   - Properties: inferential_test_id, probative_value, test_result
-
-5. supports_alternative (Evidence → Alternative_Explanation)
-   - Evidence supporting rival hypothesis
-   - Properties: probative_value, certainty
-
-6. refutes_alternative (Evidence → Alternative_Explanation)
-   - Evidence weakening rival hypothesis
-   - Properties: probative_value, certainty
-
-7. enables (Condition → Event/Causal_Mechanism)
-   - Conditions allowing events/mechanisms
-   - Properties: necessity, certainty, type
-
-8. constrains (Condition → Event/Causal_Mechanism)
-   - Factors restricting events
-   - Properties: certainty, type
-
-9. provides_evidence (Data_Source → Evidence)
-   - Source and quality of evidence
-   - Properties: credibility, bias_risk, certainty
-
-10. initiates (Actor → Event)
-    - Agent initiates/participates in event
-    - Properties: certainty, intention, agency
-
-11. infers (Inference_Rule → Hypothesis/Causal_Mechanism)
-    - Logical link from inference to outcomes
-    - Properties: certainty, logic_type
-
-12. updates_probability (Evidence → Hypothesis)
-    - Bayesian updating documented via probability
-    - Properties: prior_probability, posterior_probability, Bayes_factor
-
-13. contradicts (Evidence → Evidence)
-    - Conflicting evidence points
-    - Properties: certainty, reason
-
-14. supports (Evidence → Hypothesis)
-    - Evidence supporting a hypothesis
-    - Properties: certainty, strength
-
-15. refutes (Evidence → Hypothesis)
-    - Evidence refuting a hypothesis
-    - Properties: certainty, strength
-
-Return valid JSON conforming to this structure:
-{{
+Output format example:
+{
   "nodes": [
-    {{
-      "id": "string",
-      "type": "string (one of the node types)",
-      "description": "string",
-      // Additional properties as appropriate for the node type
-    }},
-    // ... more nodes
+    {"id": "evt1", "type": "Event", "properties": {"description": "Tea Act passed", "timestamp": "1773-05-10", "certainty": 0.9}},
+    {"id": "hyp1", "type": "Hypothesis", "properties": {"description": "Taxation without representation causes unrest", "prior_probability": 0.6, "status": "active"}},
+    {"id": "evd1", "type": "Evidence", "properties": {"description": "Public protests against Tea Act", "type": "straw_in_the_wind", "source": "doc1"}}
   ],
   "edges": [
-    {{
-      "source": "string (id of source node)",
-      "target": "string (id of target node)",
-      "label": "string (one of the edge types)",
-      // Additional properties as appropriate for the edge type
-    }},
-    // ... more edges
+    {"source_id": "evd1", "target_id": "hyp1", "type": "tests_hypothesis", "properties": {"probative_value": 0.3, "test_result": "passed"}},
+    {"source_id": "evt1", "target_id": "evt2", "type": "causes", "properties": {"certainty": 0.8, "type": "direct"}}
   ]
-}}
-
-IMPORTANT:
-- All node IDs should follow the pattern [Type initial][Number], e.g., E1 for Event 1, H2 for Hypothesis 2
-- Every edge must reference existing node IDs in the nodes array
-- If the text lacks sufficient detail for this comprehensive analysis, extract what you can but maintain the ontology structure
-- Keep descriptions concise but informative (under 200 characters)
-- If the text contains no relevant information, return valid JSON with empty arrays: {{"nodes": [], "edges": []}}
-
-TEXT TO ANALYSE:
-\"\"\"{text}\"\"\"
+}
 """
 
 # ────────────────────────────────────────────────────────────────────
@@ -384,7 +311,7 @@ def parse_json(raw: str) -> dict:
 
 def validate_json_against_ontology(data: dict) -> tuple[bool, list[str]]:
     """
-    Validate the JSON data against the ontology definition.
+    Validate the JSON data against the ontology definition (new structure).
     Returns a tuple of (is_valid, list_of_errors).
     """
     errors = []
@@ -412,8 +339,6 @@ def validate_json_against_ontology(data: dict) -> tuple[bool, list[str]]:
         if not isinstance(node, dict):
             errors.append(f"Node at index {i} is not a dictionary")
             continue
-            
-        # Check for required fields
         if "id" not in node:
             errors.append(f"Node at index {i} is missing required 'id' field")
         else:
@@ -421,59 +346,80 @@ def validate_json_against_ontology(data: dict) -> tuple[bool, list[str]]:
             if node_id in node_ids:
                 errors.append(f"Duplicate node ID: {node_id}")
             node_ids[node_id] = i
-            
         if "type" not in node:
             errors.append(f"Node {node.get('id', f'at index {i}')} is missing required 'type' field")
         else:
             node_type = node["type"]
             node_types[node.get('id', f'at index {i}')] = node_type
-            
-            # Check if node type is valid
             if node_type not in NODE_TYPES:
                 errors.append(f"Node {node.get('id', f'at index {i}')} has invalid type: {node_type}")
             else:
-                # Check required fields for this node type
-                for req_field in NODE_TYPES[node_type]["required"]:
-                    if req_field not in node:
-                        errors.append(f"Node {node.get('id', f'at index {i}')} of type {node_type} is missing required field: {req_field}")
-    
+                # Check required fields in properties
+                props = node.get("properties", {})
+                for prop, prop_def in NODE_TYPES[node_type]["properties"].items():
+                    if prop_def.get("required") and prop not in props:
+                        errors.append(f"Node {node.get('id', f'at index {i}')} of type {node_type} is missing required property: {prop}")
+                    if prop in props:
+                        val = props[prop]
+                        # Type check
+                        if prop_def["type"] == "float":
+                            if not isinstance(val, (float, int)):
+                                errors.append(f"Node {node.get('id', f'at index {i}')} property '{prop}' should be a float")
+                            if "min" in prop_def and val < prop_def["min"]:
+                                errors.append(f"Node {node.get('id', f'at index {i}')} property '{prop}' below min {prop_def['min']}")
+                            if "max" in prop_def and val > prop_def["max"]:
+                                errors.append(f"Node {node.get('id', f'at index {i}')} property '{prop}' above max {prop_def['max']}")
+                        if prop_def["type"] == "string":
+                            if not isinstance(val, str):
+                                errors.append(f"Node {node.get('id', f'at index {i}')} property '{prop}' should be a string")
+                            if "allowed_values" in prop_def and val not in prop_def["allowed_values"]:
+                                errors.append(f"Node {node.get('id', f'at index {i}')} property '{prop}' has invalid value '{val}'")
     # Validate edges
     for i, edge in enumerate(data["edges"]):
         if not isinstance(edge, dict):
             errors.append(f"Edge at index {i} is not a dictionary")
             continue
-            
-        # Check for required fields
-        if "source" not in edge:
-            errors.append(f"Edge at index {i} is missing required 'source' field")
-        elif edge["source"] not in node_ids:
-            errors.append(f"Edge at index {i} references non-existent source node: {edge['source']}")
-            
-        if "target" not in edge:
-            errors.append(f"Edge at index {i} is missing required 'target' field")
-        elif edge["target"] not in node_ids:
-            errors.append(f"Edge at index {i} references non-existent target node: {edge['target']}")
-            
-        if "label" not in edge:
-            errors.append(f"Edge at index {i} is missing required 'label' field")
+        if "source_id" not in edge:
+            errors.append(f"Edge at index {i} is missing required 'source_id' field")
+        elif edge["source_id"] not in node_ids:
+            errors.append(f"Edge at index {i} references non-existent source node: {edge['source_id']}")
+        if "target_id" not in edge:
+            errors.append(f"Edge at index {i} is missing required 'target_id' field")
+        elif edge["target_id"] not in node_ids:
+            errors.append(f"Edge at index {i} references non-existent target node: {edge['target_id']}")
+        if "type" not in edge:
+            errors.append(f"Edge at index {i} is missing required 'type' field")
         else:
-            edge_type = edge["label"]
-            
-            # Check if edge type is valid
+            edge_type = edge["type"]
             if edge_type not in EDGE_TYPES:
                 errors.append(f"Edge at index {i} has invalid type: {edge_type}")
-            elif "source" in edge and "target" in edge and edge["source"] in node_ids and edge["target"] in node_ids:
-                # Check source and target node types are compatible with this edge type
-                source_type = node_types.get(edge["source"])
-                target_type = node_types.get(edge["target"])
-                
+            elif "source_id" in edge and "target_id" in edge and edge["source_id"] in node_ids and edge["target_id"] in node_ids:
+                source_type = node_types.get(edge["source_id"])
+                target_type = node_types.get(edge["target_id"])
                 if source_type and target_type:
-                    if source_type not in EDGE_TYPES[edge_type]["source_types"]:
+                    if source_type not in EDGE_TYPES[edge_type]["domain"]:
                         errors.append(f"Edge {edge_type} at index {i} has incompatible source node type: {source_type}")
-                    
-                    if target_type not in EDGE_TYPES[edge_type]["target_types"]:
+                    if target_type not in EDGE_TYPES[edge_type]["range"]:
                         errors.append(f"Edge {edge_type} at index {i} has incompatible target node type: {target_type}")
-    
+            # Check edge properties
+            props = edge.get("properties", {})
+            for prop, prop_def in EDGE_TYPES[edge_type]["properties"].items():
+                if prop_def.get("required") and prop not in props:
+                    errors.append(f"Edge {edge_type} at index {i} is missing required property: {prop}")
+                if prop in props:
+                    val = props[prop]
+                    if prop_def["type"] == "float":
+                        if not isinstance(val, (float, int)):
+                            errors.append(f"Edge {edge_type} at index {i} property '{prop}' should be a float")
+                        if "min" in prop_def and val < prop_def["min"]:
+                            errors.append(f"Edge {edge_type} at index {i} property '{prop}' below min {prop_def['min']}")
+                        if "max" in prop_def and val > prop_def["max"]:
+                            errors.append(f"Edge {edge_type} at index {i} property '{prop}' above max {prop_def['max']}")
+                    if prop_def["type"] == "string":
+                        if not isinstance(val, str):
+                            errors.append(f"Edge {edge_type} at index {i} property '{prop}' should be a string")
+                        if "allowed_values" in prop_def and val not in prop_def["allowed_values"]:
+                            errors.append(f"Edge {edge_type} at index {i} property '{prop}' has invalid value '{val}'")
     return len(errors) == 0, errors
 
 
@@ -543,28 +489,21 @@ def build_visualization(data, html_out):
     # Create formatted nodes for vis.js
     vis_nodes = []
     for node in data["nodes"]:
+        props = node.get("properties", {})
         # Prepare label based on node type
+        label = f"{node['type']}: {props.get('description', node['id'])}"
         if node["type"] == "Actor":
-            label = f"{node['type']}: {node.get('name', node.get('description', node['id']))}"
-        else:
-            label = f"{node['type']}: {node.get('description', node['id'])}"
-            
+            label = f"{node['type']}: {props.get('name', props.get('description', node['id']))}"
         # Truncate long labels
         if len(label) > 100:
             label = label[:97] + "..."
-            
         # Prepare tooltip with all properties
         tooltip = "<div style='max-width:300px;'>"
         tooltip += f"<strong>ID:</strong> {node['id']}<br>"
         tooltip += f"<strong>Type:</strong> {node['type']}<br>"
-        
-        # Add all other properties to tooltip
-        for key, value in node.items():
-            if key not in ["id", "type"] and value:
-                tooltip += f"<strong>{key.replace('_', ' ').title()}:</strong> {value}<br>"
-                
+        for k, v in props.items():
+            tooltip += f"<strong>{k.replace('_', ' ').title()}:</strong> {v}<br>"
         tooltip += "</div>"
-        
         vis_nodes.append({
             "id": node["id"],
             "label": label,
@@ -572,40 +511,29 @@ def build_visualization(data, html_out):
             "color": NODE_COLORS.get(node["type"], "#dddddd"),
             "title": tooltip
         })
-    
     # Create formatted edges for vis.js
     vis_edges = []
     node_ids = {n["id"] for n in data["nodes"]}
-    
     for edge in data["edges"]:
-        # Skip edges with non-existent source or target nodes
-        if edge["source"] not in node_ids:
-            print(f"⚠️  Skipping edge from non-existent source node '{edge['source']}' to '{edge['target']}'.")
+        if edge["source_id"] not in node_ids:
+            print(f"⚠️  Skipping edge from non-existent source node '{edge['source_id']}' to '{edge['target_id']}'.")
             continue
-        if edge["target"] not in node_ids:
-            print(f"⚠️  Skipping edge from '{edge['source']}' to non-existent target node '{edge['target']}'.")
+        if edge["target_id"] not in node_ids:
+            print(f"⚠️  Skipping edge from '{edge['source_id']}' to non-existent target node '{edge['target_id']}'.")
             continue
-            
-        # Prepare tooltip with edge properties
+        props = edge.get("properties", {})
         tooltip = "<div style='max-width:250px;'>"
-        tooltip += f"<strong>Type:</strong> {edge['label']}<br>"
-        
-        # Add all other properties to tooltip
-        for key, value in edge.items():
-            if key not in ["source", "target", "label"] and value:
-                tooltip += f"<strong>{key.replace('_', ' ').title()}:</strong> {value}<br>"
-                
+        tooltip += f"<strong>Type:</strong> {edge['type']}<br>"
+        for k, v in props.items():
+            tooltip += f"<strong>{k.replace('_', ' ').title()}:</strong> {v}<br>"
         tooltip += "</div>"
-        
-        # Create edge with formatted properties
         vis_edges.append({
-            "from": edge["source"],
-            "to": edge["target"],
-            "label": edge["label"],
+            "from": edge["source_id"],
+            "to": edge["target_id"],
+            "label": edge["type"],
             "title": tooltip,
-            "width": edge.get("certainty", 1) if isinstance(edge.get("certainty"), (int, float)) else 1
+            "width": props.get("certainty", 1) if isinstance(props.get("certainty"), (int, float)) else 1
         })
-    
     # Create groups JSON for the visualization
     groups_json = {}
     for node_type, color in NODE_COLORS.items():
