@@ -1,150 +1,245 @@
-# Core Ontology Definitions for Process Tracing Toolkit
+# Core Ontology Definitions for Process Tracing Toolkit (Advanced)
 
-# Node types and their required/optional properties
+# Node types and their required/optional properties (expanded, state-of-the-art)
 NODE_TYPES = {
     "Event": {
-        "required": ["id", "description", "type"],
-        "optional": ["timestamp", "location", "certainty"],
-        "valid_type_values": ["triggering", "intermediate", "outcome", "unspecified"]
+        "properties": {
+            "description": {"type": "string", "required": True},
+            "timestamp": {"type": "datetime", "required": False},
+            "location": {"type": "string", "required": False},
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "type": {"type": "string", "allowed_values": ["triggering", "intermediate", "outcome", "unspecified"], "required": False}
+        },
+        "plural_name": "Events"
     },
     "Causal_Mechanism": {
-        "required": ["id", "description"],
-        "optional": ["confidence", "status", "level_of_detail"]
+        "properties": {
+            "description": {"type": "string", "required": True},
+            "confidence": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "status": {"type": "string", "allowed_values": ["hypothetical", "supported", "refuted", "unspecified"], "required": False},
+            "level_of_detail": {"type": "string", "required": False}
+        },
+        "plural_name": "Causal Mechanisms"
     },
     "Hypothesis": {
-        "required": ["id", "description"],
-        "optional": ["prior_probability", "posterior_probability", "status", "scope"]
+        "properties": {
+            "description": {"type": "string", "required": True},
+            "prior_probability": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "posterior_probability": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "status": {"type": "string", "allowed_values": ["active", "confirmed", "refuted"], "required": False},
+            "scope": {"type": "string", "allowed_values": ["general", "case-specific"], "required": False}
+        },
+        "plural_name": "Hypotheses"
     },
     "Evidence": {
-        "required": ["id", "description", "type"],
-        "optional": ["probative_value", "certainty", "source", "credibility"],
-        "valid_type_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "bayesian", "general"]
+        "properties": {
+            "description": {"type": "string", "required": True},
+            "type": {"type": "string", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "bayesian", "general"], "required": True},
+            "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "source": {"type": "string", "required": False},
+            "credibility": {"type": "float", "min": 0.0, "max": 1.0, "required": False}
+        },
+        "plural_name": "Evidence"
     },
     "Condition": {
-        "required": ["id", "description", "type"],
-        "optional": ["necessity", "certainty"],
-        "valid_type_values": ["background", "enabling", "facilitating", "constraining", "unspecified"]
+        "properties": {
+            "description": {"type": "string", "required": True},
+            "type": {"type": "string", "allowed_values": ["background", "enabling", "facilitating", "constraining", "unspecified"], "required": True},
+            "necessity": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False}
+        },
+        "plural_name": "Conditions"
     },
     "Actor": {
-        "required": ["id", "name"],
-        "optional": ["role", "intentions", "beliefs", "credibility"]
+        "properties": {
+            "name": {"type": "string", "required": True},
+            "role": {"type": "string", "required": False},
+            "intentions": {"type": "string", "required": False},
+            "beliefs": {"type": "string", "required": False},
+            "credibility": {"type": "float", "min": 0.0, "max": 1.0, "required": False}
+        },
+        "plural_name": "Actors"
     },
     "Inference_Rule": {
-        "required": ["id", "description", "type"],
-        "optional": [],
-        "valid_type_values": ["bayesian_updating", "abductive", "deductive", "inductive", "heuristic", "general"]
+        "properties": {
+            "description": {"type": "string", "required": True},
+            "type": {"type": "string", "allowed_values": ["bayesian_updating", "abductive", "deductive", "inductive", "heuristic", "general"], "required": True}
+        },
+        "plural_name": "Inference Rules"
     },
     "Inferential_Test": {
-        "required": ["id", "description", "type"],
-        "optional": ["conditions"],
-        "valid_type_values": ["hoop", "smoking_gun", "doubly_decisive", "bayesian", "general"]
+        "properties": {
+            "description": {"type": "string", "required": True},
+            "type": {"type": "string", "allowed_values": ["hoop", "smoking_gun", "doubly_decisive", "bayesian", "general"], "required": True},
+            "conditions": {"type": "string", "required": False}
+        },
+        "plural_name": "Inferential Tests"
     },
     "Alternative_Explanation": {
-        "required": ["id", "description"],
-        "optional": ["probability", "status"]
+        "properties": {
+            "description": {"type": "string", "required": True},
+            "probability": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "status": {"type": "string", "allowed_values": ["active", "confirmed", "refuted"], "required": False}
+        },
+        "plural_name": "Alternative Explanations"
     },
     "Data_Source": {
-        "required": ["id", "type"],
-        "optional": ["credibility", "bias_risk"],
-        "valid_type_values": ["interview", "document", "observation", "artifact", "general"]
+        "properties": {
+            "type": {"type": "string", "allowed_values": ["interview", "document", "observation", "artifact", "general"], "required": True},
+            "credibility": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "bias_risk": {"type": "float", "min": 0.0, "max": 1.0, "required": False}
+        },
+        "plural_name": "Data Sources"
     }
 }
 
-# Edge types and their properties
+# Edge types and their properties (expanded)
 EDGE_TYPES = {
     "causes": {
-        "source_types": ["Event"],
-        "target_types": ["Event"],
-        "required": [],
-        "optional": ["certainty", "mechanism_id", "type"]
+        "domain": ["Event"],
+        "range": ["Event"],
+        "properties": {
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "mechanism_id": {"type": "string", "required": False},
+            "type": {"type": "string", "allowed_values": ["direct", "indirect"], "required": False}
+        },
+        "label": "causes"
     },
     "part_of_mechanism": {
-        "source_types": ["Event"],
-        "target_types": ["Causal_Mechanism"],
-        "required": [],
-        "optional": ["role"]
+        "domain": ["Event"],
+        "range": ["Causal_Mechanism"],
+        "properties": {
+            "role": {"type": "string", "required": False}
+        },
+        "label": "part of mechanism"
     },
     "tests_hypothesis": {
-        "source_types": ["Evidence"],
-        "target_types": ["Hypothesis"],
-        "required": [],
-        "optional": ["inferential_test_id", "probative_value", "test_result"]
+        "domain": ["Evidence"],
+        "range": ["Hypothesis"],
+        "properties": {
+            "inferential_test_id": {"type": "string", "required": False},
+            "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "test_result": {"type": "string", "allowed_values": ["passed", "failed", "ambiguous"], "required": False}
+        },
+        "label": "tests hypothesis"
     },
     "tests_mechanism": {
-        "source_types": ["Evidence"],
-        "target_types": ["Causal_Mechanism"],
-        "required": [],
-        "optional": ["inferential_test_id", "probative_value", "test_result"]
+        "domain": ["Evidence"],
+        "range": ["Causal_Mechanism"],
+        "properties": {
+            "inferential_test_id": {"type": "string", "required": False},
+            "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "test_result": {"type": "string", "allowed_values": ["passed", "failed", "ambiguous"], "required": False}
+        },
+        "label": "tests mechanism"
     },
     "supports_alternative": {
-        "source_types": ["Evidence"],
-        "target_types": ["Alternative_Explanation"],
-        "required": [],
-        "optional": ["probative_value", "certainty"]
+        "domain": ["Evidence"],
+        "range": ["Alternative_Explanation"],
+        "properties": {
+            "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False}
+        },
+        "label": "supports alternative"
     },
     "refutes_alternative": {
-        "source_types": ["Evidence"],
-        "target_types": ["Alternative_Explanation"],
-        "required": [],
-        "optional": ["probative_value", "certainty"]
+        "domain": ["Evidence"],
+        "range": ["Alternative_Explanation"],
+        "properties": {
+            "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False}
+        },
+        "label": "refutes alternative"
     },
     "enables": {
-        "source_types": ["Condition"],
-        "target_types": ["Event", "Causal_Mechanism"],
-        "required": [],
-        "optional": ["necessity", "certainty", "type"]
+        "domain": ["Condition"],
+        "range": ["Event", "Causal_Mechanism"],
+        "properties": {
+            "necessity": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "type": {"type": "string", "required": False}
+        },
+        "label": "enables"
     },
     "constrains": {
-        "source_types": ["Condition"],
-        "target_types": ["Event", "Causal_Mechanism"],
-        "required": [],
-        "optional": ["certainty", "type"]
+        "domain": ["Condition"],
+        "range": ["Event", "Causal_Mechanism"],
+        "properties": {
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "type": {"type": "string", "required": False}
+        },
+        "label": "constrains"
     },
     "provides_evidence": {
-        "source_types": ["Data_Source"],
-        "target_types": ["Evidence"],
-        "required": [],
-        "optional": ["credibility", "bias_risk", "certainty"]
+        "domain": ["Data_Source"],
+        "range": ["Evidence"],
+        "properties": {
+            "credibility": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "bias_risk": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False}
+        },
+        "label": "provides evidence"
     },
     "initiates": {
-        "source_types": ["Actor"],
-        "target_types": ["Event"],
-        "required": [],
-        "optional": ["certainty", "intention", "agency"]
+        "domain": ["Actor"],
+        "range": ["Event"],
+        "properties": {
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "intention": {"type": "string", "required": False},
+            "agency": {"type": "string", "required": False}
+        },
+        "label": "initiates"
     },
     "infers": {
-        "source_types": ["Inference_Rule"],
-        "target_types": ["Hypothesis", "Causal_Mechanism"],
-        "required": [],
-        "optional": ["certainty", "logic_type"]
+        "domain": ["Inference_Rule"],
+        "range": ["Hypothesis", "Causal_Mechanism"],
+        "properties": {
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "logic_type": {"type": "string", "required": False}
+        },
+        "label": "infers"
     },
     "updates_probability": {
-        "source_types": ["Evidence"],
-        "target_types": ["Hypothesis"],
-        "required": [],
-        "optional": ["prior_probability", "posterior_probability", "Bayes_factor"]
+        "domain": ["Evidence"],
+        "range": ["Hypothesis"],
+        "properties": {
+            "prior_probability": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "posterior_probability": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "Bayes_factor": {"type": "float", "min": 0.0, "max": 1.0, "required": False}
+        },
+        "label": "updates probability"
     },
     "contradicts": {
-        "source_types": ["Evidence"],
-        "target_types": ["Evidence"],
-        "required": [],
-        "optional": ["certainty", "reason"]
+        "domain": ["Evidence"],
+        "range": ["Evidence"],
+        "properties": {
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "reason": {"type": "string", "required": False}
+        },
+        "label": "contradicts"
     },
     "supports": {
-        "source_types": ["Evidence"],
-        "target_types": ["Hypothesis"],
-        "required": [],
-        "optional": ["certainty", "strength"]
+        "domain": ["Evidence"],
+        "range": ["Hypothesis"],
+        "properties": {
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "strength": {"type": "float", "min": 0.0, "max": 1.0, "required": False}
+        },
+        "label": "supports"
     },
     "refutes": {
-        "source_types": ["Evidence"],
-        "target_types": ["Hypothesis"],
-        "required": [],
-        "optional": ["certainty", "strength"]
+        "domain": ["Evidence"],
+        "range": ["Hypothesis"],
+        "properties": {
+            "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": False},
+            "strength": {"type": "float", "min": 0.0, "max": 1.0, "required": False}
+        },
+        "label": "refutes"
     }
 }
 
-# Node type colors for visualization
+# Node type colors for visualization (expanded)
 NODE_COLORS = {
     "Event": "#66b3ff",
     "Causal_Mechanism": "#99ff99",
