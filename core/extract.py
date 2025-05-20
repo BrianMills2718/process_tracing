@@ -23,6 +23,7 @@ import os, glob, re, json, ast, sys, textwrap, time
 from itertools import count
 from datetime import datetime
 import webbrowser
+from core.ontology import NODE_TYPES, EDGE_TYPES, NODE_COLORS
 
 # Check if Google Generative AI package is installed
 try:
@@ -40,168 +41,32 @@ except ImportError:
 # CONFIG
 # ────────────────────────────────────────────────────────────────────
 GEMINI_API_KEY = "AIzaSyDXaLhSWAQhGNHZqdbvY-qFB0jxyPbiiow"  # Only used if HAS_GEMINI is True
-INPUT_DIR   = r"C:\Users\Brian\Downloads\process_tracing\input_text"
-INPUT_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input_text", "american_revolution.txt") # Default, can be overridden
-OUTPUT_HTML = "advanced_process_trace.html"
-OUTPUT_JSON = "advanced_process_trace_data.json"
+INPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "input_text")
+# Default: use the first .txt file in a project subdirectory if not specified
+INPUT_FILE_PATH = None
+for root, dirs, files in os.walk(INPUT_DIR):
+    for file in files:
+        if file.endswith('.txt'):
+            INPUT_FILE_PATH = os.path.join(root, file)
+            break
+    if INPUT_FILE_PATH:
+        break
+if not INPUT_FILE_PATH:
+    raise FileNotFoundError("No .txt file found in input_text/ or its subdirectories.")
+
+# Determine project name from input file path
+project_name = os.path.relpath(os.path.dirname(INPUT_FILE_PATH), INPUT_DIR)
+project_name = project_name.replace(os.sep, "_")  # flatten subdirs to single name
+# Timestamp for output files
+now_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+# Output paths
+OUTPUT_DIR = os.path.join("output_data", project_name)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+OUTPUT_JSON = os.path.join(OUTPUT_DIR, f"{project_name}_{now_str}_graph.json")
+OUTPUT_HTML = os.path.join(OUTPUT_DIR, f"{project_name}_{now_str}_graph.html")
 MODEL_NAME  = "gemini-2.5-flash-preview-04-17"
 MAX_RETRIES = 3  # Maximum number of retries for Gemini API
-
-# ────────────────────────────────────────────────────────────────────
-# ONTOLOGY DEFINITION FOR VALIDATION
-# ────────────────────────────────────────────────────────────────────
-
-# Node types and their required/optional properties
-NODE_TYPES = {
-    "Event": {
-        "required": ["id", "description"],
-        "optional": ["timestamp", "location", "certainty", "type"]
-    },
-    "Causal_Mechanism": {
-        "required": ["id", "description"],
-        "optional": ["confidence", "status", "level_of_detail"]
-    },
-    "Hypothesis": {
-        "required": ["id", "description"],
-        "optional": ["prior_probability", "posterior_probability", "status", "scope"]
-    },
-    "Evidence": {
-        "required": ["id", "description", "type"],
-        "optional": ["probative_value", "certainty", "source", "credibility"]
-    },
-    "Condition": {
-        "required": ["id", "description"],
-        "optional": ["necessity", "certainty", "type"]
-    },
-    "Actor": {
-        "required": ["id", "name"],
-        "optional": ["role", "intentions", "beliefs", "credibility"]
-    },
-    "Inference_Rule": {
-        "required": ["id", "description", "type"],
-        "optional": []
-    },
-    "Inferential_Test": {
-        "required": ["id", "description", "type"],
-        "optional": ["conditions"]
-    },
-    "Alternative_Explanation": {
-        "required": ["id", "description"],
-        "optional": ["probability", "status"]
-    },
-    "Data_Source": {
-        "required": ["id", "type"],
-        "optional": ["credibility", "bias_risk"]
-    }
-}
-
-# Edge types and their properties
-EDGE_TYPES = {
-    "causes": {
-        "source_types": ["Event"],
-        "target_types": ["Event"],
-        "required": [],
-        "optional": ["certainty", "mechanism_id", "type"]
-    },
-    "part_of_mechanism": {
-        "source_types": ["Event"],
-        "target_types": ["Causal_Mechanism"],
-        "required": [],
-        "optional": ["role"]
-    },
-    "tests_hypothesis": {
-        "source_types": ["Evidence"],
-        "target_types": ["Hypothesis"],
-        "required": [],
-        "optional": ["inferential_test_id", "probative_value", "test_result"]
-    },
-    "tests_mechanism": {
-        "source_types": ["Evidence"],
-        "target_types": ["Causal_Mechanism"],
-        "required": [],
-        "optional": ["inferential_test_id", "probative_value", "test_result"]
-    },
-    "supports_alternative": {
-        "source_types": ["Evidence"],
-        "target_types": ["Alternative_Explanation"],
-        "required": [],
-        "optional": ["probative_value", "certainty"]
-    },
-    "refutes_alternative": {
-        "source_types": ["Evidence"],
-        "target_types": ["Alternative_Explanation"],
-        "required": [],
-        "optional": ["probative_value", "certainty"]
-    },
-    "enables": {
-        "source_types": ["Condition"],
-        "target_types": ["Event", "Causal_Mechanism"],
-        "required": [],
-        "optional": ["necessity", "certainty", "type"]
-    },
-    "constrains": {
-        "source_types": ["Condition"],
-        "target_types": ["Event", "Causal_Mechanism"],
-        "required": [],
-        "optional": ["certainty", "type"]
-    },
-    "provides_evidence": {
-        "source_types": ["Data_Source"],
-        "target_types": ["Evidence"],
-        "required": [],
-        "optional": ["credibility", "bias_risk", "certainty"]
-    },
-    "initiates": {
-        "source_types": ["Actor"],
-        "target_types": ["Event"],
-        "required": [],
-        "optional": ["certainty", "intention", "agency"]
-    },
-    "infers": {
-        "source_types": ["Inference_Rule"],
-        "target_types": ["Hypothesis", "Causal_Mechanism"],
-        "required": [],
-        "optional": ["certainty", "logic_type"]
-    },
-    "updates_probability": {
-        "source_types": ["Evidence"],
-        "target_types": ["Hypothesis"],
-        "required": [],
-        "optional": ["prior_probability", "posterior_probability", "Bayes_factor"]
-    },
-    "contradicts": {
-        "source_types": ["Evidence"],
-        "target_types": ["Evidence"],
-        "required": [],
-        "optional": ["certainty", "reason"]
-    },
-    "supports": {
-        "source_types": ["Evidence"],
-        "target_types": ["Hypothesis"],
-        "required": [],
-        "optional": ["certainty", "strength"]
-    },
-    "refutes": {
-        "source_types": ["Evidence"],
-        "target_types": ["Hypothesis"],
-        "required": [],
-        "optional": ["certainty", "strength"]
-    }
-}
-
-# Node type colors for visualization
-NODE_COLORS = {
-    "Event": "#66b3ff",
-    "Causal_Mechanism": "#99ff99",
-    "Hypothesis": "#ffcc00",
-    "Evidence": "#ff6666",
-    "Condition": "#ccccff",
-    "Actor": "#ff99cc",
-    "Inference_Rule": "#cc99ff",
-    "Inferential_Test": "#ffb366",
-    "Alternative_Explanation": "#ff9966",
-    "Data_Source": "#c2c2f0"
-}
 
 # ────────────────────────────────────────────────────────────────────
 # GEMINI PROMPT WITH EXPANDED ONTOLOGY
@@ -245,17 +110,20 @@ Edge Types (with Properties):
    - test_result (string: passed, failed, ambiguous, optional)
 
 Output format example:
-{
+{{
   "nodes": [
-    {"id": "evt1", "type": "Event", "properties": {"description": "Tea Act passed", "timestamp": "1773-05-10", "certainty": 0.9}},
-    {"id": "hyp1", "type": "Hypothesis", "properties": {"description": "Taxation without representation causes unrest", "prior_probability": 0.6, "status": "active"}},
-    {"id": "evd1", "type": "Evidence", "properties": {"description": "Public protests against Tea Act", "type": "straw_in_the_wind", "source": "doc1"}}
+    {{"id": "evt1", "type": "Event", "properties": {{"description": "Tea Act passed", "timestamp": "1773-05-10", "certainty": 0.9}}}},
+    {{"id": "hyp1", "type": "Hypothesis", "properties": {{"description": "Taxation without representation causes unrest", "prior_probability": 0.6, "status": "active"}}}},
+    {{"id": "evd1", "type": "Evidence", "properties": {{"description": "Public protests against Tea Act", "type": "straw_in_the_wind", "source": "doc1"}}}}
   ],
   "edges": [
-    {"source_id": "evd1", "target_id": "hyp1", "type": "tests_hypothesis", "properties": {"probative_value": 0.3, "test_result": "passed"}},
-    {"source_id": "evt1", "target_id": "evt2", "type": "causes", "properties": {"certainty": 0.8, "type": "direct"}}
+    {{"source_id": "evd1", "target_id": "hyp1", "type": "tests_hypothesis", "properties": {{"probative_value": 0.3, "test_result": "passed"}}}},
+    {{"source_id": "evt1", "target_id": "evt2", "type": "causes", "properties": {{"certainty": 0.8, "type": "direct"}}}}
   ]
-}
+}}
+
+TEXT TO ANALYZE:
+{text}
 """
 
 # ────────────────────────────────────────────────────────────────────
@@ -268,14 +136,14 @@ def read_all_text(path: str) -> str:
         raise FileNotFoundError(f"No .txt files in {path}")
 
     big_text, total = "", 0
-    print(f"📄 Reading {len(files)} file(s):")
+    print(f"[INFO] Reading {len(files)} file(s):")
     for fp in files:
         with open(fp, encoding="utf-8") as f:
             txt = f.read()
             big_text += txt + "\n\n"
             total += len(txt)
             print(f"  • {os.path.basename(fp):<40s} ({len(txt):,} chars)")
-    print(f"📝 Total characters loaded: {total:,}\n")
+    print(f"[INFO] Total characters loaded: {total:,}\n")
     return big_text
 
 
@@ -302,7 +170,7 @@ def parse_json(raw: str) -> dict:
             return ast.literal_eval(raw_clean)
         except Exception as e:
             snippet = textwrap.shorten(raw_clean, width=300, placeholder=" […]")
-            print("\n⚠️  JSON parsing failed. First 300 chars Gemini sent:\n"
+            print("\n[WARN]  JSON parsing failed. First 300 chars Gemini sent:\n"
                   "────────────────────────────────────────────────────")
             print(snippet)
             print("────────────────────────────────────────────────────")
@@ -425,6 +293,7 @@ def validate_json_against_ontology(data: dict) -> tuple[bool, list[str]]:
 
 def query_gemini(big_text: str, retry_count=0) -> dict:
     """Query Gemini API with retry mechanism for validation failures."""
+    print("[DEBUG] About to query Gemini...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
 
     contents = [types.Content(role="user",
@@ -432,17 +301,17 @@ def query_gemini(big_text: str, retry_count=0) -> dict:
                                   text=PROMPT_TEMPLATE.format(text=big_text))])]
     config = types.GenerateContentConfig(response_mime_type="text/plain")
 
-    print(f"🚀 Streaming from Gemini (attempt {retry_count + 1}/{MAX_RETRIES})…")
-    json_str, chunk_counter = "", count(1)
+    print(f"[RUN] Streaming from Gemini (attempt {retry_count + 1}/{MAX_RETRIES})…")
+    json_str = ""
+    chunk_count = 0
     for chunk in client.models.generate_content_stream(
             model=MODEL_NAME, contents=contents, config=config):
         if hasattr(chunk, "text"):
             json_str += chunk.text
-        # pulse every 5 chunks
-        if next(chunk_counter) % 5 == 0:
-            print("•", end="", flush=True)
+        chunk_count += 1
+        print(f"  chunk {chunk_count}")
 
-    print("\n✅ Stream complete. Parsing JSON…")
+    print(f"[OK] Stream complete. Received {chunk_count} chunks. Parsing JSON…")
     
     try:
         # Parse the returned JSON
@@ -452,32 +321,32 @@ def query_gemini(big_text: str, retry_count=0) -> dict:
         is_valid, errors = validate_json_against_ontology(graph_data)
         
         if is_valid:
-            print("✅ Validation successful: JSON conforms to ontology!")
+            print("[OK] Validation successful: JSON conforms to ontology!")
             return graph_data
         else:
-            print("❌ Validation failed. Errors found:")
+            print("[WARN] Validation failed. Errors found:")
             for error in errors:
                 print(f"  ⚠️ {error}")
                 
             # Retry if we haven't exceeded the maximum attempts
             if retry_count < MAX_RETRIES - 1:
-                print(f"🔄 Retrying query ({retry_count + 2}/{MAX_RETRIES})...")
+                print(f"[RETRY] Retrying query ({retry_count + 2}/{MAX_RETRIES})...")
                 time.sleep(2)  # Short delay between retries
                 return query_gemini(big_text, retry_count + 1)
             else:
-                print("❌ Maximum retry attempts reached. Using last response despite validation errors.")
+                print("[ERROR] Maximum retry attempts reached. Using last response despite validation errors.")
                 return graph_data
                 
     except Exception as e:
-        print(f"❌ Error processing response: {str(e)}")
+        print(f"[ERROR] Error processing response: {str(e)}")
         
         # Retry if we haven't exceeded the maximum attempts
         if retry_count < MAX_RETRIES - 1:
-            print(f"🔄 Retrying query ({retry_count + 2}/{MAX_RETRIES})...")
+            print(f"[RETRY] Retrying query ({retry_count + 2}/{MAX_RETRIES})...")
             time.sleep(2)  # Short delay between retries
             return query_gemini(big_text, retry_count + 1)
         else:
-            print("❌ Maximum retry attempts reached. Raising error.")
+            print("[ERROR] Maximum retry attempts reached. Raising error.")
             raise e
 
 
@@ -732,7 +601,7 @@ def build_visualization(data, html_out):
     with open(html_out, 'w', encoding='utf-8') as f:
         f.write(full_html)
     
-    print(f"🎉 Graph written to {html_out}")
+    print(f"[SUCCESS] Graph written to {html_out}")
     
     # Open the HTML file in the default web browser
     webbrowser.open('file://' + os.path.realpath(html_out))
@@ -743,10 +612,10 @@ def read_text_file(file_path: str) -> str:
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"Input file not found: {file_path}")
 
-    print(f"📄 Reading file: {os.path.basename(file_path)}")
+    print(f"[INFO] Reading file: {os.path.basename(file_path)}")
     with open(file_path, encoding="utf-8") as f:
         txt = f.read()
-    print(f"📝 Total characters loaded: {len(txt):,}\n")
+    print(f"[INFO] Total characters loaded: {len(txt):,}\n")
     return txt
 
 
@@ -756,9 +625,9 @@ def main() -> None:
     try:
         # If the JSON file already exists, give the user an option to reuse it
         if os.path.exists(OUTPUT_JSON) and os.path.getsize(OUTPUT_JSON) > 0:
-            print(f"📄 Found existing JSON data file: {OUTPUT_JSON}")
+            print(f"[INFO] Found existing JSON data file: {OUTPUT_JSON}")
             if not HAS_GEMINI:
-                print("ℹ️ Will use existing JSON data since Gemini API is not available.")
+                print("[INFO] Will use existing JSON data since Gemini API is not available.")
                 use_existing = True
             else:
                 response = input("   Would you like to reuse this data instead of querying Gemini? (y/n): ").strip().lower()
@@ -771,18 +640,18 @@ def main() -> None:
             try:
                 with open(OUTPUT_JSON, 'r', encoding='utf-8') as f:
                     graph_data = json.load(f)
-                print(f"✅ Successfully loaded data from {OUTPUT_JSON}")
+                print(f"[OK] Successfully loaded data from {OUTPUT_JSON}")
             except Exception as e:
-                print(f"❌ Error loading JSON data: {str(e)}")
+                print(f"[ERROR] Error loading JSON data: {str(e)}")
                 if not HAS_GEMINI:
-                    print("❌ Cannot proceed without valid JSON data and Gemini API.")
+                    print("[ERROR] Cannot proceed without valid JSON data and Gemini API.")
                     return
                 use_existing = False
         
         if not use_existing:
             # Process requires Gemini API
             if not HAS_GEMINI:
-                print("❌ Cannot query Gemini API. Package not available.")
+                print("[ERROR] Cannot query Gemini API. Package not available.")
                 return
                 
             # Read the specified input file
@@ -795,15 +664,15 @@ def main() -> None:
             try:
                 with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
                     json.dump(graph_data, f, ensure_ascii=False, indent=4)
-                print(f"💾 Raw graph data saved to {OUTPUT_JSON}")
+                print(f"[SAVE] Raw graph data saved to {OUTPUT_JSON}")
             except IOError as e:
-                print(f"⚠️  Error saving JSON data to {OUTPUT_JSON}: {e}")
+                print(f"[WARN]  Error saving JSON data to {OUTPUT_JSON}: {e}")
 
         # Create visualization (works regardless of where data came from)
         build_visualization(graph_data, OUTPUT_HTML)
         
     except Exception as e:
-        print(f"❌ Error in main execution: {str(e)}")
+        print(f"[ERROR] Error in main execution: {str(e)}")
         traceback_str = traceback.format_exc()
         print(f"Traceback:\n{traceback_str}")
         sys.exit(1)

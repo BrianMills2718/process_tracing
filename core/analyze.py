@@ -21,6 +21,7 @@ import io
 import base64
 from pathlib import Path
 import textwrap
+from datetime import datetime
 
 # Assuming this file will be in core/ and ontology.py is in core/
 from core.ontology import NODE_TYPES as CORE_NODE_TYPES, NODE_COLORS
@@ -61,74 +62,41 @@ def parse_args():
         args.theory = True 
     return args
 
-def fix_json_for_causal_chains(data):
-    """
-    Fix JSON data to enable causal chain detection by making the following changes:
-    1. Convert nodes with 'type' values of 'triggering', 'intermediate', 'outcome', etc. to have a primary type of 'Event'
-    2. Move original type values to an 'event_type' property
-    3. Ensure edges have proper 'relation' property (for backward compatibility with 'label')
-    """
-    if not isinstance(data, dict) or "nodes" not in data or "edges" not in data:
-        print("❌ Invalid JSON structure. Expected {nodes: [...], edges: [...]}")
-        return None
-    
-    fixed_data = {"nodes": [], "edges": []}
-    event_types = ["triggering", "intermediate", "outcome", "background", "unspecified"]
-    
-    # Process nodes
-    for node in data["nodes"]:
-        node_copy = node.copy()
-        
-        # Fix event nodes
-        if "type" in node and node["type"] in event_types:
-            # Store original type as event_type
-            node_copy["event_type"] = node["type"]
-            # Set primary type to Event
-            node_copy["type"] = "Event"
-            
-        fixed_data["nodes"].append(node_copy)
-    
-    # Process edges
-    for edge in data["edges"]:
-        edge_copy = edge.copy()
-        
-        # Ensure 'relation' property exists, but don't have both label and relation
-        if "label" in edge:
-            # If both exist, keep relation and remove label
-            if "relation" in edge:
-                edge_copy.pop("label")
-            else:
-                # Only label exists, copy it to relation
-                edge_copy["relation"] = edge["label"]
-                edge_copy.pop("label")
-        
-        fixed_data["edges"].append(edge_copy)
-    
-    return fixed_data
-
 def load_graph(json_file):
     with open(json_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
-    
-    # Fix the data format for causal chain detection
-    fixed_data = fix_json_for_causal_chains(data)
-    if not fixed_data:
-        raise ValueError("Failed to fix JSON data format")
-    
+
     G = nx.DiGraph()
-    for node in fixed_data['nodes']:
-        G.add_node(node['id'], **node)
-    for edge in fixed_data['edges']:
-        # Create a copy of the edge attributes to manipulate
-        edge_attrs = edge.copy()
-        
-        # Remove source and target from attributes dict
-        source = edge_attrs.pop('source')
-        target = edge_attrs.pop('target')
-        
-        # Add the edge with cleaned attributes
-        G.add_edge(source, target, **edge_attrs)
-    return G, fixed_data
+
+    def sanitize_value(value):
+        if isinstance(value, str):
+            return value.encode('utf-8').decode('ascii', 'replace')
+        return value
+
+    for node_data in data['nodes']:
+        node_id = node_data['id']
+        node_type = node_data['type']
+        # Sanitize all properties before adding to the graph
+        props = {k: sanitize_value(v) for k, v in node_data.get('properties', {}).items()}
+        node_attrs = {'type': node_type, **props}
+        try:
+            G.add_node(node_id, **node_attrs)
+        except Exception as e:
+            print(f"[WARN] Skipping node {node_id} due to attribute error: {e}. Attributes: {node_attrs}")
+
+    for edge_data in data['edges']:
+        source = edge_data['source']
+        target = edge_data['target']
+        edge_type = edge_data['type']
+        # Sanitize all properties before adding to the graph
+        props = {k: sanitize_value(v) for k, v in edge_data.get('properties', {}).items()}
+        edge_attrs = {'type': edge_type, **props}
+        try:
+            G.add_edge(source, target, **edge_attrs)
+        except Exception as e:
+            print(f"[WARN] Skipping edge {source}->{target} due to attribute error: {e}. Attributes: {edge_attrs}")
+            
+    return G, data
 
 def identify_causal_chains(G):
     """Identify causal chains in the graph"""
@@ -1465,11 +1433,11 @@ def main():
     if not os.path.isfile(args.json_file):
         print(f"Error: File not found: {args.json_file}"); sys.exit(1)
     
-    print(f"📊 Analyzing data from {os.path.basename(args.json_file)}...")
+    print(f"[ANALYZE] Analyzing data from {os.path.basename(args.json_file)}...")
     try:
         G, data = load_graph(args.json_file)
         data['filename'] = args.json_file
-        print(f"✅ Loaded graph: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges")
+        print(f"[SUCCESS] Loaded graph: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges")
     except Exception as e:
         print(f"Error loading graph: {e}"); sys.exit(1)
     
@@ -1485,7 +1453,7 @@ def main():
     
     theoretical_insights = None
     if args.theory or args.html: # HTML implies theory
-        print("🔍 Generating theoretical insights...")
+        print("[INFO] Generating theoretical insights...")
         theoretical_insights = generate_theoretical_insights(results, data)
     
     analysis_text = ""
@@ -1496,33 +1464,36 @@ def main():
     else:
         analysis_text = format_analysis(results, data, G, theoretical_insights)
     
-    output_path_str = args.output
-    if not output_path_str:
-        base_name = os.path.splitext(os.path.basename(args.json_file))[0]
-        output_path_str = f"{base_name}_analysis.{output_extension}"
+    # Project-based output organization
+    # Use the input JSON's directory and base name for output
+    input_json_path = Path(args.json_file)
+    project_dir = input_json_path.parent
+    project_name = input_json_path.stem.replace('_graph', '')
+    now_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+    if args.output:
+        output_path_str = args.output
     else:
-        # Ensure correct extension if user provides one
-        name, ext = os.path.splitext(output_path_str)
-        if not ext.lower() == f".{output_extension}":
-            output_path_str = name + f".{output_extension}"
-    
+        output_path_str = str(project_dir / f"{project_name}_analysis_{now_str}.{output_extension}")
     output_path = Path(output_path_str)
     try:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(analysis_text)
-        print(f"✅ Analysis report saved to {output_path}")
+        print(f"[SUCCESS] Analysis report saved to {output_path}")
+        # Automatically open HTML report in browser
+        if args.html:
+            import webbrowser
+            webbrowser.open('file://' + str(output_path.resolve()))
     except Exception as e:
         print(f"Error writing report to {output_path}: {e}")
         if not args.html: print("\nANALYSIS CONTENT:\n" + analysis_text)
-    
-    print("\n✅ Analysis generation complete!")
+    print("\n[SUCCESS] Analysis generation complete!")
     
     if not args.html and args.charts_dir:
         charts_output_dir = Path(args.charts_dir)
         charts_output_dir.mkdir(parents=True, exist_ok=True)
         base_chart_name = Path(args.json_file).stem
-        print(f"📊 Generating PNG charts in {charts_output_dir}/...")
+        print(f"[INFO] Generating PNG charts in {charts_output_dir}/...")
         try:
             # Node type distribution pie chart
             plt.figure(figsize=(10, 6))
@@ -1543,11 +1514,11 @@ def main():
                 plt.tight_layout()
                 plt.savefig(charts_output_dir / f"{base_chart_name}_edge_types.png")
             plt.close()
-            print(f"✅ PNG charts saved.")
+            print(f"[SUCCESS] PNG charts saved.")
         except Exception as e:
-            print(f"⚠️ Error generating PNG charts: {str(e)}")
+            print(f"[ERROR] Error generating PNG charts: {str(e)}")
     elif not args.html:
-        print("ℹ️ PNG chart generation skipped: --charts-dir not specified.")
+        print("[INFO] PNG chart generation skipped: --charts-dir not specified.")
     
     sys.exit(0)
 

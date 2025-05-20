@@ -1,4 +1,4 @@
-# Process Tracing Analysis Toolkit
+# Process Tracing Toolkit
 
 This toolkit is designed for qualitative analysis of causal processes in social science research. It provides tools to extract causal information from text, visualize it as a network, and perform theoretical analysis based on process tracing methodology.
 
@@ -6,17 +6,17 @@ This toolkit is designed for qualitative analysis of causal processes in social 
 
 ```
 process_tracing/
-├── core/                    # Core analysis engine
-│   ├── extract.py          # Data extraction from text
-│   ├── analyze.py          # Analysis engine
-│   ├── ontology.py         # Ontology definitions
-│   └── __init__.py         # Package initialization
-├── input_text/             # Input text files
-├── output_data/            # Output files
-│   ├── json/              # JSON data files
-│   ├── reports/           # Analysis reports
-│   └── charts/            # Generated charts
-└── process_trace.py       # Main entry point
+├── core/                  # Core Python modules (analyze.py, extract.py, ontology.py, etc.)
+├── input_text/            # Input text files, organized by project
+│   └── revolutions/
+│       └── american_revolution.txt
+├── output_data/           # All outputs, organized by project and timestamp
+│   └── revolutions/
+│       ├── revolutions_YYYYMMDD_HHMMSS_graph.json
+│       ├── revolutions_YYYYMMDD_HHMMSS_graph.html
+│       └── revolutions_YYYYMMDD_HHMMSS_analysis.md
+├── README.md
+└── ...
 ```
 
 ## Core Components
@@ -62,12 +62,31 @@ The main script that orchestrates the entire process:
 
 ## Usage
 
-1. Place your input text files in the `input_text/` directory.
-2. Run the main script:
-   ```bash
-   python process_trace.py
-   ```
-3. Find the generated analysis in the `output_data/` directory.
+1. **Add a new project:**
+   - Place your input `.txt` files in a subdirectory under `input_text/`, e.g., `input_text/my_project/`.
+
+2. **Run extraction:**
+   - From the project root, run:
+     ```sh
+     python -m core.extract
+     ```
+   - This will process the first `.txt` file found in any project subdirectory, generate outputs in `output_data/{project}/` with a timestamp.
+
+3. **Run analysis:**
+   - To analyze a specific output, run:
+     ```sh
+     python -m core.analyze output_data/{project}/{project}_YYYYMMDD_HHMMSS_graph.json --html
+     ```
+   - The analysis HTML report will open automatically in your browser.
+   - For Markdown output:
+     ```sh
+     python -m core.analyze output_data/{project}/{project}_YYYYMMDD_HHMMSS_graph.json --output output_data/{project}/{project}_YYYYMMDD_HHMMSS_analysis.md
+     ```
+
+## Notes
+- All outputs are timestamped for easy versioning.
+- The analysis HTML report now opens automatically after generation.
+- You can have multiple projects in `input_text/` and process them independently.
 
 ## Requirements
 

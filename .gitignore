@@ -37,4 +37,7 @@ Thumbs.db
 
 # Project specific
 output_data/*
-!output_data/.gitkeep 
+!output_data/.gitkeep
+
+# Ignore environment variable files
+.env 
