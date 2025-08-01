@@ -1,0 +1,267 @@
+{
+  "nodes": [
+    {
+      "id": "soviet_missiles_cuba",
+      "type": "Event",
+      "properties": {
+        "description": "Soviet deployment of nuclear missiles in Cuba, October 1962",
+        "subtype": "triggering"
+      }
+    },
+    {
+      "id": "us_intelligence_discovery",
+      "type": "Event",
+      "properties": {
+        "description": "U-2 spy plane discovers Soviet missile sites in Cuba"
+      }
+    },
+    {
+      "id": "excomm_deliberations",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Executive Committee crisis decision-making process"
+      }
+    },
+    {
+      "id": "naval_quarantine",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "US naval quarantine of Cuba implementation"
+      }
+    },
+    {
+      "id": "back_channel_negotiations",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Secret diplomatic negotiations through intermediaries"
+      }
+    },
+    {
+      "id": "crisis_resolution",
+      "type": "Event",
+      "properties": {
+        "description": "Soviet agreement to remove missiles from Cuba, October 28, 1962",
+        "subtype": "outcome"
+      }
+    },
+    {
+      "id": "rational_decision_hypothesis",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Crisis resolved through rational decision-making by both leaders"
+      }
+    },
+    {
+      "id": "coercive_diplomacy_hypothesis",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "US coercive diplomacy (quarantine) forced Soviet withdrawal"
+      }
+    },
+    {
+      "id": "compromise_hypothesis",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Secret Turkey missile trade enabled face-saving compromise"
+      }
+    },
+    {
+      "id": "khrushchev_memoirs_evidence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Khrushchev memoirs cite fear of nuclear war as withdrawal reason",
+        "evidence_type": "smoking_gun"
+      }
+    },
+    {
+      "id": "quarantine_effectiveness_evidence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Soviet ships turned back after quarantine announcement",
+        "evidence_type": "hoop"
+      }
+    },
+    {
+      "id": "turkey_missiles_evidence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Secret agreement to remove Jupiter missiles from Turkey",
+        "evidence_type": "smoking_gun"
+      }
+    },
+    {
+      "id": "public_statements_evidence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Both leaders made public statements about avoiding nuclear war",
+        "evidence_type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "military_pressure_evidence",
+      "type": "Evidence",
+      "properties": {
+        "description": "US military preparations for invasion of Cuba were visible to Soviets",
+        "evidence_type": "hoop"
+      }
+    },
+    {
+      "id": "timing_evidence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Soviet withdrawal came within hours of Turkey deal agreement",
+        "evidence_type": "hoop"
+      }
+    },
+    {
+      "id": "kennedy_advisors_evidence", 
+      "type": "Evidence",
+      "properties": {
+        "description": "ExComm transcripts show rational cost-benefit analysis",
+        "evidence_type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "hotline_communications_evidence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Direct hotline communications between leaders during crisis",
+        "evidence_type": "straw_in_the_wind"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "soviet_missiles_cuba",
+      "target": "us_intelligence_discovery",
+      "type": "causes",
+      "properties": {}
+    },
+    {
+      "id": "e2", 
+      "source": "us_intelligence_discovery",
+      "target": "excomm_deliberations",
+      "type": "triggers",
+      "properties": {}
+    },
+    {
+      "id": "e3",
+      "source": "excomm_deliberations",
+      "target": "naval_quarantine",
+      "type": "causes",
+      "properties": {}
+    },
+    {
+      "id": "e4",
+      "source": "excomm_deliberations", 
+      "target": "back_channel_negotiations",
+      "type": "enables",
+      "properties": {}
+    },
+    {
+      "id": "e5",
+      "source": "naval_quarantine",
+      "target": "crisis_resolution",
+      "type": "contributes_to",
+      "properties": {}
+    },
+    {
+      "id": "e6",
+      "source": "back_channel_negotiations",
+      "target": "crisis_resolution",
+      "type": "causes",
+      "properties": {}
+    },
+    {
+      "id": "e7",
+      "source": "khrushchev_memoirs_evidence",
+      "target": "rational_decision_hypothesis",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.8
+      }
+    },
+    {
+      "id": "e8",
+      "source": "quarantine_effectiveness_evidence",
+      "target": "coercive_diplomacy_hypothesis", 
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.7
+      }
+    },
+    {
+      "id": "e9",
+      "source": "turkey_missiles_evidence",
+      "target": "compromise_hypothesis",
+      "type": "supports", 
+      "properties": {
+        "probative_value": 0.9
+      }
+    },
+    {
+      "id": "e10",
+      "source": "public_statements_evidence",
+      "target": "rational_decision_hypothesis",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.4
+      }
+    },
+    {
+      "id": "e11",
+      "source": "military_pressure_evidence",
+      "target": "coercive_diplomacy_hypothesis",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.6
+      }
+    },
+    {
+      "id": "e12",
+      "source": "timing_evidence",
+      "target": "compromise_hypothesis",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.8
+      }
+    },
+    {
+      "id": "e13",
+      "source": "kennedy_advisors_evidence",
+      "target": "rational_decision_hypothesis",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.5
+      }
+    },
+    {
+      "id": "e14",
+      "source": "hotline_communications_evidence",
+      "target": "rational_decision_hypothesis",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.6
+      }
+    },
+    {
+      "id": "e15",
+      "source": "turkey_missiles_evidence",
+      "target": "coercive_diplomacy_hypothesis",
+      "type": "refutes",
+      "properties": {
+        "probative_value": 0.7
+      }
+    },
+    {
+      "id": "e16",
+      "source": "quarantine_effectiveness_evidence",
+      "target": "compromise_hypothesis",
+      "type": "refutes",
+      "properties": {
+        "probative_value": 0.5
+      }
+    }
+  ]
+}

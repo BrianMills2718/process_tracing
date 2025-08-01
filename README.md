@@ -1,115 +1,105 @@
-# Process Tracing Toolkit
+# Process Tracing Toolkit (LLM-Enhanced)
 
-This toolkit is designed for qualitative analysis of causal processes in social science research. It provides tools to extract causal information from text, visualize it as a network, and perform theoretical analysis based on process tracing methodology.
+## Overview
 
-## Project Structure
+This toolkit supports advanced, multi-case, hypothesis-driven qualitative analysis using process tracing methodology, now deeply integrated with LLM (Gemini API) for enhanced causal reasoning, evidence assessment, and reporting.
 
-```
-process_tracing/
-├── core/                  # Core Python modules (analyze.py, extract.py, ontology.py, etc.)
-├── input_text/            # Input text files, organized by project
-│   └── revolutions/
-│       └── american_revolution.txt
-├── output_data/           # All outputs, organized by project and timestamp
-│   └── revolutions/
-│       ├── revolutions_YYYYMMDD_HHMMSS_graph.json
-│       ├── revolutions_YYYYMMDD_HHMMSS_graph.html
-│       └── revolutions_YYYYMMDD_HHMMSS_analysis.md
-├── README.md
-└── ...
-```
+## Key Features
 
-## Core Components
+- **LLM-Powered Graph Extraction:**
+  - Extracts detailed, causally rich process tracing graphs from case texts using a comprehensive prompt and Gemini API.
 
-The toolkit is organized into several key directories and scripts:
+- **LLM-Aided Mechanism Elaboration:**
+  - After initial extraction, each Causal_Mechanism node is further analyzed by the LLM to:
+    - Write a narrative connecting its constituent events.
+    - Suggest missing micro-steps (as new Event nodes).
+    - Assess internal coherence.
+    - Suggest refined properties (confidence, level_of_detail).
+  - Results are included in the HTML report for each mechanism.
 
-### 1. `core/` - Core Logic
-Contains the fundamental scripts for data extraction, ontology, and analysis.
+- **LLM-Aided Evidence Refinement:**
+  - For each Hypothesis-Evidence link, the LLM:
+    - Refines the Van Evera diagnostic type (hoop, smoking_gun, etc.).
+    - Suggests a more nuanced probative value (including Bayesian likelihoods).
+    - Provides a textual justification for its assessment.
+  - These refinements are shown in the evidence tables and used in balance calculations.
 
-*   `core/extract.py`:
-    *   **Purpose**: Extracts structured causal graph data from input text using Google's Generative AI (Gemini).
-    *   **Input**: Text file(s).
-    *   **Output**: JSON file representing the causal graph and an HTML visualization of this graph.
-    *   **Key Features**: Uses a comprehensive ontology (defined in `core/ontology.py`) for node and edge types, robust JSON parsing and validation, dynamic configuration for input/output paths.
+- **LLM-Generated Analytical Narrative Summaries:**
+  - The LLM generates concise, analytical summaries for:
+    - Causal chains (highlighting triggers and outcomes).
+    - Each mechanism and hypothesis evaluation.
+    - The overall cross-case synthesis (multi-case studies).
+  - These summaries are embedded in the HTML reports for richer, more readable output.
 
-*   `core/analyze.py`:
-    *   **Purpose**: Core analysis engine for process tracing networks.
-    *   **Input**: JSON file containing the causal graph.
-    *   **Output**: Analysis reports in Markdown or HTML format with visualizations.
-    *   **Key Features**: Causal chain identification, mechanism evaluation, evidence analysis, condition analysis, actor analysis, alternative explanation analysis, and network metrics calculation.
+- **LLM-Powered Counterfactual Exploration:**
+  - Analyze "what if" scenarios by specifying a counterfactual premise and outcome of interest.
+  - The LLM traces consequences through the causal graph and provides a structured analysis.
+  - Run via the CLI script (see below).
 
-*   `core/ontology.py`:
-    *   **Purpose**: Defines the schema for the process tracing graphs.
-    *   **Contents**: Specifies `NODE_TYPES` (e.g., Event, Causal_Mechanism, Actor) with their required/optional properties, and `EDGE_TYPES` (e.g., causes, enables, tests_hypothesis) with their source/target constraints. Also includes `NODE_COLORS` for visualization.
+## Directory Structure
 
-### 2. `input_text/` - Input Data
-Directory containing the text files to be analyzed. These files should contain the narrative or case study text from which causal relationships will be extracted.
-
-### 3. `output_data/` - Output Files
-Directory containing all generated output files:
-
-*   `json/`: Contains the extracted causal graph data in JSON format.
-*   `reports/`: Contains the generated analysis reports in Markdown or HTML format.
-*   `charts/`: Contains any generated visualization charts in PNG format.
-
-### 4. `process_trace.py` - Main Entry Point
-The main script that orchestrates the entire process:
-1. Reads input text files
-2. Extracts causal relationships
-3. Generates the causal graph
-4. Performs analysis
-5. Produces reports and visualizations
+- `process_trace_advanced.py` — Main extraction and pipeline orchestrator.
+- `core/analyze.py` — Per-case graph analysis, now with LLM-powered mechanism and evidence enhancement.
+- `core/enhance_mechanisms.py` — LLM mechanism elaboration logic.
+- `core/enhance_evidence.py` — LLM evidence refinement logic.
+- `core/llm_reporting_utils.py` — LLM narrative summary generation.
+- `core/counterfactual_analyzer.py` — LLM-powered counterfactual analysis.
+- `run_study.py` — Multi-case orchestrator.
+- `run_counterfactual_analysis.py` — CLI for counterfactual analysis.
 
 ## Usage
 
-1. **Add a new project:**
-   - Place your input `.txt` files in a subdirectory under `input_text/`, e.g., `input_text/my_project/`.
+### 1. Standard Multi-Case Analysis
 
-2. **Run extraction:**
-   - From the project root, run:
-     ```sh
-     python -m core.extract
-     ```
-   - This will process the first `.txt` file found in any project subdirectory, generate outputs in `output_data/{project}/` with a timestamp.
+Prepare a `study_config.json` specifying your cases, (optional) global hypothesis, and output directory. Then run:
 
-3. **Run analysis:**
-   - To analyze a specific output, run:
-     ```sh
-     python -m core.analyze output_data/{project}/{project}_YYYYMMDD_HHMMSS_graph.json --html
-     ```
-   - The analysis HTML report will open automatically in your browser.
-   - For Markdown output:
-     ```sh
-     python -m core.analyze output_data/{project}/{project}_YYYYMMDD_HHMMSS_graph.json --output output_data/{project}/{project}_YYYYMMDD_HHMMSS_analysis.md
-     ```
+```bash
+python run_study.py study_config.json
+```
 
-## Notes
-- All outputs are timestamped for easy versioning.
-- The analysis HTML report now opens automatically after generation.
-- You can have multiple projects in `input_text/` and process them independently.
+This will:
+- Extract and analyze each case, including LLM-powered mechanism and evidence enhancement.
+- Generate HTML reports with LLM-generated summaries.
+- Perform cross-case synthesis with an LLM summary at the top of the report.
+
+### 2. Single-Case Analysis
+
+You can run the pipeline on a single case file using `process_trace_advanced.py` or analyze an existing graph with:
+
+```bash
+python -m core.analyze <case_graph.json> --html
+```
+
+### 3. Counterfactual Analysis
+
+To explore counterfactual scenarios:
+
+```bash
+python run_counterfactual_analysis.py --graph_json <path_to_case_graph.json> --premise "What if Event X did not happen?" --outcome_id <EventY>
+```
+
+- The result will be printed and can be saved with `--output <result.txt>`.
 
 ## Requirements
 
 - Python 3.8+
-- Required packages:
-  - networkx
-  - matplotlib
-  - google-generativeai (for text extraction)
-  - Other dependencies listed in requirements.txt
+- `google-genai` (Gemini API)
+- `networkx`, `matplotlib`, `dotenv`, etc. (see `requirements.txt`)
 
-## Installation
+## LLM API Key
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Set up your Google API key for Gemini (if using text extraction)
+- Place your Gemini API key in a `.env` file as `GOOGLE_API_KEY=your_key_here` or set it in your environment.
 
-## Contributing
+## Notes
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+- LLM calls may incur costs and can be slow for large graphs or many cases.
+- All LLM prompts and responses are saved for debugging.
+- The toolkit is robust to large outputs and will chunk or save data as needed.
 
-## License
+## Advanced
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+- You can further customize prompts or add new LLM-powered modules by following the structure in `core/enhance_mechanisms.py`, `core/enhance_evidence.py`, and `core/llm_reporting_utils.py`.
+
+---
+
+For more details, see the docstrings in each module and the comments in the main scripts.

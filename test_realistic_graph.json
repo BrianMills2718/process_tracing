@@ -1,0 +1,68 @@
+{
+  "nodes": [
+    {
+      "id": "british_taxation",
+      "type": "Event",
+      "properties": {
+        "subtype": "triggering",
+        "description": "British taxation policies 1765-1773"
+      }
+    },
+    {
+      "id": "colonial_resistance",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Colonial resistance movement",
+        "confidence": 0.8
+      }
+    },
+    {
+      "id": "independence_declared",
+      "type": "Event",
+      "properties": {
+        "subtype": "outcome",
+        "description": "Declaration of Independence 1776"
+      }
+    },
+    {
+      "id": "washington_hypothesis",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Washington leadership was decisive for success"
+      }
+    },
+    {
+      "id": "taxation_evidence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Evidence of taxation without representation",
+        "evidence_type": "hoop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "british_taxation",
+      "target": "colonial_resistance",
+      "type": "triggers",
+      "properties": {}
+    },
+    {
+      "id": "e2",
+      "source": "colonial_resistance",
+      "target": "independence_declared",
+      "type": "causes",
+      "properties": {}
+    },
+    {
+      "id": "e3",
+      "source": "taxation_evidence",
+      "target": "washington_hypothesis",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.6
+      }
+    }
+  ]
+}
