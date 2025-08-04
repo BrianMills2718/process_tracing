@@ -22,6 +22,10 @@ Expected JSON structure for LLM output (based on advanced ontology):
 import os, glob, re, json, ast, sys, textwrap, time
 from itertools import count
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 import webbrowser
 from core.ontology import NODE_TYPES, EDGE_TYPES, NODE_COLORS
 
@@ -40,7 +44,7 @@ except ImportError:
 # ────────────────────────────────────────────────────────────────────
 # CONFIG
 # ────────────────────────────────────────────────────────────────────
-GEMINI_API_KEY = "AIzaSyDXaLhSWAQhGNHZqdbvY-qFB0jxyPbiiow"  # Only used if HAS_GEMINI is True
+GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")  # Load from .env file
 INPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "input_text")
 # Default: use the first .txt file in a project subdirectory if not specified
 INPUT_FILE_PATH = None
@@ -65,24 +69,62 @@ OUTPUT_DIR = os.path.join("output_data", project_name)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 OUTPUT_JSON = os.path.join(OUTPUT_DIR, f"{project_name}_{now_str}_graph.json")
 OUTPUT_HTML = os.path.join(OUTPUT_DIR, f"{project_name}_{now_str}_graph.html")
-MODEL_NAME  = "gemini-2.5-flash-preview-04-17"
+MODEL_NAME  = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")  # Load model from .env file
 MAX_RETRIES = 3  # Maximum number of retries for Gemini API
 
 # ────────────────────────────────────────────────────────────────────
 # GEMINI PROMPT WITH EXPANDED ONTOLOGY
 # ────────────────────────────────────────────────────────────────────
 PROMPT_TEMPLATE = """
-You are an expert in causal process tracing methodology. Extract a structured causal graph from the provided text using the following ontology subset. Output your answer as a JSON object with two arrays: 'nodes' and 'edges'.
+You are an expert in causal process tracing methodology following Van Evera and Beach & Pedersen approaches. Extract a structured causal graph from the provided text using the following extended ontology. Focus on creating rich, flexible connections that reflect academic process tracing standards with particular attention to CAUSAL MECHANISMS:
+
+EXTRACTION PRIORITIES:
+1. MECHANISMS: Identify Causal_Mechanism nodes that explain HOW causation works step-by-step
+   - Connect events to mechanisms via part_of_mechanism edges (role: trigger/intermediate/outcome)  
+   - Test mechanism operation with evidence via tests_mechanism edges
+   - Link hypotheses to mechanisms via explains_mechanism edges
+
+2. ALTERNATIVE EXPLANATIONS: Extract Alternative_Explanation nodes for competing theories
+   - Test alternatives with supporting/refuting evidence
+   - Compare strength against primary hypotheses
+   - Mark status (active/eliminated/supported)
+
+3. ACTORS & AGENCY: Identify Actor nodes with intentions, beliefs, and constraints
+   - Connect actors to events they initiate
+   - Model strategic interactions and decision-making
+   - Include capabilities and limitations
+
+4. CONDITIONS & CONTEXT: Extract Condition nodes for scope conditions and constraints
+   - Model enabling conditions that make events/mechanisms possible
+   - Identify constraining conditions that limit outcomes
+   - Specify temporal and spatial scope
+
+FLEXIBLE CONNECTION PATTERNS:
+- Use Evidence → Event connections (confirms_occurrence/disproves_occurrence) to establish whether events actually occurred
+- Use Event → Hypothesis connections (provides_evidence_for) to show how events serve as evidence for broader patterns  
+- Use Evidence → Hypothesis connections (supports/refutes/tests_hypothesis) for direct hypothesis testing
+- Use flexible supports/refutes connections between different node types as appropriate
+- Use Actor → Event connections (initiates) when actors directly start or launch specific events
+- Use Data_Source → Evidence connections (provides_evidence) when sources supply evidence
+- Apply Van Evera diagnostic types (hoop, smoking_gun, straw_in_the_wind, doubly_decisive) systematically
+
+CRITICAL EDGE TYPES TO PRIORITIZE:
+- disproves_occurrence: Evidence showing an event did NOT happen (contrary evidence)
+- initiates: Actors who directly started, launched, or began specific events
+- provides_evidence: Data sources (documents, interviews, observations) that supply evidence
+- refutes: Evidence that contradicts or challenges hypotheses, events, or mechanisms
+
+Output your answer as a JSON object with two arrays: 'nodes' and 'edges'.
 
 Each node must have:
 - id: unique string
-- type: one of [Event, Hypothesis, Evidence]
+- type: one of [Event, Hypothesis, Evidence, Causal_Mechanism, Alternative_Explanation, Actor, Condition, Data_Source]
 - properties: a dictionary of the node's properties (see below)
 
 Each edge must have:
 - source_id: id of the source node
 - target_id: id of the target node
-- type: one of [causes, tests_hypothesis]
+- type: one of [causes, supports, refutes, tests_hypothesis, tests_mechanism, confirms_occurrence, disproves_occurrence, provides_evidence_for, part_of_mechanism, explains_mechanism, supports_alternative, refutes_alternative, initiates, enables, constrains, provides_evidence]
 - properties: a dictionary of the edge's properties (see below)
 
 # Issue #84 Fix: Align prompt properties with ontology schema
@@ -114,27 +156,140 @@ Node Types (with Properties):
    - source (string, optional)
    - certainty (float 0-1, optional)
    - credibility (float 0-1, optional)
+4. Causal_Mechanism
+   - description (string, required): How the causal mechanism works step-by-step
+   - confidence (float 0-1, optional): Confidence mechanism operates as described
+   - completeness (float 0-1, optional): How complete our understanding is
+   - status (string: hypothetical, supported, refuted, partial, unspecified, optional)
+5. Alternative_Explanation
+   - description (string, required): Alternative causal explanation
+   - probability (float 0-1, optional): Estimated likelihood
+   - status (string: active, eliminated, supported, undetermined, optional)
+   - key_predictions (list of strings, optional): Distinguishing implications that separate from main hypotheses
+6. Actor
+   - name (string, required): Actor identification
+   - role (string, optional): Position or function in events
+   - intentions (string, optional): Goals and motivations
+   - beliefs (string, optional): What they believe to be true
+   - constraints (string, optional): Limitations on their actions
+   - capabilities (string, optional): What they can actually accomplish
+7. Condition
+   - description (string, required): Condition description
+   - type (string: background, enabling, constraining, scope, optional)
+   - necessity (float 0-1, optional): How necessary for outcomes
+   - temporal_scope (string, optional): When condition applies
+   - spatial_scope (string, optional): Where condition applies
+8. Data_Source
+   - type (string: interview, document, observation, artifact, general, required)
+   - credibility (float 0-1, optional): Reliability of source
+   - bias_risk (float 0-1, optional): Risk of bias in source
 
-Edge Types (with Properties):
+Edge Types (with flexible domain/range for academic process tracing):
 1. causes (Event → Event)
    - certainty (float 0-1, optional)
    - mechanism_id (string, optional)
    - type (string: direct, indirect, optional)
-2. tests_hypothesis (Evidence → Hypothesis)
-   - inferential_test_id (string, optional)
+   
+2. supports (Evidence/Event → Hypothesis/Event/Causal_Mechanism)
+   - probative_value (float 0-1, optional): strength of support
+   - diagnostic_type (string: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, general, optional)
+   - target_type (string: event_occurrence, causal_relationship, mechanism_operation, general, optional)
+   - certainty (float 0-1, optional)
+   
+3. refutes (Evidence/Event → Hypothesis/Event/Causal_Mechanism)  
+   - probative_value (float 0-1, optional): strength of refutation
+   - diagnostic_type (string: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, general, optional)
+   - target_type (string: event_occurrence, causal_relationship, mechanism_operation, general, optional)
+   - certainty (float 0-1, optional)
+   
+4. tests_hypothesis (Evidence/Event → Hypothesis)
    - probative_value (float 0-1, optional)
    - test_result (string: passed, failed, ambiguous, optional)
+   - diagnostic_type (string: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, general, optional)
+   
+5. tests_mechanism (Evidence/Event → Causal_Mechanism)
+   - probative_value (float 0-1, optional)
+   - test_result (string: passed, failed, ambiguous, optional)  
+   - diagnostic_type (string: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, general, optional)
+   
+6. confirms_occurrence (Evidence → Event)
+   - certainty (float 0-1, optional): confidence evidence confirms event occurred
+   - diagnostic_type (string: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, general, optional)
+   
+7. disproves_occurrence (Evidence → Event)
+   - certainty (float 0-1, optional): confidence evidence disproves event occurred
+   - diagnostic_type (string: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, general, optional)
+   
+8. provides_evidence_for (Event → Hypothesis/Causal_Mechanism)
+   - probative_value (float 0-1, optional): how strongly event serves as evidence
+   - diagnostic_type (string: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, general, optional)
+   - reasoning (string, optional): explanation of how event provides evidence
+
+9. part_of_mechanism (Event → Causal_Mechanism)
+   - role (string: trigger, intermediate, outcome, facilitating): event's role in mechanism
+   - sequence_position (int, optional): step number in mechanism sequence
+   - necessity (float 0-1, optional): how necessary event is for mechanism
+
+10. tests_mechanism (Evidence/Event → Causal_Mechanism)
+   - probative_value (float 0-1, optional): strength of mechanism test
+   - test_result (string: passed, failed, ambiguous, inconclusive, optional)
+   - diagnostic_type (string: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, general, optional)
+   - mechanism_aspect (string: existence, operation, completeness, optional)
+
+11. explains_mechanism (Hypothesis → Causal_Mechanism)
+   - certainty (float 0-1, optional): confidence in explanation
+   - type_of_claim (string: existence, operation, necessity, sufficiency, optional)
+   - scope (string, optional): under what conditions explanation applies
+
+12. supports_alternative (Evidence → Alternative_Explanation)
+   - probative_value (float 0-1, optional): strength of support
+   - diagnostic_type (string: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, general, optional)
+   - comparative_strength (float 0-1, optional): relative strength compared to main hypothesis
+
+13. refutes_alternative (Evidence → Alternative_Explanation)
+   - probative_value (float 0-1, optional): strength of refutation
+   - diagnostic_type (string: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, general, optional)
+   - refutation_strength (string: weak, moderate, strong, decisive, optional)
+
+14. initiates (Actor → Event)
+   - intentionality (string: deliberate, accidental, coerced, optional)
+   - capability_assessment (float 0-1, optional): actor's capability to initiate event
+   - constraint_factors (string, optional): what limited the actor's actions
+
+15. enables (Condition → Event/Causal_Mechanism)
+   - necessity (float 0-1, optional): how necessary condition is
+   - temporal_scope (string, optional): when enabling condition applies
+   - enabling_type (string: background, structural, contingent, optional)
+
+16. constrains (Condition → Event/Causal_Mechanism)
+   - constraint_strength (float 0-1, optional): how strongly it constrains
+   - temporal_scope (string, optional): when constraint applies
+   - constraint_type (string: prevents, limits, channels, optional)
+
+17. provides_evidence (Data_Source → Evidence)
+   - credibility (float 0-1, optional): reliability of the data source
+   - bias_risk (float 0-1, optional): risk of bias in the source
+   - certainty (float 0-1, optional): confidence that source provides evidence
 
 Output format example:
 {{
   "nodes": [
     {{"id": "evt1", "type": "Event", "properties": {{"description": "Tea Act passed", "timestamp": "1773-05-10", "certainty": 0.9}}}},
     {{"id": "hyp1", "type": "Hypothesis", "properties": {{"description": "Taxation without representation causes unrest", "prior_probability": 0.6, "status": "active"}}}},
-    {{"id": "evd1", "type": "Evidence", "properties": {{"description": "Public protests against Tea Act", "type": "straw_in_the_wind", "source": "doc1"}}}}
+    {{"id": "evd1", "type": "Evidence", "properties": {{"description": "Public protests against Tea Act", "type": "straw_in_the_wind", "source": "doc1"}}}},
+    {{"id": "mech1", "type": "Causal_Mechanism", "properties": {{"description": "British taxation creates economic pressure leading to organized colonial resistance", "confidence": 0.8, "status": "supported"}}}},
+    {{"id": "alt1", "type": "Alternative_Explanation", "properties": {{"description": "Economic interests of merchants drove opposition", "probability": 0.3, "status": "active"}}}},
+    {{"id": "actor1", "type": "Actor", "properties": {{"name": "Samuel Adams", "role": "Colonial leader", "intentions": "Mobilize resistance against British rule"}}}},
+    {{"id": "cond1", "type": "Condition", "properties": {{"description": "British naval dominance", "type": "constraining", "necessity": 0.8}}}}
   ],
   "edges": [
-    {{"source_id": "evd1", "target_id": "hyp1", "type": "tests_hypothesis", "properties": {{"probative_value": 0.3, "test_result": "passed"}}}},
-    {{"source_id": "evt1", "target_id": "evt2", "type": "causes", "properties": {{"certainty": 0.8, "type": "direct"}}}}
+    {{"source_id": "evd1", "target_id": "evt1", "type": "confirms_occurrence", "properties": {{"certainty": 0.8, "diagnostic_type": "smoking_gun"}}}},
+    {{"source_id": "evt1", "target_id": "mech1", "type": "part_of_mechanism", "properties": {{"role": "trigger", "sequence_position": 1, "necessity": 0.9}}}},
+    {{"source_id": "evd1", "target_id": "mech1", "type": "tests_mechanism", "properties": {{"probative_value": 0.8, "test_result": "passed", "diagnostic_type": "smoking_gun", "mechanism_aspect": "operation"}}}},
+    {{"source_id": "hyp1", "target_id": "mech1", "type": "explains_mechanism", "properties": {{"certainty": 0.7, "type_of_claim": "operation"}}}},
+    {{"source_id": "evd1", "target_id": "alt1", "type": "refutes_alternative", "properties": {{"probative_value": 0.7, "diagnostic_type": "hoop", "refutation_strength": "moderate"}}}},
+    {{"source_id": "actor1", "target_id": "evt1", "type": "initiates", "properties": {{"intentionality": "deliberate", "capability_assessment": 0.8}}}},
+    {{"source_id": "cond1", "target_id": "mech1", "type": "constrains", "properties": {{"constraint_strength": 0.7, "constraint_type": "limits"}}}}
   ]
 }}
 
@@ -365,7 +520,9 @@ def query_gemini(big_text: str, retry_count=0) -> dict:
         else:
             print("[WARN] Validation failed. Errors found:")
             for error in errors:
-                print(f"  ⚠️ {error}")
+                # Handle Unicode in error messages
+                clean_error = str(error).encode('ascii', errors='replace').decode('ascii')
+                print(f"  [WARN] {clean_error}")
                 
             # Retry if we haven't exceeded the maximum attempts
             if retry_count < MAX_RETRIES - 1:
@@ -380,7 +537,9 @@ def query_gemini(big_text: str, retry_count=0) -> dict:
                 return graph_data
                 
     except Exception as e:
-        print(f"[ERROR] Error processing response: {str(e)}")
+        # Handle Unicode in exception messages
+        error_msg = str(e).encode('ascii', errors='replace').decode('ascii')
+        print(f"[ERROR] Error processing response: {error_msg}")
         
         # Retry if we haven't exceeded the maximum attempts
         if retry_count < MAX_RETRIES - 1:
