@@ -113,22 +113,24 @@
       "label": "part of mechanism"
     },
     "tests_hypothesis": {
-      "domain": ["Evidence"],
+      "domain": ["Evidence", "Event"],
       "range": ["Hypothesis"],
       "properties": {
         "inferential_test_id": {"type": "string", "required": false},
         "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
-        "test_result": {"type": "string", "allowed_values": ["passed", "failed", "ambiguous"], "required": false}
+        "test_result": {"type": "string", "allowed_values": ["passed", "failed", "ambiguous"], "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
       },
       "label": "tests hypothesis"
     },
     "tests_mechanism": {
-      "domain": ["Evidence"],
+      "domain": ["Evidence", "Event"],
       "range": ["Causal_Mechanism"],
       "properties": {
         "inferential_test_id": {"type": "string", "required": false},
         "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
-        "test_result": {"type": "string", "allowed_values": ["passed", "failed", "ambiguous"], "required": false}
+        "test_result": {"type": "string", "allowed_values": ["passed", "failed", "ambiguous"], "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
       },
       "label": "tests mechanism"
     },
@@ -218,26 +220,30 @@
       "label": "contradicts"
     },
     "supports": {
-      "domain": ["Evidence"],
-      "range": ["Hypothesis"],
+      "domain": ["Evidence", "Event"],
+      "range": ["Hypothesis", "Event", "Causal_Mechanism"],
       "properties": {
         "label": {"type": "string", "description": "Defaults to 'supports'. Optional.", "required": false},
-        "description": {"type": "string", "description": "Explanation of how the evidence supports the hypothesis/mechanism. Optional.", "required": false},
-        "probative_value": {"type": "float", "description": "A numerical assessment of how strongly this specific piece of evidence supports the target (0.0 to 1.0, where 0.0 is no support, 1.0 is maximum support). Optional.", "min": 0.0, "max": 1.0, "required": false},
+        "description": {"type": "string", "description": "Explanation of how the evidence/event supports the target. Optional.", "required": false},
+        "probative_value": {"type": "float", "description": "A numerical assessment of how strongly this supports the target (0.0 to 1.0, where 0.0 is no support, 1.0 is maximum support). Optional.", "min": 0.0, "max": 1.0, "required": false},
         "source_text_quote": {"type": "string", "description": "The exact quote or specific textual reference from the input that substantiates this supportive link. Optional.", "required": false},
-        "certainty": {"type": "float", "description": "Confidence level in this supportive link (0.0 to 1.0). Optional.", "min": 0.0, "max": 1.0, "required": false}
+        "certainty": {"type": "float", "description": "Confidence level in this supportive link (0.0 to 1.0). Optional.", "min": 0.0, "max": 1.0, "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type when evidence supports target.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false},
+        "target_type": {"type": "string", "description": "What aspect is being supported.", "allowed_values": ["event_occurrence", "causal_relationship", "mechanism_operation", "general"], "required": false}
       },
       "label": "supports"
     },
     "refutes": {
-      "domain": ["Evidence"],
-      "range": ["Hypothesis"],
+      "domain": ["Evidence", "Event"],
+      "range": ["Hypothesis", "Event", "Causal_Mechanism"],
       "properties": {
         "label": {"type": "string", "description": "Defaults to 'refutes'. Optional.", "required": false},
-        "description": {"type": "string", "description": "Explanation of how the evidence refutes the hypothesis/mechanism. Optional.", "required": false},
-        "probative_value": {"type": "float", "description": "A numerical assessment of how strongly this specific piece of evidence refutes the target (0.0 to 1.0, where 0.0 is no refutation, 1.0 is maximum refutation). Optional.", "min": 0.0, "max": 1.0, "required": false},
+        "description": {"type": "string", "description": "Explanation of how the evidence/event refutes the target. Optional.", "required": false},
+        "probative_value": {"type": "float", "description": "A numerical assessment of how strongly this refutes the target (0.0 to 1.0, where 0.0 is no refutation, 1.0 is maximum refutation). Optional.", "min": 0.0, "max": 1.0, "required": false},
         "source_text_quote": {"type": "string", "description": "The exact quote or specific textual reference from the input that substantiates this refuting link. Optional.", "required": false},
-        "certainty": {"type": "float", "description": "Confidence level in this refuting link (0.0 to 1.0). Optional.", "min": 0.0, "max": 1.0, "required": false}
+        "certainty": {"type": "float", "description": "Confidence level in this refuting link (0.0 to 1.0). Optional.", "min": 0.0, "max": 1.0, "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type when evidence refutes target.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false},
+        "target_type": {"type": "string", "description": "What aspect is being refuted.", "allowed_values": ["event_occurrence", "causal_relationship", "mechanism_operation", "general"], "required": false}
       },
       "label": "refutes"
     },
@@ -249,6 +255,36 @@
         "type_of_claim": {"type": "string", "allowed_values": ["existence", "significance", "component_role", "operational_details", "unspecified"], "required": false, "description": "Describes what aspect of the mechanism the hypothesis is claiming."}
       },
       "label": "explains mechanism"
+    },
+    "confirms_occurrence": {
+      "domain": ["Evidence"],
+      "range": ["Event"],
+      "properties": {
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "Confidence that the evidence confirms the event occurred."},
+        "source_text_quote": {"type": "string", "description": "Exact quote from source that confirms event occurrence.", "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type for event confirmation.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
+      },
+      "label": "confirms occurrence"
+    },
+    "disproves_occurrence": {
+      "domain": ["Evidence"],
+      "range": ["Event"],
+      "properties": {
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "Confidence that the evidence disproves the event occurred."},
+        "source_text_quote": {"type": "string", "description": "Exact quote from source that disproves event occurrence.", "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type for event disproof.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
+      },
+      "label": "disproves occurrence"
+    },
+    "provides_evidence_for": {
+      "domain": ["Event"],
+      "range": ["Hypothesis", "Causal_Mechanism"],
+      "properties": {
+        "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "How strongly the event serves as evidence."},
+        "reasoning": {"type": "string", "description": "Explanation of how the event provides evidence.", "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type when event serves as evidence.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
+      },
+      "label": "provides evidence for"
     }
   },
   "node_colors": {

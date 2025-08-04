@@ -150,9 +150,13 @@ STEP-BY-STEP EXTRACTION:
    - Prioritize finding strong evidence types (smoking_gun, doubly_decisive) when the text supports them
    - Estimate probative_value (0.3-1.0 for meaningful evidence)
 
-4. **Connect Everything:**
-   - Events → Events (causes)
-   - Evidence → Hypothesis (supports/refutes with source_text_quote)
+4. **Connect Everything with Flexible Academic Process Tracing:**
+   - Events → Events (causes) - for causal sequences
+   - Evidence → Events (confirms_occurrence/disproves_occurrence) - confirming events happened
+   - Evidence → Hypotheses (supports/refutes) - testing causal claims
+   - Events → Hypotheses (provides_evidence_for) - events as evidence for broader patterns
+   - Evidence → Mechanisms (tests_mechanism) - testing how causation works
+   - Use diagnostic_type property on all evidence connections when possible
    - Ensure complete chain from triggering to outcome events
 
 {global_hypothesis_section}
@@ -160,25 +164,36 @@ STEP-BY-STEP EXTRACTION:
 Focus on quality over quantity - better to have 5 well-described entities than 20 with "N/A" descriptions.
 
 **Output Format:**
-Return JSON with 'nodes' and 'edges' lists. Evidence nodes MUST include Van Evera type:
+Return JSON with 'nodes' and 'edges' lists. Use flexible connection types for rigorous process tracing:
 
-Examples by diagnostic type:
-- Hoop test (foundational requirement): "Constitutional documents show colonists believed in their rights"
-- Smoking gun (definitive proof): "Official British documents explicitly ordering oppressive measures"  
-- Straw-in-wind (weak indicator): "General colonial unrest and economic boycotts"
-- Doubly decisive (critical turning point): "Declaration stating specific British action was 'final straw'"
+**Available Edge Types:**
+- "causes" (Event → Event): Causal sequences
+- "supports" (Evidence/Event → Hypothesis/Event/Mechanism): Supporting evidence 
+- "refutes" (Evidence/Event → Hypothesis/Event/Mechanism): Refuting evidence
+- "confirms_occurrence" (Evidence → Event): Evidence confirms event happened
+- "provides_evidence_for" (Event → Hypothesis/Mechanism): Event serves as evidence
+- "tests_hypothesis" (Evidence/Event → Hypothesis): Formal hypothesis testing
 
-Example Evidence node:
+**Edge Properties to Include:**
+- diagnostic_type: "hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive"
+- probative_value: 0.0-1.0 strength assessment
+- source_text_quote: Exact quote supporting the connection
+- target_type: "event_occurrence", "causal_relationship", "mechanism_operation"
+
+Example connections:
 {{
-  "id": "evidence1",
-  "type": "Evidence", 
+  "source": "evidence1", "target": "event1", "type": "confirms_occurrence",
   "properties": {{
-    "description": "Detailed description of the evidence",
-    "type": "smoking_gun",
-    "source": "source_document",
-    "source_text_quote": "Exact quote from text",
-    "certainty": 0.9,
-    "probative_value": 0.8
+    "diagnostic_type": "smoking_gun",
+    "source_text_quote": "Exact quote proving event occurred"
+  }}
+}},
+{{
+  "source": "event2", "target": "hypothesis1", "type": "provides_evidence_for", 
+  "properties": {{
+    "diagnostic_type": "hoop",
+    "probative_value": 0.7,
+    "reasoning": "This event is necessary for the hypothesis to be true"
   }}
 }}
 """
