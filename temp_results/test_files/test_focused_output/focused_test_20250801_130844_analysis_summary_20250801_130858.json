@@ -1,0 +1,78 @@
+{
+  "filename": "test_focused_output\\focused_test_20250801_130844_graph.json",
+  "case_identifier": "focused_test_20250801_130844_graph",
+  "generated_at": "2025-08-01T13:08:58.849714",
+  "causal_chains": [
+    {
+      "path": [
+        "node1",
+        "node2",
+        "node3"
+      ],
+      "path_descriptions": [
+        "node1",
+        "Britain imposed new taxes on the American colonies including the Stamp Act to pay for the French and Indian War debt.",
+        "The Boston Tea Party in 1773, which was a direct outcome of increasing colonial tensions."
+      ],
+      "edge_types": [
+        "causes",
+        "causes"
+      ],
+      "trigger": "node1",
+      "outcome": "node3",
+      "length": 3
+    }
+  ],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 3,
+      "Evidence": 2,
+      "Hypothesis": 1
+    },
+    "edge_type_distribution": {
+      "causes": 2,
+      "supports": 2
+    },
+    "density": 0.13333333333333333,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "node2": 0.4,
+      "node5": 0.4,
+      "node1": 0.2,
+      "node3": 0.2,
+      "node4": 0.2,
+      "node6": 0.2
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "node5",
+      "description": "British taxation policies caused colonial rebellion because they violated colonial understanding of their rights as Englishmen.",
+      "assessment": "Contested / Mixed Evidence",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "node4",
+        "node6"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

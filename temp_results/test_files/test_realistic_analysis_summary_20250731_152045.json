@@ -1,0 +1,19 @@
+{
+  "filename": "test_realistic_graph.json",
+  "case_identifier": "test_realistic_graph",
+  "generated_at": "2025-07-31T15:20:45.364822",
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "washington_hypothesis",
+      "description": "Washington leadership was decisive for success",
+      "assessment": "Contested / Mixed Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "taxation_evidence"
+      ],
+      "refuting_evidence_ids": []
+    }
+  ]
+}

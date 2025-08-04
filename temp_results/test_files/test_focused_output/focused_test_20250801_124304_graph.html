@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (focused_test)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'event1', label: 'Event', title: `{
+  "description": "The French and Indian War concluded in 1763, resulting in a British victory but leaving Britain with substantial war debts that necessitated the implementation of new colonial taxation policies.",
+  "type": "triggering"
+}`},
+        {id: 'event2', label: 'Event', title: `{
+  "description": "To finance the war debt incurred from the French and Indian War, Britain imposed a series of new taxes upon the American colonies; a notable example being the Stamp Act.",
+  "type": "intermediate"
+}`},
+        {id: 'event3', label: 'Event', title: `{
+  "description": "American colonists protested against the British taxation policies, arguing that these policies violated their rights as Englishmen, as exemplified by the cry of \"taxation without representation\".",
+  "type": "intermediate"
+}`},
+        {id: 'event4', label: 'Event', title: `{
+  "description": "The rising tensions between the American colonists and Great Britain culminated in the Boston Tea Party of 1773, a significant escalation in the colonial resistance against British rule.",
+  "type": "outcome"
+}`},
+        {id: 'hypothesis1', label: 'Hypothesis', title: `{
+  "description": "British taxation policies, implemented to address the war debt following the French and Indian War, directly incited colonial rebellion among the American colonists because these policies were perceived as a violation of their fundamental rights as Englishmen, thus igniting widespread protests and resistance.",
+  "status": "supported"
+}`},
+        {id: 'evidence1', label: 'Evidence', title: `{
+  "description": "The colonists' assertion that \"taxation without representation\" violated their rights as Englishmen demonstrates the causal link between British policies and colonial unrest.",
+  "type": "unspecified"
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'event1', to: 'event2', label: 'causes', title: `{
+  "type": "direct",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'event2', to: 'event3', label: 'causes', title: `{
+  "type": "direct",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'event3', to: 'event4', label: 'causes', title: `{
+  "type": "direct",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'evidence1', to: 'hypothesis1', label: 'supports', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "taxation without representation violated their rights as Englishmen"
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

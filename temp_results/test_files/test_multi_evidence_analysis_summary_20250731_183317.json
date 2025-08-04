@@ -1,0 +1,202 @@
+{
+  "filename": "test_multi_evidence_graph.json",
+  "case_identifier": "test_multi_evidence_graph",
+  "generated_at": "2025-07-31T18:33:17.431385",
+  "causal_chains": [
+    {
+      "path": [
+        "economic_crisis",
+        "new_deal_response",
+        "economic_recovery"
+      ],
+      "node_descriptions": [
+        "Economic crisis of 1929-1932",
+        "New Deal policy response mechanism",
+        "Economic recovery 1933-1939"
+      ],
+      "node_subtypes": [
+        "triggering",
+        "N/A_subtype",
+        "outcome"
+      ],
+      "edges": [
+        "triggers",
+        "causes"
+      ],
+      "length": 3
+    }
+  ],
+  "causal_mechanisms": [
+    {
+      "id": "new_deal_response",
+      "name": "New Deal policy response mechanism",
+      "causes": [
+        "Economic crisis of 1929-1932"
+      ],
+      "effects": [
+        "Economic recovery 1933-1939"
+      ],
+      "completeness": 20,
+      "confidence": "unknown",
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "mechanism_id": "new_deal_response",
+        "narrative_elaboration": "The devastating economic crisis of 1929-1932 created widespread suffering and social unrest, prompting a demand for government intervention. This widespread societal pressure, coupled with the perceived failure of laissez-faire economics, led to the formulation and implementation of the New Deal policies as a response to alleviate the crisis and restore economic stability. The New Deal's policies aimed at providing relief, recovery, and reform.",
+        "identified_missing_micro_steps": [
+          {
+            "suggested_event_description": "Public outcry and political pressure for government intervention due to the severity of the economic crisis.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "FDR's election and the shift in political leadership towards a more interventionist approach.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Development and proposal of specific New Deal legislation (e.g., NRA, AAA, WPA).",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Congressional approval and enactment of New Deal legislation.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Implementation of New Deal programs and initiatives across the country.",
+            "suggested_event_type": "intermediate"
+          }
+        ],
+        "coherence_assessment": "Moderately coherent but with gaps. The initial description only connected the crisis to the response, neglecting the crucial intervening steps of public pressure, political change, legislative action, and program implementation.",
+        "suggested_confidence": 0.7,
+        "suggested_level_of_detail": "medium",
+        "reasoning_for_suggestions": "The confidence is set to 0.7 because, while the general causal link is well-established, the specifics of the process (including the role of public opinion, political maneuvering, and legislative processes) requires further elaboration. The level of detail is 'medium' as it describes the main stages, but more granular events (specific policy details, regional variations in implementation) could further enrich it."
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 2,
+      "Causal_Mechanism": 1,
+      "Hypothesis": 1,
+      "Evidence": 4
+    },
+    "edge_type_distribution": {
+      "triggers": 1,
+      "causes": 1,
+      "supports": 3,
+      "refutes": 1
+    },
+    "density": 0.10714285714285714,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "roosevelt_leadership_hypothesis": 0.571,
+      "new_deal_response": 0.286,
+      "economic_crisis": 0.143,
+      "economic_recovery": 0.143,
+      "unemployment_evidence": 0.143,
+      "gdp_evidence": 0.143,
+      "business_confidence_evidence": 0.143,
+      "supreme_court_evidence": 0.143
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "roosevelt_leadership_hypothesis",
+      "description": "Roosevelt's leadership was decisive for economic recovery",
+      "assessment": "Inconclusive (Mixed Straw-in-Wind)",
+      "balance_score": 6.25,
+      "van_evera_applied": true,
+      "supporting_evidence_count": 3,
+      "refuting_evidence_count": 1,
+      "supporting_evidence_ids": [
+        "unemployment_evidence",
+        "gdp_evidence",
+        "business_confidence_evidence"
+      ],
+      "refuting_evidence_ids": [
+        "supreme_court_evidence"
+      ],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [
+          {
+            "id": "unemployment_evidence",
+            "description": "Unemployment dropped from 25% to 14% during New Deal",
+            "type": "straw_in_the_wind",
+            "probative_value": 3.0,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "unemployment_evidence",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "While a drop in unemployment from 25% to 14% is significant and seemingly supportive of Roosevelt's leadership's positive impact on the economy, it's not conclusive proof.  Other factors could have contributed to this decrease, even in the absence of strong New Deal policies. The evidence doesn't definitively rule out alternative explanations for economic recovery.  It's suggestive but not decisive. It's insufficient to confirm the hypothesis alone, nor does its absence necessarily refute it. ",
+              "likelihood_P_E_given_H": "Medium (0.6)",
+              "likelihood_P_E_given_NotH": "Low (0.2)",
+              "justification_for_likelihoods": "P(E|H): If Roosevelt's leadership was truly decisive for economic recovery, one would expect a noticeable improvement in unemployment. A drop from 25% to 14% is substantial but not guaranteed.  Other factors like natural economic cycles or global events could still play a role even under effective leadership. Therefore, a Medium likelihood is assigned.\nP(E|~H): If Roosevelt's leadership wasn't decisive, a drop in unemployment is still possible, but less likely.  Other factors, such as natural economic recovery or global trends, could explain the decrease.  However, the magnitude of the drop (11 percentage points) makes it less probable that it occurred entirely independently of any governmental intervention. Hence, a low, but not negligible, likelihood is assigned.",
+              "suggested_numerical_probative_value": 3.0
+            }
+          },
+          {
+            "id": "gdp_evidence",
+            "description": "GDP growth averaged 8% annually 1933-1937",
+            "type": "straw_in_the_wind",
+            "probative_value": 3.0,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "gdp_evidence",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "While high GDP growth during the period 1933-1937 is consistent with Roosevelt's leadership contributing to economic recovery, it's not a definitive proof.  Other factors, such as natural economic cycles, global events, and the effects of prior policies, could also have contributed to this growth.  The absence of such growth wouldn't necessarily disprove Roosevelt's impact, nor does its presence definitively prove it. Therefore, it's a weakly suggestive piece of evidence.",
+              "likelihood_P_E_given_H": "Medium (0.6)",
+              "likelihood_P_E_given_NotH": "Low (0.2)",
+              "justification_for_likelihoods": "P(E|H): If Roosevelt's leadership was truly decisive, one would expect significant economic improvement, which is partially reflected in the GDP growth. However,  attributing 8% annual growth solely to his leadership is an oversimplification. Other factors were at play, reducing the likelihood to 'Medium'.\nP(E|~H): Even without decisive Roosevelt leadership, a period of economic growth is possible due to various factors. However, the magnitude of the growth (8% annually) makes this less likely, explaining the 'Low' assessment. It's not impossible, but less probable than if Roosevelt's policies were indeed effective.",
+              "suggested_numerical_probative_value": "3.0"
+            }
+          },
+          {
+            "id": "business_confidence_evidence",
+            "description": "Business confidence surveys showed improvement",
+            "type": "straw_in_the_wind",
+            "probative_value": 1.5,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "business_confidence_evidence",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "Improved business confidence is suggestive of economic recovery and thus, indirectly, of Roosevelt's leadership's positive impact. However, it's not a necessary condition (hoop) for recovery, nor is it uniquely caused by Roosevelt's actions (smoking gun).  Many factors influence business confidence, and its improvement doesn't definitively rule out other contributing factors or alternative explanations for economic recovery. It's weak evidence, offering only a slight indication in favor of the hypothesis.",
+              "likelihood_P_E_given_H": "Medium (0.6)",
+              "likelihood_P_E_given_NotH": "Medium (0.4)",
+              "justification_for_likelihoods": "If Roosevelt's leadership was decisive for economic recovery (H is true), we'd expect some improvement in business confidence, but not necessarily a dramatic or guaranteed one.  Other factors would play a role. Hence, a Medium likelihood.  If Roosevelt's leadership wasn't decisive (H is false),  business confidence could still improve due to other policy interventions, spontaneous market forces, or global events.  Therefore, observing improved business confidence isn't unlikely even if H is false; again, a Medium likelihood. The difference between the two likelihoods is the key; while both are medium, a higher likelihood given H suggests some support for the hypothesis, although weak.",
+              "suggested_numerical_probative_value": "1.5"
+            }
+          },
+          {
+            "id": "supreme_court_evidence",
+            "description": "Supreme Court struck down key New Deal programs",
+            "type": "straw_in_the_wind",
+            "probative_value": 1.25,
+            "source_text_quote": "",
+            "edge_type": "refutes",
+            "llm_reasoning": {
+              "evidence_id": "supreme_court_evidence",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "The Supreme Court striking down key New Deal programs does not definitively prove or disprove Roosevelt's leadership was decisive for economic recovery.  It's a complicating factor, suggesting obstacles to recovery even under Roosevelt's leadership.  Its presence doesn't strongly confirm or refute the hypothesis, hence 'straw-in-the-wind'. A 'hoop' test would be something absolutely necessary for recovery; this is not.  A 'smoking gun' would be strong direct evidence of success or failure, which this is not. A 'doubly decisive' piece of evidence would simultaneously confirm the hypothesis and rule out alternatives; this only weakly challenges the hypothesis.",
+              "likelihood_P_E_given_H": "Medium (0.5)",
+              "likelihood_P_E_given_NotH": "Medium (0.4)",
+              "justification_for_likelihoods": "If Roosevelt's leadership *was* decisive for recovery (H), the Supreme Court's actions could still occur.  There could be political opposition, judicial overreach, or other factors that would lead to the court striking down programs despite his leadership.  This makes P(E|H) a medium likelihood.  If Roosevelt's leadership was *not* decisive (\u00acH), the Supreme Court's actions are also plausible, as there might be other reasons for the programs' failure or the court's actions unrelated to Roosevelt. This gives P(E|\u00acH) a medium likelihood, although slightly lower, given that the failure might have been even more likely without Roosevelt's efforts. The difference isn't dramatically significant, however.",
+              "suggested_numerical_probative_value": "1.25"
+            }
+          }
+        ],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

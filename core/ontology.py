@@ -87,19 +87,70 @@ def get_gemini_graph_json_schema():
             },
             'required': ['id', 'type', 'source', 'target', 'properties']
         }
-    node_schemas = [node_schema(ntype, ndef) for ntype, ndef in NODE_TYPES.items()]
-    edge_schemas = [edge_schema(etype, edef) for etype, edef in EDGE_TYPES.items()]
+    # Create unified schemas without anyOf for better Gemini compatibility
+    # Collect all possible node properties across all node types
+    all_node_props = {}
+    for ntype, ndef in NODE_TYPES.items():
+        for prop, prop_def in ndef['properties'].items():
+            if prop not in all_node_props:
+                all_node_props[prop] = prop_def
+    
+    # Create unified node schema with all possible properties
+    unified_node_schema = {
+        'type': 'object',
+        'properties': {
+            'id': {'type': 'string'},
+            'type': {'type': 'string', 'enum': list(NODE_TYPES.keys())},
+            'properties': {
+                'type': 'object',
+                'properties': {
+                    k: ({'type': map_type(v['type'])} if 'allowed_values' not in v else {'type': map_type(v['type']), 'enum': v['allowed_values']})
+                    for k, v in all_node_props.items()
+                },
+                'required': []  # No properties are universally required
+            }
+        },
+        'required': ['id', 'type', 'properties']
+    }
+    
+    # Collect all possible edge properties across all edge types
+    all_edge_props = {}
+    for etype, edef in EDGE_TYPES.items():
+        for prop, prop_def in edef['properties'].items():
+            if prop not in all_edge_props:
+                all_edge_props[prop] = prop_def
+    
+    # Create unified edge schema with all possible properties
+    unified_edge_schema = {
+        'type': 'object',
+        'properties': {
+            'id': {'type': 'string'},
+            'type': {'type': 'string', 'enum': list(EDGE_TYPES.keys())},
+            'source': {'type': 'string'},
+            'target': {'type': 'string'},
+            'properties': {
+                'type': 'object',
+                'properties': {
+                    k: ({'type': map_type(v['type'])} if 'allowed_values' not in v else {'type': map_type(v['type']), 'enum': v['allowed_values']})
+                    for k, v in all_edge_props.items()
+                },
+                'required': []  # No properties are universally required
+            }
+        },
+        'required': ['id', 'type', 'source', 'target', 'properties']
+    }
+    
     return {
         'type': 'object',
         'properties': {
             'nodes': {
                 'type': 'array',
-                'items': {'anyOf': node_schemas},
+                'items': unified_node_schema,
                 'default': []
             },
             'edges': {
                 'type': 'array',
-                'items': {'anyOf': edge_schemas},
+                'items': unified_edge_schema,
                 'default': []
             }
         },

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vis.js Validation Test</title>
+    <!-- vis.js Network library - SAME CDN as main system -->
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 5px; 
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status { 
+            padding: 10px; 
+            margin: 5px 0; 
+            border-radius: 3px; 
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        #test-network { 
+            width: 100%; 
+            height: 400px; 
+            border: 2px solid #007bff; 
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .test-results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔬 vis.js Interactive Graph Validation</h1>
+        <p><strong>Purpose:</strong> Validate that the vis.js library loads and renders interactive graphs correctly.</p>
+        
+        <div id="status-loading" class="status warning">
+            ⏳ Loading vis.js library...
+        </div>
+        
+        <div id="status-library" class="status" style="display: none;">
+            <!-- Will be populated by JavaScript -->
+        </div>
+        
+        <div id="status-render" class="status" style="display: none;">
+            <!-- Will be populated by JavaScript -->
+        </div>
+        
+        <div id="status-interaction" class="status" style="display: none;">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>📊 Test Network Graph</h2>
+        <p>This graph should display nodes and edges that you can drag, click, and hover over.</p>
+        <div id="test-network"></div>
+        
+        <div class="test-results">
+            <h3>🧪 Test Instructions:</h3>
+            <ol>
+                <li><strong>Visual Check:</strong> You should see 4 nodes connected in a chain</li>
+                <li><strong>Drag Test:</strong> Try dragging the nodes around</li>
+                <li><strong>Click Test:</strong> Click on a node (should trigger alert)</li>
+                <li><strong>Hover Test:</strong> Hover over nodes to see tooltips</li>
+            </ol>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // Test 1: Check if vis.js library loaded
+        function testLibraryLoad() {
+            const statusEl = document.getElementById('status-library');
+            statusEl.style.display = 'block';
+            
+            if (typeof vis !== 'undefined' && vis.Network && vis.DataSet) {
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '✅ vis.js library loaded successfully';
+                return true;
+            } else {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = '❌ vis.js library failed to load';
+                return false;
+            }
+        }
+
+        // Test 2: Create and render network
+        function testNetworkRender() {
+            const statusEl = document.getElementById('status-render');
+            statusEl.style.display = 'block';
+            
+            try {
+                // Create test data - similar structure to actual system
+                const nodes = new vis.DataSet([
+                    {
+                        id: 'event1', 
+                        label: 'Event 1', 
+                        title: 'French & Indian War (1763)',
+                        color: {background: '#D2E5FF', border: '#2B7CE9'}
+                    },
+                    {
+                        id: 'event2', 
+                        label: 'Event 2', 
+                        title: 'Stamp Act (1765)',
+                        color: {background: '#D2E5FF', border: '#2B7CE9'}
+                    },
+                    {
+                        id: 'hypothesis1', 
+                        label: 'Hypothesis', 
+                        title: 'British taxation caused revolution',
+                        color: {background: '#FFE5B4', border: '#D4AF37'}
+                    },
+                    {
+                        id: 'evidence1', 
+                        label: 'Evidence', 
+                        title: 'Declaration of Rights and Grievances',
+                        color: {background: '#E5FFE5', border: '#32CD32'}
+                    }
+                ]);
+
+                const edges = new vis.DataSet([
+                    {from: 'event1', to: 'event2', label: 'causes', arrows: 'to'},
+                    {from: 'evidence1', to: 'hypothesis1', label: 'supports', arrows: 'to'},
+                    {from: 'event2', to: 'hypothesis1', label: 'relates_to', arrows: 'to'}
+                ]);
+
+                // Network configuration - same as actual system
+                const container = document.getElementById('test-network');
+                const data = { nodes: nodes, edges: edges };
+                const options = {
+                    nodes: { 
+                        shape: 'dot', 
+                        size: 25, 
+                        font: { size: 14, color: '#000000' },
+                        borderWidth: 2
+                    },
+                    edges: { 
+                        arrows: 'to', 
+                        font: { align: 'middle', size: 12 },
+                        width: 2
+                    },
+                    physics: { 
+                        stabilization: true,
+                        barnesHut: {
+                            gravitationalConstant: -2000,
+                            centralGravity: 0.3,
+                            springLength: 150,
+                            springConstant: 0.04
+                        }
+                    },
+                    interaction: {
+                        dragNodes: true,
+                        dragView: true,
+                        zoomView: true
+                    }
+                };
+
+                // Create network
+                const network = new vis.Network(container, data, options);
+                
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '✅ Network graph rendered successfully';
+                
+                // Test 3: Add interaction handlers
+                testInteractionHandlers(network);
+                
+                return network;
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = '❌ Network rendering failed: ' + error.message;
+                console.error('Network rendering error:', error);
+                return null;
+            }
+        }
+
+        // Test 3: Test interaction handlers
+        function testInteractionHandlers(network) {
+            const statusEl = document.getElementById('status-interaction');
+            statusEl.style.display = 'block';
+            
+            try {
+                // Add click handler
+                network.on("click", function (params) {
+                    if (params.nodes.length > 0) {
+                        alert('Node clicked: ' + params.nodes[0] + '\n\nThis confirms click interactions are working!');
+                    }
+                });
+
+                // Add hover handler  
+                network.on("hoverNode", function (params) {
+                    console.log('Hover detected on node:', params.node);
+                });
+
+                // Add drag handler
+                network.on("dragEnd", function (params) {
+                    if (params.nodes.length > 0) {
+                        console.log('Drag completed for node:', params.nodes[0]);
+                    }
+                });
+
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '✅ Interaction handlers configured successfully';
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = '❌ Interaction setup failed: ' + error.message;
+                console.error('Interaction setup error:', error);
+            }
+        }
+
+        // Run all tests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('status-loading').style.display = 'none';
+            
+            // Test sequence
+            if (testLibraryLoad()) {
+                setTimeout(() => {
+                    testNetworkRender();
+                }, 100);
+            }
+        });
+
+        // Global error handler
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Global error:', msg, 'at', url, lineNo, columnNo);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'status error';
+            errorDiv.innerHTML = '❌ JavaScript Error: ' + msg;
+            document.body.appendChild(errorDiv);
+        };
+    </script>
+</body>
+</html>

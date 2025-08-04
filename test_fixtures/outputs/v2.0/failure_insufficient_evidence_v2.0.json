@@ -1,0 +1,174 @@
+{
+  "metadata": {
+    "case_id": "sparse_historical_record",
+    "analysis_timestamp": "2024-01-15T10:30:00Z",
+    "methodology_version": "van_evera_2.0_fully_automated",
+    "status": "partial_failure",
+    "failure_type": "insufficient_evidence",
+    "confidence_score": 0.28,
+    "processing_time_seconds": 134
+  },
+  
+  "error_summary": {
+    "error_code": "ERR_INSUFFICIENT_EVIDENCE",
+    "error_message": "Evidence density below threshold for reliable process tracing",
+    "diagnostic_info": {
+      "evidence_pieces_found": 12,
+      "evidence_pieces_required": 30,
+      "evidence_density_score": 0.24,
+      "hypothesis_to_evidence_ratio": 3.5,
+      "untestable_hypotheses": 4
+    }
+  },
+
+  "partial_results": {
+    "extraction_summary": {
+      "nodes_extracted": {
+        "events": 34,
+        "actors": 12,
+        "conditions": 8,
+        "hypotheses": 7,
+        "evidence": 12
+      },
+      "causal_chains_identified": 5,
+      "chains_with_evidence": 2,
+      "evidence_gap_severity": "critical"
+    },
+    
+    "hypothesis_evaluation_limited": {
+      "total_hypotheses_generated": 7,
+      "hypotheses_with_sufficient_evidence": 1,
+      "hypotheses_partially_testable": 2,
+      "hypotheses_untestable": 4,
+      
+      "evaluated_hypotheses": [
+        {
+          "id": "H3",
+          "description": "Economic factors drove conflict",
+          "status": "weakly_refuted",
+          "confidence": 0.51,
+          "evidence_count": 5,
+          "note": "Only hypothesis with minimal evidence threshold"
+        }
+      ],
+      
+      "partially_evaluated": [
+        {
+          "id": "H1",
+          "description": "Leadership was crucial",
+          "partial_findings": "Cannot perform hoop tests - no evidence of leader absence",
+          "evidence_count": 3,
+          "tests_possible": ["straw_in_wind"],
+          "tests_impossible": ["hoop", "smoking_gun", "doubly_decisive"]
+        }
+      ]
+    },
+    
+    "evidence_gaps_analysis": {
+      "critical_missing_evidence_types": [
+        {
+          "type": "documentary_evidence",
+          "impact": "Cannot verify actor intentions or private communications",
+          "affected_hypotheses": ["H1", "H2", "H4"]
+        },
+        {
+          "type": "temporal_markers",
+          "impact": "Cannot establish causal sequence",
+          "affected_mechanisms": ["M1", "M2"]
+        },
+        {
+          "type": "counterfactual_cases",
+          "impact": "Cannot test necessity/sufficiency",
+          "affected_tests": ["hoop", "smoking_gun"]
+        }
+      ],
+      
+      "evidence_distribution": {
+        "temporal_coverage": "sparse - major gaps 1776-1778",
+        "actor_coverage": "uneven - 3 of 12 actors have no evidence",
+        "geographic_coverage": "limited - 70% from single region"
+      }
+    }
+  },
+
+  "statistical_reliability": {
+    "confidence_intervals": {
+      "note": "Wide intervals due to sparse evidence",
+      "H3_support": [0.31, 0.71],
+      "overall_reliability": [0.18, 0.38]
+    },
+    
+    "statistical_power": {
+      "achieved_power": 0.22,
+      "required_power": 0.80,
+      "additional_evidence_needed": "~25-30 pieces"
+    },
+    
+    "evidence_quality_scores": {
+      "mean_quality": 0.67,
+      "std_deviation": 0.23,
+      "highest_quality_evidence": "E7",
+      "lowest_quality_evidence": "E11"
+    }
+  },
+
+  "best_effort_analysis": {
+    "tentative_findings": [
+      "Economic hypothesis (H3) appears weakly refuted based on limited evidence",
+      "Temporal pattern suggests escalation in 1775-1776 period",
+      "Actor network shows centralized decision-making structure"
+    ],
+    
+    "confidence_caveat": "These findings are highly provisional given evidence limitations",
+    
+    "suggested_interpretation": "Evidence suggests economic factors were not primary drivers, but insufficient data prevents confident causal attribution",
+    
+    "methodological_validity": "Results do not meet Van Evera 2.0 standards for process tracing conclusions"
+  },
+
+  "recovery_suggestions": [
+    {
+      "approach": "targeted_evidence_search",
+      "description": "Search for specific missing evidence types identified above",
+      "priority_targets": ["government archives", "contemporary newspapers", "personal correspondence"]
+    },
+    {
+      "approach": "comparative_case_leverage",
+      "description": "Use similar cases to infer likely patterns",
+      "feasibility": "moderate"
+    },
+    {
+      "approach": "theoretical_bounding",
+      "description": "Use theory to bound possible interpretations",
+      "feasibility": "high"
+    }
+  ],
+
+  "minimum_evidence_thresholds": {
+    "current_vs_required": {
+      "total_evidence": "12 / 30",
+      "evidence_per_hypothesis": "1.7 / 4.0",
+      "temporal_coverage": "40% / 75%",
+      "actor_coverage": "25% / 60%"
+    },
+    
+    "specific_needs": [
+      "15+ additional documentary sources",
+      "5+ instances of failed outcomes for counterfactual analysis",
+      "Complete temporal sequence for at least 2 causal chains"
+    ]
+  },
+
+  "reproducibility": {
+    "analysis_pipeline_version": "2.0.0",
+    "methodology_checksum": "sha256:a3f5c921...",
+    "evidence_threshold_version": "strict_v2",
+    "sparse_data_handling": "conservative",
+    "compute_requirements": {
+      "extraction_seconds": 24,
+      "analysis_seconds": 89,
+      "synthesis_seconds": 21,
+      "total_seconds": 134
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "filename": "test_graph_structure.json",
+  "case_identifier": "test_graph_structure",
+  "generated_at": "2025-07-31T22:00:04.908507",
+  "causal_chains": [],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "triggering": 1,
+      "intermediate": 1,
+      "outcome": 1
+    },
+    "edge_type_distribution": {
+      "causes": 2
+    },
+    "density": 0.3333333333333333,
+    "avg_path_length": "N/A (not strongly connected)",
+    "degree_centrality": {
+      "event2": 1.0,
+      "event1": 0.5,
+      "event3": 0.5
+    }
+  },
+  "hypotheses_evaluation": [],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

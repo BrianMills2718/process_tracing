@@ -1,0 +1,94 @@
+{
+  "edges": [
+    {
+      "id": "edge1",
+      "properties": {
+        "type": "direct",
+        "type_of_claim": "component_role"
+      },
+      "source": "node1",
+      "target": "node2",
+      "type": "causes"
+    },
+    {
+      "id": "edge2",
+      "properties": {
+        "type": "direct",
+        "type_of_claim": "component_role"
+      },
+      "source": "node2",
+      "target": "node3",
+      "type": "causes"
+    },
+    {
+      "id": "edge3",
+      "properties": {
+        "probative_value": 0.8,
+        "source_text_quote": "taxation without representation violated their rights as Englishmen",
+        "type": "direct"
+      },
+      "source": "node4",
+      "target": "node5",
+      "type": "supports"
+    },
+    {
+      "id": "edge4",
+      "properties": {
+        "type": "direct"
+      },
+      "source": "node3",
+      "target": "node6",
+      "type": "causes"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "node1",
+      "properties": {
+        "description": "The French and Indian War ended in 1763 with Britain's victory over France, resulting in a massive war debt for Britain.",
+        "type": "triggering"
+      },
+      "type": "Event"
+    },
+    {
+      "id": "node2",
+      "properties": {
+        "description": "To finance the war debt, Britain imposed new taxes on the American colonies, including the Stamp Act.",
+        "type": "intermediate"
+      },
+      "type": "Event"
+    },
+    {
+      "id": "node3",
+      "properties": {
+        "description": "The American colonists protested the new taxes, arguing that \"taxation without representation\" violated their rights as Englishmen.",
+        "type": "intermediate"
+      },
+      "type": "Event"
+    },
+    {
+      "id": "node4",
+      "properties": {
+        "description": "The colonists' protests against taxation without representation.",
+        "type": "unspecified"
+      },
+      "type": "Evidence"
+    },
+    {
+      "id": "node5",
+      "properties": {
+        "description": "British taxation policies caused colonial rebellion because they violated colonial understanding of their rights as Englishmen.",
+        "type": "unspecified"
+      },
+      "type": "Hypothesis"
+    },
+    {
+      "id": "node6",
+      "properties": {
+        "description": "The Boston Tea Party of 1773, a major escalation of colonial resistance against British rule.",
+        "type": "outcome"
+      },
+      "type": "Event"
+    }
+  ]
+}

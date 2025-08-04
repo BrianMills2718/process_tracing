@@ -1,0 +1,121 @@
+{
+  "filename": "test_realistic_graph.json",
+  "case_identifier": "test_realistic_graph",
+  "generated_at": "2025-07-31T18:04:24.922118",
+  "causal_chains": [
+    {
+      "path": [
+        "british_taxation",
+        "colonial_resistance",
+        "independence_declared"
+      ],
+      "node_descriptions": [
+        "British taxation policies 1765-1773",
+        "Colonial resistance movement",
+        "Declaration of Independence 1776"
+      ],
+      "node_subtypes": [
+        "triggering",
+        "N/A_subtype",
+        "outcome"
+      ],
+      "edges": [
+        "triggers",
+        "causes"
+      ],
+      "length": 3
+    }
+  ],
+  "causal_mechanisms": [
+    {
+      "id": "colonial_resistance",
+      "name": "Colonial resistance movement",
+      "causes": [
+        "British taxation policies 1765-1773"
+      ],
+      "effects": [
+        "Declaration of Independence 1776"
+      ],
+      "completeness": 20,
+      "confidence": 0.8,
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "mechanism_id": "colonial_resistance",
+        "narrative_elaboration": "British taxation policies (british_taxation) in the 1765-1773 period, such as the Stamp Act and the Townshend Acts, imposed significant financial burdens on the American colonists without their consent.  This led to widespread resentment and a growing sense of injustice among the colonists. This resentment fueled the formation and growth of colonial resistance movements, including boycotts, protests, and ultimately armed rebellion.",
+        "identified_missing_micro_steps": [
+          {
+            "suggested_event_description": "Colonist response to British taxation:  Protests, boycotts, and the formation of groups such as the Sons of Liberty.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Escalation of tensions between colonists and British authorities:  Events such as the Boston Massacre and the Boston Tea Party.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Organization and mobilization of colonial militias and forces.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Growing colonial political organization and ideological unity:  Formation of committees of correspondence and the First Continental Congress.",
+            "suggested_event_type": "intermediate"
+          }
+        ],
+        "coherence_assessment": "Moderately coherent but with gaps",
+        "suggested_confidence": "0.7",
+        "suggested_level_of_detail": "medium",
+        "reasoning_for_suggestions": "While the link between British taxation and colonial resistance is clear, the causal mechanism is incomplete without detailing the intermediate steps that bridge the gap between taxation and the full-blown resistance movement.  The missing micro-steps highlight crucial processes like the colonists' response, the escalation of conflict, and their organization.  Therefore, the confidence is slightly lowered to reflect the current incompleteness.  The level of detail is also suggested as medium since many more details could enrich this causal mechanism (specific resistance actions, involvement of different groups etc.)."
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 2,
+      "Causal_Mechanism": 1,
+      "Hypothesis": 1,
+      "Evidence": 1
+    },
+    "edge_type_distribution": {
+      "triggers": 1,
+      "causes": 1,
+      "supports": 1
+    },
+    "density": 0.15,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "colonial_resistance": 0.5,
+      "british_taxation": 0.25,
+      "independence_declared": 0.25,
+      "washington_hypothesis": 0.25,
+      "taxation_evidence": 0.25
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "washington_hypothesis",
+      "description": "Washington leadership was decisive for success",
+      "assessment": "Supported",
+      "balance_score": 1.25,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "taxation_evidence"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

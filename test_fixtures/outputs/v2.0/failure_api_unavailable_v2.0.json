@@ -1,0 +1,129 @@
+{
+  "metadata": {
+    "case_id": "american_revolution_1776",
+    "analysis_timestamp": "2024-01-15T10:30:00Z",
+    "methodology_version": "van_evera_2.0_fully_automated",
+    "status": "failure",
+    "failure_type": "api_unavailable",
+    "confidence_score": null,
+    "processing_time_seconds": 65
+  },
+  
+  "error_summary": {
+    "error_code": "ERR_API_UNAVAILABLE",
+    "error_message": "LLM API service unavailable after multiple retry attempts",
+    "diagnostic_info": {
+      "service_endpoint": "api.anthropic.com",
+      "initial_failure_time": "2024-01-15T10:30:15Z",
+      "retry_attempts": 3,
+      "retry_strategy": "exponential_backoff",
+      "last_error": "Connection timeout after 30s"
+    }
+  },
+
+  "partial_results": {
+    "preprocessing_completed": {
+      "text_tokenization": true,
+      "basic_parsing": true,
+      "sentence_segmentation": true,
+      "paragraph_structure": true
+    },
+    
+    "fallback_analysis_available": false,
+    "reason": "Van Evera 2.0 methodology requires LLM for causal inference",
+    
+    "cached_results_check": {
+      "similar_cases_in_cache": 0,
+      "partial_cache_hits": 0,
+      "cache_based_inference_possible": false
+    }
+  },
+
+  "service_diagnostics": {
+    "retry_log": [
+      {
+        "attempt": 1,
+        "timestamp": "2024-01-15T10:30:15Z",
+        "error": "ETIMEDOUT",
+        "wait_before_next": 5
+      },
+      {
+        "attempt": 2,
+        "timestamp": "2024-01-15T10:30:20Z",
+        "error": "ECONNREFUSED",
+        "wait_before_next": 15
+      },
+      {
+        "attempt": 3,
+        "timestamp": "2024-01-15T10:30:35Z",
+        "error": "503 Service Unavailable",
+        "wait_before_next": null
+      }
+    ],
+    
+    "circuit_breaker_status": "OPEN",
+    "circuit_breaker_reset_time": "2024-01-15T10:45:00Z",
+    
+    "alternative_endpoints_tried": [
+      "api.anthropic.com",
+      "api-backup.anthropic.com"
+    ]
+  },
+
+  "recovery_options": {
+    "automatic_retry": {
+      "available": true,
+      "recommended_wait": 900,
+      "estimated_success_probability": 0.75
+    },
+    
+    "manual_options": [
+      {
+        "option": "retry_with_different_api_key",
+        "description": "Current key may have rate limit issues"
+      },
+      {
+        "option": "switch_to_alternative_llm",
+        "description": "Use fallback LLM provider if configured"
+      },
+      {
+        "option": "defer_processing",
+        "description": "Queue for processing when service restored"
+      }
+    ],
+    
+    "data_preservation": {
+      "input_text_saved": true,
+      "save_location": "./temp/pending_analysis/american_revolution_1776_20240115.txt",
+      "can_resume": true
+    }
+  },
+
+  "impact_assessment": {
+    "analysis_completeness": 0.0,
+    "alternative_methodology_available": false,
+    "degraded_mode_possible": false,
+    "explanation": "Van Evera 2.0 requires LLM for hypothesis generation, evidence classification, and causal inference"
+  },
+
+  "system_health": {
+    "local_resources": "normal",
+    "preprocessing_pipeline": "functional",
+    "postprocessing_pipeline": "functional",
+    "only_llm_dependent_steps_affected": true
+  },
+
+  "reproducibility": {
+    "analysis_pipeline_version": "2.0.0",
+    "methodology_checksum": "sha256:a3f5c921...",
+    "failure_checkpoint": "llm_extraction_init",
+    "preprocessed_data_checksum": "sha256:b4f6d832...",
+    "compute_requirements": {
+      "extraction_seconds": 0,
+      "analysis_seconds": 0,
+      "synthesis_seconds": 0,
+      "total_seconds": 65,
+      "time_spent_on_retries": 50
+    }
+  }
+}

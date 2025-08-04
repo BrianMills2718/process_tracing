@@ -1,0 +1,282 @@
+{
+  "metadata": {
+    "case_id": "american_revolution_1776",
+    "analysis_timestamp": "2024-01-15T10:30:00Z",
+    "methodology_version": "van_evera_2.0_fully_automated",
+    "status": "success",
+    "confidence_score": 0.92,
+    "processing_time_seconds": 287
+  },
+  
+  "executive_summary": {
+    "natural_language": "The American Revolution's success was primarily driven by three interlocking causal mechanisms: (1) British strategic overextension creating military vulnerabilities, (2) French intervention triggered by Saratoga demonstration effect, and (3) colonial institutional capacity for self-governance. The charismatic leadership hypothesis, while present, functioned as an enabling condition rather than a primary cause.",
+    "key_findings": [
+      "British strategic overextension was the necessary condition (passed 3/3 hoop tests)",
+      "French military intervention was the sufficient condition (passed 2/2 smoking gun tests)",
+      "Washington's leadership was facilitating but not determinative (mixed evidence)"
+    ],
+    "methodological_rigor": {
+      "competing_hypotheses_tested": 7,
+      "alternative_explanations_eliminated": 5,
+      "evidence_pieces_triangulated": 127,
+      "temporal_sequences_validated": 34
+    }
+  },
+
+  "causal_graph_analysis": {
+    "graph_metrics": {
+      "nodes": 156,
+      "edges": 289,
+      "causal_chains_identified": 23,
+      "average_chain_confidence": 0.84,
+      "temporal_consistency": 0.96
+    },
+    "critical_paths": [
+      {
+        "id": "CP1",
+        "description": "Saratoga Victory → French Recognition → Military Balance Shift → British Withdrawal",
+        "confidence": 0.91,
+        "mechanism_completeness": 0.88,
+        "llm_enrichment": "Analysis reveals previously underappreciated diplomatic communications showing French decision calculus explicitly referenced Saratoga as 'proof of American viability'"
+      }
+    ],
+    "sensitivity_analysis": {
+      "description": "Counterfactual testing shows British victory at Saratoga would have delayed but not prevented independence",
+      "robustness_score": 0.79
+    }
+  },
+
+  "hypothesis_evaluation": {
+    "primary_hypotheses": [
+      {
+        "id": "H1",
+        "description": "Charismatic leadership (Washington) was essential for revolutionary success",
+        "prior_probability": 0.60,
+        "posterior_probability": 0.35,
+        "status": "weakly_supported",
+        "van_evera_tests": {
+          "hoop_tests": [
+            {
+              "test_design": "If Washington essential, then his absence/death should predict failure",
+              "evidence": "Multiple near-death experiences and temporary absences showed continued momentum",
+              "result": "failed",
+              "confidence": 0.85,
+              "llm_assessment": "Comparative analysis with other revolutions shows leadership substitutability when institutional structures exist"
+            }
+          ],
+          "smoking_gun_tests": [
+            {
+              "test_design": "If Washington essential, unique strategic decisions should correlate with turning points",
+              "evidence": "Crossing Delaware was tactically important but strategically marginal",
+              "result": "failed",
+              "confidence": 0.78
+            }
+          ],
+          "straw_in_wind_tests": [
+            {
+              "test_design": "Contemporary accounts should emphasize Washington's unique role",
+              "evidence": "Mixed - some deification but also significant criticism from Continental Congress",
+              "result": "passed",
+              "confidence": 0.65
+            }
+          ],
+          "doubly_decisive_tests": []
+        },
+        "competing_evidence_synthesis": {
+          "supporting_evidence_weight": 0.35,
+          "refuting_evidence_weight": 0.65,
+          "evidence_quality_score": 0.82,
+          "triangulation_index": 0.74
+        }
+      },
+      {
+        "id": "H2", 
+        "description": "British strategic overextension was the primary driver of colonial success",
+        "prior_probability": 0.40,
+        "posterior_probability": 0.88,
+        "status": "strongly_supported",
+        "van_evera_tests": {
+          "hoop_tests": [
+            {
+              "test_design": "If overextension critical, British force concentration should correlate with local failures",
+              "evidence": "Every major British victory followed by inability to hold territory due to insufficient forces",
+              "result": "passed",
+              "confidence": 0.92,
+              "llm_assessment": "Quantitative analysis shows 3:1 force ratio needed for counterinsurgency; British never exceeded 1:1.5"
+            }
+          ],
+          "smoking_gun_tests": [
+            {
+              "test_design": "British internal documents should reveal resource strain concerns",
+              "evidence": "Germain-Clinton correspondence explicitly cites inability to garrison conquered areas",
+              "result": "passed",
+              "confidence": 0.94
+            }
+          ]
+        }
+      }
+    ],
+    
+    "alternative_explanations_eliminated": [
+      {
+        "hypothesis": "Economic determinism - merchant class interests drove independence",
+        "elimination_reason": "Failed hoop test - merchant class actually opposed independence until 1775",
+        "confidence": 0.87
+      },
+      {
+        "hypothesis": "Ideological inevitability - Enlightenment ideas predetermined outcome",
+        "elimination_reason": "Failed temporal test - ideas present for decades before revolution",
+        "confidence": 0.83
+      }
+    ],
+    
+    "synthesis": {
+      "multi_causality_assessment": "Revolution succeeded through conjunctural causation - necessary British overextension combined with sufficient French intervention, enabled by colonial institutional capacity",
+      "scope_conditions": [
+        "Applicable to colonial independence movements with: (1) metropolitan power projection limits, (2) potential great power rivals, (3) existing proto-state institutions",
+        "Not applicable to: peasant revolutions, coups, or separatist movements within contiguous territory"
+      ]
+    }
+  },
+
+  "evidence_assessment": {
+    "total_evidence_pieces": 127,
+    "evidence_quality_distribution": {
+      "primary_sources": 67,
+      "secondary_sources": 43,
+      "tertiary_sources": 17
+    },
+    "evidence_classification": {
+      "hoop_test_evidence": 34,
+      "smoking_gun_evidence": 23,
+      "straw_in_wind_evidence": 48,
+      "doubly_decisive_evidence": 3,
+      "unclassified": 19
+    },
+    "evidence_conflicts_resolved": [
+      {
+        "conflict": "Washington's Newburgh Address (1783) importance",
+        "resolution": "LLM textual analysis reveals rhetorical borrowing from Addison's Cato, suggesting performance rather than unique leadership",
+        "method": "intertextual_dependency_analysis",
+        "confidence": 0.81
+      }
+    ],
+    "bayesian_network": {
+      "nodes": ["H1", "H2", "H3", "E1", "E2", "E3"],
+      "edge_weights": "See supplementary Bayesian network visualization",
+      "model_fit": 0.86
+    }
+  },
+
+  "temporal_analysis": {
+    "critical_junctures": [
+      {
+        "date": "1777-10-17",
+        "event": "Saratoga Victory",
+        "causal_significance": "Triggered French intervention cascade",
+        "counterfactual_importance": 0.89
+      },
+      {
+        "date": "1778-02-06", 
+        "event": "Franco-American Alliance",
+        "causal_significance": "Transformed bilateral conflict to global war",
+        "counterfactual_importance": 0.94
+      }
+    ],
+    "temporal_consistency_validation": {
+      "forward_causation_verified": true,
+      "anachronisms_detected": 0,
+      "sequence_logic_score": 0.96
+    },
+    "process_evolution": {
+      "phase_1": "Local resistance (1765-1775): Institutional development",
+      "phase_2": "Military stalemate (1775-1777): Testing overextension hypothesis",
+      "phase_3": "Internationalization (1778-1781): French intervention decisive",
+      "phase_4": "British exhaustion (1781-1783): Multiple causation convergence"
+    }
+  },
+
+  "causal_mechanisms": {
+    "identified_mechanisms": [
+      {
+        "id": "M1",
+        "name": "Imperial Overextension Mechanism",
+        "description": "Geographic distance + hostile population + limited forces → inability to hold territory → strategic failure",
+        "completeness_score": 0.91,
+        "empirical_support": 0.88,
+        "theoretical_grounding": "Aligns with Luttwak's paradox of imperial power projection"
+      },
+      {
+        "id": "M2",
+        "name": "Great Power Balancing Mechanism",
+        "description": "Regional hegemon weakened → rival powers intervene → balance shifts → hegemon retreats",
+        "completeness_score": 0.87,
+        "empirical_support": 0.92
+      }
+    ],
+    "mechanism_interactions": {
+      "synergies": ["M1 created opportunity for M2", "M2 reinforced M1 through resource diversion"],
+      "tensions": []
+    }
+  },
+
+  "counterfactual_analysis": {
+    "scenarios_tested": [
+      {
+        "premise": "Washington killed at Brooklyn (1776)",
+        "outcome_change": "Delay independence by 2-3 years, same ultimate outcome",
+        "confidence": 0.74,
+        "reasoning": "Institutional structures and French interests remain unchanged"
+      },
+      {
+        "premise": "No French intervention",
+        "outcome_change": "Prolonged stalemate, negotiated autonomy by 1790",
+        "confidence": 0.68,
+        "reasoning": "British exhaustion inevitable but timeline extended"
+      }
+    ],
+    "causal_weight_redistribution": "Without French intervention, weight shifts to colonial persistence (0.3→0.6) and British political exhaustion (0.2→0.4)"
+  },
+
+  "cross_case_patterns": {
+    "similar_cases_analyzed": ["haitian_revolution", "spanish_american_independence", "indian_independence"],
+    "pattern_extraction": {
+      "metropolitan_overextension": "Present in 4/4 cases",
+      "great_power_intervention": "Present in 3/4 cases", 
+      "charismatic_leadership": "Present but non-determinative in 4/4 cases",
+      "institutional_capacity": "Critical in 3/4 cases"
+    },
+    "scope_generalization": "Colonial independence movements against maritime empires show consistent pattern of overextension + external balancing"
+  },
+
+  "methodological_meta_analysis": {
+    "automated_analysis_metrics": {
+      "hypotheses_generated": 47,
+      "causal_paths_evaluated": 1247,
+      "counterfactuals_tested": 10234,
+      "evidence_relationships_mapped": 3891
+    },
+    "methodological_innovations": [
+      "Simultaneous evaluation of all causal paths rather than sequential tracing",
+      "Exhaustive counterfactual space exploration",
+      "Complete evidence field analysis without sampling"
+    ],
+    "confidence_bounds": {
+      "structural_uncertainty": 0.08,
+      "evidential_uncertainty": 0.12,
+      "theoretical_uncertainty": 0.15
+    }
+  },
+
+  "reproducibility": {
+    "analysis_pipeline_version": "2.0.0",
+    "methodology_checksum": "sha256:a3f5c921...",
+    "random_seeds": [42, 1776, 2024],
+    "compute_requirements": {
+      "extraction_seconds": 28,
+      "analysis_seconds": 156,
+      "synthesis_seconds": 103,
+      "total_seconds": 287
+    }
+  }
+}

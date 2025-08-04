@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Tracing Analysis Report</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- vis.js Network library for interactive graph visualization -->
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .chart { margin-bottom: 1.5rem; }
+        .evidence-item { margin-bottom: 0.75rem; padding: 0.25rem; border-left: 3px solid #eee; }
+        .supporting { border-left-color: #28a745; }
+        .refuting { border-left-color: #dc3545; }
+        .card { margin-bottom: 1.5rem; overflow: hidden; }
+        .causal-chain { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; }
+        .loading { opacity: 0.5; }
+        .section-complete { opacity: 1; transition: opacity 0.3s; }
+        .progress-indicator { position: fixed; top: 10px; right: 10px; z-index: 1000; }
+    </style>
+</head>
+<body>
+<div class="container-fluid py-4">
+    <div class="progress-indicator">
+        <div class="badge bg-primary" id="progress-badge">Generating...</div>
+    </div>
+    <h1 class="mb-4">Process Tracing Analysis Report</h1>
+
+    <div class="card loading" id="overview">
+        <div class="card-header">
+            <h2 class="card-title mb-0">Analysis Overview</h2>
+            <p class="text-muted mb-0">Summary of key findings</p>
+        </div>
+        <div class="card-body">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="ms-2">Generating analysis overview...</span>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Network Statistics</h5>
+                    <ul class="list-unstyled">
+                        <li><strong>Total Nodes:</strong> 50</li>
+                        <li><strong>Total Edges:</strong> 60</li>
+                        <li><strong>Causal Chains:</strong> 10</li>
+                        <li><strong>Mechanisms:</strong> 0</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Node Types</h5>
+                    <ul class="list-unstyled">
+        <li><strong>Event:</strong> 50</li>
+                    </ul>
+                </div>
+            </div>
+        
+        </div>
+    </div>
+    <div class="card loading" id="network">
+        <div class="card-header">
+            <h2 class="card-title mb-0">Interactive Network Visualization</h2>
+            <p class="text-muted mb-0">Explore the causal network interactively</p>
+        </div>
+        <div class="card-body">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="ms-2">Generating interactive network visualization...</span>
+
+            <div id="network-container" style="width: 100%; height: 600px; border: 1px solid #ddd; position: relative;">
+                <div class="d-flex align-items-center justify-content-center h-100">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading network...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Rendering interactive network graph...</p>
+                    </div>
+                </div>
+            </div>
+        
+        </div>
+    </div>
+    <div class="card loading" id="causal-chains">
+        <div class="card-header">
+            <h2 class="card-title mb-0">Causal Chains</h2>
+            <p class="text-muted mb-0">Identified 10 causal sequences</p>
+        </div>
+        <div class="card-body">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="ms-2">Generating causal chains...</span>
+
+                <div class="causal-chain">
+                    <h6>Chain 1</h6>
+                    <p class="chain-description">Chain 0</p>
+                </div>
+            
+                <div class="causal-chain">
+                    <h6>Chain 2</h6>
+                    <p class="chain-description">Chain 1</p>
+                </div>
+            
+                <div class="causal-chain">
+                    <h6>Chain 3</h6>
+                    <p class="chain-description">Chain 2</p>
+                </div>
+            
+                <div class="causal-chain">
+                    <h6>Chain 4</h6>
+                    <p class="chain-description">Chain 3</p>
+                </div>
+            
+                <div class="causal-chain">
+                    <h6>Chain 5</h6>
+                    <p class="chain-description">Chain 4</p>
+                </div>
+            
+                <div class="causal-chain">
+                    <h6>Chain 6</h6>
+                    <p class="chain-description">Chain 5</p>
+                </div>
+            
+                <div class="causal-chain">
+                    <h6>Chain 7</h6>
+                    <p class="chain-description">Chain 6</p>
+                </div>
+            
+                <div class="causal-chain">
+                    <h6>Chain 8</h6>
+                    <p class="chain-description">Chain 7</p>
+                </div>
+            
+                <div class="causal-chain">
+                    <h6>Chain 9</h6>
+                    <p class="chain-description">Chain 8</p>
+                </div>
+            
+                <div class="causal-chain">
+                    <h6>Chain 10</h6>
+                    <p class="chain-description">Chain 9</p>
+                </div>
+            
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            setTimeout(() => {
+                const section = document.getElementById('overview');
+                if (section) {
+                    section.classList.remove('loading');
+                    section.classList.add('section-complete');
+                }
+            }, 100);
+        
+            document.getElementById('progress-badge').textContent = '1 sections complete';
+        
+            setTimeout(() => {
+                const section = document.getElementById('network');
+                if (section) {
+                    section.classList.remove('loading');
+                    section.classList.add('section-complete');
+                }
+            }, 100);
+        
+            setTimeout(() => {
+                try {
+                    const container = document.getElementById('network-container');
+                    if (!container) return;
+                    
+                    // Clear loading content
+                    container.innerHTML = '';
+                    
+                    const nodes = new vis.DataSet([{"id": 0, "label": "Node 0"}, {"id": 1, "label": "Node 1"}, {"id": 2, "label": "Node 2"}, {"id": 3, "label": "Node 3"}, {"id": 4, "label": "Node 4"}, {"id": 5, "label": "Node 5"}, {"id": 6, "label": "Node 6"}, {"id": 7, "label": "Node 7"}, {"id": 8, "label": "Node 8"}, {"id": 9, "label": "Node 9"}, {"id": 10, "label": "Node 10"}, {"id": 11, "label": "Node 11"}, {"id": 12, "label": "Node 12"}, {"id": 13, "label": "Node 13"}, {"id": 14, "label": "Node 14"}, {"id": 15, "label": "Node 15"}, {"id": 16, "label": "Node 16"}, {"id": 17, "label": "Node 17"}, {"id": 18, "label": "Node 18"}, {"id": 19, "label": "Node 19"}, {"id": 20, "label": "Node 20"}, {"id": 21, "label": "Node 21"}, {"id": 22, "label": "Node 22"}, {"id": 23, "label": "Node 23"}, {"id": 24, "label": "Node 24"}]);
+                    const edges = new vis.DataSet([{"from": 0, "to": 1}, {"from": 1, "to": 2}, {"from": 2, "to": 3}, {"from": 3, "to": 4}, {"from": 4, "to": 5}, {"from": 5, "to": 6}, {"from": 6, "to": 7}, {"from": 7, "to": 8}, {"from": 8, "to": 9}, {"from": 9, "to": 10}, {"from": 10, "to": 11}, {"from": 11, "to": 12}, {"from": 12, "to": 13}, {"from": 13, "to": 14}, {"from": 14, "to": 15}, {"from": 15, "to": 16}, {"from": 16, "to": 17}, {"from": 17, "to": 18}, {"from": 18, "to": 19}, {"from": 19, "to": 20}, {"from": 20, "to": 21}, {"from": 21, "to": 22}, {"from": 22, "to": 23}, {"from": 23, "to": 24}]);
+                    
+                    const data = { nodes: nodes, edges: edges };
+                    const options = {
+                        nodes: {
+                            shape: 'dot',
+                            size: 16,
+                            font: { size: 12, color: '#343a40' },
+                            borderWidth: 2,
+                            shadow: true
+                        },
+                        edges: {
+                            width: 2,
+                            color: { color: '#848484', highlight: '#848484' },
+                            arrows: { to: { enabled: true, scaleFactor: 1, type: 'arrow' } },
+                            shadow: true
+                        },
+                        physics: {
+                            enabled: true,
+                            stabilization: { iterations: 100 }
+                        },
+                        interaction: {
+                            hover: true,
+                            tooltipDelay: 200
+                        }
+                    };
+                    
+                    new vis.Network(container, data, options);
+                    
+                    // Update progress
+                    console.log('Network visualization rendered successfully');
+                } catch (error) {
+                    console.error('Error rendering network:', error);
+                    document.getElementById('network-container').innerHTML = '<div class="alert alert-warning">Error rendering network visualization</div>';
+                }
+            }, 500);
+        
+            document.getElementById('progress-badge').textContent = '2 sections complete';
+        
+            setTimeout(() => {
+                const section = document.getElementById('causal-chains');
+                if (section) {
+                    section.classList.remove('loading');
+                    section.classList.add('section-complete');
+                }
+            }, 100);
+        
+            document.getElementById('progress-badge').textContent = '3 sections complete';
+        
+        });
+    </script>
+            
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('progress-badge').textContent = 'Complete (0.0s)';
+            document.getElementById('progress-badge').className = 'badge bg-success';
+        });
+    </script>
+    
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</div>
+</body>
+</html>
+        

@@ -1,0 +1,172 @@
+{
+  "metadata": {
+    "case_id": "massive_historical_corpus",
+    "analysis_timestamp": "2024-01-15T10:30:00Z",
+    "methodology_version": "van_evera_2.0_fully_automated",
+    "status": "partial_success",
+    "failure_type": "token_limit_exceeded",
+    "confidence_score": 0.76,
+    "processing_time_seconds": 478
+  },
+  
+  "error_summary": {
+    "error_code": "ERR_TOKEN_LIMIT",
+    "error_message": "Input corpus exceeds processing capacity, automated chunking applied",
+    "diagnostic_info": {
+      "total_tokens_required": 487291,
+      "token_limit": 200000,
+      "chunks_created": 3,
+      "chunks_successfully_processed": 3,
+      "cross_chunk_integration_quality": 0.71
+    }
+  },
+
+  "chunking_strategy": {
+    "method": "temporal_coherent_chunking",
+    "chunk_boundaries": [
+      {
+        "chunk_id": 1,
+        "date_range": "1770-1775",
+        "tokens": 156000,
+        "key_events": 89
+      },
+      {
+        "chunk_id": 2,
+        "date_range": "1776-1778",
+        "tokens": 143000,
+        "key_events": 76
+      },
+      {
+        "chunk_id": 3,
+        "date_range": "1779-1783",
+        "tokens": 188291,
+        "key_events": 102
+      }
+    ],
+    "overlap_tokens": 5000,
+    "cross_references_preserved": 0.83
+  },
+
+  "partial_results": {
+    "extraction_summary": {
+      "total_nodes": 412,
+      "total_edges": 743,
+      "cross_chunk_edges_inferred": 67,
+      "confidence_in_completeness": 0.79
+    },
+    
+    "hypothesis_evaluation": {
+      "within_chunk_evaluation": "complete",
+      "cross_chunk_evaluation": "degraded",
+      "primary_hypotheses_evaluated": 8,
+      "evaluation_confidence": {
+        "H1": 0.88,
+        "H2": 0.74,
+        "H3": 0.69,
+        "H4": 0.52
+      }
+    },
+    
+    "synthesis_quality": {
+      "intra_chunk_coherence": 0.91,
+      "inter_chunk_coherence": 0.68,
+      "causal_chain_fragmentation": 0.23,
+      "mechanism_completeness": 0.72
+    }
+  },
+
+  "chunking_impacts": {
+    "lost_relationships": {
+      "estimated_count": 34,
+      "types": ["long_distance_causal_links", "cross_temporal_mechanisms"],
+      "mitigation_attempted": "relationship_inference_algorithm",
+      "recovery_rate": 0.59
+    },
+    
+    "degraded_analyses": [
+      {
+        "analysis_type": "counterfactual_testing",
+        "degradation_reason": "Cannot test counterfactuals spanning chunk boundaries",
+        "affected_scenarios": 12
+      },
+      {
+        "analysis_type": "temporal_evolution",
+        "degradation_reason": "Phase transitions partially obscured by chunking",
+        "confidence_impact": -0.18
+      }
+    ],
+    
+    "preserved_analyses": [
+      "hypothesis_testing_within_periods",
+      "local_mechanism_identification", 
+      "evidence_quality_assessment"
+    ]
+  },
+
+  "integrated_findings": {
+    "high_confidence_results": [
+      {
+        "finding": "British strategic overextension consistent across all chunks",
+        "confidence": 0.89,
+        "evidence_count": 43
+      },
+      {
+        "finding": "French intervention decision point identified in chunk 2",
+        "confidence": 0.86,
+        "evidence_count": 27
+      }
+    ],
+    
+    "medium_confidence_results": [
+      {
+        "finding": "Leadership hypothesis shows varying support across time periods",
+        "confidence": 0.64,
+        "note": "Chunk boundary may obscure evolution"
+      }
+    ],
+    
+    "low_confidence_areas": [
+      "Cross-period causal mechanisms",
+      "Long-term institutional evolution",
+      "Delayed causal effects"
+    ]
+  },
+
+  "chunking_metadata": {
+    "algorithm_version": "temporal_coherent_v1.2",
+    "boundary_selection_criteria": [
+      "Natural temporal breaks",
+      "Minimize causal chain disruption",
+      "Balance token distribution"
+    ],
+    "reassembly_method": "graph_merge_with_inference",
+    "quality_metrics": {
+      "information_preservation": 0.81,
+      "relationship_preservation": 0.68,
+      "semantic_coherence": 0.77
+    }
+  },
+
+  "recommendations": {
+    "for_current_results": "High confidence in within-period findings, moderate confidence in cross-period patterns",
+    "for_better_analysis": "Consider focused analysis on specific time periods or hypotheses to avoid chunking",
+    "alternative_approaches": [
+      "Hierarchical analysis with period-specific deep dives",
+      "Hypothesis-focused extraction to reduce scope",
+      "Incremental analysis with human-guided chunking"
+    ]
+  },
+
+  "reproducibility": {
+    "analysis_pipeline_version": "2.0.0",
+    "methodology_checksum": "sha256:a3f5c921...",
+    "chunking_seeds": [42, 84, 126],
+    "chunk_processing_parallel": true,
+    "compute_requirements": {
+      "extraction_seconds": 98,
+      "analysis_seconds": 287,
+      "synthesis_seconds": 93,
+      "total_seconds": 478
+    }
+  }
+}

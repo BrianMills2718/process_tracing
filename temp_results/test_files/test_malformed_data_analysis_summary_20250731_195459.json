@@ -1,0 +1,49 @@
+{
+  "filename": "test_malformed_data.json",
+  "case_identifier": "test_malformed_data",
+  "generated_at": "2025-07-31T19:54:59.158769",
+  "causal_chains": [],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 1,
+      "Hypothesis": 1,
+      "Evidence": 1
+    },
+    "edge_type_distribution": {},
+    "density": 0,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "event1": 0.0,
+      "empty_properties_node": 0.0,
+      "null_description_node": 0.0
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "empty_properties_node",
+      "description": "Description_Not_Found_For_empty_properties_node",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

@@ -85,27 +85,43 @@ Each edge must have:
 - type: one of [causes, tests_hypothesis]
 - properties: a dictionary of the edge's properties (see below)
 
+# Issue #84 Fix: Align prompt properties with ontology schema
 Node Types (with Properties):
 1. Event
    - description (string, required)
    - timestamp (string, optional)
+   - date (string, optional)
+   - start_date (string, optional)
+   - end_date (string, optional)
+   - location (string, optional)
    - certainty (float 0-1, optional)
-   - type (string: triggering, intermediate, outcome, optional)
+   - type (string: triggering, intermediate, outcome, unspecified, optional)
+   - is_point_in_time (boolean, optional)
 2. Hypothesis
    - description (string, required)
    - prior_probability (float 0-1, optional)
-   - status (string: active, confirmed, refuted, optional)
+   - posterior_probability (float 0-1, optional)
+   - status (string: active, supported, partially_supported, refuted, undetermined, optional)
 3. Evidence
    - description (string, required)
-   - type (string: hoop, smoking_gun, straw_in_the_wind, optional)
+   - type (string: REQUIRED Van Evera diagnostic type)
+     * hoop: necessary but not sufficient (hypothesis fails if this evidence is absent)
+     * smoking_gun: sufficient but not necessary (hypothesis confirmed if this evidence is present)
+     * straw_in_the_wind: neither necessary nor sufficient (weakly suggestive)
+     * doubly_decisive: both necessary and sufficient (confirms one hypothesis, eliminates others)
+     * bayesian: general Bayesian evidence
+     * general: unspecified evidence type
    - source (string, optional)
    - certainty (float 0-1, optional)
+   - credibility (float 0-1, optional)
 
 Edge Types (with Properties):
 1. causes (Event → Event)
    - certainty (float 0-1, optional)
+   - mechanism_id (string, optional)
    - type (string: direct, indirect, optional)
 2. tests_hypothesis (Evidence → Hypothesis)
+   - inferential_test_id (string, optional)
    - probative_value (float 0-1, optional)
    - test_result (string: passed, failed, ambiguous, optional)
 
@@ -292,7 +308,27 @@ def validate_json_against_ontology(data: dict) -> tuple[bool, list[str]]:
 
 
 def query_gemini(big_text: str, retry_count=0) -> dict:
-    """Query Gemini API with retry mechanism for validation failures."""
+    """Query Gemini API with retry mechanism for validation failures and intelligent caching."""
+    
+    # Phase 3A: LLM Response Caching Integration
+    from core.llm_cache import get_cache
+    cache = get_cache()
+    
+    # Generate cache key
+    cache_key = cache.generate_cache_key(
+        text=big_text, 
+        prompt_template=PROMPT_TEMPLATE,
+        model_name=MODEL_NAME,
+        additional_params={"retry_count": retry_count}
+    )
+    
+    # Try cache first
+    cached_result = cache.get(cache_key)
+    if cached_result is not None:
+        print(f"[CACHE HIT] Using cached result for text ({len(big_text)} chars)")
+        return cached_result
+    
+    print(f"[CACHE MISS] Making fresh LLM call for text ({len(big_text)} chars)")
     print("[DEBUG] About to query Gemini...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
 
@@ -322,6 +358,9 @@ def query_gemini(big_text: str, retry_count=0) -> dict:
         
         if is_valid:
             print("[OK] Validation successful: JSON conforms to ontology!")
+            # Cache the successful result
+            cache.put(cache_key, graph_data, MODEL_NAME, PROMPT_TEMPLATE)
+            print(f"[CACHE STORE] Cached result for future use")
             return graph_data
         else:
             print("[WARN] Validation failed. Errors found:")
@@ -335,6 +374,9 @@ def query_gemini(big_text: str, retry_count=0) -> dict:
                 return query_gemini(big_text, retry_count + 1)
             else:
                 print("[ERROR] Maximum retry attempts reached. Using last response despite validation errors.")
+                # Cache even failed validation results to avoid repeated failures
+                cache.put(cache_key, graph_data, MODEL_NAME, PROMPT_TEMPLATE, ttl_seconds=1800)  # Shorter TTL for failed validation
+                print(f"[CACHE STORE] Cached validation-failed result with shorter TTL")
                 return graph_data
                 
     except Exception as e:

@@ -1,0 +1,121 @@
+{
+  "filename": "test_realistic_graph.json",
+  "case_identifier": "test_realistic_graph",
+  "generated_at": "2025-07-31T18:23:13.742717",
+  "causal_chains": [
+    {
+      "path": [
+        "british_taxation",
+        "colonial_resistance",
+        "independence_declared"
+      ],
+      "node_descriptions": [
+        "British taxation policies 1765-1773",
+        "Colonial resistance movement",
+        "Declaration of Independence 1776"
+      ],
+      "node_subtypes": [
+        "triggering",
+        "N/A_subtype",
+        "outcome"
+      ],
+      "edges": [
+        "triggers",
+        "causes"
+      ],
+      "length": 3
+    }
+  ],
+  "causal_mechanisms": [
+    {
+      "id": "colonial_resistance",
+      "name": "Colonial resistance movement",
+      "causes": [
+        "British taxation policies 1765-1773"
+      ],
+      "effects": [
+        "Declaration of Independence 1776"
+      ],
+      "completeness": 20,
+      "confidence": 0.8,
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "mechanism_id": "colonial_resistance",
+        "narrative_elaboration": "British taxation policies (british_taxation) in the 1765-1773 period, such as the Stamp Act and Townshend Acts, directly provoked widespread resentment and opposition among American colonists. This resentment fueled the formation of resistance groups and ultimately escalated into organized colonial resistance movements against British rule.",
+        "identified_missing_micro_steps": [
+          {
+            "suggested_event_description": "Colonists' public protests and boycotts against British goods in response to taxation",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Formation of colonial committees of correspondence to coordinate resistance efforts",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Increasing radicalization of colonial rhetoric and the rise of revolutionary ideas among some colonists.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "British attempts to quell colonial resistance through military action or increased repression (e.g., the Quartering Act)",
+            "suggested_event_type": "intermediate"
+          }
+        ],
+        "coherence_assessment": "Moderately coherent but with gaps",
+        "suggested_confidence": "0.7",
+        "suggested_level_of_detail": "medium",
+        "reasoning_for_suggestions": "While the link between British taxation and colonial resistance is clear, the causal mechanism is incomplete without detailing the intervening steps.  The suggested micro-steps highlight crucial intermediate stages in the escalation of resistance.  Reducing confidence reflects the need for more detailed events to fully explain the mechanism. The level of detail is 'medium' because, while the main causal link is established, many crucial intermediate steps are missing."
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 2,
+      "Causal_Mechanism": 1,
+      "Hypothesis": 1,
+      "Evidence": 1
+    },
+    "edge_type_distribution": {
+      "triggers": 1,
+      "causes": 1,
+      "supports": 1
+    },
+    "density": 0.15,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "colonial_resistance": 0.5,
+      "british_taxation": 0.25,
+      "independence_declared": 0.25,
+      "washington_hypothesis": 0.25,
+      "taxation_evidence": 0.25
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "washington_hypothesis",
+      "description": "Washington leadership was decisive for success",
+      "assessment": "Supported",
+      "balance_score": 1.25,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "taxation_evidence"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

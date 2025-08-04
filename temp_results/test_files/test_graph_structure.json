@@ -1,0 +1,51 @@
+{
+  "nodes": [
+    {
+      "id": "event1",
+      "type": "Event",
+      "properties": {
+        "type": "triggering",
+        "description": "Initial event that starts the process",
+        "date": "1765-03-01"
+      }
+    },
+    {
+      "id": "event2",
+      "type": "Event",
+      "properties": {
+        "type": "intermediate",
+        "description": "Middle event in the causal chain",
+        "date": "1770-03-05"
+      }
+    },
+    {
+      "id": "event3",
+      "type": "Event",
+      "properties": {
+        "type": "outcome",
+        "description": "Final outcome event",
+        "date": "1783-09-03"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "event1_to_event2",
+      "type": "causes",
+      "source": "event1",
+      "target": "event2",
+      "properties": {
+        "certainty": 0.8
+      }
+    },
+    {
+      "id": "event2_to_event3",
+      "type": "causes",
+      "source": "event2",
+      "target": "event3",
+      "properties": {
+        "certainty": 0.7
+      }
+    }
+  ]
+}

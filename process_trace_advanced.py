@@ -27,6 +27,17 @@ except ImportError:
 
 from core.ontology import get_gemini_graph_json_schema
 
+# Bayesian Integration (optional enhancement)
+try:
+    from core.bayesian_integration import integrate_bayesian_analysis
+    from core.bayesian_reporting import BayesianReportConfig
+    from core.enhance_evidence import refine_evidence_assessment_with_llm
+    BAYESIAN_AVAILABLE = True
+except ImportError as e:
+    BAYESIAN_AVAILABLE = False
+    print(f"[INFO] Bayesian components not available due to import error: {e}")
+    print("Use --bayesian flag to see setup instructions.")
+
 # Add a safe print function to handle UnicodeEncodeError
 def safe_print(*args, **kwargs):
     try:
@@ -95,96 +106,85 @@ def read_input_text(input_path):
 def get_schema():
     return get_gemini_graph_json_schema()
 
-# --- LLM Prompt Template ---
-COMPREHENSIVE_LLM_PROMPT_TEMPLATE = """
-You are an expert qualitative researcher and analyst specializing in process tracing methodology.
-Your task is to meticulously analyze the provided text and extract entities (nodes) and relationships (edges) to construct a DETAILED, DEEPLY INTERCONNECTED, and CAUSALLY RICH network graph.
-This graph MUST strictly adhere to the provided JSON schema, which is derived from the Process Tracing Ontology. Your primary goal is to create a graph that explicitly details causal processes, enabling robust analysis. Failure to connect nodes or provide detailed properties where the text allows will significantly diminish the utility of the output.
+# --- Focused Extraction Prompt (TDD Phase 1 Implementation) ---
+FOCUSED_EXTRACTION_PROMPT = """
+Extract causal events and hypotheses from the historical text with detailed descriptions.
+
+CRITICAL REQUIREMENTS:
+1. Each Event description must be extracted from the source text (minimum 20 words)
+2. Each Hypothesis must be a testable causal claim (minimum 30 words)
+3. Each Evidence must include the exact source text quote that supports it
+4. Descriptions cannot be "N/A", "Description_Not_Found", or generic placeholders
+
+EXAMPLE (GOOD):
+Event: "French and Indian War ends with defeat of France, leaving Britain with massive war debt that requires new colonial taxation policies"
+Hypothesis: "British taxation policies caused colonial rebellion because they violated colonial understanding of their rights as Englishmen"
+Evidence: "taxation without representation violated their rights as Englishmen"
+
+EXAMPLE (BAD):
+Event: "N/A"
+Hypothesis: "Colonial discontent"
+Evidence: "Colonists were unhappy"
+
+STEP-BY-STEP EXTRACTION:
+
+1. **Extract Events with Rich Descriptions:**
+   - Find 3-8 major historical events
+   - Each Event needs detailed description from source text
+   - Classify as: triggering (starts process), intermediate (middle), outcome (end result)
+   - Connect with "causes" edges to show sequence
+
+2. **Extract Hypotheses as Testable Claims:**
+   - Find causal claims like "X caused Y because Z"
+   - Minimum 30 words explaining the causal mechanism
+   - Must be testable with evidence from the text
+
+3. **Extract Evidence with Source Quotes:**
+   - For each Hypothesis, find supporting/refuting evidence with DIVERSE diagnostic strength
+   - Include exact quote from source text
+   - CRITICAL: Set "type" field to Van Evera diagnostic type - aim for variety across all 4 types:
+     * "hoop": necessary but not sufficient (hypothesis fails if this evidence is absent) - look for foundational requirements
+     * "smoking_gun": sufficient but not necessary (hypothesis confirmed if this evidence is present) - look for definitive proof
+     * "straw_in_the_wind": neither necessary nor sufficient (weakly suggestive) - look for circumstantial indicators  
+     * "doubly_decisive": both necessary and sufficient (confirms one hypothesis, eliminates others) - look for critical turning points
+   - Prioritize finding strong evidence types (smoking_gun, doubly_decisive) when the text supports them
+   - Estimate probative_value (0.3-1.0 for meaningful evidence)
+
+4. **Connect Everything:**
+   - Events → Events (causes)
+   - Evidence → Hypothesis (supports/refutes with source_text_quote)
+   - Ensure complete chain from triggering to outcome events
 
 {global_hypothesis_section}
 
-**Overall Goal (Revised and Emphasized):**
-Your primary objective is to deconstruct the provided text into a granular causal narrative. This means you MUST:
-1.  Identify and extract all relevant `Event`, `Actor`, `Causal_Mechanism`, `Hypothesis`, `Evidence`, `Condition`, and `Alternative_Explanation` nodes.
-2.  **Establish clear CAUSAL CHAINS:** Extract `Event` nodes and meticulously link them sequentially using `causes` (or `triggers`, `leads_to`) edges. Clearly identify `triggering` and `outcome` event subtypes.
-3.  **Deconstruct CAUSAL MECHANISMS:** For each `Causal_Mechanism`, extract its constituent `Event` nodes representing its internal steps/stages, linking them with `part_of_mechanism` edges. Mechanisms like 'colonial resistance' or 'political mobilization' MUST be broken down into multiple specific action/event steps.
-4.  **Rigorously Test HYPOTHESES:** For EVERY `Hypothesis` node (especially any globally provided one), actively search the entire text for ALL relevant `Evidence`.
-5.  **Classify EVIDENCE Diagnostically:** For each `Evidence` node, assign a `type` from the Van Evera categories (`hoop`, `smoking_gun`, `straw_in_the_wind`, `doubly_decisive`) in its properties. Use `general` only as a last resort.
-6.  **Uncover ALTERNATIVE EXPLANATIONS:** Identify and extract any alternative explanations for key outcomes.
-7.  **Detail CONDITIONS:** Extract `Condition` nodes and explicitly link them to the `Event` or `Causal_Mechanism` nodes they enable or constrain.
+Focus on quality over quantity - better to have 5 well-described entities than 20 with "N/A" descriptions.
 
----
-**CRITICAL INSTRUCTIONS FOR GRAPH CONSTRUCTION (NEW SECTION):**
+**Output Format:**
+Return JSON with 'nodes' and 'edges' lists. Evidence nodes MUST include Van Evera type:
 
-* **Connectivity is Paramount:** Do NOT leave nodes isolated if the text implies any relationship. Maximize relevant connections according to the ontology.
-* **Sequential Flow for Events:** Pay extremely close attention to temporal and causal sequences. If event A leads to event B, ensure a `causes` (or similar) edge exists.
-* **Detail over Brevity:** Provide detailed descriptions in node properties. For `source_text_quote` in edge properties, use concise but directly supportive quotes.
-* **Ontology Adherence:** All node and edge `type` fields, and all property names, MUST match the definitions in the provided JSON schema derived from `ontology.py`.
----
+Examples by diagnostic type:
+- Hoop test (foundational requirement): "Constitutional documents show colonists believed in their rights"
+- Smoking gun (definitive proof): "Official British documents explicitly ordering oppressive measures"  
+- Straw-in-wind (weak indicator): "General colonial unrest and economic boycotts"
+- Doubly decisive (critical turning point): "Declaration stating specific British action was 'final straw'"
 
-**Instructions:**
-
-1. **Node Extraction:**
-   - Extract all relevant entities as nodes, using the following types: Event, Actor, Causal_Mechanism, Hypothesis, Evidence, Condition, Alternative_Explanation, Data_Source.
-
-2. **Event Nodes:**
-   - For each Event, include a properties dictionary with at least:
-     - description (string)
-     - type (string: triggering, intermediate, outcome, unspecified)
-     - date (string, optional)
-     - location (string, optional)
-   - Ensure `type` properties are assigned thoughtfully: `triggering` for initial events in key sequences, `outcome` for significant results, and `intermediate` for events within a process. An Event without a `causes` edge leading from it or to it (unless it's a clear start/end) might indicate a missed connection.
-
-3. **Causal_Mechanism (CM) Nodes:**
-   - For each CM, include a properties dictionary with:
-     - description (string)
-     - confidence (float, 0.0-1.0)
-     - level_of_detail (string: low, medium, high)
-   - **Internal Steps (CRITICAL FOR MECHANISM COMPLETENESS):** For each CM, you MUST identify multiple distinct Event nodes from the text that represent its internal, sequential steps, stages, or constituent parts. Link each such Event to the CM using a `part_of_mechanism` edge (i.e., `(Event_Step) -[part_of_mechanism]-> (CM)`). Do not simply list factors; extract them as Event nodes and link them. The more distinct, linked Event parts you extract for a CM, the higher its 'completeness' will be evaluated. Conceptual mechanisms (e.g., 'escalation', 'mobilization', 'resistance') described in the text MUST be broken down this way.
-   - Also identify the main Event(s) or Condition(s) that initiate or trigger the CM, linking them to the CM with a `causes` edge.
-   - Specify `confidence` and `level_of_detail` for the CM based on the textual description.
-
-4. **Hypothesis (HY) Nodes:**
-   - A Hypothesis node MUST represent a specific, testable statement about a causal relationship or the operation, components, or significance of a Causal_Mechanism. Avoid creating Hypothesis nodes for mere assertions or beliefs unless they are framed as part of a causal claim.
-   - You MUST actively seek to link Evidence (see next section) to EVERY Hypothesis node you create, especially the global study hypothesis if provided.
-   - If a global study hypothesis (ID: '{global_hypothesis_id_for_prompt}', Text: '{global_hypothesis_text_for_prompt}') is provided, you MUST create a Hypothesis node with this exact ID and description. Then, diligently search the entire text for all Evidence that supports or refutes it.
-   - If a Hypothesis makes a claim about a specific Causal_Mechanism you've extracted, you MUST link it using an `explains_mechanism` edge: `(Hypothesis) -[explains_mechanism]-> (CM)`. Specify `type_of_claim` in edge properties.
-
-5. **Evidence (EV) Nodes:**
-   - For each Evidence node, include a properties dictionary with:
-     - description (string)
-     - evidence_type (string: 'hoop', 'smoking_gun', 'straw_in_the_wind', 'doubly_decisive', or 'general')
-     - certainty (string, optional)
-   - For each Evidence node, its properties dictionary MUST include an evidence_type field. The value for evidence_type MUST be one of the allowed diagnostic values from the ontology: hoop, smoking_gun, straw_in_the_wind, doubly_decisive. Do NOT default to general unless no other classification is remotely appropriate. Think critically:
-     - Is this Evidence NECESSARY for the Hypothesis to be viable (potential hoop test)? If absent, would the Hypothesis be disconfirmed?
-     - Is this Evidence SUFFICIENT to confirm the Hypothesis (potential smoking_gun)? If present, does it strongly point to the Hypothesis being true, being very unlikely if the Hypothesis were false?
-     - Assign the most diagnostic type possible based on your interpretation of the text's claim about the evidence. If the text explicitly discusses the diagnostic power of a piece of evidence, reflect that in your choice.
-   - Edges linking Evidence to Hypothesis nodes (using supports or refutes edge types) MUST include probative_value (float, your best estimate of its inferential strength, e.g., 0.1-1.0 where 1.0 is very strong) and a concise source_text_quote (string) in their properties dictionary.
-
-6. **Condition Nodes (CRITICAL FOR CONTEXT AND SCOPE):**
-   - Extract all relevant `Condition` nodes that describe background factors, context, or scope conditions. [Refer to Condition node properties in ontology.py]
-   - For each `Condition`, its `properties` MUST include `type` (e.g., `background`, `enabling`, `facilitating`, `constraining`, `unspecified`).
-   - **CRITICAL LINKAGE:** You MUST link `Condition` nodes to the `Event` or `Causal_Mechanism` nodes they affect using `enables` or `constrains` edges. A `Condition` node should not be left isolated if its influence on a process is described.
-
-7. **Alternative_Explanation Nodes (CRITICAL FOR RIGOR):**
-   - Actively search the text for any alternative explanations proposed for the main outcomes or causal processes.
-   - If found, extract these as `Alternative_Explanation` nodes. [Refer to Alternative_Explanation node properties in ontology.py]
-   - Link any `Evidence` found in the text that supports or refutes these alternatives using `supports_alternative` or `refutes_alternative` edges, respectively. Include `probative_value` in the edge properties. [Refer to these edge types in ontology.py]
-
-8. **General Edge Creation:**
-   - It is critical that you create as many relevant edges as the text supports, following the specified types and property structures. An interconnected graph is vital. Do not leave nodes isolated if the text implies a relationship.
-   - Beliefs, arguments, or normative claims found in the text should be represented as properties of Actor nodes (e.g., beliefs), Condition nodes (e.g., prevailing ideology), or Event nodes (e.g., articulation of an argument), NOT as Hypothesis nodes unless they are part of a testable causal claim as defined above.
-
----
-
-**Output:**
-- Return a JSON object with two lists: 'nodes' and 'edges', strictly following the provided schema.
-- Each node must have a unique 'id', 'type', and a 'properties' dictionary.
-- Each edge must have a unique 'id' (optional, can be auto-generated if not provided by LLM), 'type', 'source' (node_id), 'target' (node_id), and a 'properties' dictionary.
+Example Evidence node:
+{{
+  "id": "evidence1",
+  "type": "Evidence", 
+  "properties": {{
+    "description": "Detailed description of the evidence",
+    "type": "smoking_gun",
+    "source": "source_document",
+    "source_text_quote": "Exact quote from text",
+    "certainty": 0.9,
+    "probative_value": 0.8
+  }}
+}}
 """
 
 # --- Refactored Single-Case Processing Function ---
-def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, project_name_str, global_hypothesis_text=None, global_hypothesis_id=None):
+def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, project_name_str, global_hypothesis_text=None, global_hypothesis_id=None, bayesian_config=None):
     import subprocess
     from datetime import datetime
     case_file_path = Path(case_file_path_str)
@@ -193,10 +193,24 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
     # Read input text
     with open(case_file_path, "r", encoding="utf-8") as f:
         text = f.read()
+    
+    # Issue #85 Fix: Hard fail if text exceeds 1M tokens (NO chunking)
+    # Rough approximation: 1 token ≈ 4 characters for English text
+    estimated_tokens = len(text) // 4
+    MAX_TOKENS = 1_000_000
+    
+    if estimated_tokens >= MAX_TOKENS:
+        print(f"[ERROR] Input text too large: ~{estimated_tokens:,} tokens (limit: {MAX_TOKENS:,})")
+        print(f"[ERROR] File: {case_file_path}")
+        print(f"[ERROR] Text length: {len(text):,} characters")
+        print("[ERROR] Please reduce input size. Chunking is not supported for quality reasons.")
+        sys.exit(1)
+    
+    print(f"[INFO] Input size: ~{estimated_tokens:,} tokens ({len(text):,} characters)")
     # Build schema
     schema = get_schema()
     # Format prompt
-    active_prompt_template = COMPREHENSIVE_LLM_PROMPT_TEMPLATE
+    active_prompt_template = FOCUSED_EXTRACTION_PROMPT
     # Default values for prompt placeholders
     gh_text_for_prompt = "Not Applicable (no global hypothesis specified for this run)"
     gh_id_for_prompt = "N/A"
@@ -220,22 +234,43 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
         global_hypothesis_text_for_prompt=gh_text_for_prompt,
         global_hypothesis_id_for_prompt=gh_id_for_prompt
     )
-    # Query Gemini
-    raw_json = query_gemini(text, schema, final_system_prompt)
+    # Query Universal LLM
+    raw_json = query_llm(text, schema, final_system_prompt)
     # Save raw output
     now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
     graph_json_path = output_dir_for_case / f"{project_name_str}_{now_str}_graph.json"
     
-    # Parse the JSON response
+    # Parse the JSON response using proper JSON cleaning
+    from core.extract import parse_json
     try:
-        graph_data = json.loads(raw_json)
+        graph_data = parse_json(raw_json)
         with open(graph_json_path, "w", encoding="utf-8") as f:
             json.dump(graph_data, f, indent=2)
     except Exception as e:
         print(f"[ERROR] Failed to parse JSON: {e}")
+        print(f"[DEBUG] Raw response: {raw_json[:500]}...")
         with open(graph_json_path, "w", encoding="utf-8") as f:
             f.write(raw_json)
         return None
+    
+    # Validate extraction connectivity
+    try:
+        from core.extraction_validator import validate_causal_connectivity, print_validation_report
+        print("\n" + "="*60)
+        print("VALIDATING EXTRACTED CAUSAL GRAPH")
+        print("="*60)
+        
+        validation_results = validate_causal_connectivity(graph_data)
+        print_validation_report(validation_results)
+        
+        if not validation_results['is_valid']:
+            print("\n[WARNING] Extracted graph has connectivity issues that may prevent analysis.")
+            print("Consider re-running extraction with enhanced connectivity requirements.")
+            
+    except ImportError:
+        print("[INFO] Extraction validator not available, skipping validation.")
+    except Exception as e:
+        print(f"[WARNING] Validation failed: {e}")
             
     # Visualize as standalone HTML (keeping this for backward compatibility)
     html_path = output_dir_for_case / f"{project_name_str}_{now_str}_graph.html"
@@ -298,75 +333,173 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
     
     if summary_json_files:
         safe_print(f"[DEBUG] Found summary JSON files: {summary_json_files}")
-        return str(summary_json_files[0])
+        summary_path = str(summary_json_files[0])
+        
+        # Bayesian Enhancement (if enabled)
+        if bayesian_config and BAYESIAN_AVAILABLE:
+            summary_path = enhance_with_bayesian_analysis(
+                summary_path, case_file_path_str, output_dir_for_case, project_name_str, bayesian_config
+            )
+        elif bayesian_config and not BAYESIAN_AVAILABLE:
+            print("[WARNING] Bayesian analysis requested but components not available.")
+            print("Install required packages: pip install scipy numpy")
+        
+        return summary_path
     else:
         print(f"[ERROR] Could not find analysis summary JSON in {output_dir_for_case} using pattern {glob_pattern}")
         return None
 
-# --- Update query_gemini to accept system_instruction ---
-def query_gemini(text_content, schema, system_instruction_text):
-    api_key = os.environ.get("GOOGLE_API_KEY")
-    if not api_key:
-        print("[ERROR] GOOGLE_API_KEY environment variable not set and not found in .env file.")
-        sys.exit(1)
-    genai.configure(api_key=api_key)
-    MODEL_ID = "gemini-1.5-flash"  # Use stable model version
-    # Save and print all inputs for debugging
-    with open("debug_input_text.txt", "w", encoding="utf-8") as f:
-        f.write(text_content)
-    with open("debug_prompt.txt", "w", encoding="utf-8") as f:
-        f.write(system_instruction_text)
-    with open("debug_schema.json", "w", encoding="utf-8") as f:
-        json.dump(schema, f, indent=2)
-    print("\n[DEBUG] Gemini Extraction Debugging:")
-    print(f"[DEBUG] Input text length: {len(text_content)} characters (saved to debug_input_text.txt)")
-    print(f"[DEBUG] Prompt length: {len(system_instruction_text)} characters (saved to debug_prompt.txt)")
-    print(f"[DEBUG] Schema saved to debug_schema.json")
-    # LLM call with corrected API
-    model = genai.GenerativeModel(MODEL_ID)
+def create_bayesian_config_from_args(args):
+    """Create BayesianReportConfig from command line arguments."""
+    if not args.bayesian:
+        return None
     
-    # Build generation config
-    generation_config = {}
-    if schema:
-        generation_config['response_mime_type'] = 'application/json'
-        generation_config['response_schema'] = schema
+    if not BAYESIAN_AVAILABLE:
+        print("[ERROR] Bayesian analysis requested but components not available.")
+        print("Please ensure all required packages are installed:")
+        print("  pip install scipy numpy")
+        print("And that the Bayesian components are properly integrated.")
+        return None
     
-    # Create content with system instruction
-    if system_instruction_text:
-        prompt_content = f"System: {system_instruction_text}\n\nUser: {text_content}"
-    else:
-        prompt_content = text_content
-    
-    result = model.generate_content(
-        prompt_content,
-        generation_config=generation_config if generation_config else None
+    config = BayesianReportConfig(
+        include_uncertainty_analysis=not args.no_uncertainty,
+        include_sensitivity_analysis=not args.no_uncertainty,
+        include_visualizations=not args.no_visualizations,
+        uncertainty_simulations=args.simulations,
+        confidence_level=args.confidence_level
     )
-    print(f"[DEBUG] Gemini result type: {type(result)}")
-    print(f"[DEBUG] Gemini result repr: {repr(result)}")
-    # Print and save the full raw output
-    print(f"[DEBUG] Raw Gemini output (first 500 chars):\n{getattr(result, 'text', str(result))[:500]}\n---END GEMINI OUTPUT SAMPLE---\n")
-    with open("debug_raw_gemini_output.txt", "w", encoding="utf-8") as f:
-        f.write(getattr(result, 'text', str(result)))
-    print("[DEBUG] Full raw Gemini output saved to debug_raw_gemini_output.txt\n")
-    # Extract and parse JSON from markdown-wrapped response
-    raw_text = getattr(result, 'text', str(result))
+    
+    print(f"[INFO] Bayesian analysis enabled:")
+    print(f"  Simulations: {args.simulations}")
+    print(f"  Confidence level: {args.confidence_level:.1%}")
+    print(f"  Uncertainty analysis: {'enabled' if not args.no_uncertainty else 'disabled'}")
+    print(f"  Visualizations: {'enabled' if not args.no_visualizations else 'disabled'}")
+    
+    return config
+
+def enhance_with_bayesian_analysis(summary_path, case_file_path, output_dir, project_name, bayesian_config):
+    """Enhance traditional analysis with Bayesian confidence assessment."""
     try:
-        # Handle markdown-wrapped JSON
-        if '```json' in raw_text:
-            json_start = raw_text.find('```json') + 7
-            json_end = raw_text.find('```', json_start)
-            json_text = raw_text[json_start:json_end].strip()
-        else:
-            json_text = raw_text.strip()
+        print(f"[INFO] Starting Bayesian enhancement of analysis...")
         
-        parsed = json.loads(json_text)
-        print(f"[SUCCESS] Parsed JSON successfully")
-        return json_text
+        # Load traditional analysis results
+        import json
+        with open(summary_path, 'r', encoding='utf-8') as f:
+            analysis_results = json.load(f)
+        
+        # Load original text for evidence assessment
+        with open(case_file_path, 'r', encoding='utf-8') as f:
+            text_content = f.read()
+        
+        # Extract evidence for Van Evera assessment
+        print("[INFO] Performing Van Evera evidence assessment...")
+        evidence_assessments = []
+        
+        # Try to extract evidence from analysis results or create mock evidence for basic integration
+        evidence_nodes = [node for node in analysis_results.get('nodes', []) 
+                         if node.get('type', '').lower() == 'evidence']
+        
+        if evidence_nodes:
+            for i, evidence_node in enumerate(evidence_nodes[:3]):  # Limit to 3 for performance
+                try:
+                    assessment = refine_evidence_assessment_with_llm(
+                        evidence_node.get('description', 'Evidence description'),
+                        text_content,
+                        context_info=f"Analysis context: {analysis_results.get('narrative_summary', '')}"
+                    )
+                    evidence_assessments.append(assessment)
+                except Exception as e:
+                    print(f"[WARNING] Failed to assess evidence {i+1}: {e}")
+                    continue
+        
+        if not evidence_assessments:
+            print("[INFO] No evidence assessments available - using structure-only Bayesian analysis")
+        
+        # Integrate Bayesian analysis
+        print("[INFO] Integrating Bayesian confidence assessment...")
+        enhanced_analysis = integrate_bayesian_analysis(
+            analysis_results,
+            evidence_assessments,
+            output_dir=output_dir,
+            config=bayesian_config
+        )
+        
+        # Save enhanced analysis
+        enhanced_filename = f"{project_name}_bayesian_enhanced_analysis_{timestamp()}.json"
+        enhanced_path = Path(output_dir) / enhanced_filename
+        
+        with open(enhanced_path, 'w', encoding='utf-8') as f:
+            json.dump(enhanced_analysis, f, indent=2, ensure_ascii=False, default=str)
+        
+        print(f"[SUCCESS] Bayesian enhancement completed: {enhanced_path.name}")
+        
+        # Extract and display key metrics
+        bayesian_section = enhanced_analysis.get('bayesian_analysis', {})
+        if bayesian_section:
+            confidence_assessments = bayesian_section.get('confidence_assessments', {})
+            print("[INFO] Bayesian Analysis Summary:")
+            for hyp_id, assessment in confidence_assessments.items():
+                confidence = assessment.get('overall_confidence', 0)
+                level = assessment.get('confidence_level', 'unknown')
+                print(f"  {hyp_id.replace('_', ' ').title()}: {confidence:.1%} confidence ({level})")
+        
+        return str(enhanced_path)
+        
     except Exception as e:
-        print(f"[ERROR] Could not parse Gemini output as JSON: {e}")
-        with open("debug_gemini_json_error.txt", "w", encoding="utf-8") as f:
-            f.write(f"Error: {e}\n\nRaw output:\n{raw_text}")
-        return raw_text
+        print(f"[ERROR] Bayesian enhancement failed: {e}")
+        print("[INFO] Continuing with traditional analysis results")
+        return summary_path
+
+# --- Universal LLM Interface (replaces 108-line query_gemini) ---
+from universal_llm_kit.universal_llm import structured, chat
+
+def query_llm(text_content, schema=None, system_instruction_text="", use_structured_output=True):
+    """Fixed structured output parsing with proper Pydantic model creation"""
+    import google.generativeai as genai
+    import os
+    import json
+    from core.extract import parse_json
+    
+    # Configure Gemini
+    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("No Gemini API key found. Set GOOGLE_API_KEY or GEMINI_API_KEY")
+    
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-2.5-flash')
+    
+    prompt = f"{system_instruction_text}\n\n{text_content}" if system_instruction_text else text_content
+    
+    if use_structured_output and schema:
+        if hasattr(schema, 'model_json_schema'):
+            prompt += f"\n\nRespond with valid JSON matching this schema: {schema.model_json_schema()}"
+        else:
+            prompt += f"\n\nRespond with valid JSON matching this schema: {json.dumps(schema, indent=2)}"
+    
+    response = model.generate_content(prompt)
+    raw_result = response.text
+    print(f"[DEBUG] Gemini response length: {len(raw_result)} chars")
+    print(f"[DEBUG] Gemini response start: {raw_result[:200]}...")
+    
+    # If structured output requested, parse and create Pydantic model
+    if use_structured_output and schema and hasattr(schema, 'model_validate'):
+        try:
+            # Use existing JSON cleaning from core.extract
+            cleaned_json = parse_json(raw_result)
+            print(f"[DEBUG] Parsed JSON keys: {list(cleaned_json.keys()) if isinstance(cleaned_json, dict) else 'Not a dict'}")
+            
+            # Create Pydantic model instance
+            structured_response = schema.model_validate(cleaned_json)
+            print(f"[DEBUG] Created structured response: {type(structured_response).__name__}")
+            return structured_response
+            
+        except Exception as e:
+            print(f"[WARNING] Failed to create structured response: {e}")
+            print(f"[WARNING] Falling back to raw response")
+            # Fall back to raw response for backward compatibility
+            return raw_result
+    
+    return raw_result
 
 # --- Save Output ---
 def save_output(data, out_dir, project, suffix):
@@ -424,7 +557,24 @@ def visualize_graph(graph_data, html_path, project):
 
 # --- Main Pipeline ---
 def main():
-    parser = argparse.ArgumentParser(description="Advanced Process Tracing Pipeline (Gemini JSON Mode)")
+    parser = argparse.ArgumentParser(
+        description="Advanced Process Tracing Pipeline (Gemini JSON Mode)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Traditional analysis
+  python process_trace_advanced.py --project myproject
+  
+  # Enhanced analysis with Bayesian confidence assessment
+  python process_trace_advanced.py --project myproject --bayesian
+  
+  # High-quality Bayesian analysis with custom settings
+  python process_trace_advanced.py --project myproject --bayesian --simulations 2000 --confidence-level 0.99
+  
+  # Fast Bayesian analysis (skip uncertainty analysis)
+  python process_trace_advanced.py --project myproject --bayesian --no-uncertainty --simulations 100
+        """
+    )
     parser.add_argument("-p", "--project", type=str, help="Project name (subdirectory of input_text/)")
     parser.add_argument("-o", "--output", type=str, default=None, help="Directory for outputs (default: output_data/<project>)")
     parser.add_argument("--extract-only", action="store_true", help="Run extraction and save initial graph + editable files, then exit.")
@@ -434,6 +584,24 @@ def main():
     parser.add_argument("--input-edges", type=str, help="Path to editable_edges.json for import.")
     parser.add_argument("--graph-file", type=str, help="Path to a graph JSON file to analyze or export.")
     parser.add_argument("--analyze-only", action="store_true", help="Run analysis only on a specified graph file.")
+    parser.add_argument("--comparative", action="store_true", help="Run comparative analysis on multiple cases.")
+    parser.add_argument("--case-directory", type=str, help="Directory containing case JSON files for comparative analysis.")
+    parser.add_argument("--case-files", nargs='+', help="Specific case files for comparative analysis.")
+    parser.add_argument("--comparison-types", nargs='+', choices=['mss', 'mds', 'diverse'], 
+                       default=['mss', 'mds'], help="Types of comparisons to perform.")
+    
+    # Bayesian Enhancement Options
+    parser.add_argument("--bayesian", action="store_true", 
+                       help="Enable Bayesian confidence assessment and uncertainty analysis")
+    parser.add_argument("--simulations", type=int, default=1000,
+                       help="Number of Monte Carlo simulations for uncertainty analysis (default: 1000)")
+    parser.add_argument("--confidence-level", type=float, default=0.95,
+                       help="Confidence level for uncertainty intervals (default: 0.95)")
+    parser.add_argument("--no-uncertainty", action="store_true",
+                       help="Skip uncertainty analysis (faster execution)")
+    parser.add_argument("--no-visualizations", action="store_true", 
+                       help="Disable visualization generation in Bayesian reports")
+    
     args = parser.parse_args()
 
     # --- Export editable nodes/edges from a graph JSON ---
@@ -471,6 +639,59 @@ def main():
             sys.exit(1)
         sys.exit(0)
 
+    # --- Comparative analysis mode ---
+    if args.comparative:
+        from process_trace_comparative import ComparativeProcessTracer
+        from core.comparative_models import ComparisonType
+        
+        # Map comparison type strings to enums
+        comparison_type_map = {
+            'mss': ComparisonType.MOST_SIMILAR_SYSTEMS,
+            'mds': ComparisonType.MOST_DIFFERENT_SYSTEMS,
+            'diverse': ComparisonType.DIVERSE_CASE
+        }
+        comparison_types = [comparison_type_map[ct] for ct in args.comparison_types]
+        
+        # Set up output directory
+        out_dir = Path(args.output) if args.output else Path('comparative_output')
+        
+        print(f"[INFO] Starting comparative analysis...")
+        
+        try:
+            # Initialize comparative tracer
+            tracer = ComparativeProcessTracer(
+                case_directory=args.case_directory,
+                output_directory=str(out_dir)
+            )
+            
+            # Load cases
+            case_ids = tracer.load_cases(case_files=args.case_files)
+            print(f"[INFO] Loaded {len(case_ids)} cases: {case_ids}")
+            
+            if len(case_ids) < 2:
+                print("[ERROR] Need at least 2 cases for comparative analysis.")
+                sys.exit(1)
+            
+            # Conduct analysis
+            results = tracer.conduct_comparative_analysis(comparison_types=comparison_types)
+            print(f"[INFO] Analysis completed. Detected {len(results.mechanism_patterns)} mechanisms.")
+            
+            # Generate reports
+            html_report = tracer.generate_comparative_report(output_format='html')
+            json_report = tracer.generate_comparative_report(output_format='json')
+            md_report = tracer.generate_comparative_report(output_format='md')
+            
+            print(f"[SUCCESS] Comparative analysis completed!")
+            print(f"  HTML Report: {html_report}")
+            print(f"  JSON Report: {json_report}")
+            print(f"  Markdown Report: {md_report}")
+            
+        except Exception as e:
+            print(f"[ERROR] Comparative analysis failed: {e}")
+            sys.exit(1)
+        
+        sys.exit(0)
+
     # --- Extraction only mode (save editable files and exit) ---
     if args.extract_only:
         input_text_dir = Path('input_text')
@@ -491,8 +712,10 @@ def main():
         out_dir = Path(args.output) if args.output else Path('output_data') / project
         out_dir.mkdir(parents=True, exist_ok=True)
         print(f"[INFO] Reading input text from {input_path} ...")
+        # Create Bayesian configuration if requested
+        bayesian_config = create_bayesian_config_from_args(args)
         # Use the new function for single-case processing
-        execute_single_case_processing(str(input_path), str(out_dir), project)
+        execute_single_case_processing(str(input_path), str(out_dir), project, bayesian_config=bayesian_config)
         sys.exit(0)
 
     # --- Default: Full pipeline (extract, visualize, analyze) ---
@@ -512,12 +735,14 @@ def main():
 
     project_dir = input_text_dir / project
     input_path = find_first_txt(project_dir)
-    print(f"\n📄 Using input: {input_path}\n")
+    safe_print(f"\nFile: Using input: {input_path}\n")
     out_dir = Path(args.output) if args.output else Path('output_data') / project
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"[INFO] Reading input text from {input_path} ...")
+    # Create Bayesian configuration if requested
+    bayesian_config = create_bayesian_config_from_args(args)
     # Use the new function for single-case processing
-    execute_single_case_processing(str(input_path), str(out_dir), project)
+    execute_single_case_processing(str(input_path), str(out_dir), project, bayesian_config=bayesian_config)
 
 if __name__ == "__main__":
     main() 

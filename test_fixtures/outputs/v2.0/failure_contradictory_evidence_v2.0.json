@@ -1,0 +1,159 @@
+{
+  "metadata": {
+    "case_id": "contradictory_case_001",
+    "analysis_timestamp": "2024-01-15T10:30:00Z",
+    "methodology_version": "van_evera_2.0_fully_automated",
+    "status": "partial_failure",
+    "failure_type": "contradictory_evidence",
+    "confidence_score": 0.34,
+    "processing_time_seconds": 198
+  },
+  
+  "error_summary": {
+    "error_code": "ERR_CONTRADICTORY_EVIDENCE",
+    "error_message": "Critical contradictions in evidence prevent definitive hypothesis evaluation",
+    "diagnostic_info": {
+      "total_contradictions_found": 17,
+      "unresolvable_contradictions": 8,
+      "hypotheses_affected": 5,
+      "confidence_degradation": 0.66
+    }
+  },
+
+  "partial_results": {
+    "extraction_successful": true,
+    "graph_metrics": {
+      "nodes": 89,
+      "edges": 134,
+      "causal_chains_identified": 12,
+      "contradiction_clusters": 4
+    },
+    
+    "hypothesis_evaluation_attempted": {
+      "total_hypotheses": 5,
+      "successfully_evaluated": 1,
+      "indeterminate_due_to_contradictions": 3,
+      "evaluation_blocked": 1
+    },
+    
+    "contradictions_detail": [
+      {
+        "id": "C1",
+        "type": "temporal_impossibility",
+        "description": "Event E23 claimed to cause E12, but E12 predates E23 by 6 months",
+        "events_involved": ["E12", "E23"],
+        "resolution_attempted": true,
+        "resolution_failed_reason": "No alternative causal path found"
+      },
+      {
+        "id": "C2",
+        "type": "evidential_conflict",
+        "description": "Evidence EV34 directly contradicts EV45 regarding same hypothesis",
+        "hypothesis_affected": "H2",
+        "evidence_items": [
+          {
+            "id": "EV34",
+            "claim": "General Washington present at Philadelphia",
+            "source_reliability": 0.87
+          },
+          {
+            "id": "EV45",
+            "claim": "General Washington confirmed in New York same date",
+            "source_reliability": 0.83
+          }
+        ],
+        "impact": "Cannot determine H2 status"
+      }
+    ],
+    
+    "salvageable_analysis": {
+      "reliable_findings": [
+        {
+          "hypothesis_id": "H1",
+          "status": "weakly_supported",
+          "confidence": 0.67,
+          "note": "Unaffected by contradictions"
+        }
+      ],
+      "tentative_mechanisms": [
+        {
+          "id": "M1",
+          "description": "Partial mechanism identified but missing crucial middle steps due to contradictory evidence",
+          "completeness": 0.43
+        }
+      ]
+    }
+  },
+
+  "evidence_conflict_analysis": {
+    "conflict_patterns": {
+      "source_bias_conflicts": 3,
+      "temporal_inconsistencies": 5,
+      "logical_contradictions": 4,
+      "measurement_discrepancies": 5
+    },
+    "reliability_degradation": {
+      "overall_evidence_reliability": 0.54,
+      "highest_reliability_cluster": 0.78,
+      "lowest_reliability_cluster": 0.23
+    },
+    "automated_resolution_attempts": [
+      {
+        "method": "source_credibility_weighting",
+        "success_rate": 0.47
+      },
+      {
+        "method": "temporal_sequence_validation",
+        "success_rate": 0.20
+      },
+      {
+        "method": "logical_consistency_checking",
+        "success_rate": 0.33
+      }
+    ]
+  },
+
+  "partial_outputs": {
+    "best_effort_summary": "Analysis suggests [hypothesis H1] may be weakly supported, but contradictory evidence prevents confident evaluation of primary hypotheses. The case exhibits significant internal inconsistencies that violate process tracing validity requirements.",
+    "usable_insights": [
+      "Time period 1775-1776 shows consistent evidence patterns",
+      "Actor A1 shows consistent behavioral pattern despite contradictions elsewhere",
+      "Mechanism M1 partially visible but incomplete"
+    ],
+    "confidence_warning": "Results should be considered highly provisional due to unresolved contradictions"
+  },
+
+  "recovery_suggestions": [
+    {
+      "issue": "Temporal contradictions",
+      "suggestion": "Verify event dates and sequence in original sources",
+      "automated_retry_possible": false
+    },
+    {
+      "issue": "Source conflicts",
+      "suggestion": "Additional source criticism or triangulation needed",
+      "automated_retry_possible": true,
+      "retry_approach": "focused_extraction_on_reliable_sources"
+    }
+  ],
+
+  "methodology_limitations": {
+    "limitation_triggered": "evidence_consistency_requirement",
+    "explanation": "Process tracing requires internally consistent evidence to establish causal chains",
+    "partial_results_validity": "low",
+    "recommended_action": "Manual review of contradictions before accepting results"
+  },
+
+  "reproducibility": {
+    "analysis_pipeline_version": "2.0.0",
+    "methodology_checksum": "sha256:a3f5c921...",
+    "failure_checkpoint": "evidence_validation",
+    "contradiction_detection_seed": 42,
+    "compute_requirements": {
+      "extraction_seconds": 31,
+      "analysis_seconds": 124,
+      "synthesis_seconds": 43,
+      "total_seconds": 198
+    }
+  }
+}

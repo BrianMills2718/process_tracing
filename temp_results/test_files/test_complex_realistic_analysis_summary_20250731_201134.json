@@ -1,0 +1,475 @@
+{
+  "filename": "test_complex_realistic_graph.json",
+  "case_identifier": "test_complex_realistic_graph",
+  "generated_at": "2025-07-31T20:11:34.402795",
+  "causal_chains": [
+    {
+      "path": [
+        "soviet_missiles_cuba",
+        "us_intelligence_discovery",
+        "excomm_deliberations",
+        "naval_quarantine",
+        "crisis_resolution"
+      ],
+      "node_descriptions": [
+        "Soviet deployment of nuclear missiles in Cuba, October 1962",
+        "U-2 spy plane discovers Soviet missile sites in Cuba",
+        "Executive Committee crisis decision-making process",
+        "US naval quarantine of Cuba implementation",
+        "Soviet agreement to remove missiles from Cuba, October 28, 1962"
+      ],
+      "node_subtypes": [
+        "triggering",
+        "N/A_subtype",
+        "N/A_subtype",
+        "N/A_subtype",
+        "outcome"
+      ],
+      "edges": [
+        "causes",
+        "triggers",
+        "causes",
+        "contributes_to"
+      ],
+      "length": 5
+    },
+    {
+      "path": [
+        "soviet_missiles_cuba",
+        "us_intelligence_discovery",
+        "excomm_deliberations",
+        "back_channel_negotiations",
+        "crisis_resolution"
+      ],
+      "node_descriptions": [
+        "Soviet deployment of nuclear missiles in Cuba, October 1962",
+        "U-2 spy plane discovers Soviet missile sites in Cuba",
+        "Executive Committee crisis decision-making process",
+        "Secret diplomatic negotiations through intermediaries",
+        "Soviet agreement to remove missiles from Cuba, October 28, 1962"
+      ],
+      "node_subtypes": [
+        "triggering",
+        "N/A_subtype",
+        "N/A_subtype",
+        "N/A_subtype",
+        "outcome"
+      ],
+      "edges": [
+        "causes",
+        "triggers",
+        "enables",
+        "causes"
+      ],
+      "length": 5
+    }
+  ],
+  "causal_mechanisms": [
+    {
+      "id": "excomm_deliberations",
+      "name": "Executive Committee crisis decision-making process",
+      "causes": [
+        "U-2 spy plane discovers Soviet missile sites in Cuba"
+      ],
+      "effects": [],
+      "completeness": 20,
+      "confidence": "unknown",
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "mechanism_id": "excomm_deliberations",
+        "narrative_elaboration": "The discovery of Soviet missiles in Cuba (us_intelligence_discovery) triggered an immediate crisis. This discovery prompted the convening of the Executive Committee of the National Security Council (ExComm), initiating its deliberations on the appropriate response.  The ExComm's discussions and decision-making process comprised the core of the 'excomm_deliberations' mechanism, leading to the eventual choice of a response (which is not yet specified in the given events).",
+        "identified_missing_micro_steps": [
+          {
+            "suggested_event_description": "President Kennedy informs key advisors of the discovery and calls an emergency meeting of ExComm.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "ExComm members present their assessments and options regarding the Cuban missile crisis.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "ExComm debates various response options (e.g., air strike, blockade, diplomacy).",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "ExComm reaches a consensus (or a majority decision) on a course of action.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "The President approves and implements the ExComm's decision.",
+            "suggested_event_type": "intermediate"
+          }
+        ],
+        "coherence_assessment": "Moderately coherent but with gaps.",
+        "suggested_confidence": 0.6,
+        "suggested_level_of_detail": "low",
+        "reasoning_for_suggestions": "The current description only identifies the trigger event.  Many crucial steps in the ExComm's decision-making process are missing.  Therefore, the confidence is set to 0.6 reflecting the incompleteness. The level of detail is low because the mechanism's internal workings are only vaguely described.  Adding the suggested micro-steps would greatly improve both the coherence and the level of detail, and consequently the confidence."
+      }
+    },
+    {
+      "id": "naval_quarantine",
+      "name": "US naval quarantine of Cuba implementation",
+      "causes": [],
+      "effects": [],
+      "completeness": 0,
+      "confidence": "unknown",
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "mechanism_id": "naval_quarantine",
+        "narrative_elaboration": "The US naval quarantine of Cuba involved a multi-step process.  First, the US government decided to implement a quarantine, likely based on intelligence assessments of Soviet missiles in Cuba.  Next, they mobilized naval assets and defined the quarantine zone. Finally, the US Navy began intercepting and inspecting Soviet ships approaching Cuba, enforcing the quarantine.",
+        "identified_missing_micro_steps": [
+          {
+            "suggested_event_description": "US government authorizes the drafting of Executive Order 3500 (or equivalent formal order authorizing the quarantine)",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Detailed planning and communication of the quarantine strategy to relevant naval commands and personnel.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Deployment of US naval vessels to designated quarantine positions around Cuba.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Establishment of communication protocols for intercepting and inspecting Soviet vessels.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "First interceptions and inspections of Soviet ships; potential diplomatic communications with the Soviet Union.",
+            "suggested_event_type": "intermediate"
+          }
+        ],
+        "coherence_assessment": "Moderately coherent but with gaps.",
+        "suggested_confidence": "0.7",
+        "suggested_level_of_detail": "medium",
+        "reasoning_for_suggestions": "The initial description is too high-level.  Adding the micro-steps significantly increases the level of detail and allows for a better understanding of the process.  The confidence is set to 0.7 because while the overall event happened, specific details (e.g. exact communication protocols) require further research. The level of detail is 'medium' as the mechanism is elaborated but not at a level detailing every single order or ship movement."
+      }
+    },
+    {
+      "id": "back_channel_negotiations",
+      "name": "Secret diplomatic negotiations through intermediaries",
+      "causes": [],
+      "effects": [
+        "Soviet agreement to remove missiles from Cuba, October 28, 1962"
+      ],
+      "completeness": 0,
+      "confidence": "unknown",
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "mechanism_id": "back_channel_negotiations",
+        "narrative_elaboration": "Without specific constituent events provided, a narrative cannot be constructed.  The causal mechanism 'back_channel_negotiations' describes secret diplomatic talks facilitated by intermediaries. This process typically involves initial contact between intermediaries, followed by confidential discussions to explore common ground and potential compromises, and culminates in an agreement or breakdown of negotiations, possibly relayed back through the intermediaries.",
+        "identified_missing_micro_steps": [
+          {
+            "suggested_event_description": "Initial contact established between intermediaries representing opposing sides.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Intermediaries assess the willingness and capacity of their respective principals to negotiate.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Confidential meetings occur between intermediaries, exchanging proposals and exploring compromise.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Intermediaries report back to their principals on the progress of negotiations.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Principals authorize further negotiation or instruct intermediaries to cease discussions.",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "A formal agreement is reached (or negotiations collapse).",
+            "suggested_event_type": "intermediate"
+          }
+        ],
+        "coherence_assessment": "Poorly specified.  The mechanism is conceptually sound, but without constituent events, its internal coherence cannot be assessed.  The missing micro-steps highlight the complexity of this type of causal mechanism.",
+        "suggested_confidence": null,
+        "suggested_level_of_detail": null,
+        "reasoning_for_suggestions": "Because no constituent events are provided, it's impossible to assess the confidence in the mechanism or its level of detail.  Once constituent events are linked and their timing and relationships are clarified, the confidence and detail level can be appropriately assigned.  The current specification lacks sufficient detail to estimate confidence and level of detail."
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 3,
+      "Causal_Mechanism": 3,
+      "Hypothesis": 3,
+      "Evidence": 8
+    },
+    "edge_type_distribution": {
+      "causes": 3,
+      "triggers": 1,
+      "enables": 1,
+      "contributes_to": 1,
+      "supports": 8,
+      "refutes": 2
+    },
+    "density": 0.058823529411764705,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "rational_decision_hypothesis": 0.25,
+      "excomm_deliberations": 0.188,
+      "coercive_diplomacy_hypothesis": 0.188,
+      "compromise_hypothesis": 0.188,
+      "us_intelligence_discovery": 0.125,
+      "naval_quarantine": 0.125,
+      "back_channel_negotiations": 0.125,
+      "crisis_resolution": 0.125,
+      "quarantine_effectiveness_evidence": 0.125,
+      "turkey_missiles_evidence": 0.125
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "rational_decision_hypothesis",
+      "description": "Crisis resolved through rational decision-making by both leaders",
+      "assessment": "Strongly Confirmed (Smoking Gun)",
+      "balance_score": 8.5,
+      "van_evera_applied": true,
+      "supporting_evidence_count": 4,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "khrushchev_memoirs_evidence",
+        "public_statements_evidence",
+        "kennedy_advisors_evidence",
+        "hotline_communications_evidence"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [
+          {
+            "id": "kennedy_advisors_evidence",
+            "description": "ExComm transcripts show rational cost-benefit analysis",
+            "type": "smoking_gun",
+            "probative_value": 4.0,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "kennedy_advisors_evidence",
+              "refined_evidence_type": "smoking_gun",
+              "reasoning_for_type": "The hypothesis posits rational decision-making by both leaders during the crisis.  ExComm transcripts directly reflect the decision-making process. If rational cost-benefit analysis is demonstrably present in the transcripts (assuming access to them), it would be strong evidence *for* the hypothesis.  The absence of such analysis would be strong evidence *against* it.  Therefore, the evidence functions as a 'smoking gun'. It's not merely a necessary condition (hoop); its presence strongly supports the hypothesis.  The lack of available source text significantly weakens this classification, however.",
+              "likelihood_P_E_given_H": "High (0.8)",
+              "likelihood_P_E_given_NotH": "Low (0.2)",
+              "justification_for_likelihoods": "If the hypothesis is true (rational decision-making), we'd expect to see evidence of cost-benefit analysis in the ExComm transcripts.  The probability is high (0.8), acknowledging that even rational actors might not always leave a perfect paper trail. Conversely, if the hypothesis is false (irrational or emotional decision-making dominated), it's less likely that the transcripts would reveal systematic cost-benefit analysis.  However,  the possibility remains that even irrational processes might produce documents that superficially resemble rational analysis (0.2). The significant caveat here is the unavailability of the source text.  Without it, these probabilities are highly speculative and could reasonably be lower, particularly P(E|H).",
+              "suggested_numerical_probative_value": "4.0"
+            }
+          }
+        ],
+        "straw_in_wind": [
+          {
+            "id": "khrushchev_memoirs_evidence",
+            "description": "Khrushchev memoirs cite fear of nuclear war as withdrawal reason",
+            "type": "straw_in_the_wind",
+            "probative_value": 1.5,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "khrushchev_memoirs_evidence",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "The evidence, even if available, only offers a potential reason for withdrawal.  It doesn't definitively prove rational decision-making by both leaders.  Fear of nuclear war could be a rational motivation, but other factors (domestic pressure, miscalculation, etc.) could also contribute to withdrawal.  The absence of this evidence wouldn't necessarily refute the hypothesis, nor does its presence strongly confirm it. It provides a weak suggestion at best.",
+              "likelihood_P_E_given_H": "Medium (0.6)",
+              "likelihood_P_E_given_NotH": "Medium (0.4)",
+              "justification_for_likelihoods": "If the hypothesis is true (rational decision-making by both leaders), it's plausible that fear of nuclear war would be cited as a reason. However, other rational reasons might also be given, making the likelihood only 'medium'.  If the hypothesis is false (decision-making wasn't purely rational), it's still possible that fear of nuclear war would be cited \u2013 leaders might present a rationalized explanation even if their actions were driven by other factors.  Therefore, P(E|~H) is also 'medium'.  The limited information in the current description limits the strength of this evidence.",
+              "suggested_numerical_probative_value": "1.5"
+            }
+          },
+          {
+            "id": "public_statements_evidence",
+            "description": "Both leaders made public statements about avoiding nuclear war",
+            "type": "straw_in_the_wind",
+            "probative_value": 1.5,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "public_statements_evidence",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "Public statements about avoiding nuclear war are consistent with rational decision-making, but they are not necessarily conclusive proof.  Leaders might make such statements for reasons unrelated to genuine rational decision-making (e.g., political posturing, attempting to calm public fear). The absence of such statements would not definitively refute the hypothesis, as rational decision-making could occur without public pronouncements.  Therefore, it's weakly suggestive at best.",
+              "likelihood_P_E_given_H": "Medium (0.6)",
+              "likelihood_P_E_given_NotH": "Medium (0.4)",
+              "justification_for_likelihoods": "If the hypothesis is true (rational decision-making led to crisis resolution), it's reasonably likely that leaders would make public statements to this effect, aiming for stability and de-escalation. However, this is not guaranteed; rational actors might choose to remain silent.  If the hypothesis is false (crisis resolution wasn't due to rational decision-making), there's still a reasonable chance leaders would make such statements for other reasons (e.g., damage control, public relations).  The ambiguity of the source text ('Not available') further reduces our confidence in the likelihoods; we have no context to assess the tone, specifics, or audience of these statements.",
+              "suggested_numerical_probative_value": "1.5"
+            }
+          },
+          {
+            "id": "hotline_communications_evidence",
+            "description": "Direct hotline communications between leaders during crisis",
+            "type": "straw_in_the_wind",
+            "probative_value": 1.5,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "hotline_communications_evidence",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "Direct hotline communication is suggestive of rational decision-making, as it facilitates direct dialogue and negotiation. However, its absence doesn't definitively refute rational decision-making (other communication channels could exist).  Similarly, its presence doesn't strongly confirm rational outcomes, as leaders could use the hotline for unproductive or even conflict-escalating communication. Therefore, it's weakly suggestive rather than definitively confirming or refuting the hypothesis.",
+              "likelihood_P_E_given_H": "Medium (0.6)",
+              "likelihood_P_E_given_NotH": "Medium (0.4)",
+              "justification_for_likelihoods": "If rational decision-making occurred (H is true), we might expect some form of direct communication, but it's not guaranteed.  Other methods could be used, or the hotline might not be used effectively. Thus, P(E|H) is not very high.  If rational decision-making did *not* occur (H is false),  direct communication could still happen for various reasons (e.g., for posturing, to coordinate misinformation).  The hotline's use doesn't inherently rule out irrational behavior, meaning P(E|~H) is also not very low.",
+              "suggested_numerical_probative_value": "1.5"
+            }
+          }
+        ],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "coercive_diplomacy_hypothesis",
+      "description": "US coercive diplomacy (quarantine) forced Soviet withdrawal",
+      "assessment": "Strongly Confirmed (Smoking Gun)",
+      "balance_score": 4.0,
+      "van_evera_applied": true,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 1,
+      "supporting_evidence_ids": [
+        "quarantine_effectiveness_evidence",
+        "military_pressure_evidence"
+      ],
+      "refuting_evidence_ids": [
+        "turkey_missiles_evidence"
+      ],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [
+          {
+            "id": "quarantine_effectiveness_evidence",
+            "description": "Soviet ships turned back after quarantine announcement",
+            "type": "smoking_gun",
+            "probative_value": 4.0,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "quarantine_effectiveness_evidence",
+              "refined_evidence_type": "smoking_gun",
+              "reasoning_for_type": "The Soviet ships turning back directly supports the hypothesis that the US quarantine forced their withdrawal.  While other factors might have contributed, the immediate reversal following the announcement strongly suggests a causal link. The absence of this evidence would significantly weaken the hypothesis, making it a strong piece of confirmatory evidence.",
+              "likelihood_P_E_given_H": "High (0.8)",
+              "likelihood_P_E_given_NotH": "Low (0.2)",
+              "justification_for_likelihoods": "If the quarantine was effective (H is true), it's highly probable that Soviet ships would have turned back, reflecting a direct response to the pressure.  However, if the quarantine was ineffective (H is false), there are alternative explanations for the ships turning back (e.g., internal Soviet decisions, other external pressures). Therefore, the likelihood of observing this evidence is substantially higher if the hypothesis is true. Note that a 0.8 and 0.2 are subjective assessments and could vary based on additional contextual information, specifically how much we know about what other factors influenced the soviet decision making.",
+              "suggested_numerical_probative_value": "4.0"
+            }
+          },
+          {
+            "id": "military_pressure_evidence",
+            "description": "US military preparations for invasion of Cuba were visible to Soviets",
+            "type": "smoking_gun",
+            "probative_value": 4.0,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "military_pressure_evidence",
+              "refined_evidence_type": "smoking_gun",
+              "reasoning_for_type": "The visibility of US military preparations for a Cuban invasion is strong evidence supporting the hypothesis that US coercive diplomacy forced Soviet withdrawal.  If the US was genuinely preparing for invasion, this would significantly increase the pressure on the Soviets, making withdrawal more likely. The presence of this evidence makes the hypothesis considerably more plausible. It's not strictly *necessary* for the hypothesis (other factors could have influenced the Soviets), nor does its absence definitively refute it (the Soviets might have withdrawn for other reasons even with visible preparations). However, its presence strongly suggests the hypothesis is true, fitting the 'smoking gun' classification.",
+              "likelihood_P_E_given_H": "High (0.8)",
+              "likelihood_P_E_given_NotH": "Low (0.2)",
+              "justification_for_likelihoods": "If the US coercive diplomacy (including the threat of invasion) *was* the primary cause of the Soviet withdrawal (H is true), then it's highly probable (0.8) that the Soviets would have observed and been aware of the extensive US military preparations.  If the coercive diplomacy was *not* the primary cause (H is false), then while the US might still have undertaken military preparations for other reasons (e.g., general Cold War tensions, internal US policy decisions), the probability of the Soviets noticing these preparations is significantly lower (0.2).  The lower probability reflects other factors that could have influenced the Soviet decision to withdraw, independent of US military pressure.",
+              "suggested_numerical_probative_value": "4.0"
+            }
+          },
+          {
+            "id": "turkey_missiles_evidence",
+            "description": "Secret agreement to remove Jupiter missiles from Turkey",
+            "type": "smoking_gun",
+            "probative_value": 4.0,
+            "source_text_quote": "",
+            "edge_type": "refutes",
+            "llm_reasoning": {
+              "evidence_id": "turkey_missiles_evidence",
+              "refined_evidence_type": "smoking_gun",
+              "reasoning_for_type": "The secret agreement to remove Jupiter missiles from Turkey is a strong piece of evidence supporting the hypothesis that US coercive diplomacy forced Soviet withdrawal.  The removal of the missiles was a key Soviet concession, directly resulting from the pressure exerted by the US quarantine.  The absence of such an agreement would significantly weaken the hypothesis, making it less plausible that the quarantine was the primary driver of the Soviet withdrawal. Therefore, it's more than a 'straw in the wind' and acts as strong confirming evidence, qualifying as a smoking gun.  It's not strictly a 'hoop' as the Soviets could have withdrawn for other reasons, but its presence strongly points towards the hypothesis's validity.",
+              "likelihood_P_E_given_H": "High (0.8)",
+              "likelihood_P_E_given_NotH": "Low (0.2)",
+              "justification_for_likelihoods": "If the US quarantine forced the Soviet withdrawal (H), then a significant concession like the removal of Jupiter missiles from Turkey is highly probable (0.8).  These missiles were a central point of contention, making their removal a likely outcome of successful coercive diplomacy. If the quarantine did *not* force the Soviet withdrawal (~H), the likelihood of a secret agreement to remove the missiles diminishes considerably (0.2).  While other factors could explain the missile removal, it would be less likely to occur as a standalone event without the pressure of the quarantine.  The 'secret' nature also lends weight to this interpretation; it suggests a deal born out of pressure and a desire to avoid public escalation.",
+              "suggested_numerical_probative_value": "4.0"
+            }
+          }
+        ],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "compromise_hypothesis",
+      "description": "Secret Turkey missile trade enabled face-saving compromise",
+      "assessment": "Strongly Confirmed (Smoking Gun)",
+      "balance_score": 5.5,
+      "van_evera_applied": true,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 1,
+      "supporting_evidence_ids": [
+        "turkey_missiles_evidence",
+        "timing_evidence"
+      ],
+      "refuting_evidence_ids": [
+        "quarantine_effectiveness_evidence"
+      ],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [
+          {
+            "id": "turkey_missiles_evidence",
+            "description": "Secret agreement to remove Jupiter missiles from Turkey",
+            "type": "smoking_gun",
+            "probative_value": 4.0,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "turkey_missiles_evidence",
+              "refined_evidence_type": "smoking_gun",
+              "reasoning_for_type": "The secret agreement to remove Jupiter missiles from Turkey is a strong piece of evidence supporting the 'face-saving compromise' hypothesis.  If a secret missile trade occurred to facilitate a compromise, a secret agreement regarding the removal of those missiles would be a highly expected consequence. The absence of such an agreement would strongly weaken the hypothesis.  While not definitively proving the trade, its presence is highly indicative of the hypothesis being true and unlikely if the hypothesis were false.",
+              "likelihood_P_E_given_H": "High (0.8)",
+              "likelihood_P_E_given_NotH": "Low (0.2)",
+              "justification_for_likelihoods": "P(E|H) is high because a secret agreement on missile removal is a very plausible and almost expected consequence of a secret missile trade intended as a compromise.  The removal of the missiles is a key part of the compromise itself. P(E|~H) is low because there's little reason to expect such a secret agreement unless a significant, behind-the-scenes deal (like the hypothesized missile trade) was underway.  While other explanations could exist, they seem less likely than the direct causal link between the hypothesis and the evidence.",
+              "suggested_numerical_probative_value": "4.0"
+            }
+          }
+        ],
+        "straw_in_wind": [
+          {
+            "id": "timing_evidence",
+            "description": "Soviet withdrawal came within hours of Turkey deal agreement",
+            "type": "straw_in_the_wind",
+            "probative_value": 3.0,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "timing_evidence",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "The close timing between the Soviet withdrawal and the Turkey deal agreement is suggestive of a connection, but not definitive proof of a causal link.  The absence of this close timing wouldn't necessarily refute the compromise hypothesis (other factors could explain the Soviet withdrawal), and its presence doesn't overwhelmingly confirm it (correlation doesn't equal causation; the timing could be coincidental). Therefore, it's a weak piece of evidence, more suggestive than conclusive.",
+              "likelihood_P_E_given_H": "Medium (0.6)",
+              "likelihood_P_E_given_NotH": "Low (0.2)",
+              "justification_for_likelihoods": "If the hypothesis is true (secret missile trade enabled a face-saving compromise), it's plausible that the Soviets would withdraw quickly after securing a deal, making this timing somewhat expected. However, there's room for delay, alternative explanations for the withdrawal timing, or other factors influencing the timing of the deal. Therefore, P(E|H) isn't very high.  If the hypothesis is false, the probability of such close timing is still possible due to chance but relatively low.  Many international events occur concurrently without causal relationships. The low probability arises from the presumption that unrelated events having this precise timing are less likely than if there is a causal relationship, which is the nature of probabilistic reasoning.",
+              "suggested_numerical_probative_value": "3.0"
+            }
+          },
+          {
+            "id": "quarantine_effectiveness_evidence",
+            "description": "Soviet ships turned back after quarantine announcement",
+            "type": "straw_in_the_wind",
+            "probative_value": 1.5,
+            "source_text_quote": "",
+            "edge_type": "refutes",
+            "llm_reasoning": {
+              "evidence_id": "quarantine_effectiveness_evidence",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "The evidence that Soviet ships turned back after the quarantine announcement is weakly suggestive of a secret missile trade enabling a compromise.  It doesn't definitively prove or disprove the hypothesis.  The ships could have turned back for various reasons unrelated to a secret deal (e.g., routine naval maneuvers, unrelated diplomatic pressure, etc.).  The absence of this evidence wouldn't necessarily refute the hypothesis, nor does its presence strongly confirm it. It's a piece of circumstantial evidence that could be consistent with the hypothesis, but it alone is far from conclusive.",
+              "likelihood_P_E_given_H": "Medium (0.6)",
+              "likelihood_P_E_given_NotH": "Medium (0.4)",
+              "justification_for_likelihoods": "If the secret missile trade (H) were true, and it led to a face-saving compromise, then the quarantine announcement could have played a role in this compromise, making the turning back of Soviet ships somewhat more likely.  However, other factors could also explain the ships turning back, even if the hypothesis is true, hence only a Medium likelihood.  If the hypothesis (H) were false, the ships turning back could still occur due to numerous alternative explanations, therefore a Medium likelihood of observing the evidence in that case as well.",
+              "suggested_numerical_probative_value": "1.5"
+            }
+          }
+        ],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

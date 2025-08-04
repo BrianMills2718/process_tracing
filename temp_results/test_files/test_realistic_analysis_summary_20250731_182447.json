@@ -1,0 +1,121 @@
+{
+  "filename": "test_realistic_graph.json",
+  "case_identifier": "test_realistic_graph",
+  "generated_at": "2025-07-31T18:24:47.794319",
+  "causal_chains": [
+    {
+      "path": [
+        "british_taxation",
+        "colonial_resistance",
+        "independence_declared"
+      ],
+      "node_descriptions": [
+        "British taxation policies 1765-1773",
+        "Colonial resistance movement",
+        "Declaration of Independence 1776"
+      ],
+      "node_subtypes": [
+        "triggering",
+        "N/A_subtype",
+        "outcome"
+      ],
+      "edges": [
+        "triggers",
+        "causes"
+      ],
+      "length": 3
+    }
+  ],
+  "causal_mechanisms": [
+    {
+      "id": "colonial_resistance",
+      "name": "Colonial resistance movement",
+      "causes": [
+        "British taxation policies 1765-1773"
+      ],
+      "effects": [
+        "Declaration of Independence 1776"
+      ],
+      "completeness": 20,
+      "confidence": 0.8,
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "mechanism_id": "colonial_resistance",
+        "narrative_elaboration": "British taxation policies (british_taxation) from 1765-1773, such as the Stamp Act and Townshend Acts, imposed significant financial burdens on the American colonists without their consent.  This perceived injustice and lack of representation fueled resentment and opposition among the colonists. This resentment, in turn, manifested in various forms of resistance, ultimately contributing to the formation and growth of a colonial resistance movement.",
+        "identified_missing_micro_steps": [
+          {
+            "suggested_event_description": "Colonial protests and boycotts against British taxation",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Formation of colonial resistance groups and committees of correspondence",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Increasing radicalization of colonial sentiment through pamphlets and speeches",
+            "suggested_event_type": "intermediate"
+          },
+          {
+            "suggested_event_description": "Escalation of tensions between colonists and British authorities (e.g., Boston Massacre)",
+            "suggested_event_type": "intermediate"
+          }
+        ],
+        "coherence_assessment": "Moderately coherent but with gaps",
+        "suggested_confidence": 0.7,
+        "suggested_level_of_detail": "medium",
+        "reasoning_for_suggestions": "The initial description only establishes a weak link between taxation and resistance.  The missing micro-steps represent crucial intervening processes necessary to explain the causal chain fully.  Including these steps would significantly improve the mechanism's explanatory power.  Therefore, the confidence is lowered to reflect the incomplete specification, and the level of detail is set to medium to acknowledge that more details are needed for a comprehensive understanding."
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 2,
+      "Causal_Mechanism": 1,
+      "Hypothesis": 1,
+      "Evidence": 1
+    },
+    "edge_type_distribution": {
+      "triggers": 1,
+      "causes": 1,
+      "supports": 1
+    },
+    "density": 0.15,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "colonial_resistance": 0.5,
+      "british_taxation": 0.25,
+      "independence_declared": 0.25,
+      "washington_hypothesis": 0.25,
+      "taxation_evidence": 0.25
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "washington_hypothesis",
+      "description": "Washington leadership was decisive for success",
+      "assessment": "Weakly Supported (Straw-in-Wind)",
+      "balance_score": 1.0,
+      "van_evera_applied": true,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "taxation_evidence"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

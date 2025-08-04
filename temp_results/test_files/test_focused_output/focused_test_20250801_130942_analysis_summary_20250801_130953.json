@@ -1,0 +1,77 @@
+{
+  "filename": "test_focused_output\\focused_test_20250801_130942_graph.json",
+  "case_identifier": "focused_test_20250801_130942_graph",
+  "generated_at": "2025-08-01T13:09:53.285336",
+  "causal_chains": [
+    {
+      "path": [
+        "node1",
+        "node2",
+        "node3"
+      ],
+      "path_descriptions": [
+        "The French and Indian War ended in 1763 with Britain's victory over France. This resulted in a massive war debt for Britain.",
+        "To pay for the war debt, Britain imposed new taxes on the American colonies, including the Stamp Act.",
+        "The colonists protested that taxation without representation violated their rights as Englishmen, leading to increasing tensions and eventually the Boston Tea Party in 1773."
+      ],
+      "edge_types": [
+        "causes",
+        "causes"
+      ],
+      "trigger": "node1",
+      "outcome": "node3",
+      "length": 3
+    }
+  ],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 4,
+      "Evidence": 1,
+      "Hypothesis": 1
+    },
+    "edge_type_distribution": {
+      "causes": 3,
+      "supports": 1
+    },
+    "density": 0.13333333333333333,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "node2": 0.4,
+      "node3": 0.4,
+      "node1": 0.2,
+      "node4": 0.2,
+      "node5": 0.2,
+      "node6": 0.2
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "node5",
+      "description": "British taxation policies caused colonial rebellion because they violated colonial understanding of their rights as Englishmen.",
+      "assessment": "Contested / Mixed Evidence",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "node4"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

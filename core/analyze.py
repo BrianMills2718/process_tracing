@@ -21,6 +21,60 @@ from core.enhance_evidence import refine_evidence_assessment_with_llm
 from core.llm_reporting_utils import generate_narrative_summary_with_llm
 from core.enhance_mechanisms import elaborate_mechanism_with_llm
 
+# Phase 2B: Advanced analytical capabilities
+
+# Issue #35 Fix: Standardized property access helper
+def get_node_property(node_data, property_name, default=None):
+    """
+    Standardized property access that handles both 'properties' and 'attr_props' patterns.
+    Tries 'properties' first (new standard), then 'attr_props' (legacy), then top-level.
+    """
+    # Try properties dict (preferred)
+    if 'properties' in node_data and isinstance(node_data['properties'], dict):
+        if property_name in node_data['properties']:
+            return node_data['properties'][property_name]
+    
+    # Try attr_props dict (legacy compatibility)
+    if 'attr_props' in node_data and isinstance(node_data['attr_props'], dict):
+        if property_name in node_data['attr_props']:
+            return node_data['attr_props'][property_name]
+    
+    # Try top-level (fallback)
+    if property_name in node_data:
+        return node_data[property_name]
+    
+    return default
+
+def get_edge_property(edge_data, property_name, default=None):
+    """
+    Standardized edge property access that handles nested properties structure.
+    Issue #19 Fix: Check for None returns from edge data access.
+    """
+    # Issue #19 Fix: Handle None edge_data
+    if edge_data is None:
+        return default
+    
+    # Try properties dict first
+    if 'properties' in edge_data and isinstance(edge_data['properties'], dict):
+        if property_name in edge_data['properties']:
+            return edge_data['properties'][property_name]
+    
+    # Try top-level (fallback)  
+    if property_name in edge_data:
+        return edge_data[property_name]
+    
+    return default
+from core.dag_analysis import find_complex_causal_patterns
+from core.cross_domain_analysis import analyze_cross_domain_patterns
+
+# Phase 4: Temporal process tracing capabilities
+from core.temporal_extraction import TemporalExtractor
+from core.temporal_graph import TemporalGraph
+from core.temporal_validator import TemporalValidator
+from core.critical_junctures import CriticalJunctureAnalyzer
+from core.duration_analysis import DurationAnalyzer
+from core.temporal_viz import TemporalVisualizer
+
 # Evidence type classifications from Van Evera's tests (specific to this analysis module)
 EVIDENCE_TYPES_VAN_EVERA = {
     "hoop": {
@@ -88,6 +142,7 @@ def analyze_graph(G, options=None):
     """
     Analyze a graph without modifying the original.
     Implements full observability with START/PROGRESS/END logging.
+    Enhanced with performance profiling for Phase 3A optimization.
     
     Args:
         G: NetworkX graph to analyze
@@ -99,50 +154,137 @@ def analyze_graph(G, options=None):
     import time
     logger = logging.getLogger(__name__)
     
-    start_time = time.time()
-    logger.info(f"START: analyze_graph - nodes={G.number_of_nodes()}, edges={G.number_of_edges()}")
+    # Initialize performance profiling
+    from core.performance_profiler import get_profiler
+    profiler = get_profiler()
     
-    # Create deep copy to prevent modification of original
-    logger.info("PROGRESS: Creating deep copy of graph")
-    G_working = copy.deepcopy(G)
+    with profiler.profile_phase("total_analysis", {"nodes": G.number_of_nodes(), "edges": G.number_of_edges()}):
+        start_time = time.time()
+        logger.info(f"START: analyze_graph - nodes={G.number_of_nodes()}, edges={G.number_of_edges()}")
+        
+        # Create deep copy to prevent modification of original
+        with profiler.profile_phase("graph_copy"):
+            logger.info("PROGRESS: Creating deep copy of graph")
+            G_working = copy.deepcopy(G)
     
-    # Run analysis on the copy
-    logger.info("PROGRESS: Starting causal chain analysis")
-    causal_chains = identify_causal_chains(G_working)
-    logger.info(f"PROGRESS: Found {len(causal_chains)} causal chains")
+        # Run analysis on the copy
+        with profiler.profile_phase("causal_chains"):
+            logger.info("PROGRESS: Starting causal chain analysis")
+            causal_chains = identify_causal_chains(G_working)
+            logger.info(f"PROGRESS: Found {len(causal_chains)} causal chains")
+        
+        with profiler.profile_phase("mechanisms"):
+            logger.info("PROGRESS: Starting mechanism evaluation")
+            mechanisms = evaluate_mechanisms(G_working)
+            logger.info(f"PROGRESS: Evaluated {len(mechanisms)} mechanisms")
+        
+        with profiler.profile_phase("evidence_analysis"):
+            logger.info("PROGRESS: Starting evidence analysis")
+            evidence_analysis = analyze_evidence(G_working)['by_hypothesis']
+            logger.info(f"PROGRESS: Analyzed evidence for {len(evidence_analysis)} hypotheses")
+        
+        with profiler.profile_phase("conditions"):
+            logger.info("PROGRESS: Analyzing conditions")
+            conditions = identify_conditions(G_working)
+        
+        with profiler.profile_phase("actors"):
+            logger.info("PROGRESS: Analyzing actors")
+            actors = analyze_actors(G_working)
+        
+        with profiler.profile_phase("alternatives"):
+            logger.info("PROGRESS: Analyzing alternative explanations")
+            alternatives = analyze_alternative_explanations(G_working)
+        
+        with profiler.profile_phase("network_metrics"):
+            logger.info("PROGRESS: Calculating network metrics")
+            metrics = calculate_network_metrics(G_working)
+        
+        # Phase 2B: Advanced analytical capabilities
+        with profiler.profile_phase("dag_analysis"):
+            logger.info("PROGRESS: Running DAG analysis for complex causal patterns")
+            dag_analysis = find_complex_causal_patterns(G_working)
+            logger.info(f"PROGRESS: Found {len(dag_analysis.get('causal_pathways', []))} complex causal pathways")
+        
+        with profiler.profile_phase("cross_domain_analysis"):
+            logger.info("PROGRESS: Running cross-domain analysis")
+            cross_domain_analysis = analyze_cross_domain_patterns(G_working)
+            logger.info(f"PROGRESS: Found {cross_domain_analysis['cross_domain_statistics']['total_cross_paths']} cross-domain paths")
+        
+        # Phase 4: Temporal Process Tracing Analysis
+        temporal_analysis = None
+        try:
+            with profiler.profile_phase("temporal_analysis"):
+                logger.info("PROGRESS: Running temporal analysis (Phase 4)")
+                
+                # Extract temporal data from graph
+                temporal_extractor = TemporalExtractor()
+                temporal_graph = temporal_extractor.extract_temporal_graph(G_working)
+                
+                # Validate temporal consistency
+                temporal_validator = TemporalValidator()
+                validation_result = temporal_validator.validate_temporal_graph(temporal_graph)
+                
+                # Analyze critical junctures
+                juncture_analyzer = CriticalJunctureAnalyzer()
+                critical_junctures = juncture_analyzer.identify_junctures(temporal_graph)
+                juncture_analysis = juncture_analyzer.analyze_juncture_distribution(critical_junctures)
+                
+                # Analyze durations and timing patterns
+                duration_analyzer = DurationAnalyzer()
+                duration_analysis = duration_analyzer.analyze_durations(temporal_graph)
+                
+                # Generate temporal visualization data
+                temporal_visualizer = TemporalVisualizer()
+                temporal_viz_data = temporal_visualizer.generate_visualization_data(temporal_graph)
+                
+                temporal_analysis = {
+                    'temporal_graph': temporal_graph,
+                    'validation_result': validation_result,
+                    'critical_junctures': critical_junctures,
+                    'juncture_analysis': juncture_analysis,
+                    'duration_analysis': duration_analysis,
+                    'temporal_visualization': temporal_viz_data,
+                    'temporal_statistics': temporal_graph.get_temporal_statistics()
+                }
+                
+                logger.info(f"PROGRESS: Temporal analysis complete - {len(critical_junctures)} critical junctures, "
+                           f"validation confidence: {validation_result.confidence_score:.2f}")
+                
+        except Exception as e:
+            logger.warning(f"Temporal analysis failed: {e}")
+            temporal_analysis = {
+                'error': str(e),
+                'temporal_graph': None,
+                'validation_result': None,
+                'critical_junctures': [],
+                'juncture_analysis': None,
+                'duration_analysis': None,
+                'temporal_visualization': None,
+                'temporal_statistics': {}
+            }
     
-    logger.info("PROGRESS: Starting mechanism evaluation")
-    mechanisms = evaluate_mechanisms(G_working)
-    logger.info(f"PROGRESS: Evaluated {len(mechanisms)} mechanisms")
-    
-    logger.info("PROGRESS: Starting evidence analysis")
-    evidence_analysis = analyze_evidence(G_working)['by_hypothesis']
-    logger.info(f"PROGRESS: Analyzed evidence for {len(evidence_analysis)} hypotheses")
-    
-    logger.info("PROGRESS: Analyzing conditions")
-    conditions = identify_conditions(G_working)
-    
-    logger.info("PROGRESS: Analyzing actors")
-    actors = analyze_actors(G_working)
-    
-    logger.info("PROGRESS: Analyzing alternative explanations")
-    alternatives = analyze_alternative_explanations(G_working)
-    
-    logger.info("PROGRESS: Calculating network metrics")
-    metrics = calculate_network_metrics(G_working)
-    
-    analysis_results = { 
-        'causal_chains': causal_chains,
-        'mechanisms': mechanisms,
-        'evidence_analysis': evidence_analysis,
-        'conditions': conditions,
-        'actors': actors,
-        'alternatives': alternatives,
-        'metrics': metrics
-    }
-    
-    duration = time.time() - start_time
-    logger.info(f"END: analyze_graph completed in {duration:.2f}s")
+        analysis_results = { 
+            'causal_chains': causal_chains,
+            'mechanisms': mechanisms,
+            'evidence_analysis': evidence_analysis,
+            'conditions': conditions,
+            'actors': actors,
+            'alternatives': alternatives,
+            'metrics': metrics,
+            # Phase 2B results
+            'dag_analysis': dag_analysis,
+            'cross_domain_analysis': cross_domain_analysis,
+            # Phase 4 results
+            'temporal_analysis': temporal_analysis
+        }
+        
+        duration = time.time() - start_time
+        logger.info(f"END: analyze_graph completed in {duration:.2f}s")
+        
+        # Save performance report
+        from pathlib import Path
+        profiler.save_report(Path("performance_report.json"))
+        profiler.print_summary()
     
     return analysis_results
 
@@ -251,9 +393,15 @@ def load_graph(json_file):
         properties_from_json = {k: sanitize_value(v) for k, v in node_data.get('properties', {}).items()}
         
         try:
-            # Add main type and flatten all properties to top level
-            node_attributes = {'type': str(main_type_from_json)}
-            node_attributes.update(properties_from_json)
+            # Preserve main type and store subtype separately to avoid overwrite
+            node_attributes = {
+                'main_type': str(main_type_from_json),  # Preserve main type
+                'subtype': properties_from_json.get('type', 'unspecified')  # Preserve subtype
+            }
+            # Add other properties except 'type' to avoid overwriting main type
+            node_attributes.update({k: v for k, v in properties_from_json.items() if k != 'type'})
+            # Set final type to main type
+            node_attributes['type'] = str(main_type_from_json)
             
             G.add_node(node_id, **node_attributes)
         except Exception as e:
@@ -283,12 +431,13 @@ def load_graph(json_file):
         properties_from_json = {k: sanitize_value(v) for k, v in edge_data.get('properties', {}).items()}
         
         try:
-            # Add main type and flatten all properties to top level
+            # Add main type and flatten properties, preserving main type
             edge_attributes = {
                 'id': str(edge_id), 
-                'type': str(main_edge_type_from_json)
+                'main_type': str(main_edge_type_from_json)  # Preserve main type separately
             }
             edge_attributes.update(properties_from_json)
+            edge_attributes['type'] = str(main_edge_type_from_json)  # Ensure main type is not overwritten
             
             G.add_edge(source, target, key=edge_id, **edge_attributes)
         except Exception as e:
@@ -298,15 +447,30 @@ def load_graph(json_file):
 
 def identify_causal_chains(G):
     causal_chains = []
-    event_nodes_data = {n: d for n, d in G.nodes(data=True) if d.get('type') == 'Event'}
+    # Handle both original and flattened structures
+    event_nodes_data = {n: d for n, d in G.nodes(data=True) if 
+                       d.get('type') == 'Event' or 
+                       d.get('type') in ['triggering', 'intermediate', 'outcome']}
     
-    # Fixed: Use flat structure instead of nested attr_props
-    triggering_events = [n for n, d_node in event_nodes_data.items() if d_node.get('subtype') == 'triggering' or d_node.get('type') == 'triggering']
-    outcome_events = [n for n, d_node in event_nodes_data.items() if d_node.get('subtype') == 'outcome' or d_node.get('type') == 'outcome']
+    # Handle multiple data structure formats for event types (Issue #35 Fix)
+    triggering_events = [n for n, d_node in event_nodes_data.items() if 
+                        d_node.get('type') == 'triggering' or 
+                        d_node.get('subtype') == 'triggering' or
+                        get_node_property(d_node, 'type') == 'triggering']
+    outcome_events = [n for n, d_node in event_nodes_data.items() if 
+                     d_node.get('type') == 'outcome' or
+                     d_node.get('subtype') == 'outcome' or 
+                     get_node_property(d_node, 'type') == 'outcome']
     
-    # Fixed: Use flat structure for descriptions
-    safe_print(f"DEBUG_CHAINS: Triggering Event IDs: {triggering_events} (Descriptions: {[G.nodes[n].get('description', n) for n in triggering_events]})")
-    safe_print(f"DEBUG_CHAINS: Outcome Event IDs: {outcome_events} (Descriptions: {[G.nodes[n].get('description', n) for n in outcome_events]})")
+    # Get descriptions from multiple possible locations
+    def get_node_description(node_id):
+        node_data = G.nodes[node_id]
+        return (get_node_property(node_data, 'description') or 
+                node_data.get('description') or 
+                node_id)
+    
+    safe_print(f"DEBUG_CHAINS: Triggering Event IDs: {triggering_events} (Descriptions: {[get_node_description(n) for n in triggering_events]})")
+    safe_print(f"DEBUG_CHAINS: Outcome Event IDs: {outcome_events} (Descriptions: {[get_node_description(n) for n in outcome_events]})")
 
     valid_chain_link_types = ['causes', 'leads_to', 'precedes', 'triggers', 'contributes_to', 'enables', 'influences', 'facilitates']
     
@@ -319,12 +483,14 @@ def identify_causal_chains(G):
             if trigger_node_id == outcome_node_id:
                 continue
             try:
-                paths = find_causal_paths_bounded(G, source=trigger_node_id, target=outcome_node_id, cutoff=10, max_paths=100)
+                paths = find_causal_paths_bounded(G, source=trigger_node_id, target=outcome_node_id, cutoff=25, max_paths=100)
+                safe_print(f"DEBUG_CHAINS: Searching paths from {trigger_node_id} to {outcome_node_id}, found {len(paths)} paths")
                 for path in paths:
                     # Fixed: Use flat structure for descriptions
-                    path_node_descriptions = [G.nodes[n].get('description', n) for n in path]
+                    path_node_descriptions = [get_node_description(n) for n in path]
                     safe_print(f"DEBUG_CHAINS: Path found by find_causal_paths_bounded: {path} (Nodes: {path_node_descriptions})")
-                    if len(path) < 2:
+                    # Issue #52 Fix: Support single-node graphs as valid minimal chains
+                    if len(path) < 1:
                         continue
 
                     is_valid_chain = True
@@ -332,33 +498,49 @@ def identify_causal_chains(G):
                     # Fixed: Use flat structure for subtypes
                     current_path_node_subtypes = [G.nodes[n].get('subtype', 'N/A_subtype') for n in path]
 
-                    for i in range(len(path) - 1):
-                        u, v = path[i], path[i+1]
-                        edge_data = G.get_edge_data(u, v) 
-                        
-                        if not edge_data: 
-                            is_valid_chain = False
-                            break
+                    # Issue #52 Fix: Handle single-node paths (no edges to validate)
+                    if len(path) > 1:
+                        for i in range(len(path) - 1):
+                            u, v = path[i], path[i+1]
+                            edge_data = G.get_edge_data(u, v) 
                             
-                        edge_main_type = edge_data.get('type', '') 
-                        current_chain_edges_types.append(edge_main_type)
+                            if not edge_data: 
+                                is_valid_chain = False
+                                break
+                                
+                            edge_main_type = edge_data.get('type', '') 
+                            current_chain_edges_types.append(edge_main_type)
                         
-                        # Fixed: Allow valid process tracing patterns beyond just Event→Event
-                        valid_node_types = ['Event', 'Causal_Mechanism']
-                        u_type = G.nodes[u].get('type')
-                        v_type = G.nodes[v].get('type')
-                        
-                        if not (u_type in valid_node_types and \
-                                v_type in valid_node_types and \
-                                edge_main_type in valid_chain_link_types):
-                            is_valid_chain = False
-                            # Fixed: Use flat structure for descriptions
-                            safe_print(f"DEBUG_CHAINS: Path {path_node_descriptions} invalidated at step {G.nodes[u].get('description', u)}->{G.nodes[v].get('description', v)}. NodeU main_type: {u_type}, NodeV main_type: {v_type}, Edge main_type: {edge_main_type}")
-                            break
+                            # Allow valid process tracing patterns - events and mechanisms
+                            valid_event_types = ['triggering', 'intermediate', 'outcome']
+                            valid_node_types = ['Event', 'Causal_Mechanism'] + valid_event_types
+                            u_type = G.nodes[u].get('type')
+                            v_type = G.nodes[v].get('type')
+                            
+                            if not (u_type in valid_node_types and \
+                                    v_type in valid_node_types and \
+                                    edge_main_type in valid_chain_link_types):
+                                is_valid_chain = False
+                                # Fixed: Use flat structure for descriptions
+                                safe_print(f"DEBUG_CHAINS: Path {path_node_descriptions} invalidated at step {get_node_description(u)}->{get_node_description(v)}. NodeU main_type: {u_type}, NodeV main_type: {v_type}, Edge main_type: {edge_main_type}")
+                                break
                     
-                    if is_valid_chain and len(path) > 2: 
+                    # Issue #52 Fix: Accept valid chains of any length >= 1 (including single nodes)
+                    if is_valid_chain and len(path) >= 1: 
                         # Fixed: Use flat structure for descriptions
-                        safe_print(f"DEBUG_CHAINS: Validated chain: {[G.nodes[n].get('description', n) for n in path]} -> Edges: {current_chain_edges_types}")
+                        safe_print(f"DEBUG_CHAINS: Validated chain: {[get_node_description(n) for n in path]} -> Edges: {current_chain_edges_types}")
+                        causal_chains.append({
+                            'path': path,
+                            'path_descriptions': [get_node_description(n) for n in path],
+                            'edge_types': current_chain_edges_types,
+                            'trigger': trigger_node_id,
+                            'outcome': outcome_node_id,
+                            'length': len(path)
+                        })
+                    elif not is_valid_chain:
+                        safe_print(f"DEBUG_CHAINS: Chain invalidated")
+                    elif len(path) <= 2:
+                        safe_print(f"DEBUG_CHAINS: Chain too short (length {len(path)})")
                         chain_details = {
                             'path': path,
                             # Fixed: Use flat structure for descriptions
@@ -377,6 +559,71 @@ def identify_causal_chains(G):
     causal_chains.sort(key=lambda x: x['length'], reverse=True)
     safe_print(f"DEBUG_CHAINS: Total causal_chains collected: {len(causal_chains)}")
     return causal_chains if causal_chains else []
+
+def calculate_mechanism_completeness_van_evera(G, mechanism_id, causes, effects):
+    """
+    Calculate mechanism completeness using Van Evera process tracing methodology.
+    
+    Args:
+        G: NetworkX directed graph
+        mechanism_id: ID of the mechanism node
+        causes: List of cause event IDs linked to mechanism
+        effects: List of effect event IDs linked to mechanism
+        
+    Returns:
+        Float representing completeness percentage (0.0 to 100.0)
+        
+    Based on Van Evera's process tracing requirements:
+    - Mechanisms should have clear antecedents (causes)
+    - Mechanisms should have clear consequents (effects) 
+    - Mechanisms should have sufficient detail/description
+    - Mechanisms should have supporting evidence connections
+    """
+    # Issue #81 Fix: Van Evera-based mechanism completeness calculation
+    completeness_factors = []
+    
+    # Factor 1: Causal antecedents (0-30 points)
+    # Van Evera: mechanisms need clear causal antecedents
+    if len(causes) > 0:
+        # Scale based on number of causes, max 30 points
+        antecedent_score = min(len(causes) * 10, 30)
+        completeness_factors.append(antecedent_score)
+    
+    # Factor 2: Causal consequents (0-30 points)  
+    # Van Evera: mechanisms need clear causal consequents
+    if len(effects) > 0:
+        # Scale based on number of effects, max 30 points
+        consequent_score = min(len(effects) * 10, 30)
+        completeness_factors.append(consequent_score)
+    
+    # Factor 3: Mechanism description richness (0-20 points)
+    mechanism_data = G.nodes[mechanism_id]
+    description = mechanism_data.get('description', '')
+    if len(description) > 100:  # Rich description
+        completeness_factors.append(20)
+    elif len(description) > 50:  # Moderate description
+        completeness_factors.append(10)
+    elif len(description) > 20:  # Basic description
+        completeness_factors.append(5)
+    
+    # Factor 4: Evidence support (0-20 points)
+    # Check for evidence nodes connected to this mechanism
+    evidence_support = 0
+    for node_id in G.nodes():
+        node_data = G.nodes[node_id]
+        if node_data.get('type') == 'Evidence':
+            # Check if evidence tests this mechanism
+            if G.has_edge(node_id, mechanism_id):
+                edge_data = G.get_edge_data(node_id, mechanism_id)
+                if edge_data and edge_data.get('type') in ['tests_mechanism', 'supports']:
+                    evidence_support += 10
+    
+    if evidence_support > 0:
+        completeness_factors.append(min(evidence_support, 20))
+    
+    # Total completeness (0-100 scale)
+    total_completeness = sum(completeness_factors)
+    return min(total_completeness, 100.0)
 
 def evaluate_mechanisms(G):
     mechanisms = []
@@ -416,7 +663,8 @@ def evaluate_mechanisms(G):
             if target_node_main_type == 'Event' and edge_main_type == 'causes':
                 effects.append(succ_id)
         
-        completeness = min(len(causes) * 20, 100) 
+# Issue #81 Fix: Replace arbitrary calculation with theoretically sound Van Evera-based approach
+        completeness = calculate_mechanism_completeness_van_evera(G, mech_id, causes, effects) 
         
         mechanisms.append({
             'id': mech_id,
@@ -437,20 +685,38 @@ def analyze_evidence(G):
     hypothesis_nodes_data = {n: d for n, d in G.nodes(data=True) if d.get('type') == 'Hypothesis'}
 
     debug_initial_hyp_descs = {
-        n_id: node_data.get('description', f'N/A_IN_DEBUG_FOR_{n_id}') 
+        n_id: get_node_property(node_data, 'description', f'N/A_IN_DEBUG_FOR_{n_id}') 
         for n_id, node_data in hypothesis_nodes_data.items()
     }
     safe_print(f"DEBUG_EVIDENCE_ANALYSIS (LATEST): Initial Hypothesis descriptions loaded from G: {debug_initial_hyp_descs}")
 
     for hyp_id, hyp_node_data in hypothesis_nodes_data.items():
-        # Fixed: Use flat structure instead of nested attr_props
-        description_for_results = hyp_node_data.get('description', f'Description_Not_Found_For_{hyp_id}')
+        # Use unified access pattern that works with both old and new data structures
+        description_for_results = (
+            hyp_node_data.get('description') or 
+            get_node_property(hyp_node_data, 'description') or
+            hyp_node_data.get('attr_props', {}).get('description') or
+            f'Description_Not_Found_For_{hyp_id}'
+        )
         
         hypothesis_results[hyp_id] = {
             'description': description_for_results,
-            'status': hyp_node_data.get('status', 'undetermined'),
-            'prior_probability': hyp_node_data.get('prior_probability'),
-            'posterior_probability': hyp_node_data.get('posterior_probability'),
+            'status': (
+                hyp_node_data.get('status') or 
+                hyp_node_data.get('properties', {}).get('status') or
+                hyp_node_data.get('attr_props', {}).get('status') or
+                'undetermined'
+            ),
+            'prior_probability': (
+                hyp_node_data.get('prior_probability') or 
+                hyp_node_data.get('properties', {}).get('prior_probability') or
+                hyp_node_data.get('attr_props', {}).get('prior_probability')
+            ),
+            'posterior_probability': (
+                hyp_node_data.get('posterior_probability') or 
+                hyp_node_data.get('properties', {}).get('posterior_probability') or
+                hyp_node_data.get('attr_props', {}).get('posterior_probability')
+            ),
             'supporting_evidence': [],
             'refuting_evidence': [],
             'balance': 0.0,
@@ -458,16 +724,32 @@ def analyze_evidence(G):
         }
 
     for evidence_id, evidence_node_data in evidence_nodes_data.items():
-        # Fixed: Use flat structure instead of nested attr_props
-        evidence_description = evidence_node_data.get('description', 'N/A')
-        evidence_classification_type = evidence_node_data.get('evidence_type', 'general') 
+        # Use unified access pattern for evidence descriptions
+        evidence_description = (
+            evidence_node_data.get('description') or 
+            evidence_node_data.get('properties', {}).get('description') or
+            evidence_node_data.get('attr_props', {}).get('description') or
+            'N/A'
+        )
+        evidence_classification_type = (
+            evidence_node_data.get('subtype') or  # Van Evera diagnostic type stored as 'subtype'
+            evidence_node_data.get('properties', {}).get('type') or  
+            evidence_node_data.get('attr_props', {}).get('type') or
+            'general'  # Don't fall back to node type "Evidence" - use "general" instead
+        ) 
 
         for u_ev_id, v_hyp_id, edge_data in G.out_edges(evidence_id, data=True): 
             if v_hyp_id in hypothesis_nodes_data: 
                 edge_main_type = edge_data.get('type', '')
-                # Fixed: Access properties directly from flattened edge_data (not nested properties)
-                probative_value_from_edge = edge_data.get('probative_value')
-                source_quote_from_edge = edge_data.get('source_text_quote', "")
+                # Access properties from nested structure OR top level
+                edge_props = edge_data.get('properties', {})
+                # Get probative value using standardized access (Issue #35 Fix)
+                probative_value_from_edge = get_edge_property(edge_data, 'probative_value')
+                # Get source quote from evidence node properties, not edge properties (Issue #35 Fix)
+                source_quote_from_node = get_node_property(evidence_node_data, 'source_text_quote', "")
+                source_quote_from_edge = get_edge_property(edge_data, 'source_text_quote', "")
+                # Prefer node source quote over edge source quote
+                source_quote = source_quote_from_node or source_quote_from_edge
                 probative_value_num = None
                 if isinstance(probative_value_from_edge, (int, float)):
                     probative_value_num = float(probative_value_from_edge)
@@ -478,38 +760,64 @@ def analyze_evidence(G):
                         safe_print(f"Warning: Could not convert probative_value '{probative_value_from_edge}' to float for edge {u_ev_id}->{v_hyp_id}")
                         probative_value_num = 0.0 
                 if probative_value_num is None: 
-                    probative_value_num = 0.0 
+                    probative_value_num = 0.0
+                
+                # Issue #14 Fix: Standardize probative value to 0.0-1.0 range
+                if probative_value_num < 0.0:
+                    safe_print(f"Warning: Clamping negative probative_value {probative_value_num} to 0.0 for edge {u_ev_id}->{v_hyp_id}")
+                    probative_value_num = 0.0
+                elif probative_value_num > 1.0:
+                    safe_print(f"Warning: Clamping probative_value {probative_value_num} to 1.0 for edge {u_ev_id}->{v_hyp_id}")
+                    probative_value_num = 1.0 
+                # Generate basic reasoning for Van Evera type classification
+                van_evera_reasoning = generate_van_evera_type_reasoning(evidence_classification_type, evidence_description)
+                
                 ev_detail = {
                     'id': evidence_id,
                     'description': evidence_description,
                     'type': evidence_classification_type, 
                     'probative_value': probative_value_num,
-                    'source_text_quote': source_quote_from_edge,
-                    'edge_type': edge_main_type 
+                    'source_text_quote': source_quote,
+                    'edge_type': edge_main_type,
+                    'van_evera_reasoning': van_evera_reasoning
                 }
                 # --- LLM Evidence Refinement Integration ---
                 try:
-                    hyp_node = hypothesis_nodes_data[v_hyp_id]
-                    llm_refined = refine_evidence_assessment_with_llm(
-                        hypothesis_node={'id': v_hyp_id, 'properties': hyp_node},  # hyp_node is already flat
-                        evidence_node={'id': evidence_id, 'properties': evidence_node_data},  # evidence_node_data is already flat
-                        edge_properties=edge_data,  # edge_data is already flat
-                        original_text_context=source_quote_from_edge
+                    # Prepare node data for LLM enhancement
+                    hypothesis_node = {
+                        'id': v_hyp_id,
+                        'properties': hypothesis_nodes_data[v_hyp_id]
+                    }
+                    evidence_node = {
+                        'id': evidence_id,
+                        'properties': evidence_node_data
+                    }
+                    
+                    # Use LLM to refine evidence assessment
+                    llm_response = refine_evidence_assessment_with_llm(
+                        hypothesis_node=hypothesis_node,
+                        evidence_node=evidence_node, 
+                        edge_properties=edge_props,
+                        original_text_context=source_quote
                     )
-                    if isinstance(llm_refined, dict):
-                        if 'refined_evidence_type' in llm_refined:
-                            ev_detail['type'] = llm_refined['refined_evidence_type']
-                        if 'suggested_numerical_probative_value' in llm_refined:
-                            try:
-                                ev_detail['probative_value'] = float(llm_refined['suggested_numerical_probative_value'])
-                            except Exception:
-                                pass
-                        ev_detail['llm_reasoning'] = llm_refined
+                    
+                    # Update ev_detail with LLM refinements if successful
+                    if llm_response and hasattr(llm_response, 'refined_evidence_type') and llm_response.refined_evidence_type:
+                        ev_detail['llm_reasoning'] = {
+                            'evidence_id': evidence_id,
+                            'refined_evidence_type': llm_response.refined_evidence_type,
+                            'reasoning_for_type': llm_response.reasoning_for_type,
+                            'prob_e_given_h': llm_response.likelihood_P_E_given_H,
+                            'prob_e_given_not_h': llm_response.likelihood_P_E_given_NotH,
+                            'likelihood_justification': llm_response.justification_for_likelihoods,
+                            'suggested_probative_value': llm_response.suggested_numerical_probative_value
+                        }
+                        
                 except Exception as e:
-                    ev_detail['llm_reasoning'] = {'error': str(e)}
+                    safe_print(f"[WARN] LLM evidence enhancement failed for {evidence_id}->{v_hyp_id}: {e}")
                 # --- End LLM Evidence Refinement Integration ---
                 balance_effect = 0.0
-                if edge_main_type == 'supports':
+                if edge_main_type in ['supports', 'provides_evidence']:
                     hypothesis_results[v_hyp_id]['supporting_evidence'].append(ev_detail)
                     balance_effect = ev_detail['probative_value']
                 elif edge_main_type == 'refutes':
@@ -526,22 +834,115 @@ def analyze_evidence(G):
         balance = hypothesis_results[hyp_id]['balance']
         van_evera_assessment = apply_van_evera_diagnostic_tests(hypothesis_results[hyp_id])
         
-        # Use Van Evera assessment if available, otherwise fall back to balance
+        # Issue #82 Fix: Use elimination logic not scores
+        # Apply Van Evera elimination logic first, then use evidence-based assessment
         if van_evera_assessment:
             hypothesis_results[hyp_id]['assessment'] = van_evera_assessment
             hypothesis_results[hyp_id]['van_evera_applied'] = True
         else:
-            # Fallback to simple balance thresholds
-            if balance > 0.5: 
-                hypothesis_results[hyp_id]['assessment'] = 'Supported'
-            elif balance < -0.5: 
-                hypothesis_results[hyp_id]['assessment'] = 'Refuted'
-            elif abs(balance) <= 0.5 and (hypothesis_results[hyp_id]['supporting_evidence'] or hypothesis_results[hyp_id]['refuting_evidence']):
-                hypothesis_results[hyp_id]['assessment'] = 'Contested / Mixed Evidence'
+            # Apply elimination logic based on evidence patterns rather than numerical scores
+            assessment = apply_elimination_logic(hypothesis_results[hyp_id], balance)
+            hypothesis_results[hyp_id]['assessment'] = assessment
             hypothesis_results[hyp_id]['van_evera_applied'] = False
-            # else remains 'Undetermined / Lacks Evidence'
 
     return {'by_hypothesis': hypothesis_results}
+
+def generate_van_evera_type_reasoning(evidence_type, evidence_description):
+    """
+    Generate basic reasoning for why evidence received a specific Van Evera classification.
+    """
+    type_explanations = {
+        'hoop': 'Classified as hoop test (necessary condition) - this evidence represents a foundational requirement that must be present for the hypothesis to hold. Its absence would refute the hypothesis.',
+        'smoking_gun': 'Classified as smoking gun (sufficient condition) - this evidence provides definitive proof that strongly confirms the hypothesis when present, as it would be very unlikely to observe this evidence if the hypothesis were false.',
+        'straw_in_the_wind': 'Classified as straw-in-the-wind (weak indicator) - this evidence provides circumstantial support that is neither necessary nor sufficient, offering weak suggestive value for the hypothesis.',
+        'doubly_decisive': 'Classified as doubly decisive (necessary and sufficient) - this evidence both confirms the hypothesis and eliminates alternative explanations, representing a critical turning point.',
+        'general': 'General evidence type - not classified according to Van Evera diagnostic framework.'
+    }
+    
+    base_reasoning = type_explanations.get(evidence_type, f'Classified as {evidence_type} evidence type.')
+    
+    # Add context-specific reasoning based on evidence description keywords
+    if 'declaration' in evidence_description.lower() or 'document' in evidence_description.lower():
+        if evidence_type == 'hoop':
+            base_reasoning += ' This documentary evidence establishes a necessary foundation for understanding the hypothesis.'
+        elif evidence_type == 'smoking_gun':
+            base_reasoning += ' This official documentation provides definitive proof of the claimed relationship.'
+    
+    return base_reasoning
+
+def apply_elimination_logic(hypothesis_data, balance):
+    """
+    Issue #82 Fix: Apply proper elimination logic rather than numerical score thresholds.
+    
+    Uses process tracing elimination principles:
+    1. Eliminate hypotheses that fail necessary condition tests
+    2. Confirm hypotheses that pass sufficient condition tests  
+    3. Assess based on evidence quality and patterns, not just quantity
+    
+    Args:
+        hypothesis_data: Dictionary containing hypothesis evidence and balance
+        balance: Numerical balance score (for context, not primary decision factor)
+        
+    Returns:
+        Assessment string based on elimination logic
+    """
+    supporting = hypothesis_data.get('supporting_evidence', [])
+    refuting = hypothesis_data.get('refuting_evidence', [])
+    
+    # Count evidence pieces by strength and type
+    strong_supporting = [ev for ev in supporting if ev.get('probative_value', 0) >= 0.7]
+    weak_supporting = [ev for ev in supporting if 0 < ev.get('probative_value', 0) < 0.7]
+    
+    # Issue #82 Fix: Remove abs() - probative_value is already positive [0.0, 1.0]
+    strong_refuting = [ev for ev in refuting if ev.get('probative_value', 0) >= 0.7]
+    weak_refuting = [ev for ev in refuting if 0 < ev.get('probative_value', 0) < 0.7]
+    
+    # Issue #82 Fix: Mixed Evidence Logic FIRST (before elimination)
+    # Mixed Evidence: Both supporting and refuting evidence present
+    if strong_supporting and strong_refuting:
+        return 'Contested (Strong Evidence on Both Sides)'
+    elif strong_supporting and weak_refuting:
+        return 'Weakly Contested (Strong vs Weak Evidence)'
+    elif weak_supporting and (strong_refuting or weak_refuting):
+        return 'Weakly Contested (Mixed Evidence)'
+    
+    # Elimination Logic: Strong refuting evidence eliminates hypothesis (no supporting evidence)
+    if strong_refuting and not supporting:
+        if len(strong_refuting) >= 2:
+            return 'Eliminated (Multiple Strong Contradictions)'
+        else:
+            return 'Eliminated (Strong Contradiction)'
+    
+    # Confirmation Logic: Strong supporting evidence with no contradictions
+    if strong_supporting and not refuting:
+        if len(strong_supporting) >= 2:
+            return 'Strongly Supported (Multiple Strong Evidence)'
+        else:
+            return 'Supported (Strong Evidence)'
+    
+    # Weak Support: Only weak supporting evidence
+    if weak_supporting and not refuting:
+        if len(weak_supporting) >= 3:
+            return 'Weakly Supported (Multiple Weak Evidence)'
+        else:
+            return 'Weakly Supported (Limited Evidence)'
+    
+    # Weak Refutation: Only weak refuting evidence
+    if weak_refuting and not supporting:
+        return 'Weakly Refuted (Limited Contradictions)'
+    
+    # No significant evidence
+    if not supporting and not refuting:
+        return 'Undetermined (No Evidence)'
+    
+    # Fallback: Use balance for edge cases, but with elimination context
+    if balance > 0.3:  # Lower threshold - more conservative than old 0.5
+        return 'Tentatively Supported (Weak Evidence Pattern)'
+    elif balance < -0.3:
+        return 'Tentatively Refuted (Weak Evidence Pattern)'
+    else:
+        return 'Undetermined (Insufficient Evidence)'
+
 
 def apply_van_evera_diagnostic_tests(hypothesis_data):
     """
@@ -680,10 +1081,19 @@ def analyze_actors(G):
         influence_score = 0
         # 1. Score for initiated events (points per event)
         influence_score += len(initiated_events) * 10
-        # 2. Score for actor's degree centrality (raw degree as a proxy for general involvement)
+        # Issue #61 Fix: Use directed graph degree analysis for actor influence scoring
         try:
-            actor_degree = G.degree(actor_id)
-            influence_score += actor_degree * 1 # 1 point per connection (in or out)
+            # For directed graphs, distinguish between different types of influence:
+            if isinstance(G, nx.DiGraph):
+                in_degree = G.in_degree(actor_id)
+                out_degree = G.out_degree(actor_id) 
+                # Total connectivity as base involvement measure
+                total_degree = in_degree + out_degree
+                influence_score += total_degree * 1 # 1 point per connection (in or out)
+            else:
+                # For undirected graphs, use total degree
+                actor_degree = G.degree(actor_id)
+                influence_score += actor_degree * 1 # 1 point per connection
         except Exception:
             pass
         # 3. Bonus points if actor is linked to Causal Mechanisms or critical Hypotheses
@@ -790,20 +1200,62 @@ def calculate_network_metrics(G):
     metrics['edge_type_distribution'] = dict(Counter(edge_types))
     metrics['density'] = nx.density(G)
     try:
-        if G.number_of_nodes() > 0 and nx.is_weakly_connected(G): # Use weakly for DiGraph if strong is too strict
-            if nx.is_strongly_connected(G):
-                 metrics['avg_path_length'] = f"{nx.average_shortest_path_length(G):.2f}"
+        # Issue #20 Fix: Correct weak/strong connectivity logic for directed graphs
+        if G.number_of_nodes() > 0:
+            if isinstance(G, nx.DiGraph):
+                # For directed graphs, NetworkX requires strong connectivity for average_shortest_path_length
+                if nx.is_strongly_connected(G):
+                    metrics['avg_path_length'] = f"{nx.average_shortest_path_length(G):.2f}"
+                    metrics['connectivity_type'] = 'strongly connected'
+                elif nx.is_weakly_connected(G):
+                    # For weakly connected directed graphs, calculate average path length differently
+                    # Use the underlying undirected graph representation
+                    undirected_G = G.to_undirected()
+                    if nx.is_connected(undirected_G):
+                        metrics['avg_path_length'] = f"{nx.average_shortest_path_length(undirected_G):.2f} (undirected)"
+                    else:
+                        metrics['avg_path_length'] = 'N/A (weakly connected but fragmented)'
+                    metrics['connectivity_type'] = 'weakly connected'
+                else:
+                    metrics['avg_path_length'] = 'N/A (disconnected graph)'
+                    metrics['connectivity_type'] = 'disconnected'
             else:
-                metrics['avg_path_length'] = 'N/A (not strongly connected)'
+                # For undirected graphs, use regular connectivity
+                if nx.is_connected(G):
+                    metrics['avg_path_length'] = f"{nx.average_shortest_path_length(G):.2f}"
+                    metrics['connectivity_type'] = 'connected'
+                else:
+                    metrics['avg_path_length'] = 'N/A (disconnected graph)'
+                    metrics['connectivity_type'] = 'disconnected'
         else:
-            metrics['avg_path_length'] = 'N/A (disconnected or empty graph)'
+            metrics['avg_path_length'] = 'N/A (empty graph)'
+            metrics['connectivity_type'] = 'empty'
     except Exception:
         metrics['avg_path_length'] = 'N/A (calculation error)'
     if G.number_of_nodes() > 0:
-        metrics['degree_centrality'] = {
-            node: round(value, 3) 
-            for node, value in sorted(nx.degree_centrality(G).items(), key=lambda x: x[1], reverse=True)[:10] 
-        }
+        # Issue #61 Fix: Use appropriate centrality measures for directed graphs
+        if isinstance(G, nx.DiGraph):
+            # For directed graphs, use both in-degree and out-degree centrality
+            in_centrality = nx.in_degree_centrality(G)
+            out_centrality = nx.out_degree_centrality(G)
+            
+            # Combine in and out centrality for overall influence measure
+            combined_centrality = {}
+            for node in G.nodes():
+                # Weight in-degree centrality higher (being a target is more significant for influence)
+                combined_centrality[node] = (in_centrality.get(node, 0) * 0.6 + 
+                                           out_centrality.get(node, 0) * 0.4)
+            
+            metrics['degree_centrality'] = {
+                node: round(value, 3) 
+                for node, value in sorted(combined_centrality.items(), key=lambda x: x[1], reverse=True)[:10] 
+            }
+        else:
+            # For undirected graphs, use standard degree centrality
+            metrics['degree_centrality'] = {
+                node: round(value, 3) 
+                for node, value in sorted(nx.degree_centrality(G).items(), key=lambda x: x[1], reverse=True)[:10] 
+            }
     else:
         metrics['degree_centrality'] = {}
     return metrics
@@ -980,6 +1432,46 @@ def generate_embedded_network_visualization(network_data_json):
         safe_print(f"[ERROR] Failed to generate embedded network visualization: {e}")
         return f"<div class='alert alert-danger'>Error generating network visualization: {e}</div>"
 
+def format_analysis(results, data_unused, G, theoretical_insights=None):
+    """Simple text formatting for markdown/text output."""
+    lines = []
+    
+    # Title
+    filename = results.get('filename', 'Process Trace Analysis')
+    lines.append(f"# {filename}")
+    lines.append("")
+    
+    # Causal Chains
+    causal_chains = results.get('causal_chains', [])
+    lines.append(f"## Causal Chains ({len(causal_chains)} found)")
+    for i, chain in enumerate(causal_chains[:5]):  # Limit to top 5
+        nodes = " → ".join([str(node) for node in chain.get('path', [])])
+        lines.append(f"{i+1}. {nodes}")
+    lines.append("")
+    
+    # Evidence Analysis
+    evidence_analysis = results.get('evidence_analysis', {})
+    if evidence_analysis:
+        lines.append("## Evidence Analysis")
+        for hypothesis_id, hypothesis_data in evidence_analysis.items():
+            lines.append(f"### {hypothesis_data.get('description', hypothesis_id)}")
+            lines.append(f"Status: {hypothesis_data.get('assessment', 'undetermined')}")
+            lines.append(f"Balance: {hypothesis_data.get('balance', 0.0)}")
+            
+            supporting = hypothesis_data.get('supporting_evidence', [])
+            refuting = hypothesis_data.get('refuting_evidence', [])
+            lines.append(f"Supporting Evidence: {len(supporting)}")
+            lines.append(f"Refuting Evidence: {len(refuting)}")
+            lines.append("")
+    
+    # Summary statistics
+    lines.append("## Summary")
+    lines.append(f"Total Nodes: {len(G.nodes())}")
+    lines.append(f"Total Edges: {len(G.edges())}")
+    lines.append(f"Causal Chains: {len(causal_chains)}")
+    
+    return "\n".join(lines)
+
 def format_html_analysis(results, data_unused, G, theoretical_insights=None, network_data_json=None):
     node_type_names = {nt: CORE_NODE_TYPES.get(nt, {}).get('plural_name', nt) for nt in CORE_NODE_TYPES}
     default_node_type_names = { 
@@ -1076,25 +1568,35 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
     if results.get('causal_chains'):
         html_parts.append('<div class="row"><div class="col-md-12">') # Full width for list
         for i, chain in enumerate(results['causal_chains'][:5], 1):
-            path_node_descriptions = []
-            for node_id_in_chain in chain['path']:
-                node_graph_data = G.nodes.get(node_id_in_chain, {})
-                desc = node_graph_data.get('attr_props', {}).get('description', node_id_in_chain)
-                path_node_descriptions.append(textwrap.shorten(desc, width=40, placeholder="..."))
+            # Use the path_descriptions from the causal chain analysis if available
+            if 'path_descriptions' in chain and chain['path_descriptions']:
+                path_node_descriptions = [textwrap.shorten(desc, width=60, placeholder="...") for desc in chain['path_descriptions']]
+            else:
+                # Fallback to extracting from graph nodes
+                path_node_descriptions = []
+                for node_id_in_chain in chain['path']:
+                    node_graph_data = G.nodes.get(node_id_in_chain, {})
+                    desc = node_graph_data.get('attr_props', {}).get('description', node_id_in_chain)
+                    path_node_descriptions.append(textwrap.shorten(desc, width=60, placeholder="..."))
+            
+            # Create a more readable main chain summary
             path_str_display = " &rarr; ".join(path_node_descriptions)
             
             html_parts.append(f"""
                 <div class="causal-chain">
                     <h3 class="h6">Chain {i} (Length: {chain['length']})</h3>
-                    <p><strong>Path (Descriptions):</strong> {path_str_display}</p>
-                    <p><small><strong>Path (IDs):</strong> {" &rarr; ".join(chain['path'])}</small></p>
-                    <p><small><strong>Edge Types:</strong> {" &rarr; ".join(chain['edges'])}</small></p>
+                    <div class="alert alert-info">
+                        <strong>Causal Chain:</strong><br>
+                        {path_str_display}
+                    </div>
+                    <p><small><strong>Node IDs:</strong> {" &rarr; ".join(chain['path'])}</small></p>
+                    <p><small><strong>Edge Types:</strong> {" &rarr; ".join(chain['edge_types'])}</small></p>
                     <div><strong>Node Details (ID: Description [Subtype]):</strong>
                         <ul class="list-group list-group-flush">""")
             for idx, node_id_in_chain_detail in enumerate(chain['path']):
                 node_graph_data_detail = G.nodes.get(node_id_in_chain_detail, {})
                 desc_detail = node_graph_data_detail.get('attr_props', {}).get('description', node_id_in_chain_detail)
-                subtype_detail = chain['node_subtypes'][idx] if idx < len(chain['node_subtypes']) else 'N/A'
+                subtype_detail = G.nodes[node_id_in_chain_detail].get('subtype', G.nodes[node_id_in_chain_detail].get('type', 'N/A'))
                 # Temporal fields for Event nodes
                 start_date = node_graph_data_detail.get('attr_props', {}).get('start_date', '')
                 end_date = node_graph_data_detail.get('attr_props', {}).get('end_date', '')
@@ -1128,11 +1630,291 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
                 top_chain_data = results['causal_chains'][0]
                 chain_summary_prompt = "Summarize the primary causal chain presented, highlighting the initial trigger and final outcome."
                 llm_chain_summary = generate_narrative_summary_with_llm(top_chain_data, chain_summary_prompt)
-                html_parts.append(f'<div class="llm-summary"><h4>Analytical Summary of Top Chain (LLM):</h4><p>{llm_chain_summary}</p></div>')
+                # Handle structured output response
+                if hasattr(llm_chain_summary, 'summary_text'):
+                    summary_text = llm_chain_summary.summary_text
+                else:
+                    summary_text = str(llm_chain_summary)  # Backward compatibility
+                html_parts.append(f'<div class="llm-summary"><h4>Analytical Summary of Top Chain (LLM):</h4><p>{summary_text}</p></div>')
             except Exception as e:
                 html_parts.append(f'<div class="llm-summary"><h4>Analytical Summary of Top Chain (LLM):</h4><p>LLM integration error: {str(e)}</p></div>')
     else:
         html_parts.append("<p>No clear causal chains detected in the network.</p>")
+    html_parts.append("""
+            </div>
+        </div>""")
+
+    # Phase 2B: DAG Analysis Section
+    html_parts.append("""
+        <div class="card">
+            <div class="card-header"><h2 class="card-title h5">Advanced Causal Analysis (DAG)</h2></div>
+            <div class="card-body">""")
+    
+    dag_analysis = results.get('dag_analysis', {})
+    if dag_analysis and dag_analysis.get('causal_pathways'):
+        html_parts.append('<div class="row"><div class="col-md-12">')
+        
+        # Convergence analysis
+        convergence = dag_analysis.get('convergence_analysis', {})
+        if convergence.get('convergence_points'):
+            html_parts.append('<h3 class="h6">Causal Convergence Points</h3>')
+            for node_id, conv_data in list(convergence['convergence_points'].items())[:3]:
+                html_parts.append(f"""
+                    <div class="alert alert-warning">
+                        <strong>Convergence at {node_id}:</strong> {conv_data.get('description', 'Multiple causal pathways converge')}<br>
+                        <small>Convergence Strength: {conv_data.get('convergence_strength', 0):.2f} | 
+                        Converging Paths: {conv_data.get('num_converging_paths', 0)}</small>
+                    </div>""")
+        
+        # Divergence analysis  
+        divergence = dag_analysis.get('divergence_analysis', {})
+        if divergence.get('divergence_points'):
+            html_parts.append('<h3 class="h6">Causal Divergence Points</h3>')
+            for node_id, div_data in list(divergence['divergence_points'].items())[:3]:
+                html_parts.append(f"""
+                    <div class="alert alert-info">
+                        <strong>Divergence from {node_id}:</strong> {div_data.get('description', 'Single cause leads to multiple effects')}<br>
+                        <small>Divergence Strength: {div_data.get('divergence_strength', 0):.2f} | 
+                        Diverging Paths: {div_data.get('num_diverging_paths', 0)}</small>
+                    </div>""")
+        
+        # Complex pathways
+        pathways = dag_analysis.get('causal_pathways', [])[:5]
+        if pathways:
+            html_parts.append('<h3 class="h6">Top Complex Causal Pathways</h3>')
+            for i, pathway in enumerate(pathways, 1):
+                pathway_nodes = [G.nodes.get(node_id, {}).get('attr_props', {}).get('description', node_id)[:50] 
+                               for node_id in pathway.get('path', [])]
+                pathway_str = " → ".join(pathway_nodes)
+                html_parts.append(f"""
+                    <div class="causal-chain">
+                        <strong>Pathway {i}:</strong> {pathway_str}<br>
+                        <small>Strength: {pathway.get('strength', 0):.2f} | Length: {pathway.get('length', 0)} | 
+                        Types: {', '.join(pathway.get('node_types', []))}</small>
+                    </div>""")
+        
+        html_parts.append('</div>')
+    else:
+        html_parts.append("<p>No complex causal patterns detected in the network.</p>")
+    
+    html_parts.append("""
+            </div>
+        </div>""")
+
+    # Phase 2B: Cross-Domain Analysis Section
+    html_parts.append("""
+        <div class="card">
+            <div class="card-header"><h2 class="card-title h5">Cross-Domain Analysis</h2></div>
+            <div class="card-body">""")
+    
+    cross_domain = results.get('cross_domain_analysis', {})
+    if cross_domain:
+        html_parts.append('<div class="row"><div class="col-md-12">')
+        
+        # Hypothesis-Evidence chains
+        he_chains = cross_domain.get('hypothesis_evidence_chains', [])
+        if he_chains:
+            html_parts.append('<h3 class="h6">Hypothesis-Evidence Chains</h3>')
+            for i, chain in enumerate(he_chains[:3], 1):
+                evidence_desc = G.nodes.get(chain.get('evidence_node', ''), {}).get('attr_props', {}).get('description', 'Evidence')
+                hypothesis_desc = G.nodes.get(chain.get('hypothesis_node', ''), {}).get('attr_props', {}).get('description', 'Hypothesis')
+                van_evera_type = chain.get('van_evera_type', 'Unknown')
+                assessment = chain.get('van_evera_assessment', 'No assessment')
+                
+                html_parts.append(f"""
+                    <div class="alert alert-success">
+                        <strong>Chain {i}:</strong> {evidence_desc[:60]}... → {hypothesis_desc[:60]}...<br>
+                        <small>Van Evera Type: <strong>{van_evera_type}</strong> | Assessment: {assessment}</small>
+                    </div>""")
+        
+        # Cross-domain paths
+        cross_paths = cross_domain.get('cross_domain_paths', [])
+        if cross_paths:
+            html_parts.append('<h3 class="h6">Top Cross-Domain Paths</h3>')
+            for i, path in enumerate(cross_paths[:3], 1):
+                unique_types = ', '.join(path.get('unique_types', []))
+                transitions = path.get('domain_transitions', 0)
+                length = path.get('length', 0)
+                
+                html_parts.append(f"""
+                    <div class="alert alert-primary">
+                        <strong>Path {i}:</strong> Crosses {unique_types}<br>
+                        <small>Domain Transitions: {transitions} | Path Length: {length}</small>
+                    </div>""")
+        
+        # Van Evera integration
+        van_evera_integration = cross_domain.get('van_evera_integration', {})
+        if van_evera_integration.get('van_evera_type_distribution'):
+            html_parts.append('<h3 class="h6">Van Evera Evidence Distribution</h3>')
+            html_parts.append('<div class="row">')
+            for van_type, count in van_evera_integration['van_evera_type_distribution'].items():
+                html_parts.append(f"""
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{count}</h5>
+                                <p class="card-text">{van_type.replace('_', ' ').title()}</p>
+                            </div>
+                        </div>
+                    </div>""")
+            html_parts.append('</div>')
+        
+        # Statistics
+        stats = cross_domain.get('cross_domain_statistics', {})
+        if stats:
+            html_parts.append(f"""
+                <h3 class="h6">Cross-Domain Statistics</h3>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Hypothesis-Evidence Chains: <span class="badge bg-primary">{stats.get('total_he_chains', 0)}</span></li>
+                    <li class="list-group-item">Cross-Domain Paths: <span class="badge bg-secondary">{stats.get('total_cross_paths', 0)}</span></li>
+                    <li class="list-group-item">Mechanism Validation Paths: <span class="badge bg-success">{stats.get('total_mechanism_paths', 0)}</span></li>
+                    <li class="list-group-item">Most Common Van Evera Type: <span class="badge bg-info">{stats.get('most_common_van_evera_type', 'None')}</span></li>
+                </ul>""")
+        
+        html_parts.append('</div>')
+    else:
+        html_parts.append("<p>No cross-domain analysis available.</p>")
+    
+    html_parts.append("""
+            </div>
+        </div>""")
+
+    # Phase 4: Temporal Analysis Section
+    html_parts.append("""
+        <div class="card">
+            <div class="card-header"><h2 class="card-title h5">Temporal Process Tracing Analysis (Phase 4)</h2></div>
+            <div class="card-body">""")
+    
+    temporal_analysis = results.get('temporal_analysis', {})
+    if temporal_analysis and not temporal_analysis.get('error'):
+        html_parts.append('<div class="row"><div class="col-md-12">')
+        
+        # Temporal validation results
+        validation_result = temporal_analysis.get('validation_result')
+        if validation_result:
+            status_class = "success" if validation_result.is_valid else "danger"
+            confidence = validation_result.confidence_score
+            violations_count = len(validation_result.violations)
+            
+            html_parts.append(f"""
+                <h3 class="h6">Temporal Validation</h3>
+                <div class="alert alert-{status_class}">
+                    <strong>Validation Status:</strong> {'PASSED' if validation_result.is_valid else 'FAILED'}<br>
+                    <strong>Confidence Score:</strong> {confidence:.2f}/1.00<br>
+                    <strong>Violations Found:</strong> {violations_count}
+                </div>""")
+        
+        # Critical junctures analysis
+        juncture_analysis = temporal_analysis.get('juncture_analysis')
+        critical_junctures = temporal_analysis.get('critical_junctures', [])
+        if juncture_analysis:
+            html_parts.append(f"""
+                <h3 class="h6">Critical Junctures Analysis</h3>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{juncture_analysis.total_junctures}</h5>
+                                <p class="card-text">Total Junctures</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{len(juncture_analysis.high_impact_junctures)}</h5>
+                                <p class="card-text">High Impact</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{len(juncture_analysis.timing_critical_junctures)}</h5>
+                                <p class="card-text">Timing Critical</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{juncture_analysis.overall_timing_sensitivity:.2f}</h5>
+                                <p class="card-text">Timing Sensitivity</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>""")
+            
+            # Show top critical junctures
+            if critical_junctures:
+                html_parts.append('<h3 class="h6 mt-3">Top Critical Junctures</h3>')
+                for i, juncture in enumerate(critical_junctures[:3], 1):
+                    html_parts.append(f"""
+                        <div class="alert alert-warning">
+                            <strong>Juncture {i}:</strong> {juncture.description}<br>
+                            <small>Type: <strong>{juncture.juncture_type.value}</strong> | 
+                            Impact: {juncture.counterfactual_impact:.2f} | 
+                            Timing Sensitivity: {juncture.timing_sensitivity:.2f} |
+                            Alternatives: {len(juncture.alternative_pathways)}</small>
+                        </div>""")
+        
+        # Duration analysis
+        duration_analysis = temporal_analysis.get('duration_analysis')
+        if duration_analysis:
+            html_parts.append(f"""
+                <h3 class="h6">Process Duration Analysis</h3>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{duration_analysis.total_processes}</h5>
+                                <p class="card-text">Total Processes</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{len(duration_analysis.efficient_processes)}</h5>
+                                <p class="card-text">Efficient Processes</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{len(duration_analysis.bottleneck_nodes)}</h5>
+                                <p class="card-text">Bottleneck Nodes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>""")
+            
+            # Timing insights
+            if duration_analysis.timing_insights:
+                html_parts.append('<h3 class="h6 mt-3">Timing Insights</h3>')
+                html_parts.append('<ul class="list-group list-group-flush">')
+                for insight in duration_analysis.timing_insights[:5]:
+                    html_parts.append(f'<li class="list-group-item">{insight}</li>')
+                html_parts.append('</ul>')
+        
+        # Temporal statistics
+        temporal_stats = temporal_analysis.get('temporal_statistics', {})
+        if temporal_stats:
+            html_parts.append(f"""
+                <h3 class="h6 mt-3">Temporal Statistics</h3>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Nodes with Timestamps: <span class="badge bg-primary">{temporal_stats.get('nodes_with_timestamps', 0)}</span></li>
+                    <li class="list-group-item">Nodes with Duration: <span class="badge bg-secondary">{temporal_stats.get('nodes_with_duration', 0)}</span></li>
+                    <li class="list-group-item">Temporal Span: <span class="badge bg-info">{temporal_stats.get('temporal_span', 'Unknown')}</span></li>
+                    <li class="list-group-item">Average Uncertainty: <span class="badge bg-warning">{temporal_stats.get('average_uncertainty', 'N/A')}</span></li>
+                </ul>""")
+        
+        html_parts.append('</div>')
+    else:
+        error_msg = temporal_analysis.get('error', 'No temporal analysis available')
+        html_parts.append(f"<p class='text-muted'>Temporal analysis not available: {error_msg}</p>")
+    
     html_parts.append("""
             </div>
         </div>""")
@@ -1343,7 +2125,18 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
     # Theoretical Insights
     if theoretical_insights:
         html_parts.append(f'<div class="card"><div class="card-header"><h2 class="card-title h5">Theoretical Insights</h2></div><div class="card-body">{theoretical_insights}</div></div>')
-    return ''.join(html_parts)
+    
+    # HTML footer to close the document
+    html_footer = """
+</div>
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+"""
+    
+    # Combine header, body, and footer
+    return html_header + ''.join(html_parts) + html_footer
 
 # --- Charting Functions (generate_node_type_chart, etc.) ---
 # These need to be refactored to use G.nodes[id].get('attr_props', {}).get('property_name')
@@ -1394,7 +2187,8 @@ def generate_causal_chain_network(G, chain_to_visualize): # Takes one chain
         return None
     
     path_nodes = chain_to_visualize['path']
-    if not path_nodes or len(path_nodes) < 2: return None
+    # Issue #52 Fix: Support single-node visualizations
+    if not path_nodes or len(path_nodes) < 1: return None
 
     try:
         subG = G.subgraph(path_nodes)
@@ -1524,16 +2318,47 @@ def main():
     
     safe_print(f"[SUCCESS] Loaded graph: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges")
     
-    analysis_results = { 
-        'filename': args.json_file, 
-        'causal_chains': identify_causal_chains(G),
-        'mechanisms': evaluate_mechanisms(G),
-        'evidence_analysis': analyze_evidence(G)['by_hypothesis'],
-        'conditions': identify_conditions(G),
-        'actors': analyze_actors(G),
-        'alternatives': analyze_alternative_explanations(G),
-        'metrics': calculate_network_metrics(G)
-    }
+    # Check if plugin integration is requested via environment variable
+    use_plugins = os.environ.get('PROCESS_TRACING_USE_PLUGINS', 'false').lower() == 'true'
+    
+    if use_plugins:
+        try:
+            from .plugin_integration import run_analysis_with_plugins, validate_plugin_integration
+            
+            # Validate plugin integration
+            if not validate_plugin_integration():
+                safe_print("[WARN] Plugin validation failed, falling back to standard analysis")
+                use_plugins = False
+            else:
+                safe_print("[INFO] Plugin integration validated, using plugin-enhanced analysis")
+                
+                # Extract case ID from filename
+                case_id = Path(args.json_file).stem.replace('_graph', '')
+                output_dir = Path(args.json_file).parent
+                
+                # Run plugin-enhanced analysis
+                analysis_results = run_analysis_with_plugins(G, case_id, str(output_dir))
+                safe_print("[SUCCESS] Plugin-enhanced analysis completed")
+                
+        except ImportError as e:
+            safe_print(f"[WARN] Plugin integration not available: {e}")
+            use_plugins = False
+        except Exception as e:
+            safe_print(f"[WARN] Plugin analysis failed, falling back to standard analysis: {e}")
+            use_plugins = False
+    
+    # Run standard analysis if plugins not used
+    if not use_plugins:
+        analysis_results = { 
+            'filename': args.json_file, 
+            'causal_chains': identify_causal_chains(G),
+            'mechanisms': evaluate_mechanisms(G),
+            'evidence_analysis': analyze_evidence(G)['by_hypothesis'],
+            'conditions': identify_conditions(G),
+            'actors': analyze_actors(G),
+            'alternatives': analyze_alternative_explanations(G),
+            'metrics': calculate_network_metrics(G)
+        }
 
     # --- LLM Mechanism Elaboration ---
     for mech in analysis_results['mechanisms']:
@@ -1561,9 +2386,36 @@ def main():
                 original_text_context=original_text_context,
                 ontology_schema=ontology_schema
             )
+            # Handle structured output response
+            if hasattr(llm_elaboration, 'completeness_score'):
+                # Structured output response - convert to dict for storage
+                mech['llm_elaboration'] = {
+                    'completeness_score': llm_elaboration.completeness_score,
+                    'plausibility_score': llm_elaboration.plausibility_score,
+                    'evidence_support_level': llm_elaboration.evidence_support_level.value if hasattr(llm_elaboration.evidence_support_level, 'value') else llm_elaboration.evidence_support_level,
+                    'missing_elements': llm_elaboration.missing_elements,
+                    'improvement_suggestions': llm_elaboration.improvement_suggestions,
+                    'detailed_reasoning': llm_elaboration.detailed_reasoning
+                }
+                
+                # Issue #81 Fix: Integrate LLM completeness score with Van Evera score
+                # Combine Van Evera structural score with LLM assessment score
+                van_evera_score = mech.get('completeness', 0.0)
+                llm_score = llm_elaboration.completeness_score * 100  # Convert 0.0-1.0 to 0-100 scale
+                
+                # Weighted combination: 60% Van Evera structural, 40% LLM assessment
+                mech['completeness'] = round(0.6 * van_evera_score + 0.4 * llm_score, 1)
+                mech['completeness_breakdown'] = {
+                    'van_evera_structural': van_evera_score,
+                    'llm_assessment': llm_score,
+                    'combined': mech['completeness']
+                }
+                
+            else:
+                # Fallback for backward compatibility
+                mech['llm_elaboration'] = llm_elaboration if isinstance(llm_elaboration, dict) else {'response': str(llm_elaboration)}
         except Exception as e:
-            llm_elaboration = {'error': str(e)}
-        mech['llm_elaboration'] = llm_elaboration
+            mech['llm_elaboration'] = {'error': str(e)}
     # --- End LLM Mechanism Elaboration ---
 
     # --- LLM Evidence Refinement --- 
@@ -1576,7 +2428,11 @@ def main():
             top_chain_data = analysis_results['causal_chains'][0]
             chain_summary_prompt = "Summarize the primary causal chain presented, highlighting the initial trigger and final outcome."
             llm_chain_summary = generate_narrative_summary_with_llm(top_chain_data, chain_summary_prompt)
-            analysis_results['causal_chains_llm_summary'] = llm_chain_summary
+            # Handle structured output response
+            if hasattr(llm_chain_summary, 'summary_text'):
+                analysis_results['causal_chains_llm_summary'] = llm_chain_summary.summary_text
+            else:
+                analysis_results['causal_chains_llm_summary'] = str(llm_chain_summary)  # Backward compatibility
         except Exception as e:
             analysis_results['causal_chains_llm_summary'] = f"LLM integration error: {str(e)}"
     
@@ -1584,7 +2440,11 @@ def main():
         try:
             hyp_summary_prompt = f"Summarize the overall findings for the hypothesis: {hyp_data.get('description', hyp_id)}."
             llm_hyp_summary = generate_narrative_summary_with_llm(hyp_data, hyp_summary_prompt)
-            hyp_data['llm_summary'] = llm_hyp_summary
+            # Handle structured output response
+            if hasattr(llm_hyp_summary, 'summary_text'):
+                hyp_data['llm_summary'] = llm_hyp_summary.summary_text
+            else:
+                hyp_data['llm_summary'] = str(llm_hyp_summary)  # Backward compatibility
         except Exception as e:
             hyp_data['llm_summary'] = f"LLM integration error: {str(e)}"
     # --- End LLM Narrative Summaries ---
@@ -1607,8 +2467,29 @@ def main():
                     network_data_json = f.read()
             else:
                 network_data_json = args.network_data
-        # Pass G and network_data_json to format_html_analysis
-        analysis_text = format_html_analysis(analysis_results, data, G, theoretical_insights, network_data_json) 
+        # Phase 3A: Streaming HTML Generation Integration
+        from core.streaming_html import ProgressiveHTMLAnalysis
+        import json
+        
+        # Prepare network data for streaming
+        network_data = {}
+        if network_data_json:
+            try:
+                network_data = json.loads(network_data_json)
+            except:
+                safe_print("[WARN] Failed to parse network data JSON for streaming")
+        
+        # We'll handle streaming after output path is determined
+        # Store data for potential streaming use
+        streaming_data = {
+            'results': analysis_results,
+            'G': G,
+            'network_data': network_data,
+            'insights': theoretical_insights
+        }
+        
+        # Use original HTML formatter as fallback
+        analysis_text = format_html_analysis(analysis_results, data, G, theoretical_insights, network_data_json)
         output_extension = "html"
     else: # Markdown
         safe_print("[INFO] Formatting Markdown report...")
@@ -1625,20 +2506,52 @@ def main():
         output_path_str = str(project_dir / f"{project_name}_analysis_{now_str}.{output_extension}")
     output_path = Path(output_path_str)
 
-    try:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(analysis_text)
-        safe_print(f"[SUCCESS] Analysis report saved to {output_path}")
-        if args.html:
-            import webbrowser
-            try:
-                webbrowser.open('file://' + str(output_path.resolve()))
-            except Exception as e_wb:
-                safe_print(f"[WARN] Could not open HTML report in browser: {e_wb}")
-    except Exception as e:
-        safe_print(f"Error writing report to {output_path}: {e}")
-        if not args.html: safe_print("\nANALYSIS CONTENT (MD):\n" + analysis_text)
+    # Phase 3A: Apply streaming HTML if appropriate
+    if args.html and 'streaming_data' in locals():
+        html_generator = ProgressiveHTMLAnalysis(output_path)
+        if html_generator.should_use_streaming(streaming_data['results']):
+            safe_print("[HTML] Using streaming HTML generation for complex analysis")
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            html_generator.generate_streaming_html(
+                streaming_data['results'], 
+                streaming_data['G'], 
+                streaming_data['network_data'], 
+                streaming_data['insights']
+            )
+            # Skip the regular file write since streaming handled it
+            analysis_text = None
+
+    if analysis_text is not None:
+        try:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(analysis_text)
+            safe_print(f"[SUCCESS] Analysis report saved to {output_path}")
+        except Exception as e:
+            safe_print(f"Error writing report to {output_path}: {e}")
+            if not args.html: safe_print("\nANALYSIS CONTENT (MD):\n" + analysis_text)
+    else:
+        safe_print(f"[SUCCESS] Streaming HTML report generated at {output_path}")
+    
+    # Open HTML in browser if requested
+    if args.html:
+        import webbrowser
+        try:
+            webbrowser.open('file://' + str(output_path.resolve()))
+        except Exception as e_wb:
+            safe_print(f"[WARN] Could not open HTML report in browser: {e_wb}")
+    
+    # Phase 3A: Print performance summary
+    from core.performance_profiler import get_profiler
+    profiler = get_profiler()
+    if profiler.phases:
+        profiler.print_summary()
+    
+    # Phase 3A: Print cache statistics
+    from core.llm_cache import get_cache
+    cache = get_cache()
+    if cache.stats.total_requests > 0:
+        cache.print_stats()
     
     safe_print("\n[SUCCESS] Analysis generation complete!")
     

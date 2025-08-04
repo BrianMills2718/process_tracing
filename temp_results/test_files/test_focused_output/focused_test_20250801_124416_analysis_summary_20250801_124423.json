@@ -1,0 +1,61 @@
+{
+  "filename": "test_focused_output\\focused_test_20250801_124416_graph.json",
+  "case_identifier": "focused_test_20250801_124416_graph",
+  "generated_at": "2025-08-01T12:44:23.046051",
+  "causal_chains": [
+    {
+      "path": [
+        "node1",
+        "node2",
+        "node3",
+        "node6"
+      ],
+      "path_descriptions": [
+        "The French and Indian War ended in 1763 with Britain's victory over France, resulting in a massive war debt for Britain.",
+        "To finance the war debt, Britain imposed new taxes on the American colonies, including the Stamp Act.",
+        "The American colonists protested the new taxes, arguing that \"taxation without representation\" violated their rights as Englishmen.",
+        "The Boston Tea Party of 1773, a major escalation of colonial resistance against British rule."
+      ],
+      "edge_types": [
+        "causes",
+        "causes",
+        "causes"
+      ],
+      "trigger": "node1",
+      "outcome": "node6",
+      "length": 4
+    }
+  ],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "triggering": 1,
+      "intermediate": 2,
+      "unspecified": 2,
+      "outcome": 1
+    },
+    "edge_type_distribution": {
+      "causes": 3,
+      "supports": 1
+    },
+    "density": 0.13333333333333333,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "node2": 0.4,
+      "node3": 0.4,
+      "node1": 0.2,
+      "node4": 0.2,
+      "node5": 0.2,
+      "node6": 0.2
+    }
+  },
+  "hypotheses_evaluation": [],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}
