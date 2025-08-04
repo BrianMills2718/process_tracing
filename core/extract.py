@@ -113,6 +113,15 @@ CRITICAL EDGE TYPES TO PRIORITIZE:
 - initiates: Actors who directly started, launched, or began specific events
 - provides_evidence: Data sources (documents, interviews, observations) that supply evidence
 - refutes: Evidence that contradicts or challenges hypotheses, events, or mechanisms
+- tests_alternative: Evidence that systematically tests alternative explanations ("tests the alternative")
+- explains_mechanism: Hypotheses that explain how causal mechanisms operate ("explains how the mechanism works")
+- weighs_evidence: Evidence comparisons showing relative strength ("weighs more heavily than")
+
+INTEGRATION PATTERNS FOR CONNECTIVITY:
+- Link hypotheses to mechanisms via explains_mechanism edges
+- Connect alternatives to evidence via tests_alternative, supports_alternative, refutes_alternative
+- Use weighs_evidence to compare evidence strength across competing explanations
+- Connect mechanisms to each other via enables/constrains for interaction analysis
 
 Output your answer as a JSON object with two arrays: 'nodes' and 'edges'.
 
@@ -124,7 +133,7 @@ Each node must have:
 Each edge must have:
 - source_id: id of the source node
 - target_id: id of the target node
-- type: one of [causes, supports, refutes, tests_hypothesis, tests_mechanism, confirms_occurrence, disproves_occurrence, provides_evidence_for, part_of_mechanism, explains_mechanism, supports_alternative, refutes_alternative, initiates, enables, constrains, provides_evidence]
+- type: one of [causes, supports, refutes, tests_hypothesis, tests_mechanism, confirms_occurrence, disproves_occurrence, provides_evidence_for, part_of_mechanism, explains_mechanism, supports_alternative, refutes_alternative, initiates, enables, constrains, provides_evidence, tests_alternative, weighs_evidence]
 - properties: a dictionary of the edge's properties (see below)
 
 # Issue #84 Fix: Align prompt properties with ontology schema
@@ -270,6 +279,16 @@ Edge Types (with flexible domain/range for academic process tracing):
    - credibility (float 0-1, optional): reliability of the data source
    - bias_risk (float 0-1, optional): risk of bias in the source
    - certainty (float 0-1, optional): confidence that source provides evidence
+
+18. tests_alternative (Evidence/Event → Alternative_Explanation)
+   - probative_value (float 0-1, optional): how strongly evidence tests the alternative
+   - diagnostic_type (string: hoop, smoking_gun, straw_in_the_wind, doubly_decisive, general, optional)
+   - test_result (string: supports, refutes, inconclusive, optional): result of testing
+
+19. weighs_evidence (Evidence → Evidence)
+   - comparison_strength (float 0-1, optional): relative strength compared to target evidence
+   - comparison_type (string: stronger_than, weaker_than, equivalent_to, complements, contradicts, optional)
+   - reasoning (string, optional): explanation of comparative strength
 
 Output format example:
 {{

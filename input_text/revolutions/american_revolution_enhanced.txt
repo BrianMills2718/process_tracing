@@ -96,3 +96,58 @@ INFERENTIAL REASONING:
 Using deductive reasoning, if British fiscal policies violated colonial constitutional expectations (established premise) and constitutional violations generate resistance (general principle), then we can infer that British fiscal policies were a necessary cause of colonial resistance.
 
 Through abductive reasoning, the best explanation for the coordinated pattern of colonial responses across different regions infers that a systematic communication network existed among colonial leaders, suggesting more organization than spontaneous local resistance.
+
+ADVANCED ALTERNATIVE EXPLANATION TESTING:
+
+Testing Economic Self-Interest Alternative:
+Colonial merchant records provide evidence that directly tests the alternative explanation that economic self-interest motivated revolutionary activities. This evidence supports the alternative explanation by showing extensive smuggling operations that would be threatened by British enforcement, but it refutes the alternative explanation by demonstrating that many merchants actually opposed destructive actions like the Tea Party that harmed legitimate trade.
+
+The economic self-interest alternative is refuted by evidence showing working-class participation in revolutionary activities, as these groups had no direct economic stake in trade policies yet participated actively in resistance movements.
+
+Testing Elite Manipulation Alternative:
+Documentary evidence from town meetings tests the alternative explanation that colonial elites manipulated popular sentiment for their own political gain. This evidence refutes the alternative explanation by showing genuine grassroots participation across different social classes, indicating that revolutionary sentiment was not artificially manufactured by elites.
+
+Letters between colonial leaders support the alternative explanation of elite coordination by revealing strategic planning among educated leaders, but they simultaneously refute the manipulation aspect by showing genuine ideological commitment rather than cynical political calculation.
+
+Testing Social Contract Alternative:
+Philosophical writings by colonial intellectuals provide evidence that tests the alternative explanation that Enlightenment social contract theory was the primary driver of revolutionary thinking. This evidence supports the alternative explanation by demonstrating widespread familiarity with Locke, Rousseau, and other social contract theorists among colonial leaders.
+
+However, evidence from popular protests and working-class participation refutes the alternative explanation that philosophical theory alone motivated resistance, showing that material grievances and practical constitutional concerns were equally important.
+
+HYPOTHESIS-MECHANISM INTEGRATION:
+
+Constitutional Principles Hypothesis Explains Imperial Resistance Mechanism:
+The constitutional principles hypothesis explains how the imperial resistance mechanism operates by showing that principled opposition to taxation without representation created the ideological framework necessary for each step of the resistance process. This hypothesis explains that the mechanism functions through constitutional interpretation that transforms specific policy grievances into universal rights claims.
+
+Economic Grievance Hypothesis Explains Trade Disruption Mechanism:
+The economic grievance hypothesis explains the trade disruption mechanism by proposing that material interests rather than constitutional principles drove the systematic pattern of boycotts, smuggling, and commercial resistance. This hypothesis explains that the mechanism operates through rational economic calculation rather than ideological commitment.
+
+Elite Coordination Hypothesis Explains Communication Mechanism:
+The elite coordination hypothesis explains how the inter-colony communication mechanism operated by showing that educated colonial leaders deliberately created systematic networks to coordinate resistance activities. This hypothesis explains the mechanism through strategic political organization rather than spontaneous popular uprising.
+
+MECHANISM INTERACTION ANALYSIS:
+
+The Imperial Control Mechanism directly constrains the Colonial Resistance Mechanism by limiting the strategic options available to colonial actors. British naval supremacy constrains colonial access to foreign support, while military deployment constrains the locations and methods of colonial resistance activities.
+
+Conversely, the Colonial Resistance Mechanism enables the breakdown of the Imperial Control Mechanism by creating coordination costs that exceed British administrative capacity. The systematic nature of colonial boycotts enables the collapse of imperial trade regulation by making enforcement economically prohibitive.
+
+The Communication Mechanism enables both the Imperial Control Mechanism and Colonial Resistance Mechanism by providing the information networks necessary for both British policy coordination and colonial counter-coordination. However, the same communication networks that enable imperial administration also enable colonial resistance planning.
+
+EVIDENCE STRENGTH COMPARISON AND WEIGHTING:
+
+Comparative Evidence Assessment:
+The Declaration of Rights and Grievances (doubly decisive evidence, strength 0.95) weighs more heavily than Captain Levi Preston's testimony (smoking gun evidence, strength 0.8) in supporting the constitutional principles hypothesis, because official collective declarations provide stronger evidence for widespread principled commitment than individual retrospective accounts.
+
+However, the extensive merchant participation records (smoking gun evidence, strength 0.85) weigh more heavily than philosophical pamphlets (straw in the wind evidence, strength 0.6) in supporting the economic interest hypothesis, because actual behavioral evidence provides stronger support than theoretical writings.
+
+When weighing evidence between competing alternatives, the working-class participation records (hoop evidence, strength 0.9) provide stronger refutation of the elite manipulation alternative than do elite correspondence records (straw in the wind evidence, strength 0.5) provide support for it, because broad-based participation is necessary evidence against manipulation theories.
+
+The archaeological evidence from Boston Harbor (doubly decisive evidence, strength 0.95) weighs more heavily than British government reports (smoking gun evidence, strength 0.7) in establishing the actual scale of tea destruction, because physical evidence provides more reliable measurement than potentially biased official accounts.
+
+SYSTEMATIC ALTERNATIVE COMPARISON:
+
+The constitutional principles hypothesis (posterior probability 0.95) currently weighs more heavily than the economic self-interest alternative (posterior probability 0.6) based on the strength of documentary evidence showing principled arguments even when economically disadvantageous.
+
+However, the social contract theory alternative (posterior probability 0.8) weighs less heavily than the constitutional principles hypothesis because, while philosophical evidence supports theoretical influence, behavioral evidence shows that practical constitutional violations provided more immediate motivation than abstract social contract theory.
+
+The elite manipulation alternative (posterior probability 0.3) weighs least heavily among all explanations because multiple lines of evidence consistently refute the core prediction of manufactured rather than genuine popular sentiment.

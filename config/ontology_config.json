@@ -45,8 +45,10 @@
     "Condition": {
       "properties": {
         "description": {"type": "string", "required": true},
-        "type": {"type": "string", "allowed_values": ["background", "enabling", "facilitating", "constraining", "unspecified"], "required": true},
+        "type": {"type": "string", "allowed_values": ["background", "enabling", "constraining", "scope"], "required": false},
         "necessity": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "temporal_scope": {"type": "string", "required": false},
+        "spatial_scope": {"type": "string", "required": false},
         "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false}
       },
       "plural_name": "Conditions"
@@ -57,6 +59,8 @@
         "role": {"type": "string", "required": false},
         "intentions": {"type": "string", "required": false},
         "beliefs": {"type": "string", "required": false},
+        "constraints": {"type": "string", "required": false},
+        "capabilities": {"type": "string", "required": false},
         "credibility": {"type": "float", "min": 0.0, "max": 1.0, "required": false}
       },
       "plural_name": "Actors"
@@ -80,7 +84,8 @@
       "properties": {
         "description": {"type": "string", "required": true},
         "probability": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
-        "status": {"type": "string", "allowed_values": ["active", "confirmed", "refuted"], "required": false}
+        "status": {"type": "string", "allowed_values": ["active", "eliminated", "supported", "undetermined"], "required": false},
+        "key_predictions": {"type": "list", "required": false}
       },
       "plural_name": "Alternative Explanations"
     },
@@ -154,7 +159,7 @@
     },
     "enables": {
       "domain": ["Condition"],
-      "range": ["Event", "Causal_Mechanism"],
+      "range": ["Event", "Causal_Mechanism", "Hypothesis"],
       "properties": {
         "necessity": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
         "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
@@ -164,7 +169,7 @@
     },
     "constrains": {
       "domain": ["Condition"],
-      "range": ["Event", "Causal_Mechanism"],
+      "range": ["Event", "Causal_Mechanism", "Actor"],
       "properties": {
         "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
         "type": {"type": "string", "required": false}
@@ -221,7 +226,7 @@
     },
     "supports": {
       "domain": ["Evidence", "Event"],
-      "range": ["Hypothesis", "Event", "Causal_Mechanism"],
+      "range": ["Hypothesis", "Event", "Causal_Mechanism", "Actor"],
       "properties": {
         "label": {"type": "string", "description": "Defaults to 'supports'. Optional.", "required": false},
         "description": {"type": "string", "description": "Explanation of how the evidence/event supports the target. Optional.", "required": false},
@@ -252,7 +257,7 @@
       "range": ["Causal_Mechanism"],
       "properties": {
         "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "Confidence that this hypothesis correctly pertains to this mechanism."},
-        "type_of_claim": {"type": "string", "allowed_values": ["existence", "significance", "component_role", "operational_details", "unspecified"], "required": false, "description": "Describes what aspect of the mechanism the hypothesis is claiming."}
+        "type_of_claim": {"type": "string", "allowed_values": ["existence", "operation", "significance", "component_role", "operational_details", "unspecified"], "required": false, "description": "Describes what aspect of the mechanism the hypothesis is claiming."}
       },
       "label": "explains mechanism"
     },
@@ -277,14 +282,34 @@
       "label": "disproves occurrence"
     },
     "provides_evidence_for": {
-      "domain": ["Event"],
-      "range": ["Hypothesis", "Causal_Mechanism"],
+      "domain": ["Event", "Evidence"],
+      "range": ["Hypothesis", "Causal_Mechanism", "Actor", "Alternative_Explanation"],
       "properties": {
         "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "How strongly the event serves as evidence."},
         "reasoning": {"type": "string", "description": "Explanation of how the event provides evidence.", "required": false},
         "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type when event serves as evidence.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
       },
       "label": "provides evidence for"
+    },
+    "tests_alternative": {
+      "domain": ["Evidence", "Event"],
+      "range": ["Alternative_Explanation"],
+      "properties": {
+        "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "How strongly the evidence tests the alternative explanation."},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type for alternative testing.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false},
+        "test_result": {"type": "string", "description": "Result of testing the alternative.", "allowed_values": ["supports", "refutes", "inconclusive"], "required": false}
+      },
+      "label": "tests alternative"
+    },
+    "weighs_evidence": {
+      "domain": ["Evidence"],
+      "range": ["Evidence"],
+      "properties": {
+        "comparison_strength": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "Relative strength of source evidence compared to target evidence."},
+        "comparison_type": {"type": "string", "description": "Type of evidence comparison.", "allowed_values": ["stronger_than", "weaker_than", "equivalent_to", "complements", "contradicts"], "required": false},
+        "reasoning": {"type": "string", "description": "Explanation of why one evidence weighs more than another.", "required": false}
+      },
+      "label": "weighs evidence"
     }
   },
   "node_colors": {
