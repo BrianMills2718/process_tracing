@@ -522,8 +522,8 @@ def load_graph(json_file):
         
         # Add new edges to G
         for edge in repaired_graph_data['edges'][len(graph_data_for_repair['edges']):]:
-            source = edge['source']
-            target = edge['target']
+            source = edge.get('source_id') or edge.get('source')
+            target = edge.get('target_id') or edge.get('target')
             edge_type = edge['type']
             edge_id = edge['id']
             properties = edge.get('properties', {})
@@ -556,6 +556,26 @@ def identify_causal_chains(G):
                      d_node.get('subtype') == 'outcome' or 
                      get_node_property(d_node, 'type') == 'outcome']
     
+    # Enhanced: Also find events that are connected by causal edges
+    # This catches cases where events have causal relationships regardless of subtype
+    causal_source_events = []
+    causal_target_events = []
+    
+    for u, v, edge_data in G.edges(data=True):
+        if edge_data.get('type') == 'causes':
+            if G.nodes[u].get('type') == 'Event':
+                causal_source_events.append(u)
+            if G.nodes[v].get('type') == 'Event':
+                causal_target_events.append(v)
+    
+    # Combine subtype-based and causal-edge-based detection
+    all_triggering_events = list(set(triggering_events + causal_source_events))
+    all_outcome_events = list(set(outcome_events + causal_target_events))
+    
+    # Use the enhanced event lists
+    triggering_events = all_triggering_events
+    outcome_events = all_outcome_events
+    
     # Get descriptions from multiple possible locations
     def get_node_description(node_id):
         node_data = G.nodes[node_id]
@@ -566,11 +586,29 @@ def identify_causal_chains(G):
     safe_print(f"DEBUG_CHAINS: Triggering Event IDs: {triggering_events} (Descriptions: {[get_node_description(n) for n in triggering_events]})")
     safe_print(f"DEBUG_CHAINS: Outcome Event IDs: {outcome_events} (Descriptions: {[get_node_description(n) for n in outcome_events]})")
 
-    valid_chain_link_types = ['causes', 'leads_to', 'precedes', 'triggers', 'contributes_to', 'enables', 'influences', 'facilitates']
+    # Include all meaningful causal relationship types from our ontology
+    valid_chain_link_types = ['causes', 'leads_to', 'precedes', 'triggers', 'contributes_to', 'enables', 'influences', 'facilitates', 'initiates', 'part_of_mechanism']
     
+    # Enhanced: If no traditional triggering/outcome events found, look for any causal chains
     if not triggering_events or not outcome_events:
-        safe_print("DEBUG_CHAINS: No triggering or outcome events found based on subtype, so no chains can be formed.")
-        return []
+        safe_print("DEBUG_CHAINS: No triggering or outcome events found based on subtype")
+        # Look for any events connected by causal edges as fallback
+        all_event_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'Event']
+        if len(all_event_nodes) >= 2:
+            safe_print(f"DEBUG_CHAINS: Fallback - using all {len(all_event_nodes)} events to find causal chains")
+            # Use events with outgoing causal relationship edges as triggers, incoming as outcomes
+            fallback_triggers = [n for n in all_event_nodes if any(G.get_edge_data(n, v, {}).get('type') in valid_chain_link_types for v in G.successors(n))]
+            fallback_outcomes = [n for n in all_event_nodes if any(G.get_edge_data(u, n, {}).get('type') in valid_chain_link_types for u in G.predecessors(n))]
+            if fallback_triggers and fallback_outcomes:
+                triggering_events = fallback_triggers
+                outcome_events = fallback_outcomes
+                safe_print(f"DEBUG_CHAINS: Fallback found {len(triggering_events)} triggers and {len(outcome_events)} outcomes")
+            else:
+                safe_print("DEBUG_CHAINS: No causal relationships found, cannot form chains")
+                return []
+        else:
+            safe_print("DEBUG_CHAINS: Insufficient events for chain formation")
+            return []
 
     for trigger_node_id in triggering_events:
         for outcome_node_id in outcome_events:
@@ -679,8 +717,15 @@ def calculate_mechanism_completeness_van_evera(G, mechanism_id, causes, effects)
     # Factor 1: Causal antecedents (0-30 points)
     # Van Evera: mechanisms need clear causal antecedents
     if len(causes) > 0:
-        # Scale based on number of causes, max 30 points
-        antecedent_score = min(len(causes) * 10, 30)
+        # Improved scaling: reward more constituent events, softer cap
+        if len(causes) >= 8:  # Rich mechanism with many constituent events
+            antecedent_score = 30
+        elif len(causes) >= 5:  # Moderate mechanism
+            antecedent_score = 25
+        elif len(causes) >= 3:  # Basic mechanism
+            antecedent_score = 20
+        else:  # Minimal mechanism
+            antecedent_score = len(causes) * 7
         completeness_factors.append(antecedent_score)
     
     # Factor 2: Causal consequents (0-30 points)  
@@ -826,9 +871,9 @@ def analyze_evidence(G):
             'N/A'
         )
         evidence_classification_type = (
-            evidence_node_data.get('subtype') or  # Van Evera diagnostic type stored as 'subtype'
-            evidence_node_data.get('properties', {}).get('type') or  
+            evidence_node_data.get('properties', {}).get('type') or  # Van Evera diagnostic type stored in properties.type
             evidence_node_data.get('attr_props', {}).get('type') or
+            evidence_node_data.get('subtype') or  # Fallback to subtype if properties not available
             'general'  # Don't fall back to node type "Evidence" - use "general" instead
         ) 
 
@@ -1266,11 +1311,24 @@ def analyze_alternative_explanations(G):
                 elif edge_main_type == 'refutes_alternative': 
                     refuting.append(evidence_info)
         
-        strength_score = sum(ev.get('probative_value', 0.0) or 0.0 for ev in supporting) - sum(abs(ev.get('probative_value', 0.0) or 0.0) for ev in refuting)
-        assessment = "Contested alternative explanation" 
-        if strength_score > 0.5: assessment = "Plausible alternative explanation" 
-        if strength_score > 1.5: assessment = "Strong alternative explanation"
-        if strength_score < -0.5: assessment = "Weak alternative explanation"
+        # Calculate strength as ratio: supporting evidence / (supporting + refuting)
+        supporting_strength = sum(ev.get('probative_value', 0.0) or 0.0 for ev in supporting)
+        refuting_strength = sum(ev.get('probative_value', 0.0) or 0.0 for ev in refuting)
+        total_evidence = supporting_strength + refuting_strength
+        
+        if total_evidence > 0:
+            strength_score = supporting_strength / total_evidence  # Always 0-1 scale
+        else:
+            strength_score = 0.5  # No evidence = neutral
+        # Assessment based on 0-1 probability scale
+        if strength_score > 0.75:
+            assessment = "Strong alternative explanation"
+        elif strength_score > 0.6:
+            assessment = "Plausible alternative explanation"
+        elif strength_score >= 0.4:
+            assessment = "Contested alternative explanation"
+        else:
+            assessment = "Weak alternative explanation"
 
         alternatives.append({
             'id': alt_id,
@@ -2277,12 +2335,16 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
 
 def generate_node_type_chart(results):
     if not results or 'metrics' not in results or 'node_type_distribution' not in results['metrics']: return None
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 7))  # Match edge chart size
     node_dist_data = results['metrics']['node_type_distribution']
     if not node_dist_data: plt.close(); return None
     try:
-        plt.pie(node_dist_data.values(), labels=node_dist_data.keys(), autopct='%1.1f%%', shadow=True)
+        # Convert to bar chart like edge type distribution
+        plt.bar(node_dist_data.keys(), node_dist_data.values(), color='steelblue')
+        plt.xticks(rotation=45, ha='right')
+        plt.ylabel('Count')
         plt.title('Node Type Distribution')
+        plt.tight_layout()
         buffer = io.BytesIO()
         plt.savefig(buffer, format='png')
         plt.close() # Close the figure

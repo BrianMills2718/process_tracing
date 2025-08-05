@@ -330,6 +330,26 @@ Output format example:
   ]
 }}
 
+CRITICAL INSTRUCTIONS FOR EDGE PROPERTIES:
+For EVERY edge you create, you MUST assign these quantitative properties based on Van Evera diagnostic testing framework:
+
+1. probative_value (0.1-1.0): Strength of the evidence relationship
+   - 0.1-0.3: Weak evidence
+   - 0.4-0.6: Moderate evidence  
+   - 0.7-0.8: Strong evidence
+   - 0.9-1.0: Decisive evidence
+
+2. diagnostic_type (REQUIRED for evidence relationships):
+   - "smoking_gun": Evidence is sufficient but not necessary (if false, hypothesis could still be true)
+   - "hoop": Evidence is necessary but not sufficient (if false, hypothesis is false)
+   - "doubly_decisive": Evidence is both necessary and sufficient (decisive test)
+   - "straw_in_the_wind": Evidence is neither necessary nor sufficient but supportive
+
+3. certainty (0.1-1.0): Your confidence in the relationship itself
+
+EXAMPLE EDGE WITH PROPER PROPERTIES:
+{{"source_id": "evd1", "target_id": "hyp1", "type": "supports", "properties": {{"probative_value": 0.8, "diagnostic_type": "smoking_gun", "certainty": 0.9, "source_text_quote": "exact quote from text"}}}}
+
 TEXT TO ANALYZE:
 {text}
 """
@@ -369,20 +389,108 @@ def clean_json_block(raw: str) -> str:
 
 
 def parse_json(raw: str) -> dict:
-    """Parse JSON from raw string, handling common issues."""
+    """Parse JSON from raw string with progressive parsing strategies."""
     raw_clean = clean_json_block(raw)
+    
+    # Strategy 1: Standard JSON parsing
     try:
         return json.loads(raw_clean)
-    except json.JSONDecodeError:
-        try:
-            return ast.literal_eval(raw_clean)
-        except Exception as e:
-            snippet = textwrap.shorten(raw_clean, width=300, placeholder=" […]")
-            print("\n[WARN]  JSON parsing failed. First 300 chars Gemini sent:\n"
-                  "────────────────────────────────────────────────────")
-            print(snippet)
-            print("────────────────────────────────────────────────────")
-            raise e
+    except json.JSONDecodeError as e1:
+        pass
+    
+    # Strategy 2: AST literal eval (handles Python-like syntax)
+    try:
+        return ast.literal_eval(raw_clean)
+    except Exception as e2:
+        pass
+    
+    # Strategy 3: Extract partial JSON from malformed response
+    try:
+        # Look for JSON-like structures in the response
+        partial_result = extract_partial_json(raw_clean)
+        if partial_result:
+            return partial_result
+    except Exception as e3:
+        pass
+    
+    # Strategy 4: Liberal JSON parsing with common fixes
+    try:
+        liberal_result = liberal_json_parse(raw_clean)
+        if liberal_result:
+            return liberal_result
+    except Exception as e4:
+        pass
+    
+    # All strategies failed - return error info for debugging
+    snippet = textwrap.shorten(raw_clean, width=500, placeholder=" [...]")
+    print("\n[WARN] All JSON parsing strategies failed. Response snippet:")
+    print("-" * 52)
+    print(snippet)
+    print("-" * 52)
+    
+    # Return empty structure rather than raising exception
+    print("[INFO] Returning empty structure to continue processing")
+    return {"nodes": [], "edges": [], "additional_edges": []}
+
+def extract_partial_json(raw: str) -> dict:
+    """Extract partial JSON from malformed responses."""
+    import re
+    
+    # Look for "additional_edges" array specifically
+    edges_match = re.search(r'"additional_edges"\s*:\s*\[(.*?)\]', raw, re.DOTALL)
+    if edges_match:
+        edges_content = edges_match.group(1)
+        # Try to parse individual edge objects
+        edge_objects = []
+        
+        # Find individual edge objects
+        edge_matches = re.findall(r'\{[^}]*"source_id"[^}]*\}', edges_content, re.DOTALL)
+        for edge_match in edge_matches:
+            try:
+                edge_obj = json.loads(edge_match)
+                edge_objects.append(edge_obj)
+            except:
+                continue
+        
+        if edge_objects:
+            return {"additional_edges": edge_objects}
+    
+    # Look for nodes/edges structure
+    nodes_match = re.search(r'"nodes"\s*:\s*\[(.*?)\]', raw, re.DOTALL)
+    edges_match = re.search(r'"edges"\s*:\s*\[(.*?)\]', raw, re.DOTALL)
+    
+    if nodes_match or edges_match:
+        result = {"nodes": [], "edges": []}
+        # Could add more sophisticated parsing here
+        return result
+    
+    return None
+
+def liberal_json_parse(raw: str) -> dict:
+    """Liberal JSON parsing with common LLM response fixes."""
+    import re
+    
+    # Common fixes for LLM responses
+    fixed = raw
+    
+    # Fix unescaped quotes in strings
+    fixed = re.sub(r'(?<!\\)"([^"]*?)(?<!\\)"(?=\s*[,}\]])', r'"\1"', fixed)
+    
+    # Fix trailing commas
+    fixed = re.sub(r',\s*}', '}', fixed)
+    fixed = re.sub(r',\s*]', ']', fixed)
+    
+    # Fix missing quotes around keys
+    fixed = re.sub(r'(\w+)(?=\s*:)', r'"\1"', fixed)
+    
+    # Fix single quotes to double quotes
+    fixed = fixed.replace("'", '"')
+    
+    # Try parsing the fixed version
+    try:
+        return json.loads(fixed)
+    except:
+        return None
 
 
 def validate_json_against_ontology(data: dict) -> tuple[bool, list[str]]:
@@ -899,7 +1007,8 @@ def analyze_graph_connectivity(graph_data: dict) -> dict:
     disconnection_rate = 1 - (len(giant_component) / len(G.nodes())) if G.nodes() else 0
     
     # Find small components (not the giant component)
-    small_components = [comp for comp in components if len(comp) < 10 and comp != giant_component]
+    # For 100% connectivity goal, consider ANY non-giant component as needing repair
+    small_components = [comp for comp in components if comp != giant_component]
     small_component_nodes = []
     for comp in small_components:
         small_component_nodes.extend(comp)
@@ -958,7 +1067,7 @@ def create_connectivity_repair_prompt(original_text: str, disconnected_entities:
         
         target_nodes_section = f"""
 AVAILABLE TARGET NODES IN MAIN GRAPH:
-{chr(10).join(target_nodes[:10])}  # Show top 10 targets
+{chr(10).join(target_nodes[:20])}  # Show top 20 targets for better connectivity
 """
     
     return f"""CONNECTIVITY REPAIR TASK:
@@ -982,6 +1091,11 @@ Based on the original text, identify what relationships should connect these dis
 - supports/refutes: How evidence relates to hypotheses
 - provides_evidence_for: How events/evidence support other elements
 - part_of_mechanism: How events are components of mechanisms
+- explains_mechanism: How hypotheses explain causal mechanisms
+- refutes_alternative/supports_alternative: How evidence connects to alternative explanations
+- tests_hypothesis/tests_mechanism: How evidence tests theories
+
+SPECIAL ATTENTION: Alternative explanations should connect to the hypotheses and mechanisms they compete with or explain. Evidence that refutes alternative explanations often supports the main hypotheses.
 
 For each relationship, use Van Evera diagnostic test framework:
 - diagnostic_type: Choose from "smoking_gun" (sufficient but not necessary), "hoop" (necessary but not sufficient), "doubly_decisive" (both necessary and sufficient), or "straw_in_the_wind" (neither necessary nor sufficient but supportive)
@@ -994,8 +1108,8 @@ Output ONLY the missing edges as JSON in this format:
 {{
   "additional_edges": [
     {{
-      "source": "disconnected_node_id",
-      "target": "existing_main_graph_node_id", 
+      "source_id": "disconnected_node_id",
+      "target_id": "existing_main_graph_node_id", 
       "type": "relationship_type",
       "properties": {{
         "diagnostic_type": "straw_in_the_wind",
@@ -1010,49 +1124,129 @@ Output ONLY the missing edges as JSON in this format:
 
 Focus on high-confidence connections clearly supported by the text. Do not create speculative relationships."""
 
-def extract_connectivity_relationships(prompt: str) -> list:
+def extract_connectivity_relationships(prompt: str, max_retries: int = 3) -> list:
     """
-    Extract additional relationships using connectivity repair prompt
+    Extract additional relationships using connectivity repair prompt with retry mechanism
+    
+    Args:
+        prompt: The connectivity repair prompt
+        max_retries: Maximum number of retry attempts (default: 3)
+    
+    Returns:
+        List of additional edges or empty list if all attempts fail
     """
     if not HAS_GEMINI:
         print("[WARNING] Cannot perform connectivity repair without Gemini API")
         return []
-        
-    try:
-        print("[INFO] Attempting connectivity repair...")
-        
-        # Use the same approach as query_llm for consistency
-        import google.generativeai as genai
-        import os
-        
-        # Configure Gemini
-        api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            print("[WARNING] No API key found for connectivity repair")
-            return []
-        
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        
-        response = model.generate_content(prompt)
-        response_text = response.text
-        
-        # Parse the JSON response
-        repair_data = parse_json(response_text)
-        return repair_data.get('additional_edges', [])
-        
-    except Exception as e:
-        print(f"[WARNING] Connectivity repair failed: {e}")
+    
+    import google.generativeai as genai
+    import os
+    import time
+    
+    # Configure Gemini
+    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        print("[WARNING] No API key found for connectivity repair")
+        return []
+    
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-2.5-flash')
+    
+    collected_edges = []
+    
+    for attempt in range(max_retries):
+        try:
+            print(f"[INFO] Connectivity repair attempt {attempt + 1}/{max_retries}...")
+            
+            # Add variation to prompt on retries to avoid identical failures
+            current_prompt = prompt
+            if attempt > 0:
+                current_prompt = add_retry_variation(prompt, attempt)
+            
+            response = model.generate_content(current_prompt)
+            response_text = response.text
+            
+            # Pre-validate response before parsing  
+            if not validate_llm_response(response_text):
+                print(f"[WARNING] Attempt {attempt + 1}: Invalid LLM response format")
+                if attempt < max_retries - 1:
+                    time.sleep(1 * (attempt + 1))  # Exponential backoff
+                    continue
+                else:
+                    break
+            
+            # Parse the JSON response (now robust with multiple strategies)
+            repair_data = parse_json(response_text)
+            additional_edges = repair_data.get('additional_edges', [])
+            
+            if additional_edges:
+                print(f"[SUCCESS] Attempt {attempt + 1}: Found {len(additional_edges)} relationships")
+                collected_edges.extend(additional_edges)
+                return collected_edges  # Success on first valid result
+            else:
+                print(f"[INFO] Attempt {attempt + 1}: No relationships found in response")
+                
+        except Exception as e:
+            print(f"[WARNING] Attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                print(f"[INFO] Retrying in {1 * (attempt + 1)} seconds...")
+                time.sleep(1 * (attempt + 1))  # Exponential backoff
+            continue
+    
+    # If we get here, all attempts failed or returned empty results
+    if collected_edges:
+        print(f"[INFO] Collected {len(collected_edges)} relationships from partial attempts")
+        return collected_edges
+    else:
+        print(f"[WARNING] All {max_retries} connectivity repair attempts failed")
         return []
 
-def extract_causal_graph_two_pass(text: str) -> dict:
+def add_retry_variation(original_prompt: str, attempt_number: int) -> str:
+    """Add variation to prompt on retry attempts to avoid identical failures."""
+    variations = [
+        "\n\nIMPORTANT: Focus on the most obvious and well-supported connections first.",
+        "\n\nIMPORTANT: Prioritize high-confidence relationships with clear text evidence.",
+        "\n\nIMPORTANT: Output valid JSON only. Ensure proper comma placement and bracket closure."
+    ]
+    
+    if attempt_number <= len(variations):
+        return original_prompt + variations[attempt_number - 1]
+    else:
+        return original_prompt
+
+def validate_llm_response(response_text: str) -> bool:
+    """Pre-validate LLM response before attempting JSON parsing."""
+    if not response_text or len(response_text.strip()) < 10:
+        return False
+    
+    # Check for basic JSON structure indicators
+    has_braces = '{' in response_text and '}' in response_text
+    has_edges_key = 'additional_edges' in response_text or 'edges' in response_text
+    
+    # Check for common failure patterns
+    has_error_messages = any(pattern in response_text.lower() for pattern in [
+        'i cannot', 'i\'m sorry', 'as an ai', 'i don\'t have access',
+        'error', 'failed', 'unable to'
+    ])
+    
+    return has_braces and has_edges_key and not has_error_messages
+
+def extract_causal_graph_multi_pass(text: str, max_passes: int = 6, target_disconnection_rate: float = 0.05) -> dict:
     """
-    Two-pass extraction: standard extraction + connectivity repair
+    Multi-pass extraction: standard extraction + iterative connectivity repair
+    
+    Args:
+        text: Source text for extraction
+        max_passes: Maximum number of connectivity repair passes (default: 6)
+        target_disconnection_rate: Target disconnection rate to achieve (default: 5%)
+    
+    Returns:
+        Enhanced graph with improved connectivity
     """
     # Pass 1: Standard extraction
     initial_graph = query_gemini(text)
     
-    # Analyze connectivity
+    # Analyze initial connectivity
     connectivity = analyze_graph_connectivity(initial_graph)
     
     if not connectivity['needs_repair']:
@@ -1060,38 +1254,119 @@ def extract_causal_graph_two_pass(text: str) -> dict:
         return initial_graph
     
     print(f"[INFO] Graph needs connectivity repair: {connectivity['disconnection_rate']:.1%} disconnection rate")
-    print(f"[INFO] Found {len(connectivity['isolated_nodes'])} isolated nodes")
+    print(f"[INFO] Found {len(connectivity['isolated_nodes'])} isolated nodes and {len(connectivity['small_components'])} small components")
     
-    # Pass 2: Connectivity repair
-    if connectivity['isolated_node_details']:
-        main_graph_summary = f"Main graph has {connectivity['giant_component_size']} connected nodes including Events, Hypotheses, Evidence, and Mechanisms"
+    current_graph = initial_graph
+    pass_number = 2
+    
+    # Multi-pass connectivity repair
+    while pass_number <= max_passes:
+        print(f"[INFO] Pass {pass_number}: Connectivity repair...")
         
-        repair_prompt = create_connectivity_repair_prompt(
-            text, 
-            connectivity['isolated_node_details'],
-            main_graph_summary
-        )
+        # Get current connectivity state
+        connectivity = analyze_graph_connectivity(current_graph)
         
-        additional_edges = extract_connectivity_relationships(repair_prompt)
-        
-        if additional_edges:
-            print(f"[INFO] Found {len(additional_edges)} additional relationships")
-            # Merge edges into original graph
-            initial_graph['edges'].extend(additional_edges)
+        # Check if we've achieved our target
+        if connectivity['disconnection_rate'] <= target_disconnection_rate:
+            print(f"[SUCCESS] Target disconnection rate achieved: {connectivity['disconnection_rate']:.1%} <= {target_disconnection_rate:.1%}")
+            break
             
-            # Re-analyze connectivity
-            final_connectivity = analyze_graph_connectivity(initial_graph)
-            print(f"[INFO] Final disconnection rate: {final_connectivity['disconnection_rate']:.1%}")
+        # Check if we have a giant component (>95% of nodes connected for academic rigor)
+        giant_component_ratio = connectivity['giant_component_size'] / len(current_graph['nodes']) if current_graph['nodes'] else 0
+        if giant_component_ratio >= 0.95:
+            print(f"[SUCCESS] Giant component achieved: {giant_component_ratio:.1%} of nodes connected")
+            break
+        
+        # Attempt connectivity repair for this pass
+        disconnected_entities = []
+        
+        # Collect isolated nodes
+        for node_id in connectivity['isolated_nodes']:
+            node_data = next((n for n in current_graph['nodes'] if n['id'] == node_id), None)
+            if node_data:
+                disconnected_entities.append({
+                    'id': node_id,
+                    'type': node_data.get('type', 'unknown'),
+                    'description': node_data.get('properties', {}).get('description', 'No description')[:100]
+                })
+        
+        # Collect nodes from small components
+        for component in connectivity['small_components']:
+            for node_id in list(component)[:3]:  # Limit to 3 nodes per small component to avoid overwhelming the LLM
+                if node_id not in connectivity['isolated_nodes']:  # Avoid duplicates
+                    node_data = next((n for n in current_graph['nodes'] if n['id'] == node_id), None)
+                    if node_data:
+                        disconnected_entities.append({
+                            'id': node_id,
+                            'type': node_data.get('type', 'unknown'),
+                            'description': node_data.get('properties', {}).get('description', 'No description')[:100]
+                        })
+        
+        if disconnected_entities:
+            print(f"[INFO] Attempting to connect {len(disconnected_entities)} disconnected entities")
+            
+            main_graph_summary = f"Main graph has {connectivity['giant_component_size']} connected nodes including Events, Hypotheses, Evidence, and Mechanisms"
+            
+            repair_prompt = create_connectivity_repair_prompt(
+                text, 
+                disconnected_entities,
+                main_graph_summary
+            )
+            
+            additional_edges = extract_connectivity_relationships(repair_prompt)
+            
+            if additional_edges:
+                print(f"[INFO] Found {len(additional_edges)} additional relationships")
+                # Merge edges into current graph
+                current_graph['edges'].extend(additional_edges)
+                
+                # Re-analyze connectivity
+                new_connectivity = analyze_graph_connectivity(current_graph)
+                improvement = connectivity['disconnection_rate'] - new_connectivity['disconnection_rate']
+                print(f"[INFO] Pass {pass_number} results: {new_connectivity['disconnection_rate']:.1%} disconnection rate (improved by {improvement:.1%})")
+                
+                # If no improvement, break to avoid infinite loop
+                # Be more lenient for valuable nodes - continue if we have high-value disconnected entities
+                if improvement <= 0.005:  # Less than 0.5% improvement
+                    valuable_node_types = ['Actor', 'Condition', 'Evidence', 'Causal_Mechanism', 'Hypothesis']
+                    has_valuable_disconnected = any(
+                        entity['type'] in valuable_node_types 
+                        for entity in disconnected_entities
+                    )
+                    if not has_valuable_disconnected or improvement <= 0.001:
+                        print(f"[INFO] Minimal improvement in pass {pass_number}, stopping connectivity repair")
+                        break
+            else:
+                print(f"[WARNING] No additional relationships found in pass {pass_number}")
+                break
         else:
-            print("[WARNING] No additional relationships found in connectivity repair")
+            print(f"[INFO] No disconnected entities to repair in pass {pass_number}")
+            break
+            
+        pass_number += 1
     
-    return initial_graph
+    # Final connectivity report
+    final_connectivity = analyze_graph_connectivity(current_graph)
+    total_passes = pass_number - 1
+    print(f"[INFO] Multi-pass connectivity repair complete after {total_passes} passes")
+    print(f"[INFO] Final disconnection rate: {final_connectivity['disconnection_rate']:.1%}")
+    print(f"[INFO] Giant component: {final_connectivity['giant_component_size']}/{len(current_graph['nodes'])} nodes ({final_connectivity['giant_component_size']/len(current_graph['nodes']):.1%})")
+    print(f"[INFO] Total components: {final_connectivity['total_components']}")
+    
+    return current_graph
+
+def extract_causal_graph_two_pass(text: str) -> dict:
+    """
+    Two-pass extraction: standard extraction + connectivity repair
+    Maintained for backwards compatibility
+    """
+    return extract_causal_graph_multi_pass(text, max_passes=2)
 
 def extract_causal_graph(text: str) -> dict:
     """
-    Alias for backwards compatibility - uses two-pass extraction by default
+    Main extraction function - uses multi-pass extraction by default for optimal connectivity
     """
-    return extract_causal_graph_two_pass(text)
+    return extract_causal_graph_multi_pass(text, max_passes=10, target_disconnection_rate=0.02)
 
 
 # ────────────────────────────────────────────────────────────────────
