@@ -4,14 +4,16 @@ from typing import Dict, Any, Optional
 from process_trace_advanced import query_llm
 from .structured_models import NarrativeSummary
 
-# Phase 6C Bayesian Integration
-try:
-    from .bayesian_reporting import BayesianReporter, BayesianReportConfig
-    from .bayesian_models import BayesianHypothesisSpace
-    BAYESIAN_AVAILABLE = True
-except ImportError:
-    BAYESIAN_AVAILABLE = False
-    logging.warning("Bayesian reporting components not available")
+# Phase 6C Bayesian Integration - Components moved to archive
+BAYESIAN_AVAILABLE = False
+logging.warning("Bayesian reporting components not available")
+
+# Mock classes for type hints when not available
+class BayesianReportConfig:
+    pass
+
+class BayesianHypothesisSpace:
+    pass
 
 logger = logging.getLogger(__name__)
 

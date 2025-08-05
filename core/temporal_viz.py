@@ -13,8 +13,21 @@ from typing import List, Dict, Optional, Tuple, Any
 from dataclasses import dataclass, field
 import json
 from core.temporal_graph import TemporalGraph, TemporalNode, TemporalEdge
-from core.critical_junctures import CriticalJuncture, JunctureType
-from core.duration_analysis import ProcessDuration, PathwayDuration, ProcessSpeed
+# Critical junctures and duration analysis moved to archive - using fallback
+class CriticalJuncture:
+    pass
+
+class JunctureType:
+    pass
+
+class ProcessDuration:
+    pass
+
+class PathwayDuration:
+    pass
+
+class ProcessSpeed:
+    pass
 
 @dataclass
 class TimelineEvent:
