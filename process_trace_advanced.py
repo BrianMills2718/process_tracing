@@ -237,8 +237,9 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
     print(f"[INFO] Input size: ~{estimated_tokens:,} tokens ({len(text):,} characters)")
     # Build schema
     schema = get_schema()
-    # Format prompt
-    active_prompt_template = FOCUSED_EXTRACTION_PROMPT
+    # Import and use comprehensive prompt from core/extract.py
+    from core.extract import PROMPT_TEMPLATE
+    active_prompt_template = PROMPT_TEMPLATE
     # Default values for prompt placeholders
     gh_text_for_prompt = "Not Applicable (no global hypothesis specified for this run)"
     gh_id_for_prompt = "N/A"
