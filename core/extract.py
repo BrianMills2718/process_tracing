@@ -78,6 +78,12 @@ MAX_RETRIES = 3  # Maximum number of retries for Gemini API
 PROMPT_TEMPLATE = """
 You are an expert in causal process tracing methodology following Van Evera and Beach & Pedersen approaches. Extract a structured causal graph from the provided text using the following extended ontology. Focus on creating rich, flexible connections that reflect academic process tracing standards with particular attention to CAUSAL MECHANISMS:
 
+CRITICAL: Pay special attention to these often-missed edge types:
+- tests_hypothesis: When text states "tests the hypothesis", "testing whether", "this tests if"
+- confirms_occurrence: When text confirms events happened: "confirms that", "evidence shows that [event] occurred", "proves [event] took place"
+- disproves_occurrence: When text denies events happened: "disproves that", "evidence shows [event] did NOT occur", "no evidence of [event]"
+- refutes: When evidence contradicts claims: "refutes the claim", "contradicts", "challenges the assertion"
+
 EXTRACTION PRIORITIES:
 1. MECHANISMS: Identify Causal_Mechanism nodes that explain HOW causation works step-by-step
    - Connect events to mechanisms via part_of_mechanism edges (role: trigger/intermediate/outcome)  
@@ -101,8 +107,12 @@ EXTRACTION PRIORITIES:
 
 FLEXIBLE CONNECTION PATTERNS:
 - Use Evidence → Event connections (confirms_occurrence/disproves_occurrence) to establish whether events actually occurred
+  * confirms_occurrence: Use when text confirms events happened ("confirms his role", "evidence shows that X occurred")
+  * disproves_occurrence: Use when text denies events ("disproves claims", "evidence shows X did NOT happen")
 - Use Event → Hypothesis connections (provides_evidence_for) to show how events serve as evidence for broader patterns  
 - Use Evidence → Hypothesis connections (supports/refutes/tests_hypothesis) for direct hypothesis testing
+  * tests_hypothesis: Use when text explicitly tests hypotheses ("tests the hypothesis that", "this tests whether")
+  * refutes: Use when evidence contradicts claims ("refutes the theory", "contradicts the assertion")
 - Use flexible supports/refutes connections between different node types as appropriate
 - Use Actor → Event connections (initiates) when actors directly start or launch specific events
 - Use Data_Source → Evidence connections (provides_evidence) when sources supply evidence
