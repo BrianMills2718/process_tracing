@@ -298,23 +298,42 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
                 repair_prompt = create_connectivity_repair_prompt(
                     text, 
                     connectivity['disconnected_entity_details'],
-                    main_graph_summary
+                    main_graph_summary,
+                    graph_data
                 )
                 
                 additional_edges = extract_connectivity_relationships(repair_prompt)
                 
                 if additional_edges:
-                    print(f"[INFO] Found {len(additional_edges)} additional relationships")
-                    # Merge edges into original graph
-                    graph_data['edges'].extend(additional_edges)
+                    # Validate that target nodes exist before adding edges
+                    existing_node_ids = {node['id'] for node in graph_data['nodes']}
+                    valid_edges = []
+                    invalid_edges = []
                     
-                    # Re-analyze connectivity
-                    final_connectivity = analyze_graph_connectivity(graph_data)
-                    print(f"[INFO] Final disconnection rate: {final_connectivity['disconnection_rate']:.1%}")
-                    if final_connectivity['total_components'] == 1:
-                        print("[SUCCESS] Graph is now fully connected!")
+                    for edge in additional_edges:
+                        source_id = edge.get('source_id') or edge.get('source')
+                        target_id = edge.get('target_id') or edge.get('target')
+                        
+                        if source_id in existing_node_ids and target_id in existing_node_ids:
+                            valid_edges.append(edge)
+                        else:
+                            invalid_edges.append(edge)
+                            print(f"[WARNING] Skipping invalid edge: {source_id} -> {target_id} (target not found)")
+                    
+                    if valid_edges:
+                        print(f"[INFO] Found {len(valid_edges)} valid relationships (skipped {len(invalid_edges)} invalid)")
+                        # Merge valid edges into original graph
+                        graph_data['edges'].extend(valid_edges)
+                        
+                        # Re-analyze connectivity
+                        final_connectivity = analyze_graph_connectivity(graph_data)
+                        print(f"[INFO] Final disconnection rate: {final_connectivity['disconnection_rate']:.1%}")
+                        if final_connectivity['total_components'] == 1:
+                            print("[SUCCESS] Graph is now fully connected!")
+                        else:
+                            print(f"[INFO] Reduced to {final_connectivity['total_components']} components")
                     else:
-                        print(f"[INFO] Reduced to {final_connectivity['total_components']} components")
+                        print("[WARNING] No valid relationships found in connectivity repair")
                 else:
                     print("[WARNING] No additional relationships found in connectivity repair")
         

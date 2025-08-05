@@ -907,7 +907,7 @@ def analyze_graph_connectivity(graph_data: dict) -> dict:
         'disconnected_entity_details': disconnected_node_details
     }
 
-def create_connectivity_repair_prompt(original_text: str, disconnected_entities: list, main_graph_summary: str) -> str:
+def create_connectivity_repair_prompt(original_text: str, disconnected_entities: list, main_graph_summary: str, main_graph_data: dict = None) -> str:
     """
     Create focused prompt for connecting disconnected entities to main graph
     """
@@ -915,6 +915,33 @@ def create_connectivity_repair_prompt(original_text: str, disconnected_entities:
         f"- {node['id']} ({node['type']}): {node['description']}"
         for node in disconnected_entities
     ])
+    
+    # Extract available target nodes from main graph
+    target_nodes_section = ""
+    if main_graph_data:
+        # Get main component nodes as potential targets
+        import networkx as nx
+        G = nx.Graph()
+        for node in main_graph_data['nodes']:
+            G.add_node(node['id'], **node)
+        for edge in main_graph_data['edges']:
+            source_id = edge.get('source_id') or edge.get('source')
+            target_id = edge.get('target_id') or edge.get('target')
+            if source_id and target_id:
+                G.add_edge(source_id, target_id)
+        
+        components = list(nx.connected_components(G))
+        main_component = max(components, key=len) if components else set()
+        
+        target_nodes = []
+        for node in main_graph_data['nodes']:
+            if node['id'] in main_component:
+                target_nodes.append(f"- {node['id']} ({node['type']}): {node['properties'].get('description', '')[:80]}...")
+        
+        target_nodes_section = f"""
+AVAILABLE TARGET NODES IN MAIN GRAPH:
+{chr(10).join(target_nodes[:10])}  # Show top 10 targets
+"""
     
     return f"""CONNECTIVITY REPAIR TASK:
 
@@ -925,6 +952,7 @@ DISCONNECTED ENTITIES NEEDING CONNECTIONS:
 
 MAIN GRAPH CONTEXT:
 {main_graph_summary}
+{target_nodes_section}
 
 ORIGINAL TEXT:
 {original_text}
@@ -937,12 +965,14 @@ Based on the original text, identify what relationships should connect these dis
 - provides_evidence_for: How events/evidence support other elements
 - part_of_mechanism: How events are components of mechanisms
 
+IMPORTANT: You must use ONLY the target node IDs listed above. Do not create edges to nodes that don't exist.
+
 Output ONLY the missing edges as JSON in this format:
 {{
   "additional_edges": [
     {{
       "source_id": "disconnected_node_id",
-      "target_id": "main_graph_node_id", 
+      "target_id": "existing_main_graph_node_id", 
       "type": "relationship_type",
       "properties": {{
         "reasoning": "Brief explanation from text",
