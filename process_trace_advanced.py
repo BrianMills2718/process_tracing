@@ -258,11 +258,17 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
             f"- Text: {global_hypothesis_text}\n"
             f"You MUST create a 'Hypothesis' node with this exact ID and description. Then, you MUST diligently search the entire text for all `Evidence` that supports or refutes this specific global hypothesis and link it accordingly. This is a primary objective for this analysis.\n---"
         )
-    final_system_prompt = active_prompt_template.format(
-        global_hypothesis_section=global_hypothesis_section_text,
-        global_hypothesis_text_for_prompt=gh_text_for_prompt,
-        global_hypothesis_id_for_prompt=gh_id_for_prompt
-    )
+    # Format prompt based on which template is being used
+    if active_prompt_template == PROMPT_TEMPLATE:
+        # Comprehensive template only expects {text}
+        final_system_prompt = active_prompt_template.format(text=text)
+    else:
+        # FOCUSED_EXTRACTION_PROMPT expects global hypothesis placeholders
+        final_system_prompt = active_prompt_template.format(
+            global_hypothesis_section=global_hypothesis_section_text,
+            global_hypothesis_text_for_prompt=gh_text_for_prompt,
+            global_hypothesis_id_for_prompt=gh_id_for_prompt
+        )
     # Two-pass extraction with connectivity repair
     from core.extract import parse_json, analyze_graph_connectivity, create_connectivity_repair_prompt, extract_connectivity_relationships
     
@@ -277,6 +283,8 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
         
         # Pass 1: Standard extraction
         print("[INFO] Pass 1: Standard graph extraction...")
+        print(f"[DEBUG] Using {'comprehensive' if active_prompt_template == PROMPT_TEMPLATE else 'focused'} prompt template")
+        print(f"[DEBUG] Prompt length: {len(final_system_prompt)} characters")
         raw_json = query_llm(text, schema, final_system_prompt)
         graph_data = parse_json(raw_json)
         
