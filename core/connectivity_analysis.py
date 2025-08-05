@@ -66,9 +66,14 @@ class DisconnectionDetector:
         for node in graph_data['nodes']:
             G.add_node(node['id'], **node)
         
-        # Add edges
+        # Add edges (handle both 'source'/'target' and 'source_id'/'target_id' formats)
         for edge in graph_data['edges']:
-            G.add_edge(edge['source'], edge['target'], **edge)
+            source = edge.get('source') or edge.get('source_id')
+            target = edge.get('target') or edge.get('target_id')
+            if source and target:
+                G.add_edge(source, target, **edge)
+            else:
+                print(f"Warning: Edge missing source/target information: {edge}")
         
         return G
     
@@ -123,8 +128,13 @@ class DisconnectionDetector:
         
         # Calculate connectivity by type
         for edge in graph_data['edges']:
-            source_node = next(n for n in graph_data['nodes'] if n['id'] == edge['source'])
-            target_node = next(n for n in graph_data['nodes'] if n['id'] == edge['target'])
+            source_id = edge.get('source') or edge.get('source_id')
+            target_id = edge.get('target') or edge.get('target_id')
+            if not source_id or not target_id:
+                continue
+            
+            source_node = next(n for n in graph_data['nodes'] if n['id'] == source_id)
+            target_node = next(n for n in graph_data['nodes'] if n['id'] == target_id)
             
             type_connectivity[source_node['type']]['out_degree'] += 1
             type_connectivity[target_node['type']]['in_degree'] += 1

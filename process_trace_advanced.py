@@ -1,8 +1,22 @@
 # This script loads the Gemini API key from a .env file if not set in the environment.
 # Create a .env file with: GOOGLE_API_KEY=your_key_here
 
+# Comprehensive Unicode fix for Windows
 import os
 import sys
+import subprocess
+
+# Set environment variables for all subprocesses
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+os.environ['PYTHONUTF8'] = '1'
+
+# Configure current process encoding
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except:
+        pass
 import json
 import datetime
 from pathlib import Path

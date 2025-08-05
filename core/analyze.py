@@ -1,5 +1,15 @@
 import os
 import sys
+
+# Unicode fix for Windows
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+os.environ['PYTHONUTF8'] = '1'
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except:
+        pass
 import json
 import argparse
 import networkx as nx
@@ -441,8 +451,8 @@ def load_graph(json_file):
             safe_print(f"[WARN] Skipping node {node_id} due to attribute error: {e}. MainType: {main_type_from_json}, Properties: {properties_from_json}")
 
     for edge_data in data.get('edges', []):
-        source = edge_data.get('source')
-        target = edge_data.get('target')
+        source = edge_data.get('source') or edge_data.get('source_id')
+        target = edge_data.get('target') or edge_data.get('target_id')
         edge_id = edge_data.get('id', f"{source}_to_{target}_{edge_data.get('type', 'edge')}")
 
         if not source or not target :
@@ -475,6 +485,57 @@ def load_graph(json_file):
             G.add_edge(source, target, key=edge_id, **edge_attributes)
         except Exception as e:
             safe_print(f"[WARN] Skipping edge {edge_id} from {source} to {target} due to attribute error: {e}. MainType: {main_edge_type_from_json}, Properties: {properties_from_json}")
+    
+    # Apply connectivity repair to fix disconnected graph
+    safe_print("[INFO] Checking graph connectivity...")
+    from .disconnection_repair import repair_graph_connectivity
+    
+    # Convert graph data to format expected by repair system
+    graph_data_for_repair = {
+        'nodes': [
+            {
+                'id': node_id,
+                'type': node_attrs.get('type', 'Unknown'),
+                'properties': {k: v for k, v in node_attrs.items() if k not in ['type', 'main_type']}
+            }
+            for node_id, node_attrs in G.nodes(data=True)
+        ],
+        'edges': [
+            {
+                'id': edge_attrs.get('id', f"{source}_{target}"),
+                'source': source,
+                'target': target,
+                'type': edge_attrs.get('type', 'unknown'),
+                'properties': {k: v for k, v in edge_attrs.items() if k not in ['type', 'main_type', 'id']}
+            }
+            for source, target, edge_attrs in G.edges(data=True)
+        ]
+    }
+    
+    # Repair connectivity
+    repaired_graph_data = repair_graph_connectivity(graph_data_for_repair)
+    
+    # Add any new edges back to the NetworkX graph
+    if len(repaired_graph_data['edges']) > len(graph_data_for_repair['edges']):
+        new_edges_count = len(repaired_graph_data['edges']) - len(graph_data_for_repair['edges'])
+        safe_print(f"[INFO] Added {new_edges_count} edges to improve connectivity")
+        
+        # Add new edges to G
+        for edge in repaired_graph_data['edges'][len(graph_data_for_repair['edges']):]:
+            source = edge['source']
+            target = edge['target']
+            edge_type = edge['type']
+            edge_id = edge['id']
+            properties = edge.get('properties', {})
+            
+            if G.has_node(source) and G.has_node(target):
+                edge_attributes = {
+                    'id': edge_id,
+                    'type': edge_type,
+                    'main_type': edge_type
+                }
+                edge_attributes.update(properties)
+                G.add_edge(source, target, key=edge_id, **edge_attributes)
             
     return G, data
 
@@ -1205,7 +1266,7 @@ def analyze_alternative_explanations(G):
                 elif edge_main_type == 'refutes_alternative': 
                     refuting.append(evidence_info)
         
-        strength_score = sum(ev.get('probative_value', 0.0) for ev in supporting) - sum(abs(ev.get('probative_value', 0.0)) for ev in refuting)
+        strength_score = sum(ev.get('probative_value', 0.0) or 0.0 for ev in supporting) - sum(abs(ev.get('probative_value', 0.0) or 0.0) for ev in refuting)
         assessment = "Contested alternative explanation" 
         if strength_score > 0.5: assessment = "Plausible alternative explanation" 
         if strength_score > 1.5: assessment = "Strong alternative explanation"
@@ -1411,6 +1472,22 @@ def generate_embedded_network_visualization(network_data_json):
         <div class="card">
             <div class="card-header"><h2 class="card-title h5">Interactive Network Visualization</h2></div>
             <div class="card-body">
+                <!-- Color Legend -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h6>Node Type Legend:</h6>
+                        <div class="d-flex flex-wrap gap-3">
+                            <span><span style="display:inline-block;width:12px;height:12px;background-color:#FF6B6B;border-radius:50%;margin-right:5px;"></span>Events</span>
+                            <span><span style="display:inline-block;width:12px;height:12px;background-color:#4ECDC4;border-radius:50%;margin-right:5px;"></span>Hypotheses</span>
+                            <span><span style="display:inline-block;width:12px;height:12px;background-color:#45B7D1;border-radius:50%;margin-right:5px;"></span>Evidence</span>
+                            <span><span style="display:inline-block;width:12px;height:12px;background-color:#96CEB4;border-radius:50%;margin-right:5px;"></span>Actors</span>
+                            <span><span style="display:inline-block;width:12px;height:12px;background-color:#FFEAA7;border-radius:50%;margin-right:5px;"></span>Causal Mechanisms</span>
+                            <span><span style="display:inline-block;width:12px;height:12px;background-color:#DDA0DD;border-radius:50%;margin-right:5px;"></span>Alternative Explanations</span>
+                            <span><span style="display:inline-block;width:12px;height:12px;background-color:#98D8C8;border-radius:50%;margin-right:5px;"></span>Conditions</span>
+                            <span><span style="display:inline-block;width:12px;height:12px;background-color:#F7DC6F;border-radius:50%;margin-right:5px;"></span>Data Sources</span>
+                        </div>
+                    </div>
+                </div>
                 <div id="mynetwork" style="width: 100%; height: 600px; border: 1px solid lightgray;"></div>
                 <script type="text/javascript">
                     // Create the network visualization once the page has loaded
@@ -1428,32 +1505,54 @@ def generate_embedded_network_visualization(network_data_json):
                         var options = {{
                             nodes: {{ 
                                 shape: 'dot', 
-                                size: 20, 
-                                font: {{ size: 16 }},
-                                color: {{
-                                    background: '#D2E5FF',
-                                    border: '#2B7CE9'
-                                }}
+                                font: {{ size: 12, color: '#000000' }},
+                                borderWidth: 2,
+                                chosen: {{ node: true }}
                             }},
                             edges: {{ 
-                                arrows: 'to', 
-                                font: {{ align: 'middle' }} 
+                                arrows: {{ to: {{ enabled: true, scaleFactor: 1.2 }} }}, 
+                                font: {{ align: 'middle', size: 10, color: '#333333' }},
+                                width: 2,
+                                color: {{ color: '#666666', opacity: 0.8 }},
+                                chosen: {{ edge: true }}
                             }},
                             physics: {{ 
-                                stabilization: true,
+                                enabled: true,
+                                stabilization: {{ iterations: 200 }},
                                 barnesHut: {{
-                                    gravitationalConstant: -2000,
+                                    gravitationalConstant: -3000,
                                     centralGravity: 0.3,
-                                    springLength: 150,
-                                    springConstant: 0.04
+                                    springLength: 200,
+                                    springConstant: 0.05,
+                                    damping: 0.09,
+                                    avoidOverlap: 0.1
                                 }}
+                            }},
+                            interaction: {{ 
+                                hover: true,
+                                tooltipDelay: 300,
+                                zoomView: true,
+                                dragView: true
                             }}
                         }};
                         var network = new vis.Network(container, data, options);
                         
+                        // Debug: Log network data
+                        console.log("Network initialized with", nodes.length, "nodes and", edges.length, "edges");
+                        console.log("First few edges:", edges.get().slice(0, 5));
+                        
                         // Add tooltip behavior
                         network.on("hoverNode", function (params) {{
                             // Show tooltip with node information
+                        }});
+                        
+                        // Add edge click behavior to show edge information
+                        network.on("selectEdge", function (params) {{
+                            if (params.edges.length > 0) {{
+                                var edgeId = params.edges[0];
+                                var edge = edges.get(edgeId);
+                                console.log("Selected edge:", edge);
+                            }}
                         }});
                     }});
                 </script>
@@ -2018,7 +2117,7 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
                     html_parts.append(f"""
                         <div class="evidence-item supporting">
                             <small><strong>{ev.get('id', 'N/A_ev_id')}:</strong> {textwrap.shorten(ev.get('description', 'N/A'), width=80, placeholder="...")} (Type: {ev.get('type', 'N/A')}, PV: {ev.get('probative_value', 'N/A')})<br>
-                            <em>Quote: "{textwrap.shorten(ev.get('source_text_quote', 'No quote provided.'), width=100, placeholder='...')}"</em></small>
+                            <em>Quote: "{textwrap.shorten(ev.get('source_text_quote') or 'No quote provided.', width=100, placeholder='...')}"</em></small>
                     """)
                     # LLM evidence refinement
                     if ev.get('llm_reasoning'):
@@ -2030,7 +2129,7 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
                     html_parts.append(f"""
                         <div class="evidence-item refuting">
                             <small><strong>{ev.get('id', 'N/A_ev_id')}:</strong> {textwrap.shorten(ev.get('description', 'N/A'), width=80, placeholder="...")} (Type: {ev.get('type', 'N/A')}, PV: {ev.get('probative_value', 'N/A')})<br>
-                            <em>Quote: "{textwrap.shorten(ev.get('source_text_quote', 'No quote provided.'), width=100, placeholder='...')}"</em></small>
+                            <em>Quote: "{textwrap.shorten(ev.get('source_text_quote') or 'No quote provided.', width=100, placeholder='...')}"</em></small>
                     """)
                     # LLM evidence refinement
                     if ev.get('llm_reasoning'):
@@ -2500,6 +2599,78 @@ def main():
                     network_data_json = f.read()
             else:
                 network_data_json = args.network_data
+        else:
+            # Generate network data from existing graph and results
+            safe_print("[INFO] Generating network visualization data from graph...")
+            try:
+                import json
+                # Convert NetworkX graph to vis.js format
+                nodes_list = []
+                edges_list = []
+                
+                # Add nodes from graph
+                for node_id in G.nodes():
+                    node_data = G.nodes[node_id]
+                    node_type = node_data.get('type', 'Unknown')
+                    
+                    # Color nodes by type
+                    color_map = {
+                        'Event': '#FF6B6B',
+                        'Hypothesis': '#4ECDC4', 
+                        'Evidence': '#45B7D1',
+                        'Actor': '#96CEB4',
+                        'Causal_Mechanism': '#FFEAA7',
+                        'Alternative_Explanation': '#DDA0DD',
+                        'Condition': '#98D8C8',
+                        'Data_Source': '#F7DC6F'
+                    }
+                    
+                    nodes_list.append({
+                        'id': node_id,
+                        'label': node_data.get('description', node_id)[:50] + ('...' if len(node_data.get('description', node_id)) > 50 else ''),
+                        'title': f"Type: {node_type}\nDescription: {node_data.get('description', 'No description')}",
+                        'color': color_map.get(node_type, '#95A5A6'),
+                        'size': 25 if node_type in ['Event', 'Hypothesis'] else 20
+                    })
+                
+                # Add edges from graph
+                edge_count = 0
+                for source, target in G.edges():
+                    edge_data = G.edges[source, target]
+                    edge_type = edge_data.get('type', 'unknown')
+                    
+                    # Only add edge if both nodes exist in nodes_list
+                    source_exists = any(n['id'] == source for n in nodes_list)
+                    target_exists = any(n['id'] == target for n in nodes_list)
+                    
+                    if source_exists and target_exists:
+                        edges_list.append({
+                            'id': f"edge_{edge_count}",
+                            'from': source,
+                            'to': target,
+                            'label': edge_type,
+                            'title': f"Type: {edge_type}\nCertainty: {edge_data.get('certainty', 'unknown')}",
+                            'arrows': 'to',
+                            'color': {'color': '#666666'},
+                            'font': {'color': '#333333', 'size': 10}
+                        })
+                        edge_count += 1
+                    else:
+                        safe_print(f"[DEBUG] Skipping edge {source}->{target}: source_exists={source_exists}, target_exists={target_exists}")
+                
+                # Create network data JSON
+                network_data_dict = {
+                    'nodes': nodes_list,
+                    'edges': edges_list,
+                    'project_name': analysis_results.get('filename', 'Process Tracing Analysis')
+                }
+                
+                network_data_json = json.dumps(network_data_dict)
+                safe_print(f"[INFO] Generated network with {len(nodes_list)} nodes and {len(edges_list)} edges")
+                
+            except Exception as e:
+                safe_print(f"[ERROR] Failed to generate network data: {e}")
+                network_data_json = None
         # Phase 3A: Streaming HTML Generation Integration
         from core.streaming_html import ProgressiveHTMLAnalysis
         import json
