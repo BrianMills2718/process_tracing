@@ -40,14 +40,27 @@ except ImportError as e:
 
 # Add a safe print function to handle UnicodeEncodeError
 def safe_print(*args, **kwargs):
+    """Windows-compatible print function that handles Unicode encoding issues"""
+    import re
     try:
         print(*args, **kwargs)
     except UnicodeEncodeError:
-        # Try printing with errors replaced
-        try:
-            print(*(str(a).encode('utf-8', errors='replace').decode('utf-8') for a in args), **kwargs)
-        except Exception:
-            pass  # Silently ignore if still fails
+        # Replace Unicode characters that cause issues on Windows
+        cleaned_args = []
+        for arg in args:
+            text = str(arg)
+            # Replace common Unicode characters with ASCII equivalents
+            text = re.sub(r'[→⇒←⇄]', '->', text)  # Arrows
+            text = re.sub(r'[✅]', '[OK]', text)   # Checkmarks
+            text = re.sub(r'[❌]', '[ERROR]', text) # X marks
+            text = re.sub(r'[⚠️]', '[WARN]', text)  # Warning
+            text = re.sub(r'[🔄]', '[PROCESSING]', text) # Processing
+            text = re.sub(r'[📊]', '[DATA]', text)  # Data
+            text = re.sub(r'[🎯]', '[TARGET]', text) # Target
+            # Remove any remaining non-ASCII characters
+            text = text.encode('ascii', errors='replace').decode('ascii')
+            cleaned_args.append(text)
+        print(*cleaned_args, **kwargs)
 
 def timestamp():
     return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -249,24 +262,81 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
         global_hypothesis_text_for_prompt=gh_text_for_prompt,
         global_hypothesis_id_for_prompt=gh_id_for_prompt
     )
-    # Query Universal LLM
-    raw_json = query_llm(text, schema, final_system_prompt)
-    # Save raw output
+    # Two-pass extraction with connectivity repair
+    from core.extract import parse_json, analyze_graph_connectivity, create_connectivity_repair_prompt, extract_connectivity_relationships
+    
+    # Save raw output path for compatibility
     now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
     graph_json_path = output_dir_for_case / f"{project_name_str}_{now_str}_graph.json"
     
-    # Parse the JSON response using proper JSON cleaning
-    from core.extract import parse_json
     try:
+        print("\n" + "="*60)
+        print("PERFORMING TWO-PASS GRAPH EXTRACTION")
+        print("="*60)
+        
+        # Pass 1: Standard extraction
+        print("[INFO] Pass 1: Standard graph extraction...")
+        raw_json = query_llm(text, schema, final_system_prompt)
         graph_data = parse_json(raw_json)
+        
+        # Analyze connectivity
+        print("[INFO] Analyzing graph connectivity...")
+        connectivity = analyze_graph_connectivity(graph_data)
+        
+        if not connectivity['needs_repair']:
+            print(f"[INFO] Graph connectivity acceptable: {connectivity['disconnection_rate']:.1%} disconnection rate")
+        else:
+            print(f"[INFO] Graph needs connectivity repair: {connectivity['disconnection_rate']:.1%} disconnection rate")
+            print(f"[INFO] Found {len(connectivity['isolated_nodes'])} isolated nodes and {len(connectivity['small_components'])} small components")
+            
+            # Pass 2: Connectivity repair
+            if connectivity['disconnected_entity_details']:
+                print("[INFO] Pass 2: Connectivity repair...")
+                print(f"[INFO] Attempting to connect {len(connectivity['disconnected_entity_details'])} disconnected entities")
+                main_graph_summary = f"Main graph has {connectivity['giant_component_size']} connected nodes including Events, Hypotheses, Evidence, and Mechanisms"
+                
+                repair_prompt = create_connectivity_repair_prompt(
+                    text, 
+                    connectivity['disconnected_entity_details'],
+                    main_graph_summary
+                )
+                
+                additional_edges = extract_connectivity_relationships(repair_prompt)
+                
+                if additional_edges:
+                    print(f"[INFO] Found {len(additional_edges)} additional relationships")
+                    # Merge edges into original graph
+                    graph_data['edges'].extend(additional_edges)
+                    
+                    # Re-analyze connectivity
+                    final_connectivity = analyze_graph_connectivity(graph_data)
+                    print(f"[INFO] Final disconnection rate: {final_connectivity['disconnection_rate']:.1%}")
+                    if final_connectivity['total_components'] == 1:
+                        print("[SUCCESS] Graph is now fully connected!")
+                    else:
+                        print(f"[INFO] Reduced to {final_connectivity['total_components']} components")
+                else:
+                    print("[WARNING] No additional relationships found in connectivity repair")
+        
+        # Save the enhanced graph data
         with open(graph_json_path, "w", encoding="utf-8") as f:
             json.dump(graph_data, f, indent=2)
+            
+        print(f"\n[SAVE] Enhanced graph data saved to {graph_json_path}")
+        
     except Exception as e:
-        print(f"[ERROR] Failed to parse JSON: {e}")
-        print(f"[DEBUG] Raw response: {raw_json[:500]}...")
-        with open(graph_json_path, "w", encoding="utf-8") as f:
-            f.write(raw_json)
-        return None
+        print(f"[ERROR] Two-pass extraction failed: {e}")
+        print(f"[INFO] Falling back to single-pass extraction...")
+        
+        # Fallback to single-pass extraction
+        try:
+            raw_json = query_llm(text, schema, final_system_prompt)
+            graph_data = parse_json(raw_json)
+            with open(graph_json_path, "w", encoding="utf-8") as f:
+                json.dump(graph_data, f, indent=2)
+        except Exception as fallback_error:
+            print(f"[ERROR] Fallback extraction also failed: {fallback_error}")
+            return None
     
     # Validate extraction connectivity
     try:

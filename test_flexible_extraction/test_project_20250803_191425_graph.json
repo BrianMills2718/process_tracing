@@ -1,0 +1,467 @@
+{
+  "nodes": [
+    {
+      "id": "event_revolution_1776",
+      "type": "Event",
+      "properties": {
+        "description": "The American Revolution of 1776 was a transformative historical conflict that fundamentally led to colonial independence, ultimately driven by the emergence of effective revolutionary leadership and successful mobilization of opposition against British taxation policies.",
+        "type": "outcome",
+        "date": "1776"
+      }
+    },
+    {
+      "id": "event_stamp_act_1765",
+      "type": "Event",
+      "properties": {
+        "description": "The taxation crisis began with the Stamp Act of 1765, a British policy that levied direct taxes on legal documents and printed materials in the American colonies, which colonial leaders viewed as a significant violation of their rights as Englishmen.",
+        "type": "triggering",
+        "date": "1765"
+      }
+    },
+    {
+      "id": "event_emergence_leadership",
+      "type": "Event",
+      "properties": {
+        "description": "The emergence of effective revolutionary leadership, including figures like George Washington, John Adams, and Thomas Jefferson, provided crucial strategic vision and organizational capacity necessary to transform widespread, scattered colonial grievances into a unified independence movement.",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "event_colonial_mobilization",
+      "type": "Event",
+      "properties": {
+        "description": "Colonial leaders successfully mobilized diverse colonial interests by unifying them around the rallying cry of 'no taxation without representation' and organizing effective resistance through mechanisms such as committees of correspondence and economic boycotts.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "event_continental_army_survival",
+      "type": "Event",
+      "properties": {
+        "description": "Under the strategic military leadership of George Washington, the Continental Army successfully survived British campaigns by intentionally avoiding major decisive battles while simultaneously building colonial military capacity throughout the protracted eight-year conflict.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "event_french_alliance",
+      "type": "Event",
+      "properties": {
+        "description": "A crucial military and financial alliance with France was successfully negotiated by diplomatic leaders, notably Benjamin Franklin, providing indispensable support that significantly aided the American colonies in their struggle for independence.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "hypothesis_leadership_primary_cause",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The emergence and actions of effective revolutionary leadership, providing strategic vision and organizational capacity, fundamentally drove the American Revolution by transforming scattered grievances into a unified, successful independence movement against British rule."
+      }
+    },
+    {
+      "id": "hypothesis_leadership_for_unity",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Effective leadership coordination was a necessary condition for the diverse colonial population to achieve the level of unity required to sustain and successfully complete the American Revolution against British authority over an extended period."
+      }
+    },
+    {
+      "id": "hypothesis_critique_alternatives",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Alternative explanations for the American Revolution, which focus solely on economic grievances or external pressures, are insufficient because they fail to adequately account for the significant organizational capacity needed to sustain the protracted eight-year conflict against Great Britain."
+      }
+    },
+    {
+      "id": "evidence_revolution_occurrence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Directly states the American Revolution occurred in 1776.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_stamp_act_occurrence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Confirms the Stamp Act of 1765 initiated the taxation crisis.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_emergence_leadership_occurrence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Confirms the role of key leaders in providing vision and capacity.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_colonial_mobilization_unity_occurrence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Confirms 'no taxation without representation' unified colonial interests.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_colonial_mobilization_resistance_occurrence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Confirms leaders organized resistance through specific methods.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_continental_army_survival_occurrence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Confirms Washington's strategy enabled the Continental Army's survival.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_french_alliance_occurrence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Confirms Benjamin Franklin negotiated the French alliance.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_h1_1_leadership_fundamental",
+      "type": "Evidence",
+      "properties": {
+        "description": "Direct statement identifying effective revolutionary leadership as the fundamental driver of the American Revolution.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_h1_2_leaders_vision_capacity",
+      "type": "Evidence",
+      "properties": {
+        "description": "Specific detail on how key leaders provided strategic vision and organizational capacity.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_h1_3_leaders_organized_resistance",
+      "type": "Evidence",
+      "properties": {
+        "description": "Proof that leaders actively organized effective resistance methods.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_h1_4_franklin_alliance",
+      "type": "Evidence",
+      "properties": {
+        "description": "Illustrates a specific outcome of diplomatic leadership contributing to the war effort.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_h2_1_leadership_unity_necessity",
+      "type": "Evidence",
+      "properties": {
+        "description": "Explicit statement that unity would not have been achieved without effective leadership coordination.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_h2_2_taxation_rallying_cry",
+      "type": "Evidence",
+      "properties": {
+        "description": "Demonstrates how a principle, championed by leaders, unified diverse colonial interests.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "evidence_h3_1_alternatives_fail_organizational_capacity",
+      "type": "Evidence",
+      "properties": {
+        "description": "Directly critiques the sufficiency of alternative explanations for their failure to account for organizational capacity.",
+        "source": "text"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_e2_causes_e4",
+      "type": "causes",
+      "source": "event_stamp_act_1765",
+      "target": "event_colonial_mobilization",
+      "properties": {
+        "reasoning": "The Stamp Act initiated the taxation crisis, leading to colonial resistance and mobilization.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_e3_causes_e4",
+      "type": "causes",
+      "source": "event_emergence_leadership",
+      "target": "event_colonial_mobilization",
+      "properties": {
+        "reasoning": "Leadership provided the vision and capacity needed to transform grievances into a unified movement and organize resistance.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_e4_causes_e1",
+      "type": "causes",
+      "source": "event_colonial_mobilization",
+      "target": "event_revolution_1776",
+      "properties": {
+        "reasoning": "Mobilization and sustained resistance were critical for the revolution's success.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_e5_causes_e1",
+      "type": "causes",
+      "source": "event_french_alliance",
+      "target": "event_revolution_1776",
+      "properties": {
+        "reasoning": "Crucial military and financial support from France contributed directly to the revolution's success.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_e6_causes_e1",
+      "type": "causes",
+      "source": "event_continental_army_survival",
+      "target": "event_revolution_1776",
+      "properties": {
+        "reasoning": "The Continental Army's survival and capacity building were essential for prosecuting and winning the war.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_e_rev_confirms_occ",
+      "type": "confirms_occurrence",
+      "source": "evidence_revolution_occurrence",
+      "target": "event_revolution_1776",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "The American Revolution of 1776 was fundamentally driven...",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_e_stamp_confirms_occ",
+      "type": "confirms_occurrence",
+      "source": "evidence_stamp_act_occurrence",
+      "target": "event_stamp_act_1765",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "The taxation crisis began with the Stamp Act of 1765, which colonial leaders viewed as a violation of their rights as Englishmen.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_e_emergence_confirms_occ",
+      "type": "confirms_occurrence",
+      "source": "evidence_emergence_leadership_occurrence",
+      "target": "event_emergence_leadership",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "Key leaders like George Washington, John Adams, and Thomas Jefferson provided the strategic vision and organizational capacity necessary to transform scattered colonial grievances into a unified independence movement.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_e_mobilization_unity_confirms_occ",
+      "type": "confirms_occurrence",
+      "source": "evidence_colonial_mobilization_unity_occurrence",
+      "target": "event_colonial_mobilization",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "The principle of 'no taxation without representation' became a rallying cry that unified diverse colonial interests.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_e_mobilization_resistance_confirms_occ",
+      "type": "confirms_occurrence",
+      "source": "evidence_colonial_mobilization_resistance_occurrence",
+      "target": "event_colonial_mobilization",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "Leaders organized effective resistance through committees of correspondence and economic boycotts.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_e_army_confirms_occ",
+      "type": "confirms_occurrence",
+      "source": "evidence_continental_army_survival_occurrence",
+      "target": "event_continental_army_survival",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "Washington's strategic decision to avoid major battles while building colonial military capacity enabled the Continental Army to survive British campaigns.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_e_french_confirms_occ",
+      "type": "confirms_occurrence",
+      "source": "evidence_french_alliance_occurrence",
+      "target": "event_french_alliance",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "The alliance with France, negotiated by diplomatic leaders like Benjamin Franklin, provided crucial military and financial support.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "edge_h1_s1",
+      "type": "supports",
+      "source": "evidence_h1_1_leadership_fundamental",
+      "target": "hypothesis_leadership_primary_cause",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "The American Revolution of 1776 was fundamentally driven by the emergence of effective revolutionary leadership that successfully mobilized colonial opposition to British taxation policies.",
+        "target_type": "causal_relationship"
+      }
+    },
+    {
+      "id": "edge_h1_s2",
+      "type": "supports",
+      "source": "evidence_h1_2_leaders_vision_capacity",
+      "target": "hypothesis_leadership_primary_cause",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Key leaders like George Washington, John Adams, and Thomas Jefferson provided the strategic vision and organizational capacity necessary to transform scattered colonial grievances into a unified independence movement.",
+        "target_type": "mechanism_operation"
+      }
+    },
+    {
+      "id": "edge_h1_s3",
+      "type": "supports",
+      "source": "evidence_h1_3_leaders_organized_resistance",
+      "target": "hypothesis_leadership_primary_cause",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.8,
+        "source_text_quote": "Leaders organized effective resistance through committees of correspondence and economic boycotts.",
+        "target_type": "mechanism_operation"
+      }
+    },
+    {
+      "id": "edge_h1_s4",
+      "type": "supports",
+      "source": "evidence_h1_4_franklin_alliance",
+      "target": "hypothesis_leadership_primary_cause",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.6,
+        "source_text_quote": "The alliance with France, negotiated by diplomatic leaders like Benjamin Franklin, provided crucial military and financial support.",
+        "target_type": "mechanism_operation"
+      }
+    },
+    {
+      "id": "edge_h2_s1",
+      "type": "supports",
+      "source": "evidence_h2_1_leadership_unity_necessity",
+      "target": "hypothesis_leadership_for_unity",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.9,
+        "source_text_quote": "The evidence suggests that without effective leadership coordination, the diverse colonial population would not have achieved unity sufficient for successful revolution.",
+        "target_type": "causal_relationship"
+      }
+    },
+    {
+      "id": "edge_h2_s2",
+      "type": "supports",
+      "source": "evidence_h2_2_taxation_rallying_cry",
+      "target": "hypothesis_leadership_for_unity",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.8,
+        "source_text_quote": "The principle of 'no taxation without representation' became a rallying cry that unified diverse colonial interests.",
+        "target_type": "mechanism_operation"
+      }
+    },
+    {
+      "id": "edge_h3_s1",
+      "type": "supports",
+      "source": "evidence_h3_1_alternatives_fail_organizational_capacity",
+      "target": "hypothesis_critique_alternatives",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Alternative explanations focusing solely on economic grievances or external pressures fail to account for the organizational capacity required to sustain the eight-year conflict.",
+        "target_type": "causal_relationship"
+      }
+    },
+    {
+      "id": "edge_e3_provides_h1",
+      "type": "provides_evidence_for",
+      "source": "event_emergence_leadership",
+      "target": "hypothesis_leadership_primary_cause",
+      "properties": {
+        "diagnostic_type": "general",
+        "probative_value": 0.7,
+        "reasoning": "The very occurrence of effective leadership emerging provides context for its hypothesized causal role.",
+        "target_type": "causal_relationship"
+      }
+    },
+    {
+      "id": "edge_e4_provides_h1",
+      "type": "provides_evidence_for",
+      "source": "event_colonial_mobilization",
+      "target": "hypothesis_leadership_primary_cause",
+      "properties": {
+        "diagnostic_type": "general",
+        "probative_value": 0.7,
+        "reasoning": "The successful mobilization of resistance demonstrates the effect hypothesized to be driven by leadership.",
+        "target_type": "causal_relationship"
+      }
+    },
+    {
+      "id": "edge_e4_provides_h2",
+      "type": "provides_evidence_for",
+      "source": "event_colonial_mobilization",
+      "target": "hypothesis_leadership_for_unity",
+      "properties": {
+        "diagnostic_type": "general",
+        "probative_value": 0.7,
+        "reasoning": "The observed unity and organization of colonial resistance serves as direct evidence for the role of leadership in achieving it.",
+        "target_type": "causal_relationship"
+      }
+    },
+    {
+      "id": "edge_e5_provides_h1",
+      "type": "provides_evidence_for",
+      "source": "event_french_alliance",
+      "target": "hypothesis_leadership_primary_cause",
+      "properties": {
+        "diagnostic_type": "general",
+        "probative_value": 0.6,
+        "reasoning": "The diplomatic success in securing the French alliance illustrates a key aspect of leadership's contribution to the revolution.",
+        "target_type": "causal_relationship"
+      }
+    },
+    {
+      "id": "edge_e6_provides_h1",
+      "type": "provides_evidence_for",
+      "source": "event_continental_army_survival",
+      "target": "hypothesis_leadership_primary_cause",
+      "properties": {
+        "diagnostic_type": "general",
+        "probative_value": 0.7,
+        "reasoning": "Washington's military leadership in preserving the army exemplifies the strategic vision attributed to revolutionary leadership.",
+        "target_type": "causal_relationship"
+      }
+    }
+  ]
+}

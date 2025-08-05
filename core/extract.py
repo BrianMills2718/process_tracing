@@ -840,6 +840,206 @@ def read_text_file(file_path: str) -> str:
 
 
 # ────────────────────────────────────────────────────────────────────
+# CONNECTIVITY REPAIR FUNCTIONS
+# ────────────────────────────────────────────────────────────────────
+
+def analyze_graph_connectivity(graph_data: dict) -> dict:
+    """
+    Analyze connectivity issues in process tracing graph
+    
+    Args:
+        graph_data: JSON graph with 'nodes' and 'edges' arrays
+    
+    Returns:
+        dict: Connectivity analysis with repair recommendations
+    """
+    try:
+        import networkx as nx
+    except ImportError:
+        print("[WARNING] NetworkX not available for connectivity analysis")
+        return {'needs_repair': False, 'disconnection_rate': 0}
+    
+    # Build NetworkX graph
+    G = nx.Graph()
+    
+    # Add nodes
+    for node in graph_data.get('nodes', []):
+        G.add_node(node['id'], **node)
+    
+    # Add edges (use correct field names)
+    for edge in graph_data.get('edges', []):
+        source_id = edge.get('source_id') or edge.get('source')
+        target_id = edge.get('target_id') or edge.get('target')
+        if source_id and target_id:
+            G.add_edge(source_id, target_id, **edge)
+    
+    # Analyze connectivity
+    components = list(nx.connected_components(G))
+    giant_component = max(components, key=len) if components else set()
+    isolated_nodes = [node for node in G.nodes() if G.degree(node) == 0]
+    
+    disconnection_rate = 1 - (len(giant_component) / len(G.nodes())) if G.nodes() else 0
+    
+    # Find small components (not the giant component)
+    small_components = [comp for comp in components if len(comp) < 10 and comp != giant_component]
+    small_component_nodes = []
+    for comp in small_components:
+        small_component_nodes.extend(comp)
+    
+    # Combine isolated nodes and small component nodes as disconnected entities
+    disconnected_node_ids = list(isolated_nodes) + small_component_nodes
+    disconnected_node_details = [
+        {
+            'id': node_id,
+            'type': G.nodes[node_id].get('type', 'unknown'),
+            'description': G.nodes[node_id].get('properties', {}).get('description', 'No description')[:100]
+        }
+        for node_id in disconnected_node_ids
+    ]
+    
+    return {
+        'needs_repair': disconnection_rate > 0.1 or len(small_components) > 0,
+        'disconnection_rate': disconnection_rate,
+        'total_components': len(components),
+        'giant_component_size': len(giant_component),
+        'isolated_nodes': isolated_nodes,
+        'small_components': small_components,
+        'disconnected_entity_details': disconnected_node_details
+    }
+
+def create_connectivity_repair_prompt(original_text: str, disconnected_entities: list, main_graph_summary: str) -> str:
+    """
+    Create focused prompt for connecting disconnected entities to main graph
+    """
+    disconnected_descriptions = "\n".join([
+        f"- {node['id']} ({node['type']}): {node['description']}"
+        for node in disconnected_entities
+    ])
+    
+    return f"""CONNECTIVITY REPAIR TASK:
+
+You previously extracted a causal graph but some important nodes are disconnected from the main analysis. Your task is to identify the missing relationships that should connect these disconnected entities to the main graph.
+
+DISCONNECTED ENTITIES NEEDING CONNECTIONS:
+{disconnected_descriptions}
+
+MAIN GRAPH CONTEXT:
+{main_graph_summary}
+
+ORIGINAL TEXT:
+{original_text}
+
+Based on the original text, identify what relationships should connect these disconnected entities to the main graph. Look for:
+- causes: Causal relationships between events
+- enables/constrains: How conditions affect events or mechanisms  
+- initiates: How actors start events or mechanisms
+- supports/refutes: How evidence relates to hypotheses
+- provides_evidence_for: How events/evidence support other elements
+- part_of_mechanism: How events are components of mechanisms
+
+Output ONLY the missing edges as JSON in this format:
+{{
+  "additional_edges": [
+    {{
+      "source_id": "disconnected_node_id",
+      "target_id": "main_graph_node_id", 
+      "type": "relationship_type",
+      "properties": {{
+        "reasoning": "Brief explanation from text",
+        "confidence": 0.8,
+        "source": "connectivity_repair"
+      }}
+    }}
+  ]
+}}
+
+Focus on high-confidence connections clearly supported by the text. Do not create speculative relationships."""
+
+def extract_connectivity_relationships(prompt: str) -> list:
+    """
+    Extract additional relationships using connectivity repair prompt
+    """
+    if not HAS_GEMINI:
+        print("[WARNING] Cannot perform connectivity repair without Gemini API")
+        return []
+        
+    try:
+        print("[INFO] Attempting connectivity repair...")
+        
+        # Use the same approach as query_llm for consistency
+        import google.generativeai as genai
+        import os
+        
+        # Configure Gemini
+        api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            print("[WARNING] No API key found for connectivity repair")
+            return []
+        
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        response = model.generate_content(prompt)
+        response_text = response.text
+        
+        # Parse the JSON response
+        repair_data = parse_json(response_text)
+        return repair_data.get('additional_edges', [])
+        
+    except Exception as e:
+        print(f"[WARNING] Connectivity repair failed: {e}")
+        return []
+
+def extract_causal_graph_two_pass(text: str) -> dict:
+    """
+    Two-pass extraction: standard extraction + connectivity repair
+    """
+    # Pass 1: Standard extraction
+    initial_graph = query_gemini(text)
+    
+    # Analyze connectivity
+    connectivity = analyze_graph_connectivity(initial_graph)
+    
+    if not connectivity['needs_repair']:
+        print(f"[INFO] Graph connectivity acceptable: {connectivity['disconnection_rate']:.1%} disconnection rate")
+        return initial_graph
+    
+    print(f"[INFO] Graph needs connectivity repair: {connectivity['disconnection_rate']:.1%} disconnection rate")
+    print(f"[INFO] Found {len(connectivity['isolated_nodes'])} isolated nodes")
+    
+    # Pass 2: Connectivity repair
+    if connectivity['isolated_node_details']:
+        main_graph_summary = f"Main graph has {connectivity['giant_component_size']} connected nodes including Events, Hypotheses, Evidence, and Mechanisms"
+        
+        repair_prompt = create_connectivity_repair_prompt(
+            text, 
+            connectivity['isolated_node_details'],
+            main_graph_summary
+        )
+        
+        additional_edges = extract_connectivity_relationships(repair_prompt)
+        
+        if additional_edges:
+            print(f"[INFO] Found {len(additional_edges)} additional relationships")
+            # Merge edges into original graph
+            initial_graph['edges'].extend(additional_edges)
+            
+            # Re-analyze connectivity
+            final_connectivity = analyze_graph_connectivity(initial_graph)
+            print(f"[INFO] Final disconnection rate: {final_connectivity['disconnection_rate']:.1%}")
+        else:
+            print("[WARNING] No additional relationships found in connectivity repair")
+    
+    return initial_graph
+
+def extract_causal_graph(text: str) -> dict:
+    """
+    Alias for backwards compatibility - uses two-pass extraction by default
+    """
+    return extract_causal_graph_two_pass(text)
+
+
+# ────────────────────────────────────────────────────────────────────
 def main() -> None:
     """Main execution function for the process tracing application."""
     try:

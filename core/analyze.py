@@ -111,7 +111,7 @@ def normalize_evidence_type_for_output(evidence_type):
     return normalized
 
 # Add a safe print function to handle UnicodeEncodeError
-def find_causal_paths_bounded(G, source, target, cutoff=10, max_paths=100):
+def find_causal_paths_bounded(G, source, target, cutoff=10, max_paths=100, timeout_seconds=10):
     """
     Find causal paths with bounds to prevent exponential explosion.
     
@@ -121,19 +121,37 @@ def find_causal_paths_bounded(G, source, target, cutoff=10, max_paths=100):
         target: Target node
         cutoff: Maximum path length (default 10)
         max_paths: Maximum number of paths to return (default 100)
+        timeout_seconds: Maximum time to spend finding paths (default 10)
         
     Returns:
         List of paths (each path is a list of nodes)
     """
+    import time
+    import itertools
+    
     paths = []
     paths_found = 0
+    start_time = time.time()
     
-    for path in nx.all_simple_paths(G, source, target, cutoff=cutoff):
-        paths.append(path)
-        paths_found += 1
+    try:
+        # Issue #18 Fix: Add timeout protection to prevent infinite hangs
+        path_generator = nx.all_simple_paths(G, source, target, cutoff=cutoff)
+        for path in itertools.islice(path_generator, max_paths):
+            # Check timeout every few iterations
+            if paths_found % 10 == 0 and time.time() - start_time > timeout_seconds:
+                safe_print(f"DEBUG_CHAINS: Timeout reached ({timeout_seconds}s), returning {paths_found} paths")
+                break
+                
+            paths.append(path)
+            paths_found += 1
+            
         if paths_found >= max_paths:
             safe_print(f"DEBUG_CHAINS: Reached max_paths limit of {max_paths}")
-            break
+            
+    except nx.NetworkXNoPath:
+        safe_print(f"DEBUG_CHAINS: No path exists between {source} and {target}")
+    except Exception as e:
+        safe_print(f"DEBUG_CHAINS: Error finding paths: {e}")
             
     return paths
 
@@ -291,9 +309,10 @@ def analyze_graph(G, options=None):
 
 def safe_print(*args, **kwargs):
     """
-    Safe print function that handles encoding errors and logs them.
+    Windows-compatible safe print function that handles Unicode encoding errors.
     Implements fail-fast principle - logs errors instead of hiding them.
     """
+    import re
     logger = logging.getLogger(__name__)
     
     try:
@@ -302,9 +321,23 @@ def safe_print(*args, **kwargs):
         # Log the error as required by fail-fast principle
         logger.error(f"Encoding error in safe_print: {e}", exc_info=True)
         
-        # Try printing with errors replaced
+        # Replace Unicode characters that cause issues on Windows
+        cleaned_args = []
+        for arg in args:
+            text = str(arg)
+            # Replace common Unicode characters with ASCII equivalents
+            text = re.sub(r'[→⇒←⇄]', '->', text)  # Arrows
+            text = re.sub(r'[✅]', '[OK]', text)   # Checkmarks
+            text = re.sub(r'[❌]', '[ERROR]', text) # X marks
+            text = re.sub(r'[⚠️]', '[WARN]', text)  # Warning
+            text = re.sub(r'[🔄]', '[PROCESSING]', text) # Processing
+            text = re.sub(r'[📊]', '[DATA]', text)  # Data
+            text = re.sub(r'[🎯]', '[TARGET]', text) # Target
+            # Remove any remaining non-ASCII characters
+            text = text.encode('ascii', errors='replace').decode('ascii')
+            cleaned_args.append(text)
         try:
-            print(*(str(a).encode('utf-8', errors='replace').decode('utf-8') for a in args), **kwargs)
+            print(*cleaned_args, **kwargs)
         except Exception as fallback_error:
             logger.error(f"Failed fallback print: {fallback_error}")
 

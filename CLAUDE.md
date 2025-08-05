@@ -2,18 +2,28 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🎯 CURRENT STATUS: EDGE TYPE COVERAGE OPTIMIZATION
+## 🎯 CURRENT STATUS: GRAPH CONNECTIVITY OPTIMIZATION
 
-**System Status**: **75% Functionally Demonstrated** - All 7 node types working, 9/16 edge types verified  
-**Current Priority**: **Edge Type Coverage Enhancement** - Achieve full 16/16 edge type demonstration  
-**Infrastructure**: **100% Complete** - All node and edge types configured and validated
+**System Status**: **85% Complete** - Advanced analytical capabilities achieved with connectivity issues  
+**Current Priority**: **Graph Connectivity Enhancement** - Resolve disconnected entities problem  
+**Infrastructure**: **100% Complete** - All edge/node types configured and validated
 **Verified Functionality**: 
-- ✅ **All Node Types**: 7/7 successfully extracting (Event, Hypothesis, Evidence, Causal_Mechanism, Alternative_Explanation, Actor, Condition)
-- ⚠️ **Edge Types**: 9/16 demonstrated in actual extraction
+- ✅ **Edge Type Coverage**: 18/21 edge types (85.7%) - MAJOR BREAKTHROUGH achieved
+- ✅ **Node Type Coverage**: 8/8 node types (100%) - Complete coverage
+- ✅ **Advanced Analytics**: Alternative explanations, mechanism integration, evidence weighting
 - ✅ **API Integration**: gemini-2.5-flash via .env working perfectly
-- ✅ **End-to-End Pipeline**: Extraction → Validation → Analysis → HTML generation
+- ✅ **End-to-End Pipeline**: Extraction → Analysis → HTML generation functional
+- ⚠️ **Graph Connectivity**: 14% disconnection rate causing visualization fragmentation
 
-**Immediate Goal**: Demonstrate remaining 7 edge types through enhanced text examples and prompt refinement  
+**Current Problem**: Despite sophisticated edge type extraction, graphs have isolated nodes that should connect to main analysis, reducing analytical coherence and visualization quality.
+
+**Immediate Goal**: Implement two-pass connectivity solution to reduce disconnection rate from 14% to <5%
+
+## 📋 IMPLEMENTATION PLAN
+
+### **MANDATORY REFERENCE**: Read `CONNECTIVITY_PLAN.md` for complete implementation roadmap
+
+**Phase 1 Priority**: Implement two-pass LLM extraction to resolve graph fragmentation  
 
 ## Coding Philosophy (Mandatory)
 
@@ -34,212 +44,289 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is an LLM-enhanced Process Tracing Toolkit for advanced qualitative analysis. The system extracts causal graphs from text, performs evidence assessment using Van Evera's diagnostic tests, and generates comprehensive analytical reports with interactive visualization and advanced causal analysis capabilities.
 
-**Implementation Status**: Infrastructure 100% complete, functional demonstration 75% complete - Focus on achieving full edge type coverage
+**Implementation Status**: Infrastructure 100% complete, analytical capabilities 85% complete - Focus on connectivity optimization
 
-## 📊 CURRENT EDGE TYPE COVERAGE STATUS
+## 🎯 PHASE 1 IMPLEMENTATION TASKS: TWO-PASS CONNECTIVITY
 
-### ✅ Demonstrated Edge Types (9/16)
-**Last verified in**: `test_mechanism_20250804_045812_graph.json`
-- `causes` - Event→Event causal relationships
-- `confirms_occurrence` - Evidence confirming events happened
-- `constrains` - Conditions limiting events/mechanisms/actors
-- `enables` - Conditions enabling events/mechanisms/hypotheses
-- `explains_mechanism` - Hypotheses explaining mechanisms
-- `initiates` - Actors initiating events
-- `provides_evidence_for` - Events/Evidence supporting hypotheses/mechanisms/actors/alternatives
-- `refutes` - Evidence refuting hypotheses/mechanisms
-- `supports` - Evidence/Events supporting hypotheses/events/mechanisms/actors
+### **Current Graph Analysis Problem**
+**Evidence**: `output_data/revolutions/revolutions_20250804_072914_graph.json` shows 14% disconnection rate
+**Disconnected Entities**: 
+- `condition_geographic_distance` - Should `enables` colonial autonomy
+- `condition_enlightenment_ideas` - Should `enables` ideological resistance  
+- `actor_thomas_hutchinson` - Should `initiates` British enforcement events
+- `event_stamp_act_congress_declaration` - Should connect to main causal chain
 
-### ❌ Missing from Extraction (7/16)
-**Need targeted examples to trigger**:
-- `tests_hypothesis` - Evidence testing hypothesis validity
-- `tests_mechanism` - Evidence testing mechanism operation
-- `part_of_mechanism` - Events as mechanism components
-- `disproves_occurrence` - Evidence showing events didn't happen
-- `supports_alternative` - Evidence supporting alternative explanations
-- `refutes_alternative` - Evidence refuting alternative explanations
-- *One additional edge type from the 16 total*
+### **STEP 1: Create Connectivity Detection System**
+**Objective**: Identify disconnected nodes requiring repair
+**File to Create**: `core/connectivity_analysis.py`
 
-### 🎯 IMMEDIATE IMPLEMENTATION TASKS
+**IMPLEMENTATION**:
+```python
+import networkx as nx
+from typing import Dict, List, Set, Tuple
+
+def analyze_graph_connectivity(graph_data: dict) -> dict:
+    """
+    Analyze connectivity issues in process tracing graph
+    
+    Args:
+        graph_data: JSON graph with 'nodes' and 'edges' arrays
+    
+    Returns:
+        dict: Connectivity analysis with repair recommendations
+    """
+    # Build NetworkX graph
+    G = nx.Graph()
+    
+    # Add nodes
+    for node in graph_data.get('nodes', []):
+        G.add_node(node['id'], **node)
+    
+    # Add edges
+    for edge in graph_data.get('edges', []):
+        G.add_edge(edge['source_id'], edge['target_id'], **edge)
+    
+    # Analyze connectivity
+    components = list(nx.connected_components(G))
+    giant_component = max(components, key=len) if components else set()
+    isolated_nodes = [node for node in G.nodes() if G.degree(node) == 0]
+    
+    disconnection_rate = 1 - (len(giant_component) / len(G.nodes())) if G.nodes() else 0
+    
+    return {
+        'needs_repair': disconnection_rate > 0.1,
+        'disconnection_rate': disconnection_rate,
+        'total_components': len(components),
+        'giant_component_size': len(giant_component),
+        'isolated_nodes': isolated_nodes,
+        'small_components': [comp for comp in components if len(comp) < 5 and comp != giant_component],
+        'isolated_node_details': [
+            {
+                'id': node_id,
+                'type': G.nodes[node_id].get('type', 'unknown'),
+                'description': G.nodes[node_id].get('properties', {}).get('description', 'No description')[:100]
+            }
+            for node_id in isolated_nodes
+        ]
+    }
+
+def find_isolated_nodes(graph_data: dict) -> List[dict]:
+    """Extract detailed information about isolated nodes"""
+    analysis = analyze_graph_connectivity(graph_data)
+    return analysis['isolated_node_details']
+```
+
+### **STEP 2: Create Second-Pass Extraction Prompt**
+**Objective**: Design targeted prompt for connectivity repair
+**File to Modify**: `core/extract.py`
+
+**ADD THIS FUNCTION**:
+```python
+def create_connectivity_repair_prompt(original_text: str, isolated_nodes: List[dict], main_graph_summary: str) -> str:
+    """
+    Create focused prompt for connecting isolated nodes to main graph
+    """
+    isolated_descriptions = "\n".join([
+        f"- {node['id']} ({node['type']}): {node['description']}"
+        for node in isolated_nodes
+    ])
+    
+    return f"""CONNECTIVITY REPAIR TASK:
+
+You previously extracted a causal graph but some important nodes are disconnected from the main analysis. Your task is to identify the missing relationships that should connect these isolated nodes to the main graph.
+
+ISOLATED NODES NEEDING CONNECTIONS:
+{isolated_descriptions}
+
+MAIN GRAPH CONTEXT:
+{main_graph_summary}
+
+ORIGINAL TEXT:
+{original_text}
+
+Based on the original text, identify what relationships should connect these isolated nodes to the main graph. Look for:
+- causes: Causal relationships between events
+- enables/constrains: How conditions affect events or mechanisms  
+- initiates: How actors start events or mechanisms
+- supports/refutes: How evidence relates to hypotheses
+- provides_evidence_for: How events/evidence support other elements
+- part_of_mechanism: How events are components of mechanisms
+
+Output ONLY the missing edges as JSON in this format:
+{{
+  "additional_edges": [
+    {{
+      "source_id": "isolated_node_id",
+      "target_id": "main_graph_node_id", 
+      "type": "relationship_type",
+      "properties": {{
+        "reasoning": "Brief explanation from text",
+        "confidence": 0.8,
+        "source": "connectivity_repair"
+      }}
+    }}
+  ]
+}}
+
+Focus on high-confidence connections clearly supported by the text. Do not create speculative relationships."""
+
+def extract_connectivity_relationships(prompt: str) -> List[dict]:
+    """
+    Extract additional relationships using connectivity repair prompt
+    """
+    try:
+        response = query_gemini_structured(prompt, {"type": "object", "properties": {"additional_edges": {"type": "array"}}})
+        return response.get('additional_edges', [])
+    except Exception as e:
+        print(f"[WARNING] Connectivity repair failed: {e}")
+        return []
+```
+
+### **STEP 3: Implement Two-Pass Extraction**
+**File to Modify**: `core/extract.py`
+
+**ADD THIS FUNCTION**:
+```python
+def extract_causal_graph_two_pass(text: str) -> dict:
+    """
+    Two-pass extraction: standard extraction + connectivity repair
+    """
+    # Pass 1: Standard extraction
+    initial_graph = extract_causal_graph(text)
+    
+    # Analyze connectivity
+    connectivity = analyze_graph_connectivity(initial_graph)
+    
+    if not connectivity['needs_repair']:
+        print(f"[INFO] Graph connectivity acceptable: {connectivity['disconnection_rate']:.1%} disconnection rate")
+        return initial_graph
+    
+    print(f"[INFO] Graph needs connectivity repair: {connectivity['disconnection_rate']:.1%} disconnection rate")
+    print(f"[INFO] Found {len(connectivity['isolated_nodes'])} isolated nodes")
+    
+    # Pass 2: Connectivity repair
+    if connectivity['isolated_node_details']:
+        main_graph_summary = f"Main graph has {connectivity['giant_component_size']} connected nodes including Events, Hypotheses, Evidence, and Mechanisms"
+        
+        repair_prompt = create_connectivity_repair_prompt(
+            text, 
+            connectivity['isolated_node_details'],
+            main_graph_summary
+        )
+        
+        additional_edges = extract_connectivity_relationships(repair_prompt)
+        
+        if additional_edges:
+            print(f"[INFO] Found {len(additional_edges)} additional relationships")
+            # Merge edges into original graph
+            initial_graph['edges'].extend(additional_edges)
+            
+            # Re-analyze connectivity
+            final_connectivity = analyze_graph_connectivity(initial_graph)
+            print(f"[INFO] Final disconnection rate: {final_connectivity['disconnection_rate']:.1%}")
+        else:
+            print("[WARNING] No additional relationships found in connectivity repair")
+    
+    return initial_graph
+```
+
+### **STEP 4: Integration Point**
+**File to Modify**: `process_trace_advanced.py`
+
+**FIND AND REPLACE**:
+```python
+# OLD (around line 740):
+graph_data = extract_causal_graph(text)
+
+# NEW:
+graph_data = extract_causal_graph_two_pass(text)
+```
+
+### **VALIDATION COMMANDS**
+```bash
+# Test on American Revolution case
+python process_trace_advanced.py --project revolutions
+
+# Check connectivity improvement
+python -c "
+import json
+from core.connectivity_analysis import analyze_graph_connectivity
+data = json.load(open('output_data/revolutions/[latest]_graph.json'))
+analysis = analyze_graph_connectivity(data)
+print(f'Disconnection rate: {analysis[\"disconnection_rate\"]:.1%}')
+print(f'Isolated nodes: {len(analysis[\"isolated_nodes\"])}')
+"
+```
+
+### **SUCCESS CRITERIA**
+- **Disconnection rate**: <5% (currently 14%)
+- **Giant component**: >95% of nodes (currently 85.7%)  
+- **Connected components**: 1-2 (currently 7)
+- **Academic validity**: All new connections traceable to original text
+
+### **REQUIRED IMPORTS FOR IMPLEMENTATION**
+**Add to `core/extract.py`**:
+```python
+from .connectivity_analysis import analyze_graph_connectivity
+```
+
+**Dependencies**: NetworkX (already available in project requirements)
+
+### **QUICK STATUS CHECK**
+```bash
+# Verify current issue exists
+python -c "
+import json
+data = json.load(open('output_data/revolutions/revolutions_20250804_072914_graph.json'))
+print('Current disconnection issue:')
+print(f'  Total nodes: {len(data[\"nodes\"])}')  
+print(f'  Total edges: {len(data[\"edges\"])}')
+print('Isolated node types:')
+for node in data['nodes']:
+    connected = any(e['source_id'] == node['id'] or e['target_id'] == node['id'] for e in data['edges'])
+    if not connected:
+        print(f'  - {node[\"id\"]} ({node[\"type\"]})')
+"
+```
 
 ## Codebase Structure
 
-### Main Entry Points
-- **`process_trace_advanced.py`**: Primary analysis pipeline orchestrator with configurable Bayesian integration
-- **`process_trace.py`**: Legacy simple analysis entry point
+### Key Files for Implementation
+- **`core/extract.py`**: Current extraction logic (TO MODIFY)
+- **`core/connectivity_analysis.py`**: (TO CREATE)
+- **`process_trace_advanced.py`**: Main pipeline (TO MODIFY)
+- **`config/ontology_config.json`**: Edge/node type definitions (REFERENCE)
 
-### Core Analysis Modules (`core/`)
-- **`analyze.py`**: Main analysis engine with graph processing, Van Evera assessment, and HTML generation
-- **`extract.py`**: Text-to-graph extraction using LLM structured output
-- **`ontology.py`**: Graph node/edge type definitions and validation
-- **`enhance_evidence.py`**: Van Evera evidence type classification and reasoning
-- **`enhance_mechanisms.py`**: Causal mechanism analysis and completeness assessment
-- **`dag_analysis.py`**: Advanced DAG pathway analysis with convergence/divergence detection
-- **`cross_domain_analysis.py`**: Cross-domain analysis beyond events (Evidence↔Hypothesis↔Event)
-- **`llm_reporting_utils.py`**: HTML dashboard generation and narrative reporting
+### Test Cases  
+- **`input_text/revolutions/american_revolution_enhanced.txt`**: Enhanced analytical text with 18/21 edge types
+- **`output_data/revolutions/revolutions_20250804_072914_graph.json`**: Current example with 14% disconnection rate
 
-### Bayesian Infrastructure Modules (`core/`) - PRODUCTION READY
-- **`bayesian_models.py`**: Mathematical foundation validated (95.1% test pass rate)
-- **`prior_assignment.py`**: Hierarchical probability assignment
-- **`likelihood_calculator.py`**: Van Evera likelihood calculations
-- **`belief_updater.py`**: Belief updating algorithms (29/29 tests passing)
-- **`van_evera_bayesian.py`**: Van Evera Bayesian bridge
-- **`diagnostic_probabilities.py`**: Van Evera probability templates
-- **`evidence_weighting.py`**: Evidence strength quantification
-- **`confidence_calculator.py`**: Multi-dimensional confidence assessment
-- **`uncertainty_analysis.py`**: Monte Carlo uncertainty analysis
-- **`bayesian_reporting.py`**: HTML dashboard integration
-- **`bayesian_integration.py`**: Seamless traditional/Bayesian integration
-
-## 🔧 EVIDENCE-BASED TASK IMPLEMENTATION
-
-### **Task 1: Create Comprehensive Edge Type Test Cases**
-**Objective**: Generate text examples that trigger all 16 edge types
-**Evidence Required**: Successful extraction showing all edge types
-**Success Criteria**: JSON output containing all 16 edge types in actual use
-
-**Implementation Steps**:
-1. **Analyze Missing Patterns**: Review the 7 missing edge types and identify what text patterns would trigger them
-2. **Create Targeted Examples**: Write specific text sections for each missing edge type:
-   - `tests_hypothesis`: "This evidence tests whether the hypothesis holds by..."
-   - `tests_mechanism`: "The evidence tests the mechanism's operation by..."
-   - `part_of_mechanism`: "This event was a component/step in the mechanism that..."
-   - `disproves_occurrence`: "Evidence shows this event did NOT happen because..."
-   - `supports_alternative` / `refutes_alternative`: Explicit alternative testing language
-3. **Test Iteratively**: Run extraction and verify each new edge type appears
-4. **Document Patterns**: Record what text patterns successfully trigger each edge type
-
-**Files to Modify**:
-- Create new test file: `input_text/test_mechanism/comprehensive_edge_test.txt`
-- Document findings in: `docs/edge_type_patterns.md`
-
-**Validation Commands**:
-```bash
-python process_trace_advanced.py --project test_mechanism --extract-only
-python -c "import json; data=json.load(open('output_data/test_mechanism/[latest]_graph.json')); print('Edge types:', sorted(set(e.get('type') for e in data.get('edges', []))))"
-```
-
-### **Task 2: Enhance Extraction Prompt for Missing Edge Types**
-**Objective**: Modify prompt to better recognize and extract missing edge patterns
-**Evidence Required**: Increased edge type coverage in extraction results
-**Success Criteria**: All 16 edge types demonstrated in single extraction
-
-**Implementation Steps**:
-1. **Review Current Prompt**: Analyze `core/extract.py` PROMPT_TEMPLATE for missing edge guidance
-2. **Add Explicit Examples**: Include specific examples for each missing edge type in the prompt
-3. **Update Priority Section**: Emphasize edge type diversity in extraction priorities
-4. **Test Incrementally**: Add one edge type focus at a time and verify results
-
-**Files to Modify**:
-- `core/extract.py` - PROMPT_TEMPLATE section
-- Add examples for each missing edge type in the format section
-
-**Validation Process**:
-- Run extraction after each prompt modification
-- Document which changes increase edge type coverage
-- Measure improvement: baseline 9/16 → target 16/16
-
-### **Task 3: Create Edge Type Coverage Verification Tool**
-**Objective**: Automated tool to verify and report edge type coverage
-**Evidence Required**: Reliable measurement of edge type completeness
-**Success Criteria**: Tool that provides detailed edge type coverage reports
-
-**Implementation Steps**:
-1. **Create Coverage Analyzer**: `test_edge_coverage.py` that:
-   - Loads extraction results
-   - Compares against expected 16 edge types
-   - Reports missing types with suggestions
-   - Tracks coverage improvements over time
-2. **Integration**: Add to main test suite
-3. **Documentation**: Clear usage instructions
-
-**Files to Create**:
-- `test_edge_coverage.py` - Main coverage analysis tool
-- `docs/edge_coverage_guide.md` - Usage documentation
-
-### **Task 4: Evidence Documentation**
-**Objective**: Document successful patterns for future reference
-**Evidence Required**: Reproducible edge type extraction patterns
-**Success Criteria**: Complete guide for triggering all 16 edge types
-
-**Implementation Steps**:
-1. **Pattern Documentation**: For each edge type, document:
-   - Text patterns that trigger it
-   - Example sentences
-   - Common failure modes
-   - Optimal context requirements
-2. **Success Metrics**: Track improvement from 9/16 to 16/16
-3. **Reproducible Examples**: Verified examples that consistently work
-
-## 🎯 SUCCESS CRITERIA & VALIDATION
-
-### **Definition of Complete Implementation**
-**Primary Metric**: All 16 edge types appearing in actual extraction results
-**Secondary Metrics**: 
-- Consistent edge type coverage across different text types
-- Proper validation of all edge type constraints
-- Documentation of reliable extraction patterns
-
-### **Evidence Requirements**
-**Before claiming completion**:
-1. **JSON Evidence**: Extraction file showing all 16 edge types in use
-2. **Pattern Documentation**: Verified text patterns that trigger each edge type
-3. **Reproducibility**: Multiple successful extractions with full coverage
-4. **Performance Validation**: All extractions complete within performance requirements
-
-### **Validation Commands**
-```bash
-# Run comprehensive extraction
-python process_trace_advanced.py --project test_mechanism --extract-only
-
-# Verify edge type coverage
-python test_edge_coverage.py
-
-# Check specific extraction results
-python -c "import json; data=json.load(open('output_data/test_mechanism/[latest]_graph.json')); edges=set(e.get('type') for e in data.get('edges',[])); print(f'Coverage: {len(edges)}/16 edge types'); print('Found:', sorted(edges)); missing=['tests_hypothesis','tests_mechanism','part_of_mechanism','disproves_occurrence','supports_alternative','refutes_alternative']; found_missing=[t for t in missing if t in edges]; print('Progress on missing:', found_missing)"
-```
-
-### **Quality Gates**
-- **No Implementation**: Claims without JSON evidence will be rejected
-- **Incremental Progress**: Each task must show measurable improvement in edge type coverage
-- **Documentation**: All successful patterns must be documented with examples
-- **Reproducibility**: Final solution must work consistently across multiple test runs
-
-## 📁 RELEVANT FILES FOR IMPLEMENTATION
-
-### **Primary Files**
-- **`core/extract.py`**: Main extraction logic and prompt template (PRIORITY)
-- **`config/ontology_config.json`**: Edge type definitions and constraints
-- **`input_text/test_mechanism/`**: Test files for edge type verification
-- **`output_data/test_mechanism/`**: Results for analysis and verification
-
-### **Supporting Files**
-- **`process_trace_advanced.py`**: Main execution pipeline
-- **`core/ontology.py`**: Schema loading and validation
-- **`.env`**: API configuration (gemini-2.5-flash confirmed working)
-
-### **Evidence Files**
-**Current Best Result**: `output_data/test_mechanism/test_mechanism_20250804_045812_graph.json`
-- 23 nodes (all 7 node types)
-- 16 edges (9/16 edge types)
-- Baseline for improvement measurement
-
-### **Quick Status Check**
-```bash
-# Verify current edge coverage
-cd /path/to/process_tracing
-python -c "import json; data=json.load(open('output_data/test_mechanism/test_mechanism_20250804_045812_graph.json')); print('Current:', len(set(e.get('type') for e in data.get('edges', []))), '/16 edge types')"
-```
+### API Integration
+- **Model**: gemini-2.5-flash via `.env` file
+- **Function**: `query_gemini_structured()` available in `core/extract.py`
 
 ## 🎯 NEXT IMPLEMENTER GUIDANCE
 
-**Start Here**: 
-1. Run the status check command above to verify baseline
-2. Focus on Task 1: Create text examples for the 7 missing edge types
-3. Test each addition individually to measure progress
-4. Document successful patterns for reproducibility
+### **START HERE - Implementation Order**
 
-**Success Definition**: JSON extraction showing all 16 edge types in actual use, not just configuration.
+1. **Verify Current Issue** - Run the quick status check above to confirm 14% disconnection rate
+2. **Create `core/connectivity_analysis.py`** - Implement Step 1 code exactly as shown
+3. **Modify `core/extract.py`** - Add Step 2 and Step 3 functions 
+4. **Update `process_trace_advanced.py`** - Make Step 4 integration change
+5. **Test and Validate** - Run validation commands to measure improvement
+
+### **Success Definition**
+**Primary**: Disconnection rate reduced from 14% to <5%
+**Secondary**: Giant component >95% of nodes, <3 connected components
+**Validation**: All new connections traceable to original text with confidence scores
+
+### **If Implementation Fails**
+1. Check import statements and dependencies
+2. Verify Gemini API access with existing functions
+3. Test connectivity analysis functions independently
+4. Review debugging_disconnected_entities.md for troubleshooting
+
+**Critical**: This is a post-processing approach that enhances existing 18/21 edge type capability rather than replacing it.
 
 ## 🔧 DEVELOPMENT ENVIRONMENT
 
