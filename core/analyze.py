@@ -2702,10 +2702,18 @@ def main():
                         'Data_Source': '#F7DC6F'
                     }
                     
+                    # Extract label based on node type - properties are flattened by load_graph()
+                    if node_type == 'Actor':
+                        display_text = node_data.get('name', node_id)
+                        description = f"{node_data.get('name', 'No name')} - {node_data.get('role', 'No role')}"
+                    else:
+                        display_text = node_data.get('description', node_id)
+                        description = node_data.get('description', 'No description')
+                    
                     nodes_list.append({
                         'id': node_id,
-                        'label': node_data.get('description', node_id)[:50] + ('...' if len(node_data.get('description', node_id)) > 50 else ''),
-                        'title': f"Type: {node_type}\nDescription: {node_data.get('description', 'No description')}",
+                        'label': display_text[:50] + ('...' if len(display_text) > 50 else ''),
+                        'title': f"Type: {node_type}\nDescription: {description}",
                         'color': color_map.get(node_type, '#95A5A6'),
                         'size': 25 if node_type in ['Event', 'Hypothesis'] else 20
                     })
