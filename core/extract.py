@@ -152,6 +152,8 @@ Each edge must have:
 - type: one of [causes, supports, refutes, tests_hypothesis, tests_mechanism, confirms_occurrence, disproves_occurrence, provides_evidence_for, part_of_mechanism, explains_mechanism, supports_alternative, refutes_alternative, initiates, enables, constrains, provides_evidence, tests_alternative, weighs_evidence]
 - properties: a dictionary of the edge's properties (see below)
 
+CRITICAL: Edge types must ONLY be relationship types (causes, supports, etc.). NEVER use node types (Event, Hypothesis, Evidence, etc.) as edge types.
+
 # Issue #84 Fix: Align prompt properties with ontology schema
 Node Types (with Properties):
 1. Event
