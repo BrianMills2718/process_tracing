@@ -81,8 +81,10 @@ You are an expert in causal process tracing methodology following Van Evera and 
 CRITICAL: Pay special attention to these often-missed edge types:
 - tests_hypothesis: When text states "tests the hypothesis", "testing whether", "this tests if"
 - confirms_occurrence: When text confirms events happened: "confirms that", "evidence shows that [event] occurred", "proves [event] took place"
-- disproves_occurrence: When text denies events happened: "disproves that", "evidence shows [event] did NOT occur", "no evidence of [event]"
+- disproves_occurrence: When text denies events happened: "disproves that", "disproves the occurrence", "evidence shows [event] did NOT occur", "no evidence of [event]"
 - refutes: When evidence contradicts claims: "refutes the claim", "contradicts", "challenges the assertion"
+- constrains: When conditions limit actors/events/mechanisms: "constrained by", "was constrained by", "constrains the [mechanism]", "limited by"
+- supports_alternative: When evidence backs competing theories: "supports the alternative explanation", "evidence supports the alternative", "this supports the [alternative theory]"
 
 EXTRACTION PRIORITIES:
 1. MECHANISMS: Identify Causal_Mechanism nodes that explain HOW causation works step-by-step
@@ -108,11 +110,15 @@ EXTRACTION PRIORITIES:
 FLEXIBLE CONNECTION PATTERNS:
 - Use Evidence → Event connections (confirms_occurrence/disproves_occurrence) to establish whether events actually occurred
   * confirms_occurrence: Use when text confirms events happened ("confirms his role", "evidence shows that X occurred")
-  * disproves_occurrence: Use when text denies events ("disproves claims", "evidence shows X did NOT happen")
+  * disproves_occurrence: Use when text denies events ("disproves claims", "disproves the occurrence", "evidence shows X did NOT happen")
 - Use Event → Hypothesis connections (provides_evidence_for) to show how events serve as evidence for broader patterns  
 - Use Evidence → Hypothesis connections (supports/refutes/tests_hypothesis) for direct hypothesis testing
   * tests_hypothesis: Use when text explicitly tests hypotheses ("tests the hypothesis that", "this tests whether")
   * refutes: Use when evidence contradicts claims ("refutes the theory", "contradicts the assertion")
+- Use Evidence → Alternative_Explanation connections for competing theory testing
+  * supports_alternative: Use when evidence backs alternatives ("supports the alternative explanation", "evidence supports the alternative")
+- Use Condition → Event/Mechanism connections for constraint modeling
+  * constrains: Use when conditions limit outcomes ("constrained by", "was constrained by", "constrains the mechanism")
 - Use flexible supports/refutes connections between different node types as appropriate
 - Use Actor → Event connections (initiates) when actors directly start or launch specific events
 - Use Data_Source → Evidence connections (provides_evidence) when sources supply evidence
