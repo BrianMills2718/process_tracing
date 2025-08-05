@@ -965,18 +965,25 @@ Based on the original text, identify what relationships should connect these dis
 - provides_evidence_for: How events/evidence support other elements
 - part_of_mechanism: How events are components of mechanisms
 
+For each relationship, use Van Evera diagnostic test framework:
+- diagnostic_type: Choose from "smoking_gun" (sufficient but not necessary), "hoop" (necessary but not sufficient), "doubly_decisive" (both necessary and sufficient), or "straw_in_the_wind" (neither necessary nor sufficient but supportive)
+- probative_value: 0.1-1.0 based on strength of evidence
+- source_text_quote: Extract exact quote from original text that supports this relationship
+
 IMPORTANT: You must use ONLY the target node IDs listed above. Do not create edges to nodes that don't exist.
 
 Output ONLY the missing edges as JSON in this format:
 {{
   "additional_edges": [
     {{
-      "source_id": "disconnected_node_id",
-      "target_id": "existing_main_graph_node_id", 
+      "source": "disconnected_node_id",
+      "target": "existing_main_graph_node_id", 
       "type": "relationship_type",
       "properties": {{
-        "reasoning": "Brief explanation from text",
-        "confidence": 0.8,
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.7,
+        "source_text_quote": "Relevant quote from text supporting this relationship",
+        "reasoning": "Van Evera diagnostic analysis of this relationship",
         "source": "connectivity_repair"
       }}
     }}
