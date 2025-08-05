@@ -2729,12 +2729,15 @@ def main():
                     target_exists = any(n['id'] == target for n in nodes_list)
                     
                     if source_exists and target_exists:
+                        # Get unified confidence score from either certainty or probative_value
+                        confidence = edge_data.get('certainty', edge_data.get('probative_value', 'unknown'))
+                        
                         edges_list.append({
                             'id': f"edge_{edge_count}",
                             'from': source,
                             'to': target,
                             'label': edge_type,
-                            'title': f"Type: {edge_type}\nCertainty: {edge_data.get('certainty', 'unknown')}",
+                            'title': f"Type: {edge_type}\nCertainty: {confidence}",
                             'arrows': 'to',
                             'color': {'color': '#666666'},
                             'font': {'color': '#333333', 'size': 10}
