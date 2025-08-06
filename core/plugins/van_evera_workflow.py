@@ -30,17 +30,24 @@ VAN_EVERA_ACADEMIC_WORKFLOW = [
         'input_data': {}  # Will be populated with graph_data from graph validation
     },
     {
+        'plugin_id': 'evidence_connector_enhancer',
+        'input_key': None,  # Will be provided special input_data with alternative-enhanced graph_data
+        'output_key': 'evidence_connection_result',
+        'checkpoint_stage': '04_van_evera_evidence_connection_enhancement',
+        'input_data': {}  # Will be populated with graph_data from alternative generation
+    },
+    {
         'plugin_id': 'diagnostic_rebalancer',
-        'input_key': None,  # Will be provided special input_data with enhanced graph_data
+        'input_key': None,  # Will be provided special input_data with connection-enhanced graph_data
         'output_key': 'diagnostic_rebalance_result',
-        'checkpoint_stage': '04_van_evera_diagnostic_rebalancing',
-        'input_data': {}  # Will be populated with enhanced graph_data from alternative generation
+        'checkpoint_stage': '05_van_evera_diagnostic_rebalancing',
+        'input_data': {}  # Will be populated with connection-enhanced graph_data
     },
     {
         'plugin_id': 'van_evera_testing',
         'input_key': None,  # Will be provided special input_data with rebalanced graph_data
         'output_key': 'van_evera_result',
-        'checkpoint_stage': '05_van_evera_systematic_testing',
+        'checkpoint_stage': '06_van_evera_systematic_testing',
         'input_data': {}  # Will be populated with rebalanced graph_data
     }
 ]
@@ -159,9 +166,18 @@ class VanEveraWorkflow(PluginWorkflow):
                                                    '03_van_evera_alternative_generation')
             workflow_results['alternative_hypothesis_result'] = alternative_result
             
-            # Step 4: Diagnostic rebalancing with enhanced graph data
-            self.logger.info("PROGRESS: Van Evera step 4/5 - Diagnostic rebalancing")
-            enhanced_graph_data = alternative_result.get('updated_graph_data', graph_data_for_alternatives)
+            # Step 4: Evidence connection enhancement
+            self.logger.info("PROGRESS: Van Evera step 4/6 - Evidence connection enhancement")
+            alternative_enhanced_graph_data = alternative_result.get('updated_graph_data', graph_data_for_alternatives)
+            
+            connection_result = self.execute_plugin('evidence_connector_enhancer',
+                                                  {'graph_data': alternative_enhanced_graph_data},
+                                                  '04_van_evera_evidence_connection_enhancement')
+            workflow_results['evidence_connection_result'] = connection_result
+            
+            # Step 5: Diagnostic rebalancing with connection-enhanced graph data
+            self.logger.info("PROGRESS: Van Evera step 5/6 - Diagnostic rebalancing")
+            enhanced_graph_data = connection_result.get('updated_graph_data', alternative_enhanced_graph_data)
             
             # Add LLM query function to context for enhanced assessment
             llm_query_func = self.context.get_data('llm_query_func')
@@ -170,16 +186,16 @@ class VanEveraWorkflow(PluginWorkflow):
             
             diagnostic_result = self.execute_plugin('diagnostic_rebalancer', 
                                                   {'graph_data': enhanced_graph_data}, 
-                                                  '04_van_evera_diagnostic_rebalancing')
+                                                  '05_van_evera_diagnostic_rebalancing')
             workflow_results['diagnostic_rebalance_result'] = diagnostic_result
             
-            # Step 5: Van Evera testing with rebalanced graph data
-            self.logger.info("PROGRESS: Van Evera step 5/5 - Van Evera systematic testing")
+            # Step 6: Van Evera testing with rebalanced graph data
+            self.logger.info("PROGRESS: Van Evera step 6/6 - Van Evera systematic testing")
             rebalanced_graph_data = diagnostic_result.get('updated_graph_data', enhanced_graph_data)
             
             van_evera_result = self.execute_plugin('van_evera_testing', 
                                                  {'graph_data': rebalanced_graph_data}, 
-                                                 '05_van_evera_systematic_testing')
+                                                 '06_van_evera_systematic_testing')
             workflow_results['van_evera_result'] = van_evera_result
             
             self.logger.info("SUCCESS: Van Evera workflow completed successfully")
@@ -233,6 +249,7 @@ class VanEveraWorkflow(PluginWorkflow):
         # Extract components
         config_result = workflow_results.get('config_result', {})
         graph_result = workflow_results.get('graph_result', {})
+        connection_result = workflow_results.get('evidence_connection_result', {})
         diagnostic_result = workflow_results.get('diagnostic_rebalance_result', {})
         van_evera_result = workflow_results.get('van_evera_result', {})
         
@@ -252,10 +269,18 @@ class VanEveraWorkflow(PluginWorkflow):
                 'workflow_id': self.workflow_id,
                 'steps_completed': len(workflow_results),
                 'academic_standards_applied': self.academic_standards,
+                'evidence_connection_enhancement_applied': bool(connection_result),
                 'diagnostic_rebalancing_applied': bool(diagnostic_result)
             },
             'configuration_validation': config_result,
             'graph_validation': graph_result,
+            'evidence_connection_enhancement': {
+                'enhancement_performed': bool(connection_result),
+                'connections_added': connection_result.get('enhancement_results', {}).get('connections_added', 0),
+                'coverage_improvement': connection_result.get('improvement_metrics', {}).get('coverage_improvement', 0),
+                'semantic_bridging_applied': connection_result.get('semantic_bridging_applied', False),
+                'enhancement_effectiveness': connection_result.get('improvement_metrics', {}).get('semantic_bridging_effectiveness', 'unknown')
+            },
             'diagnostic_rebalancing': {
                 'rebalancing_performed': bool(diagnostic_result),
                 'compliance_improvement': diagnostic_result.get('compliance_improvement', 0),

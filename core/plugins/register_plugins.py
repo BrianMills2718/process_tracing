@@ -12,6 +12,7 @@ from .checkpoint import CheckpointPlugin
 from .van_evera_testing import VanEveraTestingPlugin
 from .diagnostic_rebalancer import DiagnosticRebalancerPlugin
 from .alternative_hypothesis_generator import AlternativeHypothesisGeneratorPlugin
+from .evidence_connector_enhancer import EvidenceConnectorEnhancerPlugin
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,8 @@ def register_all_plugins():
         CheckpointPlugin,
         VanEveraTestingPlugin,
         DiagnosticRebalancerPlugin,
-        AlternativeHypothesisGeneratorPlugin
+        AlternativeHypothesisGeneratorPlugin,
+        EvidenceConnectorEnhancerPlugin
     ]
     
     logger.info("START: Registering all plugins")
