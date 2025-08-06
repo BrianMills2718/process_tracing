@@ -24,10 +24,10 @@ VAN_EVERA_ACADEMIC_WORKFLOW = [
     },
     {
         'plugin_id': 'van_evera_testing',
-        'input_key': 'graph_result',  # Uses validated graph from previous step
+        'input_key': None,  # Will be provided special input_data with graph_data
         'output_key': 'van_evera_result',
         'checkpoint_stage': '03_van_evera_systematic_testing',
-        'input_data': {}
+        'input_data': {}  # Will be populated with graph_data from graph validation
     }
 ]
 
@@ -62,33 +62,129 @@ class VanEveraWorkflow(PluginWorkflow):
         """
         self.logger.info(f"START: Van Evera academic analysis for case {case_id}")
         
-        # Prepare workflow steps with runtime data
-        workflow_steps = self._prepare_van_evera_steps(graph_data)
-        
-        # Execute workflow
-        workflow_results = self.execute_workflow(workflow_steps)
-        
-        # Extract Van Evera results
-        van_evera_results = workflow_results.get('van_evera_result', {})
+        # Execute custom workflow with proper graph data chaining
+        workflow_results = self._execute_van_evera_workflow(graph_data)
         
         # Create integrated academic results
         academic_results = self._create_academic_results(workflow_results, case_id)
         
         self.logger.info(f"END: Van Evera academic analysis completed for case {case_id}")
-        self.logger.info(f"Academic quality: {academic_results.get('academic_quality_score', 0):.1f}%")
+        academic_quality = academic_results.get('academic_quality_assessment', {}).get('overall_score', 0)
+        self.logger.info(f"Academic quality: {academic_quality:.1f}%")
         
         return academic_results
     
+    def _execute_van_evera_workflow(self, graph_data: Dict) -> Dict[str, Any]:
+        """Execute Van Evera workflow with proper graph data handling"""
+        import networkx as nx
+        
+        # Convert JSON graph data to NetworkX graph if needed
+        if isinstance(graph_data, dict) and 'nodes' in graph_data and 'edges' in graph_data:
+            # Transform edge format from {source_id, target_id} to {source, target}
+            transformed_data = graph_data.copy()
+            transformed_edges = []
+            for edge in graph_data['edges']:
+                transformed_edge = edge.copy()
+                if 'source_id' in edge:
+                    transformed_edge['source'] = edge['source_id']
+                if 'target_id' in edge:
+                    transformed_edge['target'] = edge['target_id']
+                transformed_edges.append(transformed_edge)
+            transformed_data['edges'] = transformed_edges
+            
+            nx_graph = nx.node_link_graph(transformed_data, edges='edges')
+            self.logger.info(f"Converted JSON graph to NetworkX: {nx_graph.number_of_nodes()} nodes, {nx_graph.number_of_edges()} edges")
+        else:
+            nx_graph = graph_data
+        
+        workflow_results = {}
+        
+        try:
+            # Step 1: Config validation
+            self.logger.info("PROGRESS: Van Evera step 1/3 - Config validation")
+            config_result = self.execute_plugin('config_validation', 
+                                              {'config_path': 'config/ontology_config.json'}, 
+                                              '01_van_evera_config')
+            workflow_results['config_result'] = config_result
+            
+            # Step 2: Graph validation  
+            self.logger.info("PROGRESS: Van Evera step 2/3 - Graph validation")
+            graph_result = self.execute_plugin('graph_validation', 
+                                             {'graph': nx_graph}, 
+                                             '02_van_evera_graph_validation')
+            workflow_results['graph_result'] = graph_result
+            
+            # Step 3: Van Evera testing with proper graph data
+            self.logger.info("PROGRESS: Van Evera step 3/3 - Van Evera systematic testing")
+            working_graph = graph_result.get('working_graph', nx_graph)
+            
+            # Convert NetworkX graph back to JSON format for Van Evera plugin
+            if hasattr(working_graph, 'nodes'):
+                nx_graph_data = nx.node_link_data(working_graph, edges='edges')
+                
+                # Transform edge format back to {source_id, target_id}
+                transformed_edges = []
+                for edge in nx_graph_data['edges']:
+                    transformed_edge = edge.copy()
+                    if 'source' in edge:
+                        transformed_edge['source_id'] = edge['source']
+                    if 'target' in edge:
+                        transformed_edge['target_id'] = edge['target']
+                    # Remove source/target to avoid confusion
+                    transformed_edge.pop('source', None)
+                    transformed_edge.pop('target', None)
+                    transformed_edges.append(transformed_edge)
+                
+                nx_graph_data['edges'] = transformed_edges
+                graph_data_for_testing = nx_graph_data
+            else:
+                graph_data_for_testing = graph_data  # Fallback to original
+            
+            van_evera_result = self.execute_plugin('van_evera_testing', 
+                                                 {'graph_data': graph_data_for_testing}, 
+                                                 '03_van_evera_systematic_testing')
+            workflow_results['van_evera_result'] = van_evera_result
+            
+            self.logger.info("SUCCESS: Van Evera workflow completed successfully")
+            return workflow_results
+            
+        except Exception as e:
+            self.logger.error(f"FAILED: Van Evera workflow failed: {e}")
+            raise
+    
     def _prepare_van_evera_steps(self, graph_data: Dict) -> List[Dict[str, Any]]:
         """Prepare workflow steps with runtime graph data"""
+        import networkx as nx
+        
+        # Convert JSON graph data to NetworkX graph if needed
+        if isinstance(graph_data, dict) and 'nodes' in graph_data and 'edges' in graph_data:
+            # Transform edge format from {source_id, target_id} to {source, target}
+            transformed_data = graph_data.copy()
+            transformed_edges = []
+            for edge in graph_data['edges']:
+                transformed_edge = edge.copy()
+                if 'source_id' in edge:
+                    transformed_edge['source'] = edge['source_id']
+                if 'target_id' in edge:
+                    transformed_edge['target'] = edge['target_id']
+                transformed_edges.append(transformed_edge)
+            transformed_data['edges'] = transformed_edges
+            
+            # Convert from JSON format to NetworkX
+            nx_graph = nx.node_link_graph(transformed_data, edges='edges')
+            self.logger.info(f"Converted JSON graph to NetworkX: {nx_graph.number_of_nodes()} nodes, {nx_graph.number_of_edges()} edges")
+        else:
+            # Assume it's already a NetworkX graph
+            nx_graph = graph_data
+        
         workflow_steps = []
         
         for step in VAN_EVERA_ACADEMIC_WORKFLOW:
             step_copy = step.copy()
             
-            # Inject graph data into graph validation step
+            # Inject NetworkX graph data into graph validation step
             if step['plugin_id'] == 'graph_validation':
-                step_copy['input_data'] = {'graph': graph_data}
+                step_copy['input_data'] = {'graph': nx_graph}
             
             workflow_steps.append(step_copy)
         
