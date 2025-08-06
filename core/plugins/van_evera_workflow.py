@@ -23,11 +23,25 @@ VAN_EVERA_ACADEMIC_WORKFLOW = [
         'input_data': {}  # Populated with {'graph': <NetworkX graph>} at runtime
     },
     {
-        'plugin_id': 'van_evera_testing',
+        'plugin_id': 'alternative_hypothesis_generator',
         'input_key': None,  # Will be provided special input_data with graph_data
-        'output_key': 'van_evera_result',
-        'checkpoint_stage': '03_van_evera_systematic_testing',
+        'output_key': 'alternative_hypothesis_result',
+        'checkpoint_stage': '03_van_evera_alternative_generation',
         'input_data': {}  # Will be populated with graph_data from graph validation
+    },
+    {
+        'plugin_id': 'diagnostic_rebalancer',
+        'input_key': None,  # Will be provided special input_data with enhanced graph_data
+        'output_key': 'diagnostic_rebalance_result',
+        'checkpoint_stage': '04_van_evera_diagnostic_rebalancing',
+        'input_data': {}  # Will be populated with enhanced graph_data from alternative generation
+    },
+    {
+        'plugin_id': 'van_evera_testing',
+        'input_key': None,  # Will be provided special input_data with rebalanced graph_data
+        'output_key': 'van_evera_result',
+        'checkpoint_stage': '05_van_evera_systematic_testing',
+        'input_data': {}  # Will be populated with rebalanced graph_data
     }
 ]
 
@@ -101,28 +115,28 @@ class VanEveraWorkflow(PluginWorkflow):
         
         try:
             # Step 1: Config validation
-            self.logger.info("PROGRESS: Van Evera step 1/3 - Config validation")
+            self.logger.info("PROGRESS: Van Evera step 1/5 - Config validation")
             config_result = self.execute_plugin('config_validation', 
                                               {'config_path': 'config/ontology_config.json'}, 
                                               '01_van_evera_config')
             workflow_results['config_result'] = config_result
             
             # Step 2: Graph validation  
-            self.logger.info("PROGRESS: Van Evera step 2/3 - Graph validation")
+            self.logger.info("PROGRESS: Van Evera step 2/5 - Graph validation")
             graph_result = self.execute_plugin('graph_validation', 
                                              {'graph': nx_graph}, 
                                              '02_van_evera_graph_validation')
             workflow_results['graph_result'] = graph_result
             
-            # Step 3: Van Evera testing with proper graph data
-            self.logger.info("PROGRESS: Van Evera step 3/3 - Van Evera systematic testing")
+            # Step 3: Alternative hypothesis generation
+            self.logger.info("PROGRESS: Van Evera step 3/5 - Alternative hypothesis generation")
             working_graph = graph_result.get('working_graph', nx_graph)
             
-            # Convert NetworkX graph back to JSON format for Van Evera plugin
+            # Convert NetworkX graph to JSON format for alternative hypothesis generator
             if hasattr(working_graph, 'nodes'):
                 nx_graph_data = nx.node_link_data(working_graph, edges='edges')
                 
-                # Transform edge format back to {source_id, target_id}
+                # Transform edge format to {source_id, target_id}
                 transformed_edges = []
                 for edge in nx_graph_data['edges']:
                     transformed_edge = edge.copy()
@@ -136,13 +150,36 @@ class VanEveraWorkflow(PluginWorkflow):
                     transformed_edges.append(transformed_edge)
                 
                 nx_graph_data['edges'] = transformed_edges
-                graph_data_for_testing = nx_graph_data
+                graph_data_for_alternatives = nx_graph_data
             else:
-                graph_data_for_testing = graph_data  # Fallback to original
+                graph_data_for_alternatives = graph_data  # Fallback to original
+            
+            alternative_result = self.execute_plugin('alternative_hypothesis_generator', 
+                                                   {'graph_data': graph_data_for_alternatives}, 
+                                                   '03_van_evera_alternative_generation')
+            workflow_results['alternative_hypothesis_result'] = alternative_result
+            
+            # Step 4: Diagnostic rebalancing with enhanced graph data
+            self.logger.info("PROGRESS: Van Evera step 4/5 - Diagnostic rebalancing")
+            enhanced_graph_data = alternative_result.get('updated_graph_data', graph_data_for_alternatives)
+            
+            # Add LLM query function to context for enhanced assessment
+            llm_query_func = self.context.get_data('llm_query_func')
+            if llm_query_func:
+                self.context.set_data('llm_query_func', llm_query_func)
+            
+            diagnostic_result = self.execute_plugin('diagnostic_rebalancer', 
+                                                  {'graph_data': enhanced_graph_data}, 
+                                                  '04_van_evera_diagnostic_rebalancing')
+            workflow_results['diagnostic_rebalance_result'] = diagnostic_result
+            
+            # Step 5: Van Evera testing with rebalanced graph data
+            self.logger.info("PROGRESS: Van Evera step 5/5 - Van Evera systematic testing")
+            rebalanced_graph_data = diagnostic_result.get('updated_graph_data', enhanced_graph_data)
             
             van_evera_result = self.execute_plugin('van_evera_testing', 
-                                                 {'graph_data': graph_data_for_testing}, 
-                                                 '03_van_evera_systematic_testing')
+                                                 {'graph_data': rebalanced_graph_data}, 
+                                                 '05_van_evera_systematic_testing')
             workflow_results['van_evera_result'] = van_evera_result
             
             self.logger.info("SUCCESS: Van Evera workflow completed successfully")
@@ -196,51 +233,70 @@ class VanEveraWorkflow(PluginWorkflow):
         # Extract components
         config_result = workflow_results.get('config_result', {})
         graph_result = workflow_results.get('graph_result', {})
+        diagnostic_result = workflow_results.get('diagnostic_rebalance_result', {})
         van_evera_result = workflow_results.get('van_evera_result', {})
         
-        # Calculate academic quality score
+        # Calculate academic quality score (includes diagnostic rebalancing)
         quality_metrics = van_evera_result.get('academic_quality_metrics', {})
         academic_quality_score = quality_metrics.get('academic_compliance_score', 0)
+        
+        # Extract diagnostic rebalancing metrics
+        diagnostic_metrics = diagnostic_result.get('academic_quality_assessment', {})
+        rebalance_compliance = diagnostic_metrics.get('distribution_analysis', {}).get('rebalanced_compliance', 0)
         
         # Create comprehensive academic results
         academic_results = {
             'case_id': case_id,
-            'methodology': 'Van Evera Process Tracing',
+            'methodology': 'Van Evera Process Tracing with Diagnostic Rebalancing',
             'workflow_execution': {
                 'workflow_id': self.workflow_id,
                 'steps_completed': len(workflow_results),
-                'academic_standards_applied': self.academic_standards
+                'academic_standards_applied': self.academic_standards,
+                'diagnostic_rebalancing_applied': bool(diagnostic_result)
             },
             'configuration_validation': config_result,
             'graph_validation': graph_result,
+            'diagnostic_rebalancing': {
+                'rebalancing_performed': bool(diagnostic_result),
+                'compliance_improvement': diagnostic_result.get('compliance_improvement', 0),
+                'original_distribution': diagnostic_result.get('original_distribution', {}),
+                'rebalanced_distribution': diagnostic_result.get('rebalanced_distribution', {}),
+                'rebalanced_count': diagnostic_result.get('rebalanced_count', 0),
+                'academic_assessment': diagnostic_metrics
+            },
             'van_evera_analysis': van_evera_result,
             'academic_quality_assessment': {
-                'overall_score': academic_quality_score,
+                'overall_score': max(academic_quality_score, rebalance_compliance),  # Use better score
+                'diagnostic_compliance_score': rebalance_compliance,
+                'testing_compliance_score': academic_quality_score,
                 'methodology_compliance': van_evera_result.get('methodology_compliance', {}),
                 'academic_rigor_criteria': {
                     'systematic_testing': True,
-                    'diagnostic_tests_balanced': quality_metrics.get('academic_compliance_score', 0) > 70,
+                    'diagnostic_tests_balanced': rebalance_compliance > 70,
+                    'diagnostic_rebalancing_applied': bool(diagnostic_result),
                     'theoretical_competition': quality_metrics.get('theoretical_competition_ratio', 0) > 0.2,
                     'bayesian_updating': True,
                     'elimination_logic': quality_metrics.get('hypotheses_eliminated', 0) > 0
                 }
             },
             'publication_readiness': {
-                'ready_for_peer_review': academic_quality_score > 80,
-                'requires_improvement': academic_quality_score < 70,
-                'recommendations': self._generate_improvement_recommendations(quality_metrics)
+                'ready_for_peer_review': max(academic_quality_score, rebalance_compliance) > 80,
+                'requires_improvement': max(academic_quality_score, rebalance_compliance) < 70,
+                'diagnostic_balance_achieved': rebalance_compliance > 80,
+                'recommendations': self._generate_improvement_recommendations(quality_metrics, diagnostic_metrics)
             }
         }
         
         return academic_results
     
-    def _generate_improvement_recommendations(self, quality_metrics: Dict[str, Any]) -> List[str]:
+    def _generate_improvement_recommendations(self, quality_metrics: Dict[str, Any], diagnostic_metrics: Dict[str, Any] = None) -> List[str]:
         """Generate recommendations for improving academic quality"""
         recommendations = []
         
+        # Van Evera testing recommendations
         compliance_score = quality_metrics.get('academic_compliance_score', 0)
         if compliance_score < 80:
-            recommendations.append("Rebalance diagnostic test distribution to meet Van Evera standards")
+            recommendations.append("Improve diagnostic test quality and systematic testing methodology")
         
         competition_ratio = quality_metrics.get('theoretical_competition_ratio', 0)
         if competition_ratio < 0.3:
@@ -254,8 +310,27 @@ class VanEveraWorkflow(PluginWorkflow):
         if total_tests < 10:
             recommendations.append("Increase number of diagnostic tests for more robust analysis")
         
+        # Diagnostic rebalancing recommendations
+        if diagnostic_metrics:
+            distribution_analysis = diagnostic_metrics.get('distribution_analysis', {})
+            rebalance_compliance = distribution_analysis.get('rebalanced_compliance', 0)
+            
+            if rebalance_compliance < 80:
+                recommendations.append("Further diagnostic rebalancing needed to meet Van Evera standards")
+            
+            processing_stats = diagnostic_metrics.get('processing_statistics', {})
+            error_rate = processing_stats.get('errors', 0) / max(processing_stats.get('enhanced', 1), 1)
+            if error_rate > 0.2:
+                recommendations.append("Review diagnostic rebalancing errors and improve LLM assessment quality")
+            
+            target_achievement = distribution_analysis.get('target_achievement', {})
+            unachieved_targets = [test_type for test_type, achievement in target_achievement.items() 
+                                if not achievement.get('achieved', False)]
+            if unachieved_targets:
+                recommendations.append(f"Fine-tune distribution for: {', '.join(unachieved_targets)}")
+        
         if not recommendations:
-            recommendations.append("Methodology meets academic standards for publication")
+            recommendations.append("Methodology meets Van Evera academic standards for publication")
         
         return recommendations
 

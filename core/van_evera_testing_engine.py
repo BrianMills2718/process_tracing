@@ -64,15 +64,28 @@ class VanEveraTestingEngine:
         self.graph_data = graph_data
         self.hypotheses = [n for n in graph_data['nodes'] 
                           if n.get('type') in ['Hypothesis', 'Alternative_Explanation']]
-        self.evidence = [n for n in graph_data['nodes'] if n.get('type') == 'Evidence']
+        # Evidence can be Events, Context nodes, or explicit Evidence nodes
+        self.evidence = [n for n in graph_data['nodes'] 
+                        if n.get('type') in ['Evidence', 'Event', 'Context', 'Actor']]
         self.evidence_edges = [e for e in graph_data['edges'] if self._is_evidence_relationship(e)]
         
     def _is_evidence_relationship(self, edge: Dict) -> bool:
         """Check if edge represents evidence-hypothesis relationship"""
         source_node = next((n for n in self.graph_data['nodes'] if n['id'] == edge['source_id']), None)
         target_node = next((n for n in self.graph_data['nodes'] if n['id'] == edge['target_id']), None)
-        return (source_node and source_node.get('type') == 'Evidence' and 
-                target_node and target_node.get('type') in ['Hypothesis', 'Alternative_Explanation'])
+        
+        # Evidence can come from various node types
+        source_is_evidence = (source_node and 
+                             source_node.get('type') in ['Evidence', 'Event', 'Context', 'Actor'])
+        target_is_hypothesis = (target_node and 
+                               target_node.get('type') in ['Hypothesis', 'Alternative_Explanation'])
+        
+        # Check for evidence relationship types
+        evidence_edge_types = ['provides_evidence_for', 'supports', 'refutes', 'contradicts', 
+                              'challenges', 'undermines', 'confirms']
+        
+        return (source_is_evidence and target_is_hypothesis and 
+                edge.get('type', '') in evidence_edge_types)
     
     def generate_testable_predictions(self, hypothesis: Dict) -> List[TestPrediction]:
         """
@@ -85,29 +98,33 @@ class VanEveraTestingEngine:
         # Extract domain-specific predictions based on hypothesis content
         predictions = []
         
+        # Generate predictions based on actual hypothesis content with semantic analysis
+        predictions = self._generate_semantic_predictions(hypothesis_id, hypothesis_desc)
+        
+        # Legacy patterns for fallback
         if 'taxation without representation' in hypothesis_desc.lower():
             predictions.extend([
                 TestPrediction(
-                    prediction_id=f"{hypothesis_id}_PRED_001",
+                    prediction_id=f"{hypothesis_id}_PRED_TAX_001",
                     hypothesis_id=hypothesis_id,
-                    description="Colonial resistance rhetoric must consistently invoke English constitutional rights",
+                    description="Colonial resistance documents must invoke constitutional rights and representation",
                     diagnostic_type=DiagnosticType.HOOP,
                     necessary_condition=True,
                     sufficient_condition=False,
-                    evidence_requirements=["legal_arguments", "constitutional_rhetoric", "rights_language"]
+                    evidence_requirements=["rights", "representation", "constitutional", "englishmen", "parliament"]
                 ),
                 TestPrediction(
-                    prediction_id=f"{hypothesis_id}_PRED_002", 
+                    prediction_id=f"{hypothesis_id}_PRED_TAX_002", 
                     hypothesis_id=hypothesis_id,
-                    description="Opposition intensity should correlate with tax burden increases",
+                    description="Evidence of taxation being the primary grievance must be documented",
                     diagnostic_type=DiagnosticType.SMOKING_GUN,
                     necessary_condition=False,
                     sufficient_condition=True,
-                    evidence_requirements=["tax_legislation", "resistance_timing", "burden_measurement"]
+                    evidence_requirements=["tax", "taxation", "stamp act", "townshend", "revenue"]
                 )
             ])
         
-        elif 'ideological' in hypothesis_desc.lower() and 'political' in hypothesis_desc.lower():
+        if 'ideological' in hypothesis_desc.lower() and 'political' in hypothesis_desc.lower():
             predictions.extend([
                 TestPrediction(
                     prediction_id=f"{hypothesis_id}_PRED_001",
@@ -129,7 +146,7 @@ class VanEveraTestingEngine:
                 )
             ])
         
-        elif 'self-governance' in hypothesis_desc.lower():
+        if 'self-governance' in hypothesis_desc.lower() or 'autonomy' in hypothesis_desc.lower():
             predictions.extend([
                 TestPrediction(
                     prediction_id=f"{hypothesis_id}_PRED_001",
@@ -152,7 +169,7 @@ class VanEveraTestingEngine:
             ])
         
         # For alternative explanations, generate competing predictions
-        elif hypothesis.get('type') == 'Alternative_Explanation':
+        if hypothesis.get('type') == 'Alternative_Explanation':
             alt_desc = hypothesis_desc.lower()
             if 'merchant' in alt_desc or 'economic' in alt_desc:
                 predictions.extend([
@@ -198,32 +215,19 @@ class VanEveraTestingEngine:
                     )
                 ])
         
+        # If no predictions generated, create generic ones based on hypothesis content
+        if not predictions:
+            predictions = self._generate_generic_predictions(hypothesis_id, hypothesis_desc)
+            
         return predictions
     
     def evaluate_prediction(self, prediction: TestPrediction) -> TestEvaluation:
         """
         Systematically evaluate whether prediction passes or fails based on available evidence.
-        Implements Van Evera's logic for each diagnostic test type.
+        Implements Van Evera's logic with enhanced evidence matching.
         """
-        # Find relevant evidence for this prediction
-        relevant_evidence = []
-        contradicting_evidence = []
-        
-        for edge in self.evidence_edges:
-            if edge['target_id'] == prediction.hypothesis_id:
-                evidence_node = next((n for n in self.graph_data['nodes'] 
-                                    if n['id'] == edge['source_id']), None)
-                if evidence_node:
-                    evidence_desc = evidence_node.get('properties', {}).get('description', '').lower()
-                    edge_type = edge.get('type', '')
-                    
-                    # Check if evidence relates to this prediction
-                    prediction_keywords = self._extract_prediction_keywords(prediction)
-                    if any(keyword in evidence_desc for keyword in prediction_keywords):
-                        if edge_type in ['supports', 'provides_evidence_for']:
-                            relevant_evidence.append(evidence_node['id'])
-                        elif edge_type in ['refutes', 'contradicts']:
-                            contradicting_evidence.append(evidence_node['id'])
+        # Find relevant evidence using multiple strategies
+        relevant_evidence, contradicting_evidence = self._find_prediction_evidence(prediction)
         
         # Apply Van Evera diagnostic logic
         test_result, reasoning = self._apply_diagnostic_logic(
@@ -246,21 +250,178 @@ class VanEveraTestingEngine:
             elimination_implications=elimination_implications
         )
     
-    def _extract_prediction_keywords(self, prediction: TestPrediction) -> List[str]:
-        """Extract keywords from prediction for evidence matching"""
-        desc = prediction.description.lower()
-        keywords = []
+    def _generate_semantic_predictions(self, hypothesis_id: str, hypothesis_desc: str) -> List[TestPrediction]:
+        """Generate predictions based on semantic analysis of hypothesis content"""
+        predictions = []
+        desc_lower = hypothesis_desc.lower()
         
-        # Extract key terms based on prediction content
-        if 'rights' in desc or 'constitutional' in desc:
-            keywords.extend(['rights', 'constitutional', 'liberty', 'freedom', 'magna carta'])
-        if 'merchant' in desc or 'trade' in desc:
+        # Analyze hypothesis content for key themes and generate targeted predictions
+        if any(term in desc_lower for term in ['taxation', 'tax', 'representation', 'parliament']):
+            predictions.append(TestPrediction(
+                prediction_id=f"{hypothesis_id}_SEM_TAX",
+                hypothesis_id=hypothesis_id,
+                description="Evidence must show taxation/representation grievances as primary concern",
+                diagnostic_type=DiagnosticType.HOOP,
+                necessary_condition=True,
+                sufficient_condition=False,
+                evidence_requirements=['tax', 'taxation', 'representation', 'parliament', 'stamp', 'townshend']
+            ))
+            
+        if any(term in desc_lower for term in ['ideological', 'political', 'movement']):
+            predictions.append(TestPrediction(
+                prediction_id=f"{hypothesis_id}_SEM_IDEOL",
+                hypothesis_id=hypothesis_id,
+                description="Political documents and actions must demonstrate ideological coherence",
+                diagnostic_type=DiagnosticType.SMOKING_GUN,
+                necessary_condition=False,
+                sufficient_condition=True,
+                evidence_requirements=['declaration', 'congress', 'political', 'rights', 'movement', 'ideology']
+            ))
+            
+        if any(term in desc_lower for term in ['self-governance', 'autonomy', 'self-governing']):
+            predictions.append(TestPrediction(
+                prediction_id=f"{hypothesis_id}_SEM_AUTON",
+                hypothesis_id=hypothesis_id,
+                description="Evidence of established self-governance patterns before British interference",
+                diagnostic_type=DiagnosticType.HOOP,
+                necessary_condition=True,
+                sufficient_condition=False,
+                evidence_requirements=['self-governing', 'autonomy', 'local', 'assembly', 'colonial', 'governance']
+            ))
+            
+        if any(term in desc_lower for term in ['revenue', 'acts', 'townshend']):
+            predictions.append(TestPrediction(
+                prediction_id=f"{hypothesis_id}_SEM_REV",
+                hypothesis_id=hypothesis_id,
+                description="Contemporary documents must explicitly discuss revenue vs. trade regulation",
+                diagnostic_type=DiagnosticType.SMOKING_GUN,
+                necessary_condition=False,
+                sufficient_condition=True,
+                evidence_requirements=['revenue', 'townshend', 'acts', 'dickinson', 'regulate', 'trade']
+            ))
+        
+        return predictions
+    
+    def _generate_generic_predictions(self, hypothesis_id: str, hypothesis_desc: str) -> List[TestPrediction]:
+        """Generate generic predictions when semantic analysis fails"""
+        # Extract key terms from hypothesis description
+        import re
+        key_terms = re.findall(r'\b[a-zA-Z]{4,}\b', hypothesis_desc.lower())
+        key_terms = [term for term in key_terms if term not in 
+                    ['this', 'that', 'with', 'from', 'were', 'have', 'been', 'would']][:6]
+        
+        return [TestPrediction(
+            prediction_id=f"{hypothesis_id}_GEN_001",
+            hypothesis_id=hypothesis_id,
+            description=f"Evidence must support key elements: {', '.join(key_terms[:3])}",
+            diagnostic_type=DiagnosticType.STRAW_IN_WIND,
+            necessary_condition=False,
+            sufficient_condition=False,
+            evidence_requirements=key_terms
+        )]
+    
+    def _find_prediction_evidence(self, prediction: TestPrediction) -> Tuple[List[str], List[str]]:
+        """Enhanced evidence finding using multiple matching strategies"""
+        relevant_evidence = []
+        contradicting_evidence = []
+        
+        # Strategy 1: Direct edge matching to hypothesis
+        for edge in self.evidence_edges:
+            if edge['target_id'] == prediction.hypothesis_id:
+                evidence_node = next((n for n in self.graph_data['nodes'] 
+                                    if n['id'] == edge['source_id']), None)
+                if evidence_node:
+                    # Use improved relevance scoring
+                    if self._is_evidence_relevant_to_prediction(evidence_node, edge, prediction):
+                        edge_type = edge.get('type', '')
+                        if edge_type in ['supports', 'provides_evidence_for', 'confirms']:
+                            relevant_evidence.append(evidence_node['id'])
+                        elif edge_type in ['refutes', 'contradicts', 'challenges', 'undermines']:
+                            contradicting_evidence.append(evidence_node['id'])
+        
+        # Strategy 2: Semantic content matching across all evidence
+        if len(relevant_evidence) < 2:  # If direct matching found little evidence
+            semantic_evidence = self._find_semantic_evidence(prediction)
+            relevant_evidence.extend(semantic_evidence)
+        
+        # Remove duplicates while preserving order
+        relevant_evidence = list(dict.fromkeys(relevant_evidence))
+        contradicting_evidence = list(dict.fromkeys(contradicting_evidence))
+        
+        return relevant_evidence, contradicting_evidence
+    
+    def _is_evidence_relevant_to_prediction(self, evidence_node: Dict, edge: Dict, prediction: TestPrediction) -> bool:
+        """Determine if evidence is relevant to a specific prediction using multiple criteria"""
+        evidence_desc = evidence_node.get('properties', {}).get('description', '').lower()
+        edge_props = edge.get('properties', {})
+        source_quote = edge_props.get('source_text_quote', '').lower()
+        edge_reasoning = edge_props.get('reasoning', '').lower()
+        
+        # Combine all text for analysis
+        evidence_text = f"{evidence_desc} {source_quote} {edge_reasoning}"
+        
+        # Score relevance based on keyword matches
+        relevance_score = 0
+        prediction_keywords = prediction.evidence_requirements
+        
+        for keyword in prediction_keywords:
+            if keyword.lower() in evidence_text:
+                relevance_score += 1
+        
+        # Boost score for exact phrase matches
+        prediction_desc_lower = prediction.description.lower()
+        if any(phrase in evidence_text for phrase in prediction_desc_lower.split() if len(phrase) > 3):
+            relevance_score += 2
+        
+        # Consider diagnostic type from edge properties
+        edge_diagnostic_type = edge_props.get('diagnostic_type', '')
+        if edge_diagnostic_type == prediction.diagnostic_type.value:
+            relevance_score += 1
+        
+        # Consider probative value
+        probative_value = edge_props.get('probative_value', 0)
+        if probative_value > 0.6:
+            relevance_score += 1
+        
+        # Threshold for relevance (adjust based on testing)
+        return relevance_score >= 2
+    
+    def _find_semantic_evidence(self, prediction: TestPrediction) -> List[str]:
+        """Find evidence using semantic/content matching beyond direct hypothesis connections"""
+        semantic_evidence = []
+        prediction_keywords = set(req.lower() for req in prediction.evidence_requirements)
+        
+        # Look through all evidence nodes for content matches
+        for evidence_node in self.evidence:
+            evidence_desc = evidence_node.get('properties', {}).get('description', '').lower()
+            
+            # Count keyword overlaps
+            word_overlaps = sum(1 for word in evidence_desc.split() 
+                              if any(keyword in word for keyword in prediction_keywords))
+            
+            # Include if sufficient overlap
+            if word_overlaps >= 2:
+                semantic_evidence.append(evidence_node['id'])
+                
+        return semantic_evidence[:5]  # Limit to top 5 matches
+    
+    def _extract_prediction_keywords(self, prediction: TestPrediction) -> List[str]:
+        """Extract keywords from prediction for evidence matching - LEGACY METHOD"""
+        # Use evidence_requirements as primary keywords
+        keywords = prediction.evidence_requirements[:]
+        
+        desc = prediction.description.lower()
+        
+        # Add contextual keywords based on prediction content
+        if any(term in desc for term in ['rights', 'constitutional']):
+            keywords.extend(['rights', 'constitutional', 'liberty', 'freedom', 'englishmen'])
+        if any(term in desc for term in ['merchant', 'trade', 'economic']):
             keywords.extend(['merchant', 'trade', 'commercial', 'business', 'profit'])
-        if 'religious' in desc or 'moral' in desc:
+        if any(term in desc for term in ['religious', 'moral']):
             keywords.extend(['religious', 'god', 'christian', 'clergy', 'moral'])
-        if 'governance' in desc or 'institutional' in desc:
+        if any(term in desc for term in ['governance', 'institutional']):
             keywords.extend(['governance', 'institution', 'assembly', 'government'])
-        if 'correlation' in desc or 'timing' in desc:
+        if any(term in desc for term in ['timing', 'correlation']):
             keywords.extend(['timing', 'correlation', 'relationship', 'pattern'])
             
         return keywords

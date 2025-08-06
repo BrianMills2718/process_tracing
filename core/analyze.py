@@ -3054,6 +3054,17 @@ def main():
             except Exception as e:
                 safe_print(f"[ERROR] Failed to generate network data: {e}")
                 network_data_json = None
+        # Run Van Evera systematic testing if HTML output is requested
+        try:
+            from core.van_evera_testing_engine import perform_van_evera_testing
+            safe_print("[VAN_EVERA] Running systematic hypothesis testing...")
+            van_evera_results = perform_van_evera_testing(data)
+            analysis_results['van_evera_assessment'] = van_evera_results
+            safe_print(f"[VAN_EVERA] Completed testing of {len(van_evera_results)} hypotheses")
+        except Exception as e:
+            safe_print(f"[WARN] Van Evera testing failed: {e}")
+            analysis_results['van_evera_assessment'] = {}
+        
         # Use comprehensive HTML generation with all Van Evera sections
         analysis_text = format_html_analysis(analysis_results, data, G, theoretical_insights, network_data_json)
         output_extension = "html"
