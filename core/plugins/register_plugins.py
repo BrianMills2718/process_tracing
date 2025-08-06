@@ -9,6 +9,7 @@ from .graph_validation import GraphValidationPlugin
 from .evidence_balance import EvidenceBalancePlugin
 from .path_finder import PathFinderPlugin
 from .checkpoint import CheckpointPlugin
+from .van_evera_testing import VanEveraTestingPlugin
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,8 @@ def register_all_plugins():
         GraphValidationPlugin,
         EvidenceBalancePlugin,
         PathFinderPlugin,
-        CheckpointPlugin
+        CheckpointPlugin,
+        VanEveraTestingPlugin
     ]
     
     logger.info("START: Registering all plugins")

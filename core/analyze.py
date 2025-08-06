@@ -28,11 +28,9 @@ from datetime import datetime
 # Assuming this file will be in core/ and ontology.py is in core/
 from core.ontology import NODE_TYPES as CORE_NODE_TYPES, NODE_COLORS
 from core.enhance_evidence import refine_evidence_assessment_with_llm
-from core.diagnostic_rebalancer import rebalance_van_evera_diagnostics
-from core.alternative_hypothesis_generator import generate_alternative_hypotheses
-from core.van_evera_testing_engine import perform_van_evera_testing
 from core.llm_reporting_utils import generate_narrative_summary_with_llm
 from core.enhance_mechanisms import elaborate_mechanism_with_llm
+from core.plugins.van_evera_workflow import execute_van_evera_analysis
 
 # Phase 2B: Advanced analytical capabilities
 
@@ -1693,20 +1691,48 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
 
     filename = results.get('filename', 'Process Trace') 
     
-    # Van Evera diagnostic rebalancing for academic quality
+    # Van Evera plugin workflow execution for academic quality
     if 'graph_data' in results:
-        print("[ANALYSIS] Rebalancing Van Evera diagnostic tests for academic quality...")
-        results['graph_data'] = rebalance_van_evera_diagnostics(
-            results['graph_data'], 
-            query_llm_func=lambda text, **kwargs: query_llm(text, **kwargs)
-        )
+        print("[ANALYSIS] Executing Van Evera academic workflow with plugin system...")
         
-        print("[ANALYSIS] Generating alternative hypotheses for systematic testing...")
-        results['graph_data'] = generate_alternative_hypotheses(results['graph_data'])
-        
-        print("[ANALYSIS] Performing systematic Van Evera hypothesis testing...")
-        van_evera_results = perform_van_evera_testing(results['graph_data'])
-        results['van_evera_assessment'] = van_evera_results
+        try:
+            # Execute complete Van Evera analysis via plugin workflow
+            case_id = results.get('case_id', 'unknown_case')
+            output_dir = results.get('output_dir', 'output_data')
+            
+            van_evera_academic_results = execute_van_evera_analysis(
+                graph_data=results['graph_data'],
+                case_id=case_id,
+                output_dir=output_dir
+            )
+            
+            # Extract Van Evera assessment for backward compatibility with display code
+            van_evera_analysis = van_evera_academic_results.get('van_evera_analysis', {})
+            results['van_evera_assessment'] = van_evera_analysis.get('hypothesis_assessments', {})
+            
+            # Store complete academic results
+            results['van_evera_academic_results'] = van_evera_academic_results
+            
+            # Update graph_data with any modifications from workflow (if any)
+            if 'graph_validation' in van_evera_academic_results:
+                graph_validation = van_evera_academic_results['graph_validation']
+                if 'working_graph' in graph_validation:
+                    # Convert NetworkX graph back to JSON format for consistency
+                    import networkx as nx
+                    working_graph = graph_validation['working_graph']
+                    if isinstance(working_graph, nx.Graph):
+                        results['graph_data'] = nx.node_link_data(working_graph)
+            
+            print(f"[ANALYSIS] Van Evera workflow completed successfully!")
+            academic_quality = van_evera_academic_results.get('academic_quality_assessment', {}).get('overall_score', 0)
+            print(f"[ANALYSIS] Academic quality score: {academic_quality:.1f}%")
+            
+        except Exception as e:
+            print(f"[ANALYSIS] Warning: Van Evera workflow failed: {e}")
+            print("[ANALYSIS] Continuing with standard analysis...")
+            # Fallback to no Van Evera assessment
+            results['van_evera_assessment'] = {}
+            results['van_evera_academic_results'] = {}
     
     node_type_chart_b64 = generate_node_type_chart(results)
     edge_type_chart_b64 = generate_edge_type_chart(results)

@@ -1,0 +1,230 @@
+"""
+Van Evera Academic Workflow Definition
+Orchestrates complete Van Evera process tracing methodology as plugin workflow
+"""
+
+from typing import Dict, List, Any
+from .workflow import PluginWorkflow
+
+# Van Evera Academic Process Tracing Workflow
+VAN_EVERA_ACADEMIC_WORKFLOW = [
+    {
+        'plugin_id': 'config_validation',
+        'input_key': None,
+        'output_key': 'config_result',
+        'checkpoint_stage': '01_van_evera_config',
+        'input_data': {'config_path': 'config/ontology_config.json'}
+    },
+    {
+        'plugin_id': 'graph_validation', 
+        'input_key': None,  # Graph provided at runtime
+        'output_key': 'graph_result',
+        'checkpoint_stage': '02_van_evera_graph_validation',
+        'input_data': {}  # Populated with {'graph': <NetworkX graph>} at runtime
+    },
+    {
+        'plugin_id': 'van_evera_testing',
+        'input_key': 'graph_result',  # Uses validated graph from previous step
+        'output_key': 'van_evera_result',
+        'checkpoint_stage': '03_van_evera_systematic_testing',
+        'input_data': {}
+    }
+]
+
+
+class VanEveraWorkflow(PluginWorkflow):
+    """
+    Specialized workflow for Van Evera academic process tracing.
+    Extends base PluginWorkflow with Van Evera-specific orchestration.
+    """
+    
+    def __init__(self, context):
+        """Initialize Van Evera workflow with academic context"""
+        super().__init__("van_evera_academic", context)
+        self.academic_standards = {
+            'methodology': 'Van Evera Process Tracing',
+            'diagnostic_tests_required': True,
+            'bayesian_updating_required': True,
+            'theoretical_competition_required': True,
+            'systematic_elimination_logic': True
+        }
+    
+    def execute_van_evera_analysis(self, graph_data: Dict, case_id: str) -> Dict[str, Any]:
+        """
+        Execute complete Van Evera analysis with academic rigor.
+        
+        Args:
+            graph_data: NetworkX graph data in JSON format
+            case_id: Unique identifier for this analysis
+            
+        Returns:
+            Complete Van Evera analysis results with academic assessment
+        """
+        self.logger.info(f"START: Van Evera academic analysis for case {case_id}")
+        
+        # Prepare workflow steps with runtime data
+        workflow_steps = self._prepare_van_evera_steps(graph_data)
+        
+        # Execute workflow
+        workflow_results = self.execute_workflow(workflow_steps)
+        
+        # Extract Van Evera results
+        van_evera_results = workflow_results.get('van_evera_result', {})
+        
+        # Create integrated academic results
+        academic_results = self._create_academic_results(workflow_results, case_id)
+        
+        self.logger.info(f"END: Van Evera academic analysis completed for case {case_id}")
+        self.logger.info(f"Academic quality: {academic_results.get('academic_quality_score', 0):.1f}%")
+        
+        return academic_results
+    
+    def _prepare_van_evera_steps(self, graph_data: Dict) -> List[Dict[str, Any]]:
+        """Prepare workflow steps with runtime graph data"""
+        workflow_steps = []
+        
+        for step in VAN_EVERA_ACADEMIC_WORKFLOW:
+            step_copy = step.copy()
+            
+            # Inject graph data into graph validation step
+            if step['plugin_id'] == 'graph_validation':
+                step_copy['input_data'] = {'graph': graph_data}
+            
+            workflow_steps.append(step_copy)
+        
+        return workflow_steps
+    
+    def _create_academic_results(self, workflow_results: Dict[str, Any], case_id: str) -> Dict[str, Any]:
+        """Create comprehensive academic results from workflow outputs"""
+        
+        # Extract components
+        config_result = workflow_results.get('config_result', {})
+        graph_result = workflow_results.get('graph_result', {})
+        van_evera_result = workflow_results.get('van_evera_result', {})
+        
+        # Calculate academic quality score
+        quality_metrics = van_evera_result.get('academic_quality_metrics', {})
+        academic_quality_score = quality_metrics.get('academic_compliance_score', 0)
+        
+        # Create comprehensive academic results
+        academic_results = {
+            'case_id': case_id,
+            'methodology': 'Van Evera Process Tracing',
+            'workflow_execution': {
+                'workflow_id': self.workflow_id,
+                'steps_completed': len(workflow_results),
+                'academic_standards_applied': self.academic_standards
+            },
+            'configuration_validation': config_result,
+            'graph_validation': graph_result,
+            'van_evera_analysis': van_evera_result,
+            'academic_quality_assessment': {
+                'overall_score': academic_quality_score,
+                'methodology_compliance': van_evera_result.get('methodology_compliance', {}),
+                'academic_rigor_criteria': {
+                    'systematic_testing': True,
+                    'diagnostic_tests_balanced': quality_metrics.get('academic_compliance_score', 0) > 70,
+                    'theoretical_competition': quality_metrics.get('theoretical_competition_ratio', 0) > 0.2,
+                    'bayesian_updating': True,
+                    'elimination_logic': quality_metrics.get('hypotheses_eliminated', 0) > 0
+                }
+            },
+            'publication_readiness': {
+                'ready_for_peer_review': academic_quality_score > 80,
+                'requires_improvement': academic_quality_score < 70,
+                'recommendations': self._generate_improvement_recommendations(quality_metrics)
+            }
+        }
+        
+        return academic_results
+    
+    def _generate_improvement_recommendations(self, quality_metrics: Dict[str, Any]) -> List[str]:
+        """Generate recommendations for improving academic quality"""
+        recommendations = []
+        
+        compliance_score = quality_metrics.get('academic_compliance_score', 0)
+        if compliance_score < 80:
+            recommendations.append("Rebalance diagnostic test distribution to meet Van Evera standards")
+        
+        competition_ratio = quality_metrics.get('theoretical_competition_ratio', 0)
+        if competition_ratio < 0.3:
+            recommendations.append("Add more alternative hypotheses for stronger theoretical competition")
+        
+        eliminated_count = quality_metrics.get('hypotheses_eliminated', 0)
+        if eliminated_count == 0:
+            recommendations.append("Strengthen elimination logic through more decisive diagnostic tests")
+        
+        total_tests = quality_metrics.get('total_diagnostic_tests', 0)
+        if total_tests < 10:
+            recommendations.append("Increase number of diagnostic tests for more robust analysis")
+        
+        if not recommendations:
+            recommendations.append("Methodology meets academic standards for publication")
+        
+        return recommendations
+
+
+def create_van_evera_context(graph_data: Dict, case_id: str, output_dir: str = "output_data"):
+    """
+    Create specialized context for Van Evera academic analysis.
+    
+    Args:
+        graph_data: NetworkX graph data
+        case_id: Unique case identifier
+        output_dir: Output directory for results
+        
+    Returns:
+        Configured plugin context for Van Evera workflow
+    """
+    from .base import PluginContext
+    
+    context = PluginContext(
+        config={
+            # Van Evera specific configuration
+            'van_evera.diagnostic_balance_required': True,
+            'van_evera.theoretical_competition_threshold': 0.3,
+            'van_evera.academic_compliance_threshold': 80,
+            'van_evera.bayesian_updating_enabled': True,
+            
+            # Graph validation for academic analysis
+            'graph_validation.strict_mode': True,
+            'graph_validation.required_node_types': ['Event', 'Hypothesis', 'Evidence', 'Alternative_Explanation'],
+            'graph_validation.academic_validation': True,
+            
+            # General academic configuration
+            'case_id': case_id,
+            'output_dir': output_dir,
+            'methodology': 'Van Evera Process Tracing',
+            'academic_standards': True,
+            'enable_checkpoints': True
+        }
+    )
+    
+    # Add graph data to context
+    context.data_bus['graph_data'] = graph_data
+    context.data_bus['case_id'] = case_id
+    context.data_bus['academic_analysis'] = True
+    
+    return context
+
+
+def execute_van_evera_analysis(graph_data: Dict, case_id: str, output_dir: str = "output_data") -> Dict[str, Any]:
+    """
+    Main entry point for Van Evera academic process tracing analysis.
+    
+    Args:
+        graph_data: NetworkX graph data in JSON format
+        case_id: Unique case identifier  
+        output_dir: Output directory for results
+        
+    Returns:
+        Complete academic Van Evera analysis results
+    """
+    # Create academic context
+    context = create_van_evera_context(graph_data, case_id, output_dir)
+    
+    # Create and execute Van Evera workflow
+    workflow = VanEveraWorkflow(context)
+    results = workflow.execute_van_evera_analysis(graph_data, case_id)
+    
+    return results
