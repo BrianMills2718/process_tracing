@@ -1,0 +1,248 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (test_simple)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'evt_BTP', label: 'Event', title: `{
+  "description": "Colonists dumped tea into Boston Harbor (Boston Tea Party)",
+  "date": "1773-12-16",
+  "location": "Boston Harbor",
+  "certainty": 1.0,
+  "type": "intermediate",
+  "is_point_in_time": true
+}`},
+        {id: 'evt_TeaAct', label: 'Event', title: `{
+  "description": "Tea Act passed, giving the British East India Company a monopoly on tea sales in America",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'actor_Adams', label: 'Actor', title: `{
+  "name": "Samuel Adams",
+  "role": "Colonial leader, organizer",
+  "intentions": "Organize resistance against British policies"
+}`},
+        {id: 'actor_SoL', label: 'Actor', title: `{
+  "name": "Sons of Liberty",
+  "role": "Colonial resistance group",
+  "intentions": "Carry out direct action against British policies"
+}`},
+        {id: 'actor_KGIII', label: 'Actor', title: `{
+  "name": "King George III",
+  "role": "British Monarch",
+  "intentions": "Punish colonists and assert British authority"
+}`},
+        {id: 'evt_IntolerableActs', label: 'Event', title: `{
+  "description": "Intolerable Acts passed, closing Boston Harbor",
+  "type": "outcome",
+  "certainty": 1.0
+}`},
+        {id: 'evt_EconomicPressure', label: 'Event', title: `{
+  "description": "Economic pressure created on colonial merchants due to the Tea Act monopoly",
+  "type": "intermediate",
+  "certainty": 0.9
+}`},
+        {id: 'evt_OrganizedResistance', label: 'Event', title: `{
+  "description": "Organized resistance developed among colonists",
+  "type": "intermediate",
+  "certainty": 0.9
+}`},
+        {id: 'evt_AmRev', label: 'Event', title: `{
+  "description": "The American Revolution",
+  "type": "outcome",
+  "certainty": 0.9
+}`},
+        {id: 'hyp_TWR', label: 'Hypothesis', title: `{
+  "description": "Taxation without representation motivated the colonists' resistance.",
+  "status": "supported"
+}`},
+        {id: 'evd_TWR', label: 'Evidence', title: `{
+  "description": "General evidence showing that taxation without representation motivated the colonists.",
+  "type": "general",
+  "certainty": 0.7
+}`},
+        {id: 'ds_ParlRecords', label: 'Data_Source', title: `{
+  "type": "document",
+  "credibility": 0.9,
+  "bias_risk": 0.1
+}`},
+        {id: 'evd_TeaActAuthority', label: 'Evidence', title: `{
+  "description": "Parliamentary records confirm that the Tea Act was designed to assert British authority.",
+  "type": "smoking_gun",
+  "source": "Parliamentary records",
+  "certainty": 0.9
+}`},
+        {id: 'hyp_TeaActAuthority', label: 'Hypothesis', title: `{
+  "description": "The Tea Act was designed to assert British authority.",
+  "status": "supported"
+}`},
+        {id: 'hyp_ColonialWillingness', label: 'Hypothesis', title: `{
+  "description": "Colonists were willing to resist British policies through direct action.",
+  "status": "supported"
+}`},
+        {id: 'alt_EconomicSelfInterest', label: 'Alternative_Explanation', title: `{
+  "description": "Economic self-interest rather than constitutional principles motivated colonial resistance.",
+  "status": "eliminated",
+  "key_predictions": [
+    "Colonial resistance primarily led by merchants",
+    "Limited working-class participation in resistance"
+  ],
+  "probability": 0.3
+}`},
+        {id: 'evd_WCParticipation', label: 'Evidence', title: `{
+  "description": "Evidence demonstrating significant working-class participation in colonial resistance.",
+  "type": "hoop",
+  "certainty": 0.8
+}`},
+        {id: 'ds_WCEvid', label: 'Data_Source', title: `{
+  "type": "general",
+  "credibility": 0.7,
+  "bias_risk": 0.2
+}`},
+        {id: 'mech_ColonialResistanceMechanism', label: 'Causal_Mechanism', title: `{
+  "description": "British policies (like the Tea Act) asserting authority and creating economic pressure lead to principled and organized colonial resistance (e.g., Boston Tea Party), which escalates into broader conflict and revolution.",
+  "confidence": 0.85,
+  "completeness": 0.7,
+  "status": "supported"
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'None', to: 'None', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.9,
+  "constraint_factors": "Mobilized through Sons of Liberty"
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.95
+}`},
+        {from: 'None', to: 'None', label: 'causes', title: `{
+  "certainty": 0.8,
+  "type": "direct"
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'causes', title: `{
+  "certainty": 0.9,
+  "mechanism_id": "mech_ColonialResistanceMechanism"
+}`},
+        {from: 'None', to: 'None', label: 'causes', title: `{
+  "certainty": 0.9,
+  "mechanism_id": "mech_ColonialResistanceMechanism"
+}`},
+        {from: 'None', to: 'None', label: 'causes', title: `{
+  "certainty": 0.8,
+  "type": "indirect",
+  "mechanism_id": "mech_ColonialResistanceMechanism"
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "trigger",
+  "sequence_position": 1,
+  "necessity": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "intermediate",
+  "sequence_position": 2,
+  "necessity": 0.8
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "intermediate",
+  "sequence_position": 3,
+  "necessity": 0.85
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "facilitating",
+  "sequence_position": 3.5,
+  "necessity": 0.7,
+  "description": "A key instance of organized resistance that escalated tensions."
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "outcome",
+  "sequence_position": 4,
+  "necessity": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "diagnostic_type": "general",
+  "target_type": "general"
+}`},
+        {from: 'None', to: 'None', label: 'explains_mechanism', title: `{
+  "certainty": 0.75,
+  "type_of_claim": "operation",
+  "scope": "Motivation for organized resistance component"
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.9,
+  "bias_risk": 0.1,
+  "certainty": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "diagnostic_type": "smoking_gun",
+  "target_type": "general"
+}`},
+        {from: 'None', to: 'None', label: 'explains_mechanism', title: `{
+  "certainty": 0.8,
+  "type_of_claim": "existence",
+  "scope": "The nature of the Tea Act as a trigger within the mechanism"
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence_for', title: `{
+  "probative_value": 0.8,
+  "diagnostic_type": "smoking_gun",
+  "reasoning": "The act of dumping tea demonstrates a concrete and direct willingness to resist."
+}`},
+        {from: 'None', to: 'None', label: 'explains_mechanism', title: `{
+  "certainty": 0.7,
+  "type_of_claim": "component_role",
+  "scope": "The capacity and propensity for direct action within organized resistance"
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.7,
+  "bias_risk": 0.2,
+  "certainty": 0.8
+}`},
+        {from: 'None', to: 'None', label: 'refutes_alternative', title: `{
+  "probative_value": 0.9,
+  "diagnostic_type": "hoop",
+  "refutation_strength": "strong",
+  "reasoning": "The alternative explanation predicted limited working-class participation, which this evidence disproves."
+}`},
+        {from: 'alt_EconomicSelfInterest', to: 'evt_OrganizedResistance', label: 'causes', title: `{
+  "diagnostic_type": "straw_in_the_wind",
+  "probative_value": 0.5,
+  "source_text_quote": "Alternative explanations suggest that economic self-interest rather than constitutional principles motivated colonial resistance.",
+  "reasoning": "The text presents economic self-interest as a suggested alternative motivation ('motivated colonial resistance') for the organized resistance, thus positing a causal link from this alternative explanation to the event.",
+  "source": "connectivity_repair"
+}`},
+        {from: 'evd_WCParticipation', to: 'hyp_TWR', label: 'supports', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.8,
+  "source_text_quote": "However, evidence from working-class participation refutes this economic self-interest theory.",
+  "reasoning": "The 'economic self-interest theory' is presented as an alternative to 'constitutional principles' (which aligns with 'Taxation without representation motivated the colonists' resistance' - hyp_TWR). By explicitly stating that evidence of working-class participation refutes this alternative theory, the text implicitly strengthens or supports the primary hypothesis (hyp_TWR). The refutation is strong, hence 'smoking_gun'.",
+  "source": "connectivity_repair"
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

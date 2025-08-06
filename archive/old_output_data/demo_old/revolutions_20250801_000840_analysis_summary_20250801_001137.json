@@ -1,0 +1,55 @@
+{
+  "filename": "output_data/demo/revolutions_20250801_000840_graph.json",
+  "case_identifier": "revolutions_20250801_000840_graph",
+  "generated_at": "2025-08-01T00:11:37.938644",
+  "causal_chains": [],
+  "causal_mechanisms": [
+    {
+      "id": "CM1",
+      "name": "Emergence of American Revolutionary sentiment",
+      "causes": [],
+      "effects": [],
+      "completeness": 0,
+      "confidence": 0.9,
+      "level_of_detail": "high",
+      "llm_elaboration": {
+        "response": "{\n  \"completeness_score\": 0.7,\n  \"detailed_reasoning\": \"The mechanism is partially complete, but lacks specific events and the connections between them. While the broad theme is addressed, the steps leading to the emergence of revolutionary sentiment are not fully detailed.  More specific events and their causal links are needed.\",\n  \"evidence_support_level\": \"moderate\",\n  \"improvement_suggestions\": [\n    \"Include specific events such as the Stamp Act, Townshend Acts, Boston Massacre, Tea Act, and Intolerable Acts.  Detail the colonists' reactions to each event (e.g., boycotts, protests, pamphlets).\",\n    \"Add the role of key figures like Samuel Adams, Patrick Henry, and Thomas Paine, and their influence on shaping public opinion.\",\n    \"Explain how these events contributed to a growing sense of grievance and ultimately to calls for independence.\",\n    \"Include events showing the shift in colonial identity from British subjects to Americans.\"\n  ],\n  \"mechanism_id\": \"CM1\",\n  \"missing_elements\": [\n    \"Specific events and their chronological order\",\n    \"Detailed reactions of the colonists to British policies\",\n    \"Role of key figures and their contributions\",\n    \"Development of revolutionary ideology and ideas\",\n    \"Shift in colonial identity\"\n  ],\n  \"plausibility_score\": 0.9\n}"
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "triggering": 1,
+      "intermediate": 23,
+      "outcome": 2,
+      "Causal_Mechanism": 1
+    },
+    "edge_type_distribution": {
+      "direct": 21,
+      "part_of_mechanism": 4
+    },
+    "density": 0.03561253561253561,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "CM1": 0.269,
+      "E2": 0.077,
+      "E3": 0.077,
+      "E4": 0.077,
+      "E5": 0.077,
+      "E6": 0.077,
+      "E7": 0.077,
+      "E8": 0.077,
+      "E9": 0.077,
+      "E10": 0.077
+    }
+  },
+  "hypotheses_evaluation": [],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

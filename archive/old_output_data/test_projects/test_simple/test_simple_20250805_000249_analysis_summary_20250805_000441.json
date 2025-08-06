@@ -1,0 +1,202 @@
+{
+  "filename": "output_data\\test_simple\\test_simple_20250805_000249_graph.json",
+  "case_identifier": "test_simple_20250805_000249_graph",
+  "generated_at": "2025-08-05T00:04:41.872146",
+  "causal_chains": [],
+  "causal_mechanisms": [
+    {
+      "id": "mech_revolution_path",
+      "name": "The Tea Act created economic pressure on colonial merchants, leading to organized resistance, which eventually caused the American Revolution.",
+      "causes": [],
+      "effects": [],
+      "completeness": 30.0,
+      "confidence": 0.8,
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "completeness_score": 0.45,
+        "plausibility_score": 0.85,
+        "evidence_support_level": "strong",
+        "missing_elements": [
+          "Specific forms of 'organized resistance' (e.g., Boston Tea Party, non-importation agreements)",
+          "British government's reaction to colonial resistance (e.g., Coercive/Intolerable Acts)",
+          "Colonial reaction to British punitive measures (e.g., formation of First Continental Congress, widespread colonial unity)",
+          "Escalation from political protest to armed conflict (e.g., formation of militias, battles of Lexington and Concord)",
+          "Deliberation and decision for independence (e.g., Declaration of Independence)",
+          "The role of broader philosophical and political ideals (e.g., 'no taxation without representation', Enlightenment principles) beyond purely economic pressure"
+        ],
+        "improvement_suggestions": [
+          "Refine 'organized resistance' to include specific actions like 'Boston Tea Party' and 'widespread boycotts'.",
+          "Add a step detailing the British government's response to the resistance, specifically the enactment of the 'Coercive Acts' (also known as the 'Intolerable Acts').",
+          "Include a step explaining how the Coercive Acts further united the colonies and led to the formation of inter-colonial bodies like the 'First Continental Congress'.",
+          "Break down the link to 'American Revolution' by adding intermediate events such as the 'mobilization of militias' and the 'Battles of Lexington and Concord'.",
+          "Consider adding elements that explain the shift from seeking redress to seeking full independence, perhaps involving key colonial leaders or influential pamphlets like 'Common Sense'."
+        ],
+        "detailed_reasoning": "The mechanism, 'The Tea Act created economic pressure on colonial merchants, leading to organized resistance, which eventually caused the American Revolution,' identifies a plausible initial cause and an intermediate effect. The economic pressure on colonial merchants from the Tea Act and the subsequent organized resistance are well-established historical facts. This chain is highly plausible and strongly supported by historical evidence, including primary sources from the period.\n\nHowever, the mechanism suffers significantly in terms of completeness. The leap from 'organized resistance' to 'American Revolution' bypasses numerous critical steps and events that define the path from protest to full-scale war and independence. Missing elements include the specific nature of the resistance (e.g., the Boston Tea Party, widespread boycotts), the crucial British punitive response (e.g., the Coercive Acts), the resulting colonial unity and escalation of political organization (e.g., the Continental Congresses), and the actual trigger points for armed conflict (e.g., Lexington and Concord). While the described pathway is a valid part of the larger narrative, it is a highly condensed and incomplete explanation for a complex historical outcome like the American Revolution. Expanding the intermediate steps would significantly enhance its explanatory power and completeness."
+      },
+      "completeness_breakdown": {
+        "van_evera_structural": 20,
+        "llm_assessment": 45.0,
+        "combined": 30.0
+      }
+    },
+    {
+      "id": "mech_motivation_resistance",
+      "name": "Motivation based on taxation without representation leading to colonial willingness to resist and organized resistance.",
+      "causes": [],
+      "effects": [],
+      "completeness": 24.0,
+      "confidence": 0.7,
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "completeness_score": 0.3,
+        "plausibility_score": 0.9,
+        "evidence_support_level": "strong",
+        "missing_elements": [
+          "Specific articulation of grievances by colonists beyond the general phrase 'taxation without representation' (e.g., economic burden, philosophical arguments about natural rights and consent of the governed).",
+          "The process by which these grievances were disseminated and amplified among the colonial population, leading to widespread 'motivation' (e.g., through pamphlets, newspapers, sermons, public meetings).",
+          "The specific mechanisms or organizational structures that facilitated the transition from individual or diffuse 'willingness to resist' into *collective* and *organized* action (e.g., formation of formal and informal associations like Committees of Correspondence, Sons of Liberty).",
+          "The communication and coordination strategies employed by colonists to unite disparate efforts across different colonies.",
+          "Concrete examples or specific types of 'organized resistance' that materialized (e.g., boycotts, non-importation agreements, petitions to Parliament, armed militias, provincial congresses).",
+          "The role of specific leaders or catalytic events that escalated the 'willingness' into 'organized resistance'."
+        ],
+        "improvement_suggestions": [
+          "Deconstruct 'Motivation based on taxation without representation' into more granular grievances (e.g., 'Perception of British taxation as an infringement on colonial rights and economic autonomy').",
+          "Add an intermediate event detailing the *dissemination and amplification* of these grievances among the colonial populace (e.g., 'Public discourse and media (pamphlets, newspapers) articulate grievances, fostering collective anti-taxation sentiment and willingness to resist').",
+          "Introduce events describing the *formation and function of organizational structures* (e.g., 'Formation of inter-colonial communication networks like the Committees of Correspondence' and 'Establishment of activist groups such as the Sons of Liberty').",
+          "Specify the *types of collective actions* taken as 'organized resistance' (e.g., 'Coordination of boycotts of British goods' or 'Organized protests and acts of defiance like the Boston Tea Party' or 'Formation of colonial militias for defense').",
+          "Clarify the *causal links* between each successive step, explicitly showing how the motivation translates into willingness, and how willingness is channeled into organized action through specific mechanisms and actors."
+        ],
+        "detailed_reasoning": "The mechanism 'Motivation based on taxation without representation leading to colonial willingness to resist and organized resistance' describes a highly plausible and historically well-supported causal relationship. The core premise that 'taxation without representation' fueled colonial resistance is a fundamental aspect of the American Revolution's origins, hence the high plausibility and strong evidence support. There is vast historical documentation and scholarship affirming this link through primary and secondary sources.\n\nHowever, the mechanism, as described, is very high-level and lacks the necessary detail to function as a complete 'process tracing' mechanism. It names the start and end points but completely skips the intermediate 'how' steps. For a mechanism to be complete, it must articulate the specific 'gears' that turn, illustrating *how* the cause produces the effect. In this case, it omits the crucial stages of grievance articulation, public mobilization, the development of communication networks, the formation of specific organizations, and the types of actions undertaken. The current description is more akin to a high-level causal claim than a detailed mechanism. Therefore, its completeness score is low, reflecting the absence of these essential intermediate steps and constituent events that would illustrate the actual process of organization and resistance."
+      },
+      "completeness_breakdown": {
+        "van_evera_structural": 20,
+        "llm_assessment": 30.0,
+        "combined": 24.0
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 10,
+      "Actor": 5,
+      "Causal_Mechanism": 2,
+      "Hypothesis": 1,
+      "Evidence": 4,
+      "Data_Source": 2,
+      "Alternative_Explanation": 1
+    },
+    "edge_type_distribution": {
+      "provides_evidence_for": 2,
+      "enables": 1,
+      "initiates": 1,
+      "causes": 1,
+      "refutes": 1
+    },
+    "density": 0.01,
+    "avg_path_length": "N/A (disconnected graph)",
+    "connectivity_type": "disconnected",
+    "degree_centrality": {
+      "evt_boston_tea_party": 0.042,
+      "alt_economic_self_interest": 0.042,
+      "evd_working_class_participation_refutes": 0.042,
+      "actor_british_eic": 0.025,
+      "evt_organized_resistance": 0.025,
+      "evd_btp_demonstrates_willingness": 0.025,
+      "evt_eic_monopoly_granted": 0.017,
+      "actor_colonists": 0.017,
+      "ds_working_class_participation": 0.017,
+      "evt_tea_act_passed": 0.0
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hyp_tax_wo_rep_motive",
+      "description": "Taxation without representation motivated the colonists.",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [
+    {
+      "id": "actor_colonists",
+      "name": "Colonists",
+      "role": "Participants in the Boston Tea Party and resistance",
+      "initiated_events": [
+        {
+          "id": "evt_boston_tea_party",
+          "description": "Colonists dumped tea into Boston Harbor.",
+          "certainty": "medium",
+          "intention": "unknown"
+        }
+      ],
+      "influence_score": 16,
+      "beliefs": "unknown",
+      "intentions": "unknown"
+    },
+    {
+      "id": "actor_british_eic",
+      "name": "British East India Company",
+      "role": "Beneficiary of the Tea Act monopoly",
+      "initiated_events": [],
+      "influence_score": 3,
+      "beliefs": "unknown",
+      "intentions": "unknown"
+    },
+    {
+      "id": "actor_samuel_adams",
+      "name": "Samuel Adams",
+      "role": "Organizer of Sons of Liberty",
+      "initiated_events": [],
+      "influence_score": 0,
+      "beliefs": "unknown",
+      "intentions": "Organize resistance against British rule"
+    },
+    {
+      "id": "actor_sons_of_liberty",
+      "name": "Sons of Liberty",
+      "role": "Executors of the Boston Tea Party",
+      "initiated_events": [],
+      "influence_score": 0,
+      "beliefs": "unknown",
+      "intentions": "unknown"
+    },
+    {
+      "id": "actor_king_george_iii",
+      "name": "King George III",
+      "role": "British Monarch",
+      "initiated_events": [],
+      "influence_score": 0,
+      "beliefs": "unknown",
+      "intentions": "Assert British authority and respond to colonial actions"
+    }
+  ],
+  "alternative_explanations": [
+    {
+      "id": "alt_economic_self_interest",
+      "description": "Economic self-interest rather than constitutional principles motivated colonial resistance.",
+      "supporting_evidence": [],
+      "refuting_evidence": [],
+      "strength_score": 0,
+      "assessment": "Contested alternative explanation",
+      "probability": "unknown",
+      "status": "refuted"
+    }
+  ],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

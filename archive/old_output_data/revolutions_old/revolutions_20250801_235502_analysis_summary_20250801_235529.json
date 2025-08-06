@@ -1,0 +1,154 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250801_235502_graph.json",
+  "case_identifier": "revolutions_20250801_235502_graph",
+  "generated_at": "2025-08-01T23:55:29.156165",
+  "causal_chains": [
+    {
+      "path": [
+        "event1",
+        "event2",
+        "event3",
+        "event4",
+        "event5",
+        "event6",
+        "event7",
+        "event8"
+      ],
+      "path_descriptions": [
+        "The French and Indian War concluded in 1763 with a British victory, resulting in a substantial war debt for Britain and a shift in control over the colonies' western lands to British officials in Montreal.  This event significantly altered the relationship between Britain and its American colonies, leading to increased tensions and ultimately contributing to the American Revolution.",
+        "The British Parliament imposed new taxes on the American colonies, such as the Stamp Act (1765) and the Townshend Acts (1767), to offset the costs incurred during the French and Indian War. These taxes, levied without direct colonial representation in Parliament, ignited widespread colonial resentment and resistance.",
+        "The Boston Tea Party of 1773, where American colonists dumped tea into Boston Harbor to protest British taxation policies, marked a significant escalation in the conflict between the colonies and Great Britain. This act of defiance further fueled revolutionary sentiment and prompted harsh retaliatory measures from the British government.",
+        "The British Parliament enacted the Intolerable Acts in 1774, a series of punitive measures designed to punish Massachusetts for the Boston Tea Party and curb colonial resistance. These acts, however, served to further unite the colonies against British rule and accelerate the movement towards independence.",
+        "The Battles of Lexington and Concord, fought on April 19, 1775, marked the beginning of open warfare between the American colonists and Great Britain, signifying the formal start of the American Revolutionary War.",
+        "The Second Continental Congress adopted the Declaration of Independence on July 4, 1776, formally declaring the thirteen colonies' independence from Great Britain.  This act solidified the colonists' commitment to revolution and fundamentally altered the nature of the conflict.",
+        "The Siege of Yorktown in 1781 resulted in a decisive victory for the Continental Army, aided by French forces, effectively ending major fighting in the Revolutionary War. This victory significantly weakened British resolve and paved the way for negotiations leading to American independence.",
+        "The Treaty of Paris, signed in 1783, formally recognized the independence of the United States of America from Great Britain, concluding the American Revolution and establishing the United States as a sovereign nation.  This marked the end of British colonial rule in the thirteen colonies."
+      ],
+      "edge_types": [
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes"
+      ],
+      "trigger": "event1",
+      "outcome": "event8",
+      "length": 8
+    }
+  ],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 8,
+      "Hypothesis": 1,
+      "Evidence": 3
+    },
+    "edge_type_distribution": {
+      "causes": 7,
+      "provides_evidence": 3
+    },
+    "density": 0.07575757575757576,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "hypothesis1": 0.273,
+      "event2": 0.182,
+      "event3": 0.182,
+      "event4": 0.182,
+      "event5": 0.182,
+      "event6": 0.182,
+      "event7": 0.182,
+      "event1": 0.091,
+      "event8": 0.091,
+      "evidence1": 0.091
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hypothesis1",
+      "description": "British taxation policies, implemented without adequate colonial representation, directly caused the American Revolution because they violated the colonists' deeply held beliefs in their rights as Englishmen and their right to self-governance, leading to escalating resistance and ultimately armed conflict.",
+      "assessment": "Conditionally Supported (Passed Hoop Test)",
+      "balance_score": 1.7999999999999998,
+      "van_evera_applied": true,
+      "supporting_evidence_count": 3,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence1",
+        "evidence2",
+        "evidence3"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [
+          {
+            "id": "evidence1",
+            "description": "The Stamp Act Congress's 'Declaration of Rights and Grievances' explicitly stated that taxation without representation violated the colonists' rights as Englishmen.",
+            "type": "hoop",
+            "probative_value": 0.7,
+            "source_text_quote": "its \"Declaration of Rights and Grievances\" argued that taxation without representation violated their rights as Englishmen.",
+            "edge_type": "provides_evidence",
+            "van_evera_reasoning": "Classified as hoop test (necessary condition) - this evidence represents a foundational requirement that must be present for the hypothesis to hold. Its absence would refute the hypothesis. This documentary evidence establishes a necessary foundation for understanding the hypothesis.",
+            "llm_reasoning": {
+              "evidence_id": "evidence1",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "While the Declaration explicitly links taxation without representation to the violation of colonists' rights, it doesn't definitively prove this was the *sole* cause of the Revolution.  Other factors contributed.  Its presence is suggestive but not conclusive; hence, 'straw-in-the-wind'.  It's not a necessary condition (hoop) because the Revolution might have happened even without this specific declaration, and it is not sufficient (smoking gun) as other grievances existed. It doesn't directly refute alternative hypotheses.",
+              "prob_e_given_h": "High (0.7)",
+              "prob_e_given_not_h": "Low (0.1)",
+              "likelihood_justification": "If the hypothesis is true (taxation without representation directly caused the revolution), it's highly probable that colonists would articulate this grievance formally.  However, even if the hypothesis were false (other factors were the primary cause), it's still possible that colonists would cite taxation without representation among their grievances, although less likely.  The low probability reflects the possibility of other complaints being central, even with this grievance also present.",
+              "suggested_probative_value": 6.0
+            }
+          }
+        ],
+        "smoking_gun": [],
+        "straw_in_wind": [
+          {
+            "id": "evidence2",
+            "description": "The colonists' widespread boycotts and protests against British taxes demonstrate their strong opposition to the policies and their willingness to engage in collective action to resist them.",
+            "type": "straw_in_the_wind",
+            "probative_value": 0.5,
+            "source_text_quote": "The colonists did not object that the taxes were high; they were actually low...They objected to their lack of representation in the Parliament...",
+            "edge_type": "provides_evidence",
+            "van_evera_reasoning": "Classified as straw-in-the-wind (weak indicator) - this evidence provides circumstantial support that is neither necessary nor sufficient, offering weak suggestive value for the hypothesis.",
+            "llm_reasoning": {
+              "evidence_id": "evidence2",
+              "refined_evidence_type": "smoking_gun",
+              "reasoning_for_type": "The widespread boycotts and protests directly demonstrate the colonists' actions in response to the taxation policies.  The hypothesis centers on the causal link between taxation without representation and colonial resistance. This evidence strongly supports that causal link, making it highly unlikely to observe such widespread resistance if the hypothesis were false (i.e., if the taxation policies were not the primary driver of the revolution). The provided source text further strengthens this classification by specifying that the objection was precisely the lack of representation, directly aligning with the hypothesis.",
+              "prob_e_given_h": "Very High (0.95)",
+              "prob_e_given_not_h": "Very Low (0.05)",
+              "likelihood_justification": "If the hypothesis is true (taxation without representation caused the revolution), then widespread boycotts and protests are a highly expected consequence.  The colonists' actions directly reflect their opposition to the policies at the core of the hypothesis.  If the hypothesis is false (other factors caused the revolution), it is very unlikely that such extensive and unified resistance would be focused specifically on taxation without representation. The probability is low but not zero because other grievances might have still resulted in some level of protest, but not the scale and intensity described.",
+              "suggested_probative_value": 8.0
+            }
+          },
+          {
+            "id": "evidence3",
+            "description": "The escalating violence, including events like the Boston Massacre and the Boston Tea Party, shows a clear progression from peaceful protest to armed resistance, directly linked to British policies.",
+            "type": "straw_in_the_wind",
+            "probative_value": 0.6,
+            "source_text_quote": "On March 5, 1770, a large crowd gathered around a group of British soldiers on a Boston street...They hit 11 people; three civilians died...",
+            "edge_type": "provides_evidence",
+            "van_evera_reasoning": "Classified as straw-in-the-wind (weak indicator) - this evidence provides circumstantial support that is neither necessary nor sufficient, offering weak suggestive value for the hypothesis.",
+            "llm_reasoning": {
+              "evidence_id": "evidence3",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "The Boston Massacre, while a significant event escalating tensions, is not a necessary condition for the American Revolution (hoop).  Its occurrence doesn't definitively prove the hypothesis (smoking gun) as other factors could have contributed to the escalation of conflict.  It is, however, suggestive of increasing unrest directly linked to the presence of British troops and the policies that led to their deployment. It doesn't rule out alternative explanations, thus not being doubly decisive.",
+              "prob_e_given_h": "High (0.8)",
+              "prob_e_given_not_h": "Medium (0.4)",
+              "likelihood_justification": "If the hypothesis is true (British policies directly caused the revolution), then incidents like the Boston Massacre are highly likely, as they represent a direct consequence of escalating tensions stemming from those policies.  However, even if the hypothesis is false (other factors caused the revolution), it's still possible for such violent incidents to occur.  Perhaps increased tensions from other sources (e.g., internal colonial conflicts) could have led to similar clashes, making the occurrence of the Boston Massacre moderately likely even without the direct causal link posited by the hypothesis.",
+              "suggested_probative_value": 2.0
+            }
+          }
+        ],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

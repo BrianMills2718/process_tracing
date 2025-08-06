@@ -1,0 +1,136 @@
+{
+  "nodes": [
+    {
+      "id": "event1",
+      "type": "Event",
+      "properties": {
+        "description": "The British Parliament passed the Stamp Act of 1765, imposing taxes on various printed materials in the American colonies. Colonial leaders viewed this as a direct violation of their rights as Englishmen, igniting widespread protests and resistance.",
+        "type": "triggering",
+        "date": "1765"
+      }
+    },
+    {
+      "id": "event2",
+      "type": "Event",
+      "properties": {
+        "description": "Colonial leaders, including figures like George Washington, John Adams, and Thomas Jefferson, organized resistance to the Stamp Act and subsequent British taxation policies.  This involved the creation of committees of correspondence to coordinate actions across different colonies, and the implementation of economic boycotts of British goods.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "event3",
+      "type": "Event",
+      "properties": {
+        "description": "The American Revolutionary War commenced, marked by significant military engagements between the Continental Army and British forces.  The war lasted for eight years and involved crucial strategic decisions such as Washington's avoidance of major battles in favor of building military capacity, and the securing of crucial military and financial support from France.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "event4",
+      "type": "Event",
+      "properties": {
+        "description": "The American colonies achieved independence from Great Britain, culminating in the establishment of the United States of America. This outcome was achieved through a sustained military campaign, effective leadership, and diplomatic alliances.",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "hypothesis1",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Effective revolutionary leadership, exemplified by figures like Washington, Adams, and Jefferson, was a necessary condition for the success of the American Revolution.  Their strategic vision and organizational capacity transformed scattered colonial grievances into a unified and sustained independence movement, which was crucial for overcoming the superior military strength of Great Britain.  Without this leadership coordination, the diverse colonial population would not have achieved sufficient unity to sustain the eight-year conflict.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evidence1",
+      "type": "Evidence",
+      "properties": {
+        "description": "The text explicitly states that without effective leadership coordination, the diverse colonial population would not have achieved unity sufficient for successful revolution.",
+        "type": "hoop",
+        "source": "Revolutionary Leadership and Colonial Independence",
+        "source_text_quote": "The evidence suggests that without effective leadership coordination, the diverse colonial population would not have achieved unity sufficient for successful revolution.",
+        "probative_value": 0.8
+      }
+    },
+    {
+      "id": "evidence2",
+      "type": "Evidence",
+      "properties": {
+        "description": "The text highlights the key role of leaders in transforming colonial grievances into a unified movement and sustaining the war effort.",
+        "type": "straw_in_the_wind",
+        "source": "Revolutionary Leadership and Colonial Independence",
+        "source_text_quote": "Key leaders like George Washington, John Adams, and Thomas Jefferson provided the strategic vision and organizational capacity necessary to transform scattered colonial grievances into a unified independence movement.",
+        "probative_value": 0.5
+      }
+    },
+    {
+      "id": "alternative_explanation1",
+      "type": "Alternative_Explanation",
+      "properties": {
+        "description": "Explanations that solely focus on economic grievances or external pressures fail to account for the organizational capacity required to sustain the eight-year conflict.",
+        "status": "refuted"
+      }
+    },
+    {
+      "id": "evidence3",
+      "type": "Evidence",
+      "properties": {
+        "description": "The text explicitly refutes alternative explanations focusing solely on economic grievances or external pressures.",
+        "type": "refutes_alternative",
+        "source": "Revolutionary Leadership and Colonial Independence",
+        "source_text_quote": "Alternative explanations focusing solely on economic grievances or external pressures fail to account for the organizational capacity required to sustain the eight-year conflict.",
+        "probative_value": 0.7
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge1",
+      "type": "causes",
+      "source": "event1",
+      "target": "event2",
+      "properties": {
+        "description": "The Stamp Act triggered colonial resistance and the organization of opposition by key leaders."
+      }
+    },
+    {
+      "id": "edge2",
+      "type": "causes",
+      "source": "event2",
+      "target": "event3",
+      "properties": {
+        "description": "Organized colonial resistance escalated into the American Revolutionary War."
+      }
+    },
+    {
+      "id": "edge3",
+      "type": "causes",
+      "source": "event3",
+      "target": "event4",
+      "properties": {
+        "description": "The successful conduct of the war led to American independence."
+      }
+    },
+    {
+      "id": "edge4",
+      "type": "supports",
+      "source": "evidence1",
+      "target": "hypothesis1",
+      "properties": {}
+    },
+    {
+      "id": "edge5",
+      "type": "supports",
+      "source": "evidence2",
+      "target": "hypothesis1",
+      "properties": {}
+    },
+    {
+      "id": "edge6",
+      "type": "refutes_alternative",
+      "source": "evidence3",
+      "target": "alternative_explanation1",
+      "properties": {}
+    }
+  ]
+}

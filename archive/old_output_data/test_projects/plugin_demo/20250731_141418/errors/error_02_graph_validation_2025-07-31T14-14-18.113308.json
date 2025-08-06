@@ -1,0 +1,9 @@
+{
+  "stage": "02_graph_validation",
+  "timestamp": "2025-07-31T14:14:18.113308",
+  "error": "Object of type DiGraph is not JSON serializable",
+  "error_type": "TypeError",
+  "context": {
+    "plugin_id": "graph_validation"
+  }
+}

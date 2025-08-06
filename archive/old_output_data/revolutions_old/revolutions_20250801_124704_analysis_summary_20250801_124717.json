@@ -1,0 +1,82 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250801_124704_graph.json",
+  "case_identifier": "revolutions_20250801_124704_graph",
+  "generated_at": "2025-08-01T12:47:17.906498",
+  "causal_chains": [
+    {
+      "path": [
+        "node1",
+        "node2",
+        "node3",
+        "node4"
+      ],
+      "path_descriptions": [
+        "Defeat of France in the French and Indian War, leading to British war debt and new colonial taxation policies.",
+        "British Parliament imposes new taxes on the American colonies to cover war debt from the French and Indian War, leading to colonial resentment.",
+        "Colonists organize protests and boycotts against British taxation policies, escalating tensions and resistance.",
+        "American Revolutionary War begins with the Battles of Lexington and Concord, followed by the Declaration of Independence and the establishment of the United States."
+      ],
+      "edge_types": [
+        "causes",
+        "causes",
+        "causes"
+      ],
+      "trigger": "node1",
+      "outcome": "node4",
+      "length": 4
+    }
+  ],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 4,
+      "Evidence": 2,
+      "Hypothesis": 1
+    },
+    "edge_type_distribution": {
+      "causes": 3,
+      "supports": 2
+    },
+    "density": 0.11904761904761904,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "node2": 0.333,
+      "node3": 0.333,
+      "node6": 0.333,
+      "node1": 0.167,
+      "node4": 0.167,
+      "node5": 0.167,
+      "node7": 0.167
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "node6",
+      "description": "British taxation policies caused colonial rebellion because they violated colonial understanding of their rights as Englishmen.",
+      "assessment": "Contested / Mixed Evidence",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "node5",
+        "node7"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

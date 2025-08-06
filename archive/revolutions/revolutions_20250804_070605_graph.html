@@ -1,0 +1,474 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (revolutions)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'E1', label: 'Event', title: `{
+  "description": "The American Revolution (1765-1783) represents a complex causal process with multiple competing explanations, key actors, and systematic mechanisms that transformed colonial resistance into full independence.",
+  "type": "outcome",
+  "start_date": "1765",
+  "end_date": "1783"
+}`},
+        {id: 'E2', label: 'Event', title: `{
+  "description": "Parliament imposed new fiscal policies to extract revenue from colonies, initiating a systematic process of imperial control designed to increase financial returns from the American colonies.",
+  "type": "triggering"
+}`},
+        {id: 'E3', label: 'Event', title: `{
+  "description": "These imposed fiscal policies created significant economic pressure and constitutional violations for the colonists, leading to widespread discontent and challenges to British authority across various colonial populations.",
+  "type": "intermediate"
+}`},
+        {id: 'E4', label: 'Event', title: `{
+  "description": "British officials enforced compliance with the new fiscal policies through various military and legal means, demonstrating the Crown's commitment to maintaining imperial control despite growing colonial opposition.",
+  "type": "intermediate"
+}`},
+        {id: 'E5', label: 'Event', title: `{
+  "description": "This enforcement of British policies generated significant colonial resistance and fostered a growing sense of unity among the diverse colonies, transforming localized grievances into a more coordinated challenge to imperial rule.",
+  "type": "intermediate"
+}`},
+        {id: 'E6', label: 'Event', title: `{
+  "description": "The Tea Act of 1773 was a crucial part of the imperial control mechanism, serving as the legislative component that created the conditions for testing colonial loyalty while simultaneously aiming to extract revenue from the colonies.",
+  "type": "triggering",
+  "date": "1773"
+}`},
+        {id: 'E7', label: 'Event', title: `{
+  "description": "The Boston Tea Party was a dramatic symbolic action executed on December 16th, involving Samuel Adams coordinating with other Sons of Liberty leaders to destroy tea in Boston Harbor to protest British taxation policies.",
+  "type": "intermediate",
+  "date": "1773-12-16"
+}`},
+        {id: 'E8', label: 'Event', title: `{
+  "description": "King George III personally initiated the military response to escalating colonial resistance by deploying troops to Boston, and subsequently issued direct orders for military suppression across the colonies to reassert imperial authority.",
+  "type": "intermediate"
+}`},
+        {id: 'E9', label: 'Event', title: `{
+  "description": "George Grenville initiated the fundamental fiscal policy changes that triggered widespread colonial resistance when he became Prime Minister in 1763, personally designing the Stamp Act as a direct tax on various colonial activities.",
+  "type": "triggering",
+  "date": "1763"
+}`},
+        {id: 'E10', label: 'Event', title: `{
+  "description": "The Sons of Liberty initiated the organized resistance campaign, developing strategic plans with Samuel Adams coordinating tactical actions and John Hancock providing essential financial resources and critical merchant networks.",
+  "type": "triggering"
+}`},
+        {id: 'E11', label: 'Event', title: `{
+  "description": "The Boston Tea Party involved the extensive destruction of tea in Boston Harbor, as confirmed by later archaeological excavations that recovered numerous tea chest fragments inconsistent with minimal damage accounts.",
+  "type": "occurrence"
+}`},
+        {id: 'E12', label: 'Event', title: `{
+  "description": "Claims of secret negotiations occurring between colonial leaders and French agents before the year 1775 are disproven by detailed diplomatic records that show no such early contact existed.",
+  "type": "unspecified",
+  "status": "refuted"
+}`},
+        {id: 'CM1', label: 'Causal_Mechanism', title: `{
+  "description": "The British imperial control mechanism operated through a systematic process: (1) Parliament imposed new fiscal policies to extract revenue from colonies; (2) These policies created economic pressure and constitutional violations; (3) British officials enforced compliance through military and legal means; (4) This enforcement generated colonial resistance and unity.",
+  "name": "Imperial Control Mechanism"
+}`},
+        {id: 'CM2', label: 'Causal_Mechanism', title: `{
+  "description": "The colonial resistance mechanism functioned through coordinated steps: (1) Local grievances against specific British policies; (2) Ideological mobilization around constitutional principles; (3) Organized collective action by groups like the Sons of Liberty; (4) Escalation from petitions to direct action to armed rebellion.",
+  "name": "Colonial Resistance Mechanism"
+}`},
+        {id: 'CM3', label: 'Causal_Mechanism', title: `{
+  "description": "This mechanism describes the process of British trade enforcement, revealing whether predicted enforcement increases actually materialized through documented records.",
+  "name": "British Trade Enforcement Mechanism"
+}`},
+        {id: 'H1', label: 'Hypothesis', title: `{
+  "description": "Colonial resistance and the American Revolution were primarily caused by the colonists' unwavering commitment to fundamental constitutional principles, particularly the belief that taxation without direct representation violated their rights as Englishmen, leading them to prioritize ideological defense over economic pragmatism.",
+  "name": "Constitutional Principles Hypothesis",
+  "status": "supported",
+  "prior_probability": 0.7,
+  "posterior_probability": 0.95
+}`},
+        {id: 'H2', label: 'Hypothesis', title: `{
+  "description": "The American Revolution was predominantly driven by the economic self-interest of colonial merchants, who manipulated popular sentiment and exploited grievances to protect their illicit smuggling operations and avoid British taxes, thereby fostering rebellion for personal financial gain.",
+  "name": "Economic Self-Interest Theory",
+  "status": "refuted"
+}`},
+        {id: 'H3', label: 'Hypothesis', title: `{
+  "description": "Colonial elites deliberately engineered widespread popular outrage and revolutionary fervor to advance their personal political ambitions and seize power from British authority, rather than revolutionary sentiment genuinely emerging from grassroots dissatisfaction across social strata.",
+  "name": "Elite Manipulation Theory",
+  "status": "refuted"
+}`},
+        {id: 'H4', label: 'Hypothesis', title: `{
+  "description": "The primary impetus for the American Revolution stemmed from the widespread adoption and deep philosophical commitment to Enlightenment ideas regarding natural rights and the social contract, with specific economic and political grievances serving as secondary manifestations of these deeper ideological convictions.",
+  "name": "Social Contract Theory",
+  "status": "supported",
+  "prior_probability": 0.6,
+  "posterior_probability": 0.9
+}`},
+        {id: 'H6', label: 'Hypothesis', title: `{
+  "description": "British fiscal policies, by violating deeply held colonial constitutional expectations and perceived rights, served as a necessary cause that generated significant colonial resistance, without which the path to revolution would not have occurred.",
+  "name": "British Fiscal Policies as Necessary Cause",
+  "status": "supported"
+}`},
+        {id: 'H7', label: 'Hypothesis', title: `{
+  "description": "A sophisticated and systematic communication network existed among colonial leaders across different regions, enabling the coordinated pattern of colonial responses and transforming localized discontent into organized revolutionary action.",
+  "name": "Systematic Communication Network",
+  "status": "supported"
+}`},
+        {id: 'A1', label: 'Actor', title: `{
+  "description": "Samuel Adams directly initiated multiple critical events in the revolutionary process. His role was to mobilize mass resistance against British authority.",
+  "name": "Samuel Adams",
+  "role": "Mobilizer of mass resistance",
+  "intentions": "To create dramatic symbolic actions that would unite colonial opinion",
+  "constraints": "Need to maintain legitimacy and avoid alienating moderate colonists"
+}`},
+        {id: 'A2', label: 'Actor', title: `{
+  "description": "King George III initiated the escalatory policies that drove colonial resistance toward independence. His role was to maintain imperial control and extract revenue from the colonies.",
+  "name": "King George III",
+  "role": "Maintain imperial control and extract revenue",
+  "beliefs": "Parliamentary supremacy and imperial unity",
+  "constraints": "Distance, costs, and competing European threats"
+}`},
+        {id: 'A3', label: 'Actor', title: `{
+  "description": "Governor Thomas Hutchinson, representing British authority in Massachusetts, initiated enforcement measures that inadvertently escalated colonial resistance.",
+  "name": "Thomas Hutchinson",
+  "role": "British Governor of Massachusetts",
+  "intentions": "Maintain order and implement Parliamentary will",
+  "constraints": "Limited resources and growing colonial opposition"
+}`},
+        {id: 'A4', label: 'Actor', title: `{
+  "description": "George Grenville initiated the fiscal policy changes that triggered colonial resistance when he became Prime Minister in 1763 and personally designed the Stamp Act as a direct tax on colonial activities.",
+  "name": "George Grenville",
+  "role": "Prime Minister of Great Britain"
+}`},
+        {id: 'A5', label: 'Actor', title: `{
+  "description": "The Sons of Liberty initiated the organized resistance campaign, a group of Patriot associations formed to protect the rights of the colonists and to fight taxation by the British government.",
+  "name": "Sons of Liberty",
+  "role": "Organized resistance group"
+}`},
+        {id: 'A6', label: 'Actor', title: `{
+  "description": "John Hancock provided financial resources and merchant networks to support the Sons of Liberty and the broader organized resistance campaign against British authority.",
+  "name": "John Hancock",
+  "role": "Financier and network provider for resistance"
+}`},
+        {id: 'C1', label: 'Condition', title: `{
+  "description": "British naval dominance constrained colonial options by preventing foreign military assistance and enabling British force projection across the Atlantic, limiting colonial strategic choices.",
+  "name": "British Naval Supremacy"
+}`},
+        {id: 'C2', label: 'Condition', title: `{
+  "description": "The 3,000-mile distance between Britain and America enabled colonial self-governance by creating communication delays and enforcement difficulties, making sustained imperial control increasingly difficult and costly.",
+  "name": "Geographic Distance"
+}`},
+        {id: 'C3', label: 'Condition', title: `{
+  "description": "The spread of Enlightenment philosophy about natural rights and self-governance enabled colonists to justify resistance as legitimate, providing the intellectual framework for transforming grievances into universal principles.",
+  "name": "Enlightenment Ideas"
+}`},
+        {id: 'C4', label: 'Condition', title: `{
+  "description": "The colonies' growing economic self-sufficiency enabled them to contemplate independence as economically viable by the 1770s, reducing their reliance on the British imperial system.",
+  "name": "Colonial Economic Development"
+}`},
+        {id: 'EVID1', label: 'Evidence', title: `{
+  "description": "Colonial pamphlets explicitly arguing against taxation without representation provides smoking gun evidence for principled opposition to British policies.",
+  "source": "Colonial pamphlets"
+}`},
+        {id: 'EVID2', label: 'Evidence', title: `{
+  "description": "The Stamp Act Congress's 'Declaration of Rights and Grievances' serves as doubly decisive evidence, both necessary for and sufficient to demonstrate deeply held constitutional concerns among the colonists.",
+  "source": "Stamp Act Congress's Declaration"
+}`},
+        {id: 'EVID3', label: 'Evidence', title: `{
+  "description": "Captain Levi Preston's quote about fighting for constitutional principles rather than specific economic issues tests the hypothesis that ideological commitment, not material interests, drove colonial resistance.",
+  "source": "Captain Levi Preston's quote"
+}`},
+        {id: 'EVID4', label: 'Evidence', title: `{
+  "description": "The widespread participation of non-merchant groups in revolutionary activities refutes the alternative explanation that only merchants with economic interests supported resistance.",
+  "source": "Historical records of participation"
+}`},
+        {id: 'EVID5', label: 'Evidence', title: `{
+  "description": "Documentary evidence showing that many merchants actually opposed the Tea Party due to its negative impact on legitimate trade relationships refutes the economic self-interest theory.",
+  "source": "Documentary evidence"
+}`},
+        {id: 'EVID6', label: 'Evidence', title: `{
+  "description": "Town meeting records showing genuine grassroots participation across different social classes disprove the occurrence of pure elite manipulation in the revolutionary movement.",
+  "source": "Town meeting records"
+}`},
+        {id: 'EVID7', label: 'Evidence', title: `{
+  "description": "The presence of working-class participants in revolutionary committees provides evidence that challenges the elite manipulation hypothesis by demonstrating broader social engagement.",
+  "source": "Records of revolutionary committees"
+}`},
+        {id: 'EVID8', label: 'Evidence', title: `{
+  "description": "Documentary evidence tests the imperial resistance mechanism by showing whether each proposed causal step actually occurred as predicted in the British imperial policy enforcement.",
+  "source": "Documentary evidence"
+}`},
+        {id: 'EVID9', label: 'Evidence', title: `{
+  "description": "Ship manifests and customs records test the mechanism of British trade enforcement by revealing whether predicted enforcement increases actually materialized as part of imperial control efforts.",
+  "source": "Ship manifests and customs records"
+}`},
+        {id: 'EVID10', label: 'Evidence', title: `{
+  "description": "The Boston Tea Party itself tests the hypothesis that constitutional principles motivated colonial action, as this event demonstrates colonists' willingness to take costly action based on principle rather than immediate economic benefit.",
+  "source": "Historical records of Boston Tea Party"
+}`},
+        {id: 'EVID11', label: 'Evidence', title: `{
+  "description": "Archaeological evidence from Boston Harbor, specifically the recovery of extensive tea chest fragments, disproves claims that only a small amount of tea was destroyed.",
+  "source": "Archaeological evidence from Boston Harbor"
+}`},
+        {id: 'EVID12', label: 'Evidence', title: `{
+  "description": "Correspondence evidence, detailed diplomatic records, disproves the occurrence of secret negotiations between colonial leaders and French agents before 1775, showing no such early contact existed.",
+  "source": "Correspondence evidence"
+}`},
+        {id: 'EVID13', label: 'Evidence', title: `{
+  "description": "Samuel Adams' personal correspondence, found in the Massachusetts Historical Society archives, confirms his central organizational role in colonial planning and resistance efforts.",
+  "source": "Massachusetts Historical Society archives"
+}`},
+        {id: 'EVID14', label: 'Evidence', title: `{
+  "description": "British Parliamentary records provide evidence about imperial policy decisions and official reactions to colonial resistance, documenting the deliberate escalatory strategy chosen by British leadership.",
+  "source": "British Parliamentary records"
+}`},
+        {id: 'EVID15', label: 'Evidence', title: `{
+  "description": "Contemporary newspaper accounts provide evidence for the widespread nature of colonial resistance, documenting participation across different social classes and geographic regions.",
+  "source": "Contemporary newspaper accounts"
+}`},
+        {id: 'EVID16', label: 'Evidence', title: `{
+  "description": "The discovery of previously unknown correspondence between colonial leaders and European philosophers supports the influence of Enlightenment ideas on colonial thinking.",
+  "source": "Previously unknown correspondence"
+}`},
+        {id: 'IR1', label: 'Inference_Rule', title: `{
+  "description": "Using deductive reasoning: if British fiscal policies violated colonial constitutional expectations (established premise) and constitutional violations generate resistance (general principle), then we can infer that British fiscal policies were a necessary cause of colonial resistance.",
+  "name": "Deductive Reasoning"
+}`},
+        {id: 'IR2', label: 'Inference_Rule', title: `{
+  "description": "Through abductive reasoning, the best explanation for the coordinated pattern of colonial responses across different regions infers that a systematic communication network existed among colonial leaders, suggesting more organization than spontaneous local resistance.",
+  "name": "Abductive Reasoning"
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'E2', to: 'E3', label: 'causes', title: `{
+  "description": "Parliament imposing new fiscal policies directly led to economic pressure and perceived constitutional violations among the colonists.",
+  "target_type": "event_occurrence",
+  "type": "direct"
+}`},
+        {from: 'E3', to: 'E4', label: 'causes', title: `{
+  "description": "The economic pressure and constitutional violations created by British policies prompted British officials to enforce compliance with military and legal means.",
+  "target_type": "event_occurrence",
+  "type": "direct"
+}`},
+        {from: 'E4', to: 'E5', label: 'causes', title: `{
+  "description": "British enforcement through military and legal means generated significant colonial resistance and fostered a sense of unity among the colonies.",
+  "target_type": "event_occurrence",
+  "type": "direct"
+}`},
+        {from: 'E5', to: 'E1', label: 'causes', title: `{
+  "description": "The generated colonial resistance and unity directly contributed to the eventual outbreak and progression of the American Revolution.",
+  "target_type": "event_occurrence",
+  "type": "direct"
+}`},
+        {from: 'E6', to: 'E7', label: 'causes', title: `{
+  "description": "The Tea Act of 1773 created the conditions that specifically triggered the Boston Tea Party as a form of colonial protest.",
+  "target_type": "event_occurrence",
+  "type": "direct"
+}`},
+        {from: 'A4', to: 'E9', label: 'initiates', title: `{
+  "description": "George Grenville personally initiated the design and implementation of the Stamp Act, triggering fiscal policy changes.",
+  "agency": "George Grenville personally designed the Stamp Act",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'E9', to: 'E2', label: 'causes', title: `{
+  "description": "The Stamp Act, designed by George Grenville, was a primary example of new fiscal policies Parliament imposed to extract revenue.",
+  "target_type": "event_occurrence",
+  "type": "direct"
+}`},
+        {from: 'A2', to: 'E8', label: 'initiates', title: `{
+  "description": "King George III personally initiated the military response to colonial resistance by deploying troops to Boston and issuing orders for suppression.",
+  "agency": "King George III personally initiated the military response",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'A1', to: 'E7', label: 'initiates', title: `{
+  "description": "Samuel Adams personally initiated the planning meetings for the Boston Tea Party, coordinating the action.",
+  "agency": "Samuel Adams personally initiated the Boston Tea Party planning meetings",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'A5', to: 'E10', label: 'initiates', title: `{
+  "description": "The Sons of Liberty, as an organized group, initiated the organized resistance campaign against British authority.",
+  "agency": "The Sons of Liberty initiated the organized resistance campaign",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'E10', to: 'E7', label: 'causes', title: `{
+  "description": "The organized resistance campaign by the Sons of Liberty, including strategic planning, directly led to actions like the Boston Tea Party.",
+  "target_type": "event_occurrence",
+  "type": "direct"
+}`},
+        {from: 'A6', to: 'E10', label: 'supports', title: `{
+  "description": "John Hancock provided essential financial resources and merchant networks which were crucial for the Sons of Liberty to initiate and sustain the organized resistance campaign.",
+  "target_type": "event_occurrence",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'EVID1', to: 'H1', label: 'supports', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "Colonial pamphlets explicitly arguing against taxation without representation provides smoking gun evidence for principled opposition",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'EVID2', to: 'H1', label: 'supports', title: `{
+  "diagnostic_type": "doubly_decisive",
+  "probative_value": 0.95,
+  "source_text_quote": "The Stamp Act Congress's \"Declaration of Rights and Grievances\" serves as doubly decisive evidence, both necessary for and sufficient to demonstrate constitutional concerns",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'EVID3', to: 'H1', label: 'supports', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.85,
+  "source_text_quote": "Captain Levi Preston's quote about fighting for constitutional principles rather than specific economic issues tests the hypothesis that ideological commitment, not material interests, drove colonial resistance",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'EVID4', to: 'H2', label: 'refutes', title: `{
+  "diagnostic_type": "hoop",
+  "probative_value": 0.8,
+  "source_text_quote": "The widespread participation of non-merchant groups in revolutionary activities refutes the alternative explanation that only merchants with economic interests supported resistance",
+  "reasoning": "If only merchants were involved, this evidence would be absent.",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'EVID5', to: 'H2', label: 'refutes', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "Documentary evidence that many merchants actually opposed the Tea Party due to its negative impact on legitimate trade relationships refutes the economic self-interest theory",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'EVID6', to: 'H3', label: 'refutes', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "Town meeting records showing genuine grassroots participation across different social classes disprove the occurrence of pure elite manipulation",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'EVID7', to: 'H3', label: 'refutes', title: `{
+  "diagnostic_type": "hoop",
+  "probative_value": 0.8,
+  "source_text_quote": "The presence of working-class participants in revolutionary committees provides evidence that challenges the elite manipulation hypothesis",
+  "reasoning": "The elite manipulation hypothesis implies a lack of working-class participation, making their presence hoop evidence against it.",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'EVID8', to: 'CM1', label: 'tests_mechanism', title: `{
+  "diagnostic_type": "general",
+  "probative_value": 0.7,
+  "source_text_quote": "Documentary evidence tests the imperial resistance mechanism by showing whether each proposed causal step actually occurred as predicted.",
+  "target_type": "mechanism_operation"
+}`},
+        {from: 'EVID9', to: 'CM3', label: 'tests_mechanism', title: `{
+  "diagnostic_type": "hoop",
+  "probative_value": 0.75,
+  "source_text_quote": "Ship manifests and customs records test the mechanism of British trade enforcement by revealing whether predicted enforcement increases actually materialized.",
+  "reasoning": "If enforcement increases did not materialize, the mechanism as predicted would fail.",
+  "target_type": "mechanism_operation"
+}`},
+        {from: 'EVID10', to: 'H1', label: 'provides_evidence_for', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "The Boston Tea Party itself tests the hypothesis that constitutional principles motivated colonial action, as this event demonstrates colonists' willingness to take costly action based on principle rather than immediate economic benefit.",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'EVID11', to: 'E11', label: 'confirms_occurrence', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.95,
+  "source_text_quote": "Archaeological evidence from Boston Harbor disproves claims that only a small amount of tea was destroyed, as underwater excavations have recovered extensive tea chest fragments inconsistent with minimal damage accounts.",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'EVID12', to: 'E12', label: 'disproves_occurrence', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "Correspondence evidence disproves the occurrence of secret negotiations between colonial leaders and French agents before 1775, as detailed diplomatic records show no such early contact existed.",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'EVID13', to: 'A1', label: 'supports', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "Primary documents from the Massachusetts Historical Society archives provide evidence about colonial organization and planning, containing Samuel Adams' personal correspondence that confirms his central organizational role.",
+  "target_type": "general"
+}`},
+        {from: 'EVID14', to: 'A2', label: 'supports', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "British Parliamentary records provide evidence about imperial policy decisions and official reactions to colonial resistance, documenting the deliberate escalatory strategy chosen by British leadership.",
+  "target_type": "general"
+}`},
+        {from: 'EVID15', to: 'E5', label: 'provides_evidence_for', title: `{
+  "diagnostic_type": "straw_in_the_wind",
+  "probative_value": 0.7,
+  "source_text_quote": "Contemporary newspaper accounts provide evidence for the widespread nature of colonial resistance, documenting participation across different social classes and geographic regions.",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'EVID16', to: 'H4', label: 'supports', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "Based on the discovery of previously unknown correspondence between colonial leaders and European philosophers, we must update the probability that Enlightenment ideas influenced colonial thinking from our prior estimate of 0.6 to a posterior probability of 0.9.",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'CM1', to: 'E5', label: 'causes', title: `{
+  "description": "The Imperial Control Mechanism's enforcement step directly generated colonial resistance and unity.",
+  "target_type": "event_occurrence",
+  "type": "direct"
+}`},
+        {from: 'CM2', to: 'E1', label: 'causes', title: `{
+  "description": "The Colonial Resistance Mechanism, through escalation to armed rebellion, ultimately led to the American Revolution.",
+  "target_type": "event_occurrence",
+  "type": "direct"
+}`},
+        {from: 'E2', to: 'CM1', label: 'part_of_mechanism', title: `{
+  "description": "Parliament imposing new fiscal policies is the first step in the Imperial Control Mechanism.",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'E3', to: 'CM1', label: 'part_of_mechanism', title: `{
+  "description": "Policies creating economic pressure and constitutional violations is the second step in the Imperial Control Mechanism.",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'E4', to: 'CM1', label: 'part_of_mechanism', title: `{
+  "description": "British officials enforcing compliance is the third step in the Imperial Control Mechanism.",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'E5', to: 'CM1', label: 'part_of_mechanism', title: `{
+  "description": "Enforcement generating colonial resistance and unity is the fourth step in the Imperial Control Mechanism.",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'C1', to: 'E1', label: 'constrains', title: `{
+  "description": "British naval dominance limited colonial options for foreign military assistance during the Revolution.",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'C2', to: 'CM1', label: 'enables', title: `{
+  "description": "Geographic distance created communication delays and enforcement difficulties for the Imperial Control Mechanism.",
+  "target_type": "mechanism_operation"
+}`},
+        {from: 'C3', to: 'CM2', label: 'enables', title: `{
+  "description": "Enlightenment ideas provided the intellectual framework for the Colonial Resistance Mechanism, justifying resistance.",
+  "target_type": "mechanism_operation"
+}`},
+        {from: 'C4', to: 'E1', label: 'enables', title: `{
+  "description": "Colonial economic development made contemplating independence economically viable by the 1770s.",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'IR1', to: 'H6', label: 'infers', title: `{
+  "description": "Deductive reasoning leads to the inference that British fiscal policies were a necessary cause of colonial resistance.",
+  "logic_type": "deductive",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'IR2', to: 'H7', label: 'infers', title: `{
+  "description": "Abductive reasoning infers the existence of a systematic communication network as the best explanation for coordinated colonial responses.",
+  "logic_type": "abductive",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'EVID16', to: 'H4', label: 'updates_probability', title: `{
+  "description": "The discovery of new correspondence updates the probability that Enlightenment ideas influenced colonial thinking.",
+  "prior_probability": 0.6,
+  "posterior_probability": 0.9,
+  "target_type": "causal_relationship"
+}`},
+        {from: 'EVID1', to: 'H1', label: 'updates_probability', title: `{
+  "description": "The strength of smoking gun evidence from colonial declarations and doubly decisive constitutional language updates confidence in the constitutional principles hypothesis.",
+  "prior_probability": 0.7,
+  "posterior_probability": 0.95,
+  "target_type": "causal_relationship"
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

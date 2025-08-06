@@ -1,0 +1,109 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250801_175641_graph.json",
+  "case_identifier": "revolutions_20250801_175641_graph",
+  "generated_at": "2025-08-01T17:56:58.737322",
+  "causal_chains": [
+    {
+      "path": [
+        "event1",
+        "event2",
+        "event3",
+        "event4",
+        "event5",
+        "event6"
+      ],
+      "path_descriptions": [
+        "The French and Indian War concluded in 1763 with a British victory, resulting in substantial war debt for Britain and a shift in colonial administration, including the transfer of control over western lands to British officials in Montreal.  This created a need for new revenue sources in the colonies and a fundamental alteration in the relationship between the colonies and the British government.",
+        "The British Parliament imposed new taxes on the American colonies, such as the Stamp Act of 1765, to offset the costs of the French and Indian War. These taxes were implemented without the consent or representation of the colonists, sparking significant resistance and protests.",
+        "The Boston Tea Party of December 16, 1773, was a pivotal event where colonists, disguised as Native Americans, dumped tea into Boston Harbor to protest the Tea Act. This act of defiance further escalated tensions and solidified the colonists' opposition to British rule.",
+        "In response to the Boston Tea Party and growing colonial resistance, the British Parliament passed the Intolerable Acts in 1774. These acts were intended to punish Massachusetts and assert British authority, but instead further inflamed colonial sentiment and pushed the colonies closer to open rebellion.",
+        "The Battles of Lexington and Concord, on April 19, 1775, marked the beginning of armed conflict between the British Army and colonial militias.  These battles served as the catalyst for the outbreak of the American Revolutionary War.",
+        "The American Revolutionary War ended with the signing of the Treaty of Paris in 1783, which formally recognized the independence of the United States of America from Great Britain. This treaty concluded eight years of war and marked the successful establishment of a new nation."
+      ],
+      "edge_types": [
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes"
+      ],
+      "trigger": "event1",
+      "outcome": "event6",
+      "length": 6
+    }
+  ],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 6,
+      "Hypothesis": 2,
+      "Evidence": 2
+    },
+    "edge_type_distribution": {
+      "causes": 5,
+      "provides_evidence": 2
+    },
+    "density": 0.07777777777777778,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "event2": 0.222,
+      "event3": 0.222,
+      "event4": 0.222,
+      "event5": 0.222,
+      "event1": 0.111,
+      "event6": 0.111,
+      "hypothesis1": 0.111,
+      "evidence1": 0.111,
+      "hypothesis2": 0.111,
+      "evidence2": 0.111
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hypothesis1",
+      "description": "British taxation policies, imposed without colonial representation, directly caused the American Revolution because these policies violated the colonists' understanding of their rights as Englishmen and fueled widespread resentment and resistance, ultimately leading to armed conflict and the pursuit of independence.",
+      "assessment": "Supported",
+      "balance_score": 0.8,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence1"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis2",
+      "description": "The British government's response to colonial protests, including the deployment of troops and the passage of punitive laws like the Intolerable Acts, escalated tensions and ultimately contributed to the outbreak of the American Revolutionary War by pushing the colonies towards open rebellion and solidifying their resolve for independence.",
+      "assessment": "Supported",
+      "balance_score": 0.7,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence2"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

@@ -1,0 +1,304 @@
+{
+  "nodes": [
+    {
+      "id": "E1",
+      "type": "Event",
+      "properties": {
+        "description": "French and Indian War ends with defeat of France",
+        "type": "triggering",
+        "date": "1763",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "E2",
+      "type": "Event", 
+      "properties": {
+        "description": "British Parliament imposes new taxes to compensate for wartime costs",
+        "type": "intermediate",
+        "date": "1763-1765",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "E3",
+      "type": "Event",
+      "properties": {
+        "description": "Stamp Act Congress convenes and issues Declaration of Rights and Grievances",
+        "type": "intermediate",
+        "date": "1765",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "E4",
+      "type": "Event",
+      "properties": {
+        "description": "Boston Massacre - British troops kill protesters",
+        "type": "intermediate",
+        "date": "March 5, 1770",
+        "location": "Boston",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "E5",
+      "type": "Event",
+      "properties": {
+        "description": "Boston Tea Party - Sons of Liberty dump tea into Boston Harbor",
+        "type": "intermediate",
+        "date": "December 16, 1773",
+        "location": "Boston Harbor",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "E6",
+      "type": "Event",
+      "properties": {
+        "description": "Declaration of Independence adopted",
+        "type": "outcome",
+        "date": "July 4, 1776",
+        "location": "Philadelphia",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "E7",
+      "type": "Event",
+      "properties": {
+        "description": "Siege of Yorktown - decisive victory capturing British troops",
+        "type": "intermediate",
+        "date": "September 28, 1781",
+        "location": "Yorktown",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "E8",
+      "type": "Event",
+      "properties": {
+        "description": "Treaty of Paris signed - Britain recognizes American independence",
+        "type": "outcome",
+        "date": "September 3, 1783",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "CM1",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Colonial resistance escalation through coordinated protests and violence",
+        "confidence": 0.9,
+        "level_of_detail": "high"
+      }
+    },
+    {
+      "id": "CM2",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "British punitive response cycle intensifying colonial unity",
+        "confidence": 0.85,
+        "level_of_detail": "medium"
+      }
+    },
+    {
+      "id": "H1",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Taxation without representation was the primary cause of the American Revolution",
+        "prior_probability": 0.7,
+        "status": "supported"
+      }
+    },
+    {
+      "id": "H2",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Colonial self-governance tradition made British control unacceptable",
+        "prior_probability": 0.6,
+        "status": "supported"
+      }
+    },
+    {
+      "id": "EV1",
+      "type": "Evidence",
+      "properties": {
+        "description": "Stamp Act Congress declaration that 'taxation without representation violated their rights as Englishmen'",
+        "type": "smoking_gun",
+        "certainty": 1.0,
+        "source": "Historical record"
+      }
+    },
+    {
+      "id": "EV2",
+      "type": "Evidence",
+      "properties": {
+        "description": "Capt. Levi Preston's statement: 'we always had governed ourselves, and we always meant to'",
+        "type": "smoking_gun",
+        "certainty": 0.9,
+        "source": "First-hand testimony"
+      }
+    },
+    {
+      "id": "EV3",
+      "type": "Evidence",
+      "properties": {
+        "description": "Pattern of escalating British punitive measures (closing Boston Harbor, ending self-government)",
+        "type": "hoop",
+        "certainty": 1.0,
+        "source": "Historical record"
+      }
+    },
+    {
+      "id": "C1",
+      "type": "Condition",
+      "properties": {
+        "description": "British policy of salutary neglect for 150 years",
+        "type": "background",
+        "necessity": 0.8,
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "A1",
+      "type": "Actor",
+      "properties": {
+        "name": "George Washington",
+        "role": "Commander-in-chief of Continental Army",
+        "credibility": 1.0
+      }
+    },
+    {
+      "id": "A2",
+      "type": "Actor",
+      "properties": {
+        "name": "King George III",
+        "role": "British monarch",
+        "credibility": 1.0
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge1",
+      "type": "causes",
+      "source": "E1",
+      "target": "E2",
+      "properties": {
+        "certainty": 0.95,
+        "type": "direct"
+      }
+    },
+    {
+      "id": "edge2",
+      "type": "causes",
+      "source": "E2",
+      "target": "E3",
+      "properties": {
+        "certainty": 0.9,
+        "type": "direct"
+      }
+    },
+    {
+      "id": "edge3",
+      "type": "part_of_mechanism",
+      "source": "E3",
+      "target": "CM1",
+      "properties": {
+        "role": "Initial organized resistance"
+      }
+    },
+    {
+      "id": "edge4",
+      "type": "part_of_mechanism",
+      "source": "E4",
+      "target": "CM1",
+      "properties": {
+        "role": "Violence escalation"
+      }
+    },
+    {
+      "id": "edge5",
+      "type": "part_of_mechanism",
+      "source": "E5",
+      "target": "CM1",
+      "properties": {
+        "role": "Symbolic defiance"
+      }
+    },
+    {
+      "id": "edge6",
+      "type": "causes",
+      "source": "E5",
+      "target": "E6",
+      "properties": {
+        "certainty": 0.8,
+        "type": "indirect",
+        "mechanism_id": "CM2"
+      }
+    },
+    {
+      "id": "edge7",
+      "type": "causes",
+      "source": "E7",
+      "target": "E8",
+      "properties": {
+        "certainty": 0.95,
+        "type": "direct"
+      }
+    },
+    {
+      "id": "edge8",
+      "type": "supports",
+      "source": "EV1",
+      "target": "H1",
+      "properties": {
+        "probative_value": 0.9,
+        "source_text_quote": "taxation without representation violated their rights as Englishmen",
+        "certainty": 0.95
+      }
+    },
+    {
+      "id": "edge9",
+      "type": "supports",
+      "source": "EV2",
+      "target": "H2",
+      "properties": {
+        "probative_value": 0.85,
+        "source_text_quote": "we always had governed ourselves, and we always meant to",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "edge10",
+      "type": "supports",
+      "source": "EV3",
+      "target": "H1",
+      "properties": {
+        "probative_value": 0.7,
+        "certainty": 0.85
+      }
+    },
+    {
+      "id": "edge11",
+      "type": "enables",
+      "source": "C1",
+      "target": "E3",
+      "properties": {
+        "necessity": 0.8,
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "edge12",
+      "type": "initiates",
+      "source": "A1",
+      "target": "E7",
+      "properties": {
+        "certainty": 1.0,
+        "intention": "Defeat British forces"
+      }
+    }
+  ]
+}

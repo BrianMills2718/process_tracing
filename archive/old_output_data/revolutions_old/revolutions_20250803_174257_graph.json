@@ -1,0 +1,447 @@
+{
+  "nodes": [
+    {
+      "id": "event_1763_french_indian_war_end",
+      "type": "Event",
+      "properties": {
+        "description": "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War in 1763, leaving Britain with massive war debt that requires new colonial taxation policies and the turning over of control of the colonies' western lands to British officials in Montreal.",
+        "type": "triggering",
+        "date": "1763",
+        "start_date": "1763",
+        "end_date": "1763"
+      }
+    },
+    {
+      "id": "event_1765_stamp_act",
+      "type": "Event",
+      "properties": {
+        "description": "In March 1765, Parliament passed the Stamp Act, which imposed direct taxes on the colonies for the first time on all official documents, newspapers, almanacs, pamphlets, and even decks of playing cards, leading colonists to object vehemently and form the Sons of Liberty.",
+        "type": "intermediate",
+        "date": "March 1765",
+        "start_date": "1765",
+        "end_date": "1765"
+      }
+    },
+    {
+      "id": "event_1767_townshend_acts",
+      "type": "Event",
+      "properties": {
+        "description": "In 1767, the British Parliament passed the Townshend Acts, which placed duties on several staple goods including paper, glass, and tea, and established a Board of Customs in Boston to more rigorously execute trade regulations, further escalating colonial tensions.",
+        "type": "intermediate",
+        "date": "1767",
+        "start_date": "1767",
+        "end_date": "1767"
+      }
+    },
+    {
+      "id": "event_1770_boston_massacre",
+      "type": "Event",
+      "properties": {
+        "description": "On March 5, 1770, a large crowd gathered around British soldiers in Boston, growing threatening and throwing objects, which led the soldiers to panic and fire into the crowd, hitting 11 people and killing three civilians at the scene, an event that quickly turned colonial sentiment against the British.",
+        "type": "intermediate",
+        "date": "March 5, 1770",
+        "start_date": "1770",
+        "end_date": "1770"
+      }
+    },
+    {
+      "id": "event_1773_boston_tea_party",
+      "type": "Event",
+      "properties": {
+        "description": "On December 16, 1773, in a seminal event in the American Revolution's escalation, Sons of Liberty activists wearing costumes of Native Americans instigated the Boston Tea Party, during which they boarded and dumped chests of tea owned by the British East India Company into Boston Harbor.",
+        "type": "intermediate",
+        "date": "December 16, 1773",
+        "start_date": "1773",
+        "end_date": "1773"
+      }
+    },
+    {
+      "id": "event_1774_intolerable_acts",
+      "type": "Event",
+      "properties": {
+        "description": "The British government responded to the Boston Tea Party by passing four laws, known as the Intolerable Acts, which altered Massachusetts' charter, restricted town meetings, ordered British soldiers to be tried in Britain, closed Boston Port, and allowed housing of troops in citizens' homes.",
+        "type": "intermediate",
+        "date": "1774",
+        "start_date": "1774",
+        "end_date": "1774"
+      }
+    },
+    {
+      "id": "event_1774_continental_congress",
+      "type": "Event",
+      "properties": {
+        "description": "In late 1774, 12 of the Thirteen Colonies sent delegates to the First Continental Congress, which met in Philadelphia to coordinate Patriot resistance through underground networks of committees and call for a boycott of all British goods.",
+        "type": "intermediate",
+        "date": "late 1774",
+        "start_date": "1774",
+        "end_date": "1774"
+      }
+    },
+    {
+      "id": "event_1775_battles_lexington_concord",
+      "type": "Event",
+      "properties": {
+        "description": "The American Revolutionary War was launched on April 19, 1775, in the Battles of Lexington and Concord, marking the initial military actions that transformed political discontent into open armed conflict.",
+        "type": "intermediate",
+        "date": "April 19, 1775",
+        "start_date": "1775",
+        "end_date": "1775"
+      }
+    },
+    {
+      "id": "event_1776_declaration_independence",
+      "type": "Event",
+      "properties": {
+        "description": "On July 4, 1776, the Second Continental Congress unanimously adopted the Declaration of Independence, authored primarily by Thomas Jefferson, which embodied the political philosophies of liberalism and republicanism, rejected monarchy, and formally escalated the war.",
+        "type": "outcome",
+        "date": "July 4, 1776",
+        "start_date": "1776",
+        "end_date": "1776"
+      }
+    },
+    {
+      "id": "event_1781_yorktown_1783_paris_treaty",
+      "type": "Event",
+      "properties": {
+        "description": "In 1781, a decisive victory by Washington and the Continental Army in the Siege of Yorktown inspired King George III and the British to negotiate an end to colonial rule, which was formally codified in the Treaty of Paris in 1783, leading to the establishment of the sovereign United States of America.",
+        "type": "outcome",
+        "date": "1781-1783",
+        "start_date": "1781",
+        "end_date": "1783"
+      }
+    },
+    {
+      "id": "hypothesis_1",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "British Parliament's decision to impose new taxes and assert greater control over western lands after the French and Indian War caused widespread colonial discontent because these policies were perceived as unjust burdens and infringements on established colonial autonomy and rights, thereby triggering the path to revolution.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "hypothesis_2",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The principle of 'no taxation without representation' was a fundamental causal factor in colonial rebellion, as colonists viewed British taxation policies like the Stamp Act as a direct violation of their deeply held rights as Englishmen and their accustomed self-governance.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "hypothesis_3",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "British efforts to assert explicit authority over the colonies through new acts like the Townshend Acts and the deployment of troops directly escalated colonial resistance by confirming fears of tyrannical governance and infringing upon cherished liberties, prompting coordinated boycotts and public outcry.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "hypothesis_4",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The British government's severe punitive measures, particularly the Intolerable Acts enacted after the Boston Tea Party, inadvertently unified and intensified the revolutionary cause across the colonies by demonstrating an intent to crush self-government, thus fostering inter-colonial cooperation and resistance.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "hypothesis_5",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The long-standing British policy of 'salutary neglect,' which allowed colonies to largely govern themselves, was a critical precondition for the American Revolution, as it fostered a deep-seated expectation of self-rule that made subsequent British attempts at direct control intolerable and ignited resistance.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evidence_1_1",
+      "type": "Evidence",
+      "properties": {
+        "description": "The text states that colonial discontent began shortly after the French and Indian War, indicating a temporal correlation between the war's end and the rise of dissatisfaction.",
+        "type": "straw_in_the_wind",
+        "source": "American Revolution Article",
+        "source_text_quote": "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War in 1763.",
+        "probative_value": 0.3
+      }
+    },
+    {
+      "id": "evidence_1_2",
+      "type": "Evidence",
+      "properties": {
+        "description": "British Parliament imposed new taxes and asserted control over western lands, which were the specific policies driving the discontent following the war.",
+        "type": "hoop",
+        "source": "American Revolution Article",
+        "source_text_quote": "Even though the colonies had fought in and supported the war, British Parliament imposed new taxes to compensate for wartime costs and turned control of the colonies' western lands over to the British officials in Montreal.",
+        "probative_value": 0.6
+      }
+    },
+    {
+      "id": "evidence_2_1",
+      "type": "Evidence",
+      "properties": {
+        "description": "The 'Declaration of Rights and Grievances' from the Stamp Act Congress explicitly articulated that 'taxation without representation' violated their rights as Englishmen, directly supporting the stated causal mechanism.",
+        "type": "smoking_gun",
+        "source": "American Revolution Article",
+        "source_text_quote": "its 'Declaration of Rights and Grievances' argued that taxation without representation violated their rights as Englishmen.",
+        "probative_value": 0.9
+      }
+    },
+    {
+      "id": "evidence_2_2",
+      "type": "Evidence",
+      "properties": {
+        "description": "Colonists' objection was specifically rooted in their lack of representation in Parliament, which they believed violated the unwritten English constitution, demonstrating the foundational nature of the 'no taxation without representation' grievance.",
+        "type": "hoop",
+        "source": "American Revolution Article",
+        "source_text_quote": "They objected to their lack of representation in the Parliament, which gave them no voice concerning legislation that affected them, such as the tax, violating the unwritten English constitution.",
+        "probative_value": 0.7
+      }
+    },
+    {
+      "id": "evidence_3_1",
+      "type": "Evidence",
+      "properties": {
+        "description": "The text explicitly states that Parliament's goal with the Townshend Acts was to assert its authority, not just collect revenue, which directly supports the claim that asserting authority was a causal factor in escalating resistance.",
+        "type": "smoking_gun",
+        "source": "American Revolution Article",
+        "source_text_quote": "Parliament's goal was not so much to collect revenue but to assert its authority over the colonies.",
+        "probative_value": 0.9
+      }
+    },
+    {
+      "id": "evidence_3_2",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Boston Massacre, caused by the deployment of British troops, led to widespread negative sentiment against the British, indicating a direct escalation of tensions due to military presence.",
+        "type": "doubly_decisive",
+        "source": "American Revolution Article",
+        "source_text_quote": "This accelerated the downward spiral in the relationship between Britain and the province of Massachusetts.",
+        "probative_value": 0.8
+      }
+    },
+    {
+      "id": "evidence_4_1",
+      "type": "Evidence",
+      "properties": {
+        "description": "The text directly states that London's response to the Boston Tea Party, the punitive laws, both ended self-government in Massachusetts and simultaneously expanded and intensified the revolutionary cause.",
+        "type": "smoking_gun",
+        "source": "American Revolution Article",
+        "source_text_quote": "London responded by closing Boston Harbor and enacting a series of punitive laws, which effectively ended self-government in Massachusetts but also served to expand and intensify the revolutionary cause.",
+        "probative_value": 0.95
+      }
+    },
+    {
+      "id": "evidence_4_2",
+      "type": "Evidence",
+      "properties": {
+        "description": "The British government's action of passing the Intolerable Acts was a necessary antecedent to their unifying and intensifying effect on colonial opinion.",
+        "type": "hoop",
+        "source": "American Revolution Article",
+        "source_text_quote": "The British government responded by passing four laws that came to be known as the Intolerable Acts, further darkening colonial opinion towards England.",
+        "probative_value": 0.7
+      }
+    },
+    {
+      "id": "evidence_5_1",
+      "type": "Evidence",
+      "properties": {
+        "description": "Captain Levi Preston's direct quote explicitly states the colonists' long-held belief in self-governance as the reason for rebellion, serving as strong evidence for this hypothesis.",
+        "type": "smoking_gun",
+        "source": "American Revolution Article",
+        "source_text_quote": "After the Revolution, one colonist, Capt. Levi Preston, of Danvers, Massachusetts, was asked why the Americans rebelled against England, responded, '\u2026we always had governed ourselves, and we always meant to. They didn\u2019t mean we should.'",
+        "probative_value": 0.9
+      }
+    },
+    {
+      "id": "evidence_5_2",
+      "type": "Evidence",
+      "properties": {
+        "description": "The colonists' long-term practice of self-governance and their enjoyment of it, enabled by salutary neglect, set the stage for their resistance when British policy changed.",
+        "type": "hoop",
+        "source": "American Revolution Article",
+        "source_text_quote": "The colonists became accustomed to running their own affairs, and they liked it.",
+        "probative_value": 0.6
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_e1_to_e2",
+      "type": "causes",
+      "source": "event_1763_french_indian_war_end",
+      "target": "event_1765_stamp_act",
+      "properties": {
+        "description": "The British debt from the French and Indian War directly led to the imposition of new taxes like the Stamp Act."
+      }
+    },
+    {
+      "id": "edge_e2_to_e3",
+      "type": "causes",
+      "source": "event_1765_stamp_act",
+      "target": "event_1767_townshend_acts",
+      "properties": {
+        "description": "The repeal of the Stamp Act was followed by new attempts at taxation with the Townshend Acts, continuing colonial grievances."
+      }
+    },
+    {
+      "id": "edge_e3_to_e4",
+      "type": "causes",
+      "source": "event_1767_townshend_acts",
+      "target": "event_1770_boston_massacre",
+      "properties": {
+        "description": "Tensions from the Townshend Acts and the deployment of troops led to violent confrontations like the Boston Massacre."
+      }
+    },
+    {
+      "id": "edge_e4_to_e5",
+      "type": "causes",
+      "source": "event_1770_boston_massacre",
+      "target": "event_1773_boston_tea_party",
+      "properties": {
+        "description": "The temporary resolution of the crisis after the Boston Massacre was broken by new grievances leading to events like the Boston Tea Party."
+      }
+    },
+    {
+      "id": "edge_e5_to_e6",
+      "type": "causes",
+      "source": "event_1773_boston_tea_party",
+      "target": "event_1774_intolerable_acts",
+      "properties": {
+        "description": "The Boston Tea Party directly provoked the British government's severe response in the form of the Intolerable Acts."
+      }
+    },
+    {
+      "id": "edge_e6_to_e7",
+      "type": "causes",
+      "source": "event_1774_intolerable_acts",
+      "target": "event_1774_continental_congress",
+      "properties": {
+        "description": "The punitive nature of the Intolerable Acts spurred the colonies to unite and convene the First Continental Congress."
+      }
+    },
+    {
+      "id": "edge_e7_to_e8",
+      "type": "causes",
+      "source": "event_1774_continental_congress",
+      "target": "event_1775_battles_lexington_concord",
+      "properties": {
+        "description": "The coordination of resistance and militia training by the Continental Congress prepared the colonies for military conflict, leading to the Battles of Lexington and Concord."
+      }
+    },
+    {
+      "id": "edge_e8_to_e9",
+      "type": "causes",
+      "source": "event_1775_battles_lexington_concord",
+      "target": "event_1776_declaration_independence",
+      "properties": {
+        "description": "The outbreak of military hostilities at Lexington and Concord prompted the colonies to declare full independence."
+      }
+    },
+    {
+      "id": "edge_e9_to_e10",
+      "type": "causes",
+      "source": "event_1776_declaration_independence",
+      "target": "event_1781_yorktown_1783_paris_treaty",
+      "properties": {
+        "description": "The formal declaration of independence escalated the conflict into a full-scale war, culminating in events like the Siege of Yorktown and the Treaty of Paris."
+      }
+    },
+    {
+      "id": "edge_e1_h1_support",
+      "type": "supports",
+      "source": "evidence_1_1",
+      "target": "hypothesis_1",
+      "properties": {
+        "description": "Temporal correlation between war's end and discontent.",
+        "probative_value": 0.3
+      }
+    },
+    {
+      "id": "edge_e1_h1_support2",
+      "type": "supports",
+      "source": "evidence_1_2",
+      "target": "hypothesis_1",
+      "properties": {
+        "description": "Specific British policies implemented after the war that caused discontent.",
+        "probative_value": 0.6
+      }
+    },
+    {
+      "id": "edge_e2_h2_support",
+      "type": "supports",
+      "source": "evidence_2_1",
+      "target": "hypothesis_2",
+      "properties": {
+        "description": "Explicit statement from colonial delegates that 'taxation without representation' violated their rights.",
+        "probative_value": 0.9
+      }
+    },
+    {
+      "id": "edge_e2_h2_support2",
+      "type": "supports",
+      "source": "evidence_2_2",
+      "target": "hypothesis_2",
+      "properties": {
+        "description": "Colonists' specific reason for objecting to the tax was lack of representation, confirming the core grievance.",
+        "probative_value": 0.7
+      }
+    },
+    {
+      "id": "edge_e3_h3_support",
+      "type": "supports",
+      "source": "evidence_3_1",
+      "target": "hypothesis_3",
+      "properties": {
+        "description": "Parliament's explicit goal was to assert authority, validating the causal mechanism of the hypothesis.",
+        "probative_value": 0.9
+      }
+    },
+    {
+      "id": "edge_e3_h3_support2",
+      "type": "supports",
+      "source": "evidence_3_2",
+      "target": "hypothesis_3",
+      "properties": {
+        "description": "The Boston Massacre definitively worsened relations and turned sentiment against Britain, showing escalation due to military presence.",
+        "probative_value": 0.8
+      }
+    },
+    {
+      "id": "edge_e4_h4_support",
+      "type": "supports",
+      "source": "evidence_4_1",
+      "target": "hypothesis_4",
+      "properties": {
+        "description": "Direct statement that punitive laws intensified the revolutionary cause and ended self-government.",
+        "probative_value": 0.95
+      }
+    },
+    {
+      "id": "edge_e4_h4_support2",
+      "type": "supports",
+      "source": "evidence_4_2",
+      "target": "hypothesis_4",
+      "properties": {
+        "description": "The passage of the Intolerable Acts was a necessary precursor to their unifying effect on colonial opinion.",
+        "probative_value": 0.7
+      }
+    },
+    {
+      "id": "edge_e5_h5_support",
+      "type": "supports",
+      "source": "evidence_5_1",
+      "target": "hypothesis_5",
+      "properties": {
+        "description": "Direct testimony from a colonist on their long-standing practice and expectation of self-governance as the reason for rebellion.",
+        "probative_value": 0.9
+      }
+    },
+    {
+      "id": "edge_e5_h5_support2",
+      "type": "supports",
+      "source": "evidence_5_2",
+      "target": "hypothesis_5",
+      "properties": {
+        "description": "Colonists becoming accustomed to running their own affairs provided the foundation for their later resistance to British control.",
+        "probative_value": 0.6
+      }
+    }
+  ]
+}

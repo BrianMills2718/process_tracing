@@ -1,0 +1,111 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250521_100400_graph.json",
+  "case_identifier": "revolutions_20250521_100400_graph",
+  "generated_at": "2025-05-21T10:04:35.173030",
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "HY1",
+      "description": "British tax policies imposed without colonial representation caused colonial resistance.",
+      "assessment": "Supported",
+      "balance_score": 0.9,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV1"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY2",
+      "description": "The actions of the Sons of Liberty (protests, boycotts, threats of violence) made British tax laws unenforceable.",
+      "assessment": "Supported",
+      "balance_score": 0.9,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV3"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY3",
+      "description": "The Intolerable Acts, intended to punish Massachusetts, instead expanded and intensified the revolutionary cause across the colonies.",
+      "assessment": "Supported",
+      "balance_score": 1.8,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV19",
+        "EV21"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY4",
+      "description": "The Committees of Correspondence provided the essential framework for rebel government and coordinated colonial resistance.",
+      "assessment": "Supported",
+      "balance_score": 2.2,
+      "supporting_evidence_count": 3,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV14",
+        "EV16",
+        "EV17"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY5",
+      "description": "Salutary neglect accustomed colonists to self-governance, fueling resistance when Britain changed its policy.",
+      "assessment": "Supported",
+      "balance_score": 1.6,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV27",
+        "EV28"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY6",
+      "description": "The development of a unique American identity separate from British identity contributed to the desire for independence.",
+      "assessment": "Supported",
+      "balance_score": 3.0000000000000004,
+      "supporting_evidence_count": 5,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV29",
+        "EV30",
+        "EV31",
+        "EV32",
+        "EV33"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY7",
+      "description": "French military and naval support was decisive in securing American independence.",
+      "assessment": "Supported",
+      "balance_score": 2.2,
+      "supporting_evidence_count": 3,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV38",
+        "EV39",
+        "EV40"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_NA",
+      "description": "Not Applicable (no global hypothesis specified for this run)",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    }
+  ]
+}

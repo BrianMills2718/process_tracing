@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (revolutions)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'event1', label: 'Event', title: `{
+  "description": "The French and Indian War concludes in 1763 with a British victory, resulting in a substantial war debt for Britain and a shift in British colonial policy towards greater control and taxation of the American colonies.  The British government, burdened by the high costs of the war, decided to increase taxes on the American colonies to help offset the expenses.",
+  "type": "triggering",
+  "date": "1763",
+  "certainty": 0.95
+}`},
+        {id: 'event2', label: 'Event', title: `{
+  "description": "The British Parliament enacts the Stamp Act of 1765, imposing direct taxes on the American colonies without their representation in Parliament. This act directly targeted various printed materials, including legal documents, newspapers, and playing cards, requiring the purchase of official stamps.",
+  "type": "intermediate",
+  "date": "1765",
+  "certainty": 0.9
+}`},
+        {id: 'event3', label: 'Event', title: `{
+  "description": "The Boston Massacre occurs on March 5, 1770, when British troops fire upon a crowd of American colonists, resulting in several deaths. This event significantly escalated tensions between the colonists and the British government, fueling anti-British sentiment.",
+  "type": "intermediate",
+  "date": "March 5, 1770",
+  "certainty": 0.9
+}`},
+        {id: 'event4', label: 'Event', title: `{
+  "description": "The Boston Tea Party takes place on December 16, 1773, where American colonists, disguised as Native Americans, board British ships and dump chests of tea into Boston Harbor to protest the Tea Act.  This act of defiance dramatically escalated tensions and prompted further British retaliatory measures.",
+  "type": "intermediate",
+  "date": "December 16, 1773",
+  "certainty": 0.9
+}`},
+        {id: 'event5', label: 'Event', title: `{
+  "description": "The British government passes the Intolerable Acts in 1774, a series of punitive measures aimed at punishing Massachusetts for the Boston Tea Party. These acts included the closure of Boston Harbor and restrictions on self-governance in Massachusetts.",
+  "type": "intermediate",
+  "date": "1774",
+  "certainty": 0.9
+}`},
+        {id: 'event6', label: 'Event', title: `{
+  "description": "The Battles of Lexington and Concord mark the beginning of the American Revolutionary War on April 19, 1775, signifying the outbreak of armed conflict between the American colonists and Great Britain. The war's start irrevocably shattered any chance of peaceful resolution and escalated the conflict.",
+  "type": "intermediate",
+  "date": "April 19, 1775",
+  "certainty": 0.95
+}`},
+        {id: 'event7', label: 'Event', title: `{
+  "description": "The Continental Congress adopts the Declaration of Independence on July 4, 1776, formally declaring the thirteen colonies' independence from Great Britain.  This declaration marked a fundamental shift in the conflict, transforming it from a rebellion into a war for independence.",
+  "type": "intermediate",
+  "date": "July 4, 1776",
+  "certainty": 0.95
+}`},
+        {id: 'event8', label: 'Event', title: `{
+  "description": "The American Revolutionary War concludes with the signing of the Treaty of Paris in 1783, formally recognizing the independence of the United States of America. This treaty marked the end of the war and the establishment of the United States as a sovereign nation.",
+  "type": "outcome",
+  "date": "1783",
+  "certainty": 0.95
+}`},
+        {id: 'hypothesis1', label: 'Hypothesis', title: `{
+  "description": "British taxation policies, particularly those enacted after the French and Indian War, caused the American Revolution because they violated the colonists' understanding of their rights as Englishmen and their belief in 'no taxation without representation,' leading to widespread resentment and resistance.",
+  "certainty": 0.8,
+  "status": "supported"
+}`},
+        {id: 'evidence1', label: 'Evidence', title: `{
+  "description": "The Stamp Act Congress's 'Declaration of Rights and Grievances' explicitly stated that taxation without representation violated the colonists' rights as Englishmen.",
+  "type": "hoop",
+  "source": "Wikipedia Article on American Revolution",
+  "source_text_quote": "its \"Declaration of Rights and Grievances\" argued that taxation without representation violated their rights as Englishmen.",
+  "probative_value": 0.7
+}`},
+        {id: 'evidence2', label: 'Evidence', title: `{
+  "description": "The text highlights the widespread colonial protests, boycotts, and acts of defiance (like the Boston Tea Party) directly resulting from British tax policies, demonstrating the colonists' resistance to these policies.",
+  "type": "straw_in_the_wind",
+  "source": "Wikipedia Article on American Revolution",
+  "source_text_quote": "The colonists did not object that the taxes were high; they were actually low...They objected to their lack of representation in the Parliament...",
+  "probative_value": 0.6
+}`},
+        {id: 'hypothesis2', label: 'Hypothesis', title: `{
+  "description": "The British deployment of troops to Boston and the subsequent Boston Massacre were significant contributing factors to the American Revolution because they inflamed colonial tensions and solidified the colonists' belief in British oppression and their determination to resist.",
+  "certainty": 0.75,
+  "status": "supported"
+}`},
+        {id: 'evidence3', label: 'Evidence', title: `{
+  "description": "The article describes the Boston Massacre as an event that 'significantly escalated tensions between the colonists and the British government, fueling anti-British sentiment.'",
+  "type": "straw_in_the_wind",
+  "source": "Wikipedia Article on American Revolution",
+  "source_text_quote": "In an effort to quell the mounting rebellion, King George III deployed British troops to Boston, where British troops killed protesters in the Boston Massacre on March 5, 1770. This event significantly escalated tensions between the colonists and the British government, fueling anti-British sentiment.",
+  "probative_value": 0.65
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'event1', to: 'event2', label: 'causes', title: `{
+  "certainty": 0.9,
+  "description": "The end of the French and Indian War and Britain's subsequent financial difficulties directly led to the imposition of new taxes on the colonies."
+}`},
+        {from: 'event2', to: 'hypothesis1', label: 'causes', title: `{
+  "certainty": 0.8,
+  "description": "The Stamp Act and subsequent tax policies directly contributed to the hypothesis that these policies caused the American Revolution."
+}`},
+        {from: 'evidence1', to: 'hypothesis1', label: 'provides_evidence', title: `{
+  "certainty": 0.7,
+  "description": "The Declaration of Rights and Grievances supports the hypothesis by showing a key colonial grievance."
+}`},
+        {from: 'evidence2', to: 'hypothesis1', label: 'provides_evidence', title: `{
+  "certainty": 0.6,
+  "description": "Colonial reactions to the Stamp Act support the causal link between taxation policies and revolution."
+}`},
+        {from: 'event2', to: 'event3', label: 'causes', title: `{
+  "certainty": 0.7,
+  "description": "Colonial resistance to the Stamp Act and other taxes contributed to rising tensions which culminated in the Boston Massacre."
+}`},
+        {from: 'event3', to: 'hypothesis2', label: 'causes', title: `{
+  "certainty": 0.75,
+  "description": "The Boston Massacre directly contributed to the hypothesis that the British military presence and violence fueled colonial resistance."
+}`},
+        {from: 'evidence3', to: 'hypothesis2', label: 'provides_evidence', title: `{
+  "certainty": 0.65,
+  "description": "The description of the Boston Massacre's impact on colonial sentiment supports this hypothesis."
+}`},
+        {from: 'event3', to: 'event4', label: 'causes', title: `{
+  "certainty": 0.8,
+  "description": "The escalation of tensions after the Boston Massacre contributed to the events leading up to the Boston Tea Party."
+}`},
+        {from: 'event4', to: 'event5', label: 'causes', title: `{
+  "certainty": 0.9,
+  "description": "The Boston Tea Party prompted the British government's response in the form of the Intolerable Acts."
+}`},
+        {from: 'event5', to: 'event6', label: 'causes', title: `{
+  "certainty": 0.95,
+  "description": "The Intolerable Acts further escalated tensions and ultimately triggered the armed conflict at Lexington and Concord."
+}`},
+        {from: 'event6', to: 'event7', label: 'causes', title: `{
+  "certainty": 0.9,
+  "description": "The outbreak of war made the Declaration of Independence a necessary and logical step."
+}`},
+        {from: 'event7', to: 'event8', label: 'causes', title: `{
+  "certainty": 0.95,
+  "description": "The Declaration of Independence and the subsequent war led to the ultimate outcome \u2013 the Treaty of Paris and American Independence."
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

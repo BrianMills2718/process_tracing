@@ -1,0 +1,258 @@
+{
+  "nodes": [
+    {
+      "id": "event1",
+      "type": "Event",
+      "properties": {
+        "description": "The French and Indian War concludes in 1763 with a British victory, resulting in a substantial war debt and a shift in British policy towards the American colonies.",
+        "type": "triggering",
+        "date": "1763",
+        "source": "Wikipedia Article on American Revolution"
+      }
+    },
+    {
+      "id": "event2",
+      "type": "Event",
+      "properties": {
+        "description": "The British Parliament imposes new taxes on the American colonies, such as the Stamp Act and Townshend Acts, to offset the costs incurred during the French and Indian War.  This is done without significant colonial representation or consent in the decision-making process.",
+        "type": "intermediate",
+        "start_date": "1764",
+        "end_date": "1773",
+        "source": "Wikipedia Article on American Revolution"
+      }
+    },
+    {
+      "id": "event3",
+      "type": "Event",
+      "properties": {
+        "description": "The Boston Tea Party, a pivotal event in which American colonists, disguised as Native Americans, dumped tea into Boston Harbor to protest British taxation policies, further escalating tensions and resistance.",
+        "type": "intermediate",
+        "date": "December 16, 1773",
+        "source": "Wikipedia Article on American Revolution"
+      }
+    },
+    {
+      "id": "event4",
+      "type": "Event",
+      "properties": {
+        "description": "The British Parliament enacts the Intolerable Acts in response to the Boston Tea Party, aiming to punish Massachusetts and assert control over the colonies.  These acts further restricted colonial self-governance and intensified colonial resentment.",
+        "type": "intermediate",
+        "date": "1774",
+        "source": "Wikipedia Article on American Revolution"
+      }
+    },
+    {
+      "id": "event5",
+      "type": "Event",
+      "properties": {
+        "description": "The Battles of Lexington and Concord mark the beginning of armed conflict between British troops and American colonists, initiating the American Revolutionary War.",
+        "type": "intermediate",
+        "date": "April 19, 1775",
+        "source": "Wikipedia Article on American Revolution"
+      }
+    },
+    {
+      "id": "event6",
+      "type": "Event",
+      "properties": {
+        "description": "The Continental Army, led by George Washington, achieves a decisive victory at the Siege of Yorktown in 1781, significantly weakening British resolve and paving the way for negotiations.",
+        "type": "intermediate",
+        "date": "September 28, 1781",
+        "source": "Wikipedia Article on American Revolution"
+      }
+    },
+    {
+      "id": "event7",
+      "type": "Event",
+      "properties": {
+        "description": "The Treaty of Paris is signed in 1783, formally recognizing the independence of the United States of America from Great Britain, concluding the American Revolution.",
+        "type": "outcome",
+        "date": "September 3, 1783",
+        "source": "Wikipedia Article on American Revolution"
+      }
+    },
+    {
+      "id": "hypothesis1",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "British taxation policies implemented after the French and Indian War, coupled with the denial of colonial representation in Parliament, directly caused the American Revolution because these policies violated the colonists' deeply held belief in their rights as Englishmen and fueled a sense of injustice and resentment leading to organized resistance and ultimately armed rebellion.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evidence1",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Stamp Act Congress's 'Declaration of Rights and Grievances' explicitly stated that 'taxation without representation violated their rights as Englishmen,' demonstrating a clear link between taxation policies and the colonists' grievances.",
+        "type": "hoop",
+        "source": "Wikipedia Article on American Revolution",
+        "source_text_quote": "its \"Declaration of Rights and Grievances\" argued that taxation without representation violated their rights as Englishmen.",
+        "probative_value": 0.7
+      }
+    },
+    {
+      "id": "evidence2",
+      "type": "Evidence",
+      "properties": {
+        "description": "The widespread colonial boycotts of British goods, such as those following the Stamp Act and Townshend Acts, demonstrate the colonists' active resistance to British policies, showing a direct causal link between policy and colonial action.",
+        "type": "straw_in_the_wind",
+        "source": "Wikipedia Article on American Revolution",
+        "source_text_quote": "Colonists responded to the taxes by organizing new boycotts of British goods.",
+        "probative_value": 0.5
+      }
+    },
+    {
+      "id": "evidence3",
+      "type": "Evidence",
+      "properties": {
+        "description": "The escalation of events, from the Boston Massacre to the Boston Tea Party and ultimately the Battles of Lexington and Concord, shows a clear progression from protest to armed conflict, directly linked to the ongoing tension created by British policies.",
+        "type": "straw_in_the_wind",
+        "source": "Wikipedia Article on American Revolution",
+        "source_text_quote": "The Boston Massacre... accelerated the downward spiral in the relationship between Britain and the province of Massachusetts.",
+        "probative_value": 0.6
+      }
+    },
+    {
+      "id": "hypothesis2",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The British government's attempts to assert greater control over the colonies after the French and Indian War, including military presence and restrictions on self-governance, directly contributed to the growing colonial resistance and ultimately led to the American Revolution because these actions undermined colonial autonomy and heightened the sense of oppression.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evidence4",
+      "type": "Evidence",
+      "properties": {
+        "description": "The deployment of British troops to Boston following the unrest surrounding the Townshend Acts and the seizure of the Liberty demonstrates a British attempt to assert control, leading to further escalation of conflict.",
+        "type": "straw_in_the_wind",
+        "source": "Wikipedia Article on American Revolution",
+        "source_text_quote": "prompting the British to deploy troops to Boston.",
+        "probative_value": 0.6
+      }
+    },
+    {
+      "id": "evidence5",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Intolerable Acts, enacted in response to the Boston Tea Party, directly aimed to curtail colonial self-governance in Massachusetts and further punish the colonists for their actions, exacerbating tensions and pushing the colonies towards rebellion.",
+        "type": "smoking_gun",
+        "source": "Wikipedia Article on American Revolution",
+        "source_text_quote": "The British government responded by passing four laws that came to be known as the Intolerable Acts, further darkening colonial opinion towards England.",
+        "probative_value": 0.8
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge1",
+      "type": "causes",
+      "source": "event1",
+      "target": "event2",
+      "properties": {
+        "certainty": 0.8,
+        "description": "The end of the French and Indian War and the resulting British debt created the conditions for the implementation of new colonial taxation policies."
+      }
+    },
+    {
+      "id": "edge2",
+      "type": "causes",
+      "source": "event2",
+      "target": "event3",
+      "properties": {
+        "certainty": 0.7,
+        "description": "British taxation policies and the lack of colonial representation led to increased colonial resistance, culminating in the Boston Tea Party."
+      }
+    },
+    {
+      "id": "edge3",
+      "type": "causes",
+      "source": "event3",
+      "target": "event4",
+      "properties": {
+        "certainty": 0.9,
+        "description": "The Boston Tea Party prompted the British government to enact the Intolerable Acts as a punitive measure."
+      }
+    },
+    {
+      "id": "edge4",
+      "type": "causes",
+      "source": "event4",
+      "target": "event5",
+      "properties": {
+        "certainty": 0.8,
+        "description": "The Intolerable Acts, further restricting colonial self-governance, escalated tensions and triggered armed conflict at Lexington and Concord."
+      }
+    },
+    {
+      "id": "edge5",
+      "type": "causes",
+      "source": "event5",
+      "target": "event6",
+      "properties": {
+        "certainty": 0.7,
+        "description": "The start of the Revolutionary War led to a series of military engagements, culminating in the decisive victory at Yorktown."
+      }
+    },
+    {
+      "id": "edge6",
+      "type": "causes",
+      "source": "event6",
+      "target": "event7",
+      "properties": {
+        "certainty": 0.9,
+        "description": "The American victory at Yorktown weakened British resolve, leading to negotiations and the signing of the Treaty of Paris."
+      }
+    },
+    {
+      "id": "edge7",
+      "type": "provides_evidence",
+      "source": "evidence1",
+      "target": "hypothesis1",
+      "properties": {
+        "certainty": 0.7,
+        "probative_value": 0.7
+      }
+    },
+    {
+      "id": "edge8",
+      "type": "provides_evidence",
+      "source": "evidence2",
+      "target": "hypothesis1",
+      "properties": {
+        "certainty": 0.5,
+        "probative_value": 0.5
+      }
+    },
+    {
+      "id": "edge9",
+      "type": "provides_evidence",
+      "source": "evidence3",
+      "target": "hypothesis1",
+      "properties": {
+        "certainty": 0.6,
+        "probative_value": 0.6
+      }
+    },
+    {
+      "id": "edge10",
+      "type": "provides_evidence",
+      "source": "evidence4",
+      "target": "hypothesis2",
+      "properties": {
+        "certainty": 0.6,
+        "probative_value": 0.6
+      }
+    },
+    {
+      "id": "edge11",
+      "type": "provides_evidence",
+      "source": "evidence5",
+      "target": "hypothesis2",
+      "properties": {
+        "certainty": 0.8,
+        "probative_value": 0.8
+      }
+    }
+  ]
+}

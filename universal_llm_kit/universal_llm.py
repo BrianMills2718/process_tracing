@@ -43,11 +43,11 @@ class UniversalLLM:
             ])
         
         # Google Models (if API key available)
-        if os.getenv("GEMINI_API_KEY"):
+        if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"):
             model_list.extend([
+                {"model_name": "smart", "litellm_params": {"model": "gemini/gemini-2.5-flash", "max_tokens": 65536}},
                 {"model_name": "code", "litellm_params": {"model": "gemini/gemini-2.5-flash", "max_tokens": 65536, "tools": [{"codeExecution": {}}]}},
-                {"model_name": "smart", "litellm_params": {"model": "gemini/gemini-2.0-flash", "max_tokens": 65536}},
-                {"model_name": "thinking", "litellm_params": {"model": "gemini/gemini-2.0-flash-thinking", "max_tokens": 32768}},
+                {"model_name": "fast", "litellm_params": {"model": "gemini/gemini-2.5-flash", "max_tokens": 32768}},
             ])
         
         # OpenRouter (if API key available)
@@ -100,21 +100,35 @@ class UniversalLLM:
         return response
     
     def structured_output(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
-        """Get structured JSON output"""
-        kwargs = {}
-        if schema:
-            kwargs["response_format"] = {"type": "json_object"}
-            # Handle both Pydantic models and dictionary schemas
-            if hasattr(schema, 'model_json_schema'):
-                prompt = f"{prompt}\n\nRespond with valid JSON matching this schema: {schema.model_json_schema()}"
-            else:
-                import json
-                prompt = f"{prompt}\n\nRespond with valid JSON matching this schema: {json.dumps(schema, indent=2)}"
-        else:
-            kwargs["response_format"] = {"type": "json_object"}
-            prompt = f"{prompt}\n\nRespond with valid JSON."
+        """Get structured JSON output using direct LiteLLM completion"""
+        import litellm
         
-        return self.chat(prompt, **kwargs)
+        # Get API key
+        api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("No Gemini API key found")
+        
+        # Prepare kwargs for structured output
+        kwargs = {
+            "model": "gemini/gemini-2.5-flash",
+            "messages": [{"role": "user", "content": prompt}],
+            "response_format": {"type": "json_object"},
+            "api_key": api_key
+        }
+        
+        # Add schema to prompt if provided
+        if schema and hasattr(schema, 'model_json_schema'):
+            schema_str = schema.model_json_schema()
+            kwargs["messages"][0]["content"] = f"{prompt}\n\nRespond with valid JSON matching this schema: {schema_str}"
+        elif schema:
+            import json
+            kwargs["messages"][0]["content"] = f"{prompt}\n\nRespond with valid JSON matching this schema: {json.dumps(schema, indent=2)}"
+        else:
+            kwargs["messages"][0]["content"] = f"{prompt}\n\nRespond with valid JSON."
+        
+        # Make direct LiteLLM call
+        response = litellm.completion(**kwargs)
+        return response.choices[0].message.content
     
     def compare_models(self, prompt: str, models: List[str] = None) -> Dict[str, str]:
         """Compare responses across different models"""

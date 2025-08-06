@@ -1,0 +1,184 @@
+{
+  "nodes": [
+    {
+      "id": "E1",
+      "type": "Event",
+      "properties": {
+        "description": "A triggering event that initiates the causal process",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "CM1",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Hypothesized mechanism linking E1 to the outcome",
+        "confidence": 0.5,
+        "status": "hypothetical",
+        "level_of_detail": "medium"
+      }
+    },
+    {
+      "id": "E_outcome",
+      "type": "Event",
+      "properties": {
+        "description": "The final outcome event of the process",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "H1",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "CM1 explains how E1 leads to E_outcome",
+        "status": "active"
+      }
+    },
+    {
+      "id": "E2",
+      "type": "Event",
+      "properties": {
+        "description": "First intermediate step in CM1",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E3",
+      "type": "Event",
+      "properties": {
+        "description": "Second intermediate step in CM1",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "C1",
+      "type": "Condition",
+      "properties": {
+        "description": "An enabling condition for the mechanism",
+        "type": "enabling"
+      }
+    },
+    {
+      "id": "C2",
+      "type": "Condition",
+      "properties": {
+        "description": "A constraining condition for the mechanism",
+        "type": "constraining"
+      }
+    },
+    {
+      "id": "EV1",
+      "type": "Evidence",
+      "properties": {
+        "description": "Testimony supporting the hypothesis",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV2",
+      "type": "Evidence",
+      "properties": {
+        "description": "Document refuting the hypothesis",
+        "type": "hoop"
+      }
+    },
+    {
+      "id": "AE1",
+      "type": "Alternative_Explanation",
+      "properties": {
+        "description": "An alternative cause for the outcome event",
+        "status": "active"
+      }
+    },
+    {
+      "id": "EV3",
+      "type": "Evidence",
+      "properties": {
+        "description": "Observation supporting the alternative explanation",
+        "type": "general"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "E1_causes_CM1",
+      "type": "causes",
+      "source": "E1",
+      "target": "CM1",
+      "properties": {}
+    },
+    {
+      "id": "CM1_causes_E_outcome",
+      "type": "causes",
+      "source": "CM1",
+      "target": "E_outcome",
+      "properties": {}
+    },
+    {
+      "id": "E2_part_CM1",
+      "type": "part_of_mechanism",
+      "source": "E2",
+      "target": "CM1",
+      "properties": {}
+    },
+    {
+      "id": "E3_part_CM1",
+      "type": "part_of_mechanism",
+      "source": "E3",
+      "target": "CM1",
+      "properties": {}
+    },
+    {
+      "id": "C1_enables_CM1",
+      "type": "enables",
+      "source": "C1",
+      "target": "CM1",
+      "properties": {}
+    },
+    {
+      "id": "C2_constrains_CM1",
+      "type": "constrains",
+      "source": "C2",
+      "target": "CM1",
+      "properties": {}
+    },
+    {
+      "id": "EV1_supports_H1",
+      "type": "supports",
+      "source": "EV1",
+      "target": "H1",
+      "properties": {
+        "probative_value": 0.6,
+        "source_text_quote": "The witness stated 'I saw step E2 occur'."
+      }
+    },
+    {
+      "id": "EV2_refutes_H1",
+      "type": "refutes",
+      "source": "EV2",
+      "target": "H1",
+      "properties": {
+        "probative_value": 0.8,
+        "source_text_quote": "The official record shows E3 could not have happened."
+      }
+    },
+    {
+      "id": "H1_explains_CM1",
+      "type": "explains_mechanism",
+      "source": "H1",
+      "target": "CM1",
+      "properties": {
+        "type_of_claim": "operational_details"
+      }
+    },
+    {
+      "id": "EV3_supports_AE1",
+      "type": "supports_alternative",
+      "source": "EV3",
+      "target": "AE1",
+      "properties": {
+        "probative_value": 0.7
+      }
+    }
+  ]
+}

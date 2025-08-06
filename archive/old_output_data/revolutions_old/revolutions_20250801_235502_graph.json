@@ -1,0 +1,227 @@
+{
+  "nodes": [
+    {
+      "id": "event1",
+      "type": "Event",
+      "properties": {
+        "description": "The French and Indian War concluded in 1763 with a British victory, resulting in a substantial war debt for Britain and a shift in control over the colonies' western lands to British officials in Montreal.  This event significantly altered the relationship between Britain and its American colonies, leading to increased tensions and ultimately contributing to the American Revolution.",
+        "type": "triggering",
+        "date": "1763",
+        "is_point_in_time": true
+      }
+    },
+    {
+      "id": "event2",
+      "type": "Event",
+      "properties": {
+        "description": "The British Parliament imposed new taxes on the American colonies, such as the Stamp Act (1765) and the Townshend Acts (1767), to offset the costs incurred during the French and Indian War. These taxes, levied without direct colonial representation in Parliament, ignited widespread colonial resentment and resistance.",
+        "type": "intermediate",
+        "date": "1765-1767",
+        "is_point_in_time": false
+      }
+    },
+    {
+      "id": "event3",
+      "type": "Event",
+      "properties": {
+        "description": "The Boston Tea Party of 1773, where American colonists dumped tea into Boston Harbor to protest British taxation policies, marked a significant escalation in the conflict between the colonies and Great Britain. This act of defiance further fueled revolutionary sentiment and prompted harsh retaliatory measures from the British government.",
+        "type": "intermediate",
+        "date": "1773",
+        "is_point_in_time": true
+      }
+    },
+    {
+      "id": "event4",
+      "type": "Event",
+      "properties": {
+        "description": "The British Parliament enacted the Intolerable Acts in 1774, a series of punitive measures designed to punish Massachusetts for the Boston Tea Party and curb colonial resistance. These acts, however, served to further unite the colonies against British rule and accelerate the movement towards independence.",
+        "type": "intermediate",
+        "date": "1774",
+        "is_point_in_time": true
+      }
+    },
+    {
+      "id": "event5",
+      "type": "Event",
+      "properties": {
+        "description": "The Battles of Lexington and Concord, fought on April 19, 1775, marked the beginning of open warfare between the American colonists and Great Britain, signifying the formal start of the American Revolutionary War.",
+        "type": "intermediate",
+        "date": "1775-04-19",
+        "is_point_in_time": true
+      }
+    },
+    {
+      "id": "event6",
+      "type": "Event",
+      "properties": {
+        "description": "The Second Continental Congress adopted the Declaration of Independence on July 4, 1776, formally declaring the thirteen colonies' independence from Great Britain.  This act solidified the colonists' commitment to revolution and fundamentally altered the nature of the conflict.",
+        "type": "intermediate",
+        "date": "1776-07-04",
+        "is_point_in_time": true
+      }
+    },
+    {
+      "id": "event7",
+      "type": "Event",
+      "properties": {
+        "description": "The Siege of Yorktown in 1781 resulted in a decisive victory for the Continental Army, aided by French forces, effectively ending major fighting in the Revolutionary War. This victory significantly weakened British resolve and paved the way for negotiations leading to American independence.",
+        "type": "intermediate",
+        "date": "1781",
+        "is_point_in_time": true
+      }
+    },
+    {
+      "id": "event8",
+      "type": "Event",
+      "properties": {
+        "description": "The Treaty of Paris, signed in 1783, formally recognized the independence of the United States of America from Great Britain, concluding the American Revolution and establishing the United States as a sovereign nation.  This marked the end of British colonial rule in the thirteen colonies.",
+        "type": "outcome",
+        "date": "1783",
+        "is_point_in_time": true
+      }
+    },
+    {
+      "id": "hypothesis1",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "British taxation policies, implemented without adequate colonial representation, directly caused the American Revolution because they violated the colonists' deeply held beliefs in their rights as Englishmen and their right to self-governance, leading to escalating resistance and ultimately armed conflict.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evidence1",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Stamp Act Congress's 'Declaration of Rights and Grievances' explicitly stated that taxation without representation violated the colonists' rights as Englishmen.",
+        "type": "hoop",
+        "source": "Wikipedia article on the American Revolution",
+        "source_text_quote": "its \"Declaration of Rights and Grievances\" argued that taxation without representation violated their rights as Englishmen.",
+        "probative_value": 0.7
+      }
+    },
+    {
+      "id": "evidence2",
+      "type": "Evidence",
+      "properties": {
+        "description": "The colonists' widespread boycotts and protests against British taxes demonstrate their strong opposition to the policies and their willingness to engage in collective action to resist them.",
+        "type": "straw_in_the_wind",
+        "source": "Wikipedia article on the American Revolution",
+        "source_text_quote": "The colonists did not object that the taxes were high; they were actually low...They objected to their lack of representation in the Parliament...",
+        "probative_value": 0.5
+      }
+    },
+    {
+      "id": "evidence3",
+      "type": "Evidence",
+      "properties": {
+        "description": "The escalating violence, including events like the Boston Massacre and the Boston Tea Party, shows a clear progression from peaceful protest to armed resistance, directly linked to British policies.",
+        "type": "straw_in_the_wind",
+        "source": "Wikipedia article on the American Revolution",
+        "source_text_quote": "On March 5, 1770, a large crowd gathered around a group of British soldiers on a Boston street...They hit 11 people; three civilians died...",
+        "probative_value": 0.6
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge1",
+      "type": "causes",
+      "source": "event1",
+      "target": "event2",
+      "properties": {
+        "certainty": 0.8,
+        "description": "The end of the French and Indian War and Britain's resulting debt created the conditions for new taxation policies."
+      }
+    },
+    {
+      "id": "edge2",
+      "type": "causes",
+      "source": "event2",
+      "target": "event3",
+      "properties": {
+        "certainty": 0.7,
+        "description": "The imposition of taxes without representation led to colonial resistance culminating in the Boston Tea Party."
+      }
+    },
+    {
+      "id": "edge3",
+      "type": "causes",
+      "source": "event3",
+      "target": "event4",
+      "properties": {
+        "certainty": 0.9,
+        "description": "The Boston Tea Party provoked the British government to enact the Intolerable Acts."
+      }
+    },
+    {
+      "id": "edge4",
+      "type": "causes",
+      "source": "event4",
+      "target": "event5",
+      "properties": {
+        "certainty": 0.8,
+        "description": "The Intolerable Acts further inflamed tensions, leading to the outbreak of armed conflict at Lexington and Concord."
+      }
+    },
+    {
+      "id": "edge5",
+      "type": "causes",
+      "source": "event5",
+      "target": "event6",
+      "properties": {
+        "certainty": 0.9,
+        "description": "The start of the war and the ongoing conflict led to the Declaration of Independence."
+      }
+    },
+    {
+      "id": "edge6",
+      "type": "causes",
+      "source": "event6",
+      "target": "event7",
+      "properties": {
+        "certainty": 0.7,
+        "description": "The declaration of independence fueled the war effort, leading to the key victory at Yorktown."
+      }
+    },
+    {
+      "id": "edge7",
+      "type": "causes",
+      "source": "event7",
+      "target": "event8",
+      "properties": {
+        "certainty": 0.9,
+        "description": "The victory at Yorktown and the weakening of British resolve led to the Treaty of Paris and the formal recognition of American independence."
+      }
+    },
+    {
+      "id": "edge8",
+      "type": "provides_evidence",
+      "source": "evidence1",
+      "target": "hypothesis1",
+      "properties": {
+        "certainty": 0.7,
+        "probative_value": 0.7
+      }
+    },
+    {
+      "id": "edge9",
+      "type": "provides_evidence",
+      "source": "evidence2",
+      "target": "hypothesis1",
+      "properties": {
+        "certainty": 0.6,
+        "probative_value": 0.5
+      }
+    },
+    {
+      "id": "edge10",
+      "type": "provides_evidence",
+      "source": "evidence3",
+      "target": "hypothesis1",
+      "properties": {
+        "certainty": 0.7,
+        "probative_value": 0.6
+      }
+    }
+  ]
+}

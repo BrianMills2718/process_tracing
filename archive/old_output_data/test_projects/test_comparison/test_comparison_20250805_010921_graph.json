@@ -1,0 +1,406 @@
+{
+  "nodes": [
+    {
+      "id": "evt_tea_act_1773",
+      "type": "Event",
+      "properties": {
+        "description": "The Tea Act of 1773 passed",
+        "timestamp": "1773-05-10",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "evt_boston_tea_party",
+      "type": "Event",
+      "properties": {
+        "description": "The Boston Tea Party",
+        "timestamp": "1773-12-16",
+        "location": "Boston Harbor",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "evt_colonist_resistance",
+      "type": "Event",
+      "properties": {
+        "description": "Colonists organized resistance",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "hyp_taxation_without_representation_cause",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Taxation without representation motivated colonial resistance",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "actor_colonists",
+      "type": "Actor",
+      "properties": {
+        "name": "Colonists",
+        "role": "Resistors",
+        "intentions": "Resist British policies, motivated by 'taxation without representation'"
+      }
+    },
+    {
+      "id": "actor_samuel_adams",
+      "type": "Actor",
+      "properties": {
+        "name": "Samuel Adams",
+        "role": "Colonial leader",
+        "intentions": "Coordinate resistance against British policies"
+      }
+    },
+    {
+      "id": "actor_sons_of_liberty",
+      "type": "Actor",
+      "properties": {
+        "name": "Sons of Liberty",
+        "role": "Direct action group",
+        "capabilities": "Organizing direct acts of protest"
+      }
+    },
+    {
+      "id": "actor_king_george_iii",
+      "type": "Actor",
+      "properties": {
+        "name": "King George III",
+        "role": "British monarch",
+        "intentions": "Assert British authority and punish colonial defiance"
+      }
+    },
+    {
+      "id": "evt_intolerable_acts_passed",
+      "type": "Event",
+      "properties": {
+        "description": "King George III passed the Intolerable Acts",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "evt_boston_harbor_closed",
+      "type": "Event",
+      "properties": {
+        "description": "Boston Harbor closed",
+        "type": "intermediate",
+        "location": "Boston Harbor"
+      }
+    },
+    {
+      "id": "evt_escalating_conflict",
+      "type": "Event",
+      "properties": {
+        "description": "The escalating conflict",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "evt_american_revolution",
+      "type": "Event",
+      "properties": {
+        "description": "The American Revolution",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "ds_parliamentary_records",
+      "type": "Data_Source",
+      "properties": {
+        "type": "document",
+        "credibility": 0.8
+      }
+    },
+    {
+      "id": "evd_parliamentary_records_tea_act_design",
+      "type": "Evidence",
+      "properties": {
+        "description": "Parliamentary records confirm that the Tea Act was designed to assert British authority.",
+        "type": "smoking_gun",
+        "source": "ds_parliamentary_records"
+      }
+    },
+    {
+      "id": "evt_tea_act_design_purpose",
+      "type": "Event",
+      "properties": {
+        "description": "Tea Act was designed to assert British authority",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "hyp_colonial_willingness_direct_action",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Colonial willingness to resist British policies through direct action",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "alt_economic_self_interest",
+      "type": "Alternative_Explanation",
+      "properties": {
+        "description": "Economic self-interest rather than constitutional principles motivated colonial resistance",
+        "status": "eliminated"
+      }
+    },
+    {
+      "id": "ds_working_class_observations",
+      "type": "Data_Source",
+      "properties": {
+        "type": "general",
+        "credibility": 0.7
+      }
+    },
+    {
+      "id": "evd_working_class_participation",
+      "type": "Evidence",
+      "properties": {
+        "description": "Evidence from working-class participation",
+        "type": "smoking_gun",
+        "source": "ds_working_class_observations"
+      }
+    },
+    {
+      "id": "mech_colonial_response_to_british_policy",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "The British government's assertion of authority through the Tea Act provokes colonial resistance, driven by grievances like taxation without representation and a willingness for direct action (e.g., Boston Tea Party). This resistance triggers a British escalatory response (Intolerable Acts), leading to an escalating conflict that culminates in the American Revolution.",
+        "confidence": 0.8,
+        "status": "supported"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source_id": "evt_tea_act_1773",
+      "target_id": "evt_boston_tea_party",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "type": "direct",
+        "mechanism_id": "mech_colonial_response_to_british_policy"
+      }
+    },
+    {
+      "source_id": "hyp_taxation_without_representation_cause",
+      "target_id": "mech_colonial_response_to_british_policy",
+      "type": "explains_mechanism",
+      "properties": {
+        "certainty": 0.8,
+        "type_of_claim": "operation"
+      }
+    },
+    {
+      "source_id": "actor_colonists",
+      "target_id": "evt_colonist_resistance",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.8
+      }
+    },
+    {
+      "source_id": "evt_colonist_resistance",
+      "target_id": "mech_colonial_response_to_british_policy",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 2
+      }
+    },
+    {
+      "source_id": "actor_samuel_adams",
+      "target_id": "evt_boston_tea_party",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9,
+        "constraint_factors": "Coordination role"
+      }
+    },
+    {
+      "source_id": "actor_sons_of_liberty",
+      "target_id": "evt_boston_tea_party",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9,
+        "constraint_factors": "Direct action group"
+      }
+    },
+    {
+      "source_id": "evt_boston_tea_party",
+      "target_id": "mech_colonial_response_to_british_policy",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 3
+      }
+    },
+    {
+      "source_id": "evt_boston_tea_party",
+      "target_id": "evt_intolerable_acts_passed",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "type": "direct",
+        "mechanism_id": "mech_colonial_response_to_british_policy"
+      }
+    },
+    {
+      "source_id": "actor_king_george_iii",
+      "target_id": "evt_intolerable_acts_passed",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9
+      }
+    },
+    {
+      "source_id": "evt_intolerable_acts_passed",
+      "target_id": "evt_boston_harbor_closed",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "type": "direct"
+      }
+    },
+    {
+      "source_id": "evt_intolerable_acts_passed",
+      "target_id": "mech_colonial_response_to_british_policy",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 4
+      }
+    },
+    {
+      "source_id": "evt_boston_harbor_closed",
+      "target_id": "mech_colonial_response_to_british_policy",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 5
+      }
+    },
+    {
+      "source_id": "evt_escalating_conflict",
+      "target_id": "evt_american_revolution",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "type": "direct",
+        "mechanism_id": "mech_colonial_response_to_british_policy"
+      }
+    },
+    {
+      "source_id": "evt_escalating_conflict",
+      "target_id": "mech_colonial_response_to_british_policy",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 6
+      }
+    },
+    {
+      "source_id": "evt_american_revolution",
+      "target_id": "mech_colonial_response_to_british_policy",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 7
+      }
+    },
+    {
+      "source_id": "ds_parliamentary_records",
+      "target_id": "evd_parliamentary_records_tea_act_design",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "certainty": 0.9
+      }
+    },
+    {
+      "source_id": "evd_parliamentary_records_tea_act_design",
+      "target_id": "evt_tea_act_design_purpose",
+      "type": "confirms_occurrence",
+      "properties": {
+        "certainty": 0.9,
+        "diagnostic_type": "smoking_gun"
+      }
+    },
+    {
+      "source_id": "evt_tea_act_design_purpose",
+      "target_id": "mech_colonial_response_to_british_policy",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "facilitating",
+        "sequence_position": 1
+      }
+    },
+    {
+      "source_id": "evt_boston_tea_party",
+      "target_id": "hyp_colonial_willingness_direct_action",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "smoking_gun",
+        "reasoning": "The act of dumping tea into the harbor serves as direct evidence of a willingness to resist through direct action."
+      }
+    },
+    {
+      "source_id": "hyp_colonial_willingness_direct_action",
+      "target_id": "mech_colonial_response_to_british_policy",
+      "type": "explains_mechanism",
+      "properties": {
+        "certainty": 0.8,
+        "type_of_claim": "component_role"
+      }
+    },
+    {
+      "source_id": "ds_working_class_observations",
+      "target_id": "evd_working_class_participation",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.7,
+        "certainty": 0.8
+      }
+    },
+    {
+      "source_id": "evd_working_class_participation",
+      "target_id": "alt_economic_self_interest",
+      "type": "refutes_alternative",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "smoking_gun",
+        "refutation_strength": "decisive"
+      }
+    },
+    {
+      "source": "alt_economic_self_interest",
+      "target": "hyp_taxation_without_representation_cause",
+      "type": "refutes",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.6,
+        "source_text_quote": "Alternative explanations suggest that economic self-interest rather than constitutional principles motivated colonial resistance.",
+        "reasoning": "This alternative explanation directly contradicts the premise of the 'taxation without representation' hypothesis by proposing a different primary motivation for colonial resistance. As an alternative, it acts as a weak refutation unless further evidence supports it.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "evd_working_class_participation",
+      "target": "hyp_taxation_without_representation_cause",
+      "type": "supports",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "However, evidence from working-class participation refutes this economic self-interest theory.",
+        "reasoning": "The evidence directly refutes the 'economic self-interest theory,' which is presented as an alternative explanation to the 'taxation without representation' hypothesis. By refuting the primary counter-argument, this evidence strongly supports the original hypothesis.",
+        "source": "connectivity_repair"
+      }
+    }
+  ]
+}

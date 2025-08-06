@@ -1,0 +1,17 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250521_095027_graph.json",
+  "case_identifier": "revolutions_20250521_095027_graph",
+  "generated_at": "2025-05-21T09:50:37.675005",
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "H-NA",
+      "description": "Not Applicable (no global hypothesis specified for this run)",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    }
+  ]
+}

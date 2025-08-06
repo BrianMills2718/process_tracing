@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (test_extended)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'event_tea_act_passed', label: 'Event', title: `{
+  "description": "The Tea Act, passed by Parliament earlier that year (1773), granted the British East India Company a significant monopoly on tea sales in the American colonies, which colonial assemblies and merchants viewed as a direct challenge to their economic autonomy and rights.",
+  "type": "triggering",
+  "date": "1773"
+}`},
+        {id: 'event_boston_tea_party', label: 'Event', title: `{
+  "description": "On December 16, 1773, American colonists, some disguised as Mohawk Indians, boarded British ships anchored in Boston Harbor and purposefully threw 342 chests of British tea overboard into the water as a dramatic act of protest.",
+  "type": "intermediate",
+  "date": "1773-12-16"
+}`},
+        {id: 'event_coercive_acts_enacted', label: 'Event', title: `{
+  "description": "In 1774, the British government responded swiftly and harshly to the Boston Tea Party by enacting a series of punitive measures known as the Coercive Acts, designed to punish Massachusetts and reassert imperial authority over the colonies.",
+  "type": "outcome",
+  "date": "1774"
+}`},
+        {id: 'hypothesis_tea_act_caused_btp', label: 'Hypothesis', title: `{
+  "description": "The British Parliament's Tea Act directly caused the Boston Tea Party because its grant of a monopoly to the British East India Company was perceived by American colonists as an unjust violation of their economic freedom and rights, prompting a forceful, public act of defiance.",
+  "status": "supported"
+}`},
+        {id: 'hypothesis_btp_demonstrated_colonial_action', label: 'Hypothesis', title: `{
+  "description": "The Boston Tea Party served as a powerful demonstration that American colonists were prepared and willing to engage in significant, direct, and overtly destructive actions against British policies that they deemed fundamentally unjust and oppressive, signaling escalating resistance.",
+  "status": "supported"
+}`},
+        {id: 'hypothesis_coercive_acts_united_opposition', label: 'Hypothesis', title: `{
+  "description": "The British government's swift and harsh punitive response to the Boston Tea Party, specifically the enactment of the Coercive Acts of 1774, paradoxically further united colonial opposition across the various colonies against British rule rather than quelling dissent.",
+  "status": "supported"
+}`},
+        {id: 'evidence_tea_act_monopoly', label: 'Evidence', title: `{
+  "description": "Quote specifying the Tea Act's provision for British East India Company monopoly.",
+  "source": "text"
+}`},
+        {id: 'evidence_btp_occurrence', label: 'Evidence', title: `{
+  "description": "Quote confirming the date and core action of the Boston Tea Party.",
+  "source": "text"
+}`},
+        {id: 'evidence_btp_details', label: 'Evidence', title: `{
+  "description": "Quote detailing specific actions during the Boston Tea Party, including disguises and number of chests.",
+  "source": "text"
+}`},
+        {id: 'evidence_btp_direct_response', label: 'Evidence', title: `{
+  "description": "Quote explicitly stating the Boston Tea Party was a direct response to the Tea Act and its monopoly.",
+  "source": "text"
+}`},
+        {id: 'evidence_colonist_willingness_demonstrated', label: 'Evidence', title: `{
+  "description": "Quote directly stating that the Boston Tea Party demonstrated colonists' willingness to take direct action.",
+  "source": "text"
+}`},
+        {id: 'evidence_john_adams_quote', label: 'Evidence', title: `{
+  "description": "Quote from John Adams reflecting on the need for memorable and striking actions.",
+  "source": "text"
+}`},
+        {id: 'evidence_british_response_coercive_acts', label: 'Evidence', title: `{
+  "description": "Quote describing the swift British response, leading to the Coercive Acts and their effect on colonial unity.",
+  "source": "text"
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'event_tea_act_passed', to: 'event_boston_tea_party', label: 'causes', title: `{
+  "description": "The Tea Act directly led to the Boston Tea Party as colonists reacted to its provisions."
+}`},
+        {from: 'event_boston_tea_party', to: 'event_coercive_acts_enacted', label: 'causes', title: `{
+  "description": "The Boston Tea Party provoked a harsh British response, resulting in the Coercive Acts."
+}`},
+        {from: 'event_tea_act_passed', to: 'hypothesis_tea_act_caused_btp', label: 'provides_evidence_for', title: `{
+  "diagnostic_type": "hoop",
+  "probative_value": 0.8,
+  "reasoning": "The existence of the Tea Act is a necessary precursor for the hypothesis that it caused the Boston Tea Party.",
+  "source_text_quote": "The Boston Tea Party occurred on December 16, 1773, when American colonists dumped British tea into Boston Harbor. This event was a direct response to the Tea Act passed by Parliament earlier that year, which gave the British East India Company a monopoly on tea sales in the colonies.",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'event_boston_tea_party', to: 'hypothesis_btp_demonstrated_colonial_action', label: 'provides_evidence_for', title: `{
+  "diagnostic_type": "hoop",
+  "probative_value": 0.9,
+  "reasoning": "The occurrence of the Boston Tea Party itself is a necessary condition for it to demonstrate colonial willingness for direct action.",
+  "source_text_quote": "The Boston Tea Party occurred on December 16, 1773, when American colonists dumped British tea into Boston Harbor. ...This event demonstrated that colonists were willing to take direct action against British policies they considered unjust.",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'event_coercive_acts_enacted', to: 'hypothesis_coercive_acts_united_opposition', label: 'provides_evidence_for', title: `{
+  "diagnostic_type": "hoop",
+  "probative_value": 0.8,
+  "reasoning": "The enactment of the Coercive Acts is a necessary condition for the hypothesis that they united colonial opposition.",
+  "source_text_quote": "The British response was swift and harsh, leading to the Coercive Acts of 1774, which further united colonial opposition.",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'evidence_tea_act_monopoly', to: 'event_tea_act_passed', label: 'confirms_occurrence', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 1.0,
+  "source_text_quote": "Tea Act passed by Parliament earlier that year, which gave the British East India Company a monopoly on tea sales in the colonies.",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'evidence_tea_act_monopoly', to: 'hypothesis_tea_act_caused_btp', label: 'supports', title: `{
+  "diagnostic_type": "straw_in_the_wind",
+  "probative_value": 0.5,
+  "source_text_quote": "Tea Act passed by Parliament earlier that year, which gave the British East India Company a monopoly on tea sales in the colonies.",
+  "target_type": "causal_relationship",
+  "reasoning": "While this quote confirms the monopoly, it doesn't explicitly link it causally to the BTP, but it provides the condition cited in the hypothesis's causal mechanism."
+}`},
+        {from: 'evidence_btp_occurrence', to: 'event_boston_tea_party', label: 'confirms_occurrence', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 1.0,
+  "source_text_quote": "The Boston Tea Party occurred on December 16, 1773, when American colonists dumped British tea into Boston Harbor.",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'evidence_btp_details', to: 'event_boston_tea_party', label: 'confirms_occurrence', title: `{
+  "diagnostic_type": "hoop",
+  "probative_value": 0.7,
+  "source_text_quote": "Contemporary accounts describe how colonists, disguised as Mohawk Indians, boarded ships and threw 342 chests of tea overboard.",
+  "target_type": "event_occurrence",
+  "reasoning": "These details confirm the *nature* of the event, which is consistent with the event's description, making it a necessary detail for understanding the event's form."
+}`},
+        {from: 'evidence_btp_direct_response', to: 'hypothesis_tea_act_caused_btp', label: 'supports', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "This event was a direct response to the Tea Act passed by Parliament earlier that year, which gave the British East India Company a monopoly on tea sales in the colonies.",
+  "target_type": "causal_relationship",
+  "reasoning": "This quote explicitly states the causal link between the Tea Act and the Boston Tea Party, directly supporting the hypothesis's core claim."
+}`},
+        {from: 'evidence_colonist_willingness_demonstrated', to: 'hypothesis_btp_demonstrated_colonial_action', label: 'supports', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.95,
+  "source_text_quote": "This event demonstrated that colonists were willing to take direct action against British policies they considered unjust.",
+  "target_type": "mechanism_operation",
+  "reasoning": "The text explicitly states that the event 'demonstrated' this willingness, providing strong direct evidence for the hypothesis."
+}`},
+        {from: 'evidence_john_adams_quote', to: 'hypothesis_btp_demonstrated_colonial_action', label: 'supports', title: `{
+  "diagnostic_type": "straw_in_the_wind",
+  "probative_value": 0.4,
+  "source_text_quote": "John Adams later wrote that 'The People should never rise, without doing something to be remembered\u2014something notable And striking.'",
+  "target_type": "causal_relationship",
+  "reasoning": "This quote provides insight into the mindset of key figures and the *intent* behind such actions, which indirectly supports the idea that the BTP was *designed* to be a powerful demonstration, though it doesn't directly prove it was *perceived* as such."
+}`},
+        {from: 'evidence_british_response_coercive_acts', to: 'event_coercive_acts_enacted', label: 'confirms_occurrence', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 1.0,
+  "source_text_quote": "The British response was swift and harsh, leading to the Coercive Acts of 1774, which further united colonial opposition.",
+  "target_type": "event_occurrence"
+}`},
+        {from: 'evidence_british_response_coercive_acts', to: 'hypothesis_coercive_acts_united_opposition', label: 'supports', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "The British response was swift and harsh, leading to the Coercive Acts of 1774, which further united colonial opposition.",
+  "target_type": "causal_relationship",
+  "reasoning": "The quote directly states that the Coercive Acts 'further united colonial opposition,' providing strong direct support for the hypothesis."
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

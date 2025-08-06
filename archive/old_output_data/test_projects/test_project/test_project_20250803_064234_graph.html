@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (test_project)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'event_stamp_act', label: 'Event', title: `{
+  "description": "The taxation crisis began with the Stamp Act of 1765, which colonial leaders viewed as a violation of their rights as Englishmen, triggering widespread discontent and a rallying cry for 'no taxation without representation.'",
+  "type": "triggering",
+  "date": "1765",
+  "certainty": 1.0
+}`},
+        {id: 'event_colonial_resistance', label: 'Event', title: `{
+  "description": "Colonial leaders, unified by the principle of 'no taxation without representation,' organized effective resistance against British policies through the formation of committees of correspondence and the implementation of economic boycotts.",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'event_washington_strategy', label: 'Event', title: `{
+  "description": "George Washington's strategic decision to carefully avoid major decisive battles while concurrently building and preserving colonial military capacity enabled the Continental Army to effectively survive British campaigns throughout the extended conflict.",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'event_france_alliance', label: 'Event', title: `{
+  "description": "A crucial alliance with France was successfully negotiated by diplomatic leaders like Benjamin Franklin, which subsequently provided indispensable military and financial support to the American cause during the Revolutionary War.",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'event_american_revolution_outcome', label: 'Event', title: `{
+  "description": "The American Revolution of 1776 culminated in the successful achievement of colonial independence from British rule, fundamentally driven by effective revolutionary leadership that mobilized a unified opposition.",
+  "type": "outcome",
+  "date": "1776",
+  "certainty": 1.0
+}`},
+        {id: 'hypothesis_leadership_drove_revolution', label: 'Hypothesis', title: `{
+  "description": "The emergence of effective revolutionary leadership, exemplified by figures like George Washington, John Adams, and Thomas Jefferson, was the fundamental driver that successfully transformed scattered colonial grievances into a unified independence movement and sustained the American Revolution for eight years.",
+  "status": "supported",
+  "certainty": 0.9
+}`},
+        {id: 'alt_hypothesis_economic_sole_cause', label: 'Alternative_Explanation', title: `{
+  "description": "Economic grievances or external pressures alone were sufficient and primary drivers of the American Revolution, capable of accounting for the organizational capacity and sustained effort required to achieve colonial independence.",
+  "status": "refuted",
+  "certainty": 0.9
+}`},
+        {id: 'evidence_leadership_fundamental_driver', label: 'Evidence', title: `{
+  "description": "The text explicitly states that the American Revolution was fundamentally driven by the emergence of effective revolutionary leadership, directly linking leadership to the core cause.",
+  "type": "smoking_gun",
+  "source": "Revolutionary Leadership and Colonial Independence text",
+  "source_text_quote": "The American Revolution of 1776 was fundamentally driven by the emergence of effective revolutionary leadership that successfully mobilized colonial opposition to British taxation policies.",
+  "certainty": 1.0,
+  "probative_value": 0.9
+}`},
+        {id: 'evidence_leaders_provided_vision_capacity', label: 'Evidence', title: `{
+  "description": "Specific key leaders are named and credited with providing the strategic vision and organizational capacity essential for unifying scattered grievances into a cohesive independence movement.",
+  "type": "smoking_gun",
+  "source": "Revolutionary Leadership and Colonial Independence text",
+  "source_text_quote": "Key leaders like George Washington, John Adams, and Thomas Jefferson provided the strategic vision and organizational capacity necessary to transform scattered colonial grievances into a unified independence movement.",
+  "certainty": 1.0,
+  "probative_value": 0.85
+}`},
+        {id: 'evidence_leaders_organized_resistance', label: 'Evidence', title: `{
+  "description": "The text details specific actions of leaders, such as organizing committees of correspondence and economic boycotts, which demonstrate their direct role in mobilizing effective resistance.",
+  "type": "smoking_gun",
+  "source": "Revolutionary Leadership and Colonial Independence text",
+  "source_text_quote": "Leaders organized effective resistance through committees of correspondence and economic boycotts.",
+  "certainty": 1.0,
+  "probative_value": 0.8
+}`},
+        {id: 'evidence_washington_military_impact', label: 'Evidence', title: `{
+  "description": "Washington's specific military decisions are highlighted as crucial for the Continental Army's survival and capacity building, underscoring the decisive role of military leadership.",
+  "type": "smoking_gun",
+  "source": "Revolutionary Leadership and Colonial Independence text",
+  "source_text_quote": "Washington's strategic decision to avoid major battles while building colonial military capacity enabled the Continental Army to survive British campaigns.",
+  "certainty": 1.0,
+  "probative_value": 0.85
+}`},
+        {id: 'evidence_franklin_diplomatic_impact', label: 'Evidence', title: `{
+  "description": "Benjamin Franklin's diplomatic efforts in negotiating the alliance with France are explicitly mentioned as providing crucial military and financial support, demonstrating the vital role of diplomatic leadership.",
+  "type": "smoking_gun",
+  "source": "Revolutionary Leadership and Colonial Independence text",
+  "source_text_quote": "The alliance with France, negotiated by diplomatic leaders like Benjamin Franklin, provided crucial military and financial support.",
+  "certainty": 1.0,
+  "probative_value": 0.85
+}`},
+        {id: 'evidence_leadership_necessity_for_unity', label: 'Evidence', title: `{
+  "description": "The text argues that effective leadership coordination was a necessary condition for achieving sufficient unity among the diverse colonial population for the revolution to succeed, implying that without it, unity would not have occurred.",
+  "type": "hoop",
+  "source": "Revolutionary Leadership and Colonial Independence text",
+  "source_text_quote": "The evidence suggests that without effective leadership coordination, the diverse colonial population would not have achieved unity sufficient for successful revolution.",
+  "certainty": 1.0,
+  "probative_value": 0.75
+}`},
+        {id: 'evidence_refuting_alternative_causes', label: 'Evidence', title: `{
+  "description": "The text directly refutes alternative explanations that solely focus on economic grievances or external pressures, stating they fail to account for the necessary organizational capacity, thereby reinforcing the central role of leadership as a doubly decisive factor.",
+  "type": "doubly_decisive",
+  "source": "Revolutionary Leadership and Colonial Independence text",
+  "source_text_quote": "Alternative explanations focusing solely on economic grievances or external pressures fail to account for the organizational capacity required to sustain the eight-year conflict.",
+  "certainty": 1.0,
+  "probative_value": 0.9
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'event_stamp_act', to: 'event_colonial_resistance', label: 'causes', title: `{
+  "certainty": 1.0,
+  "description": "The Stamp Act of 1765, viewed as a violation of rights, triggered the organization of colonial resistance."
+}`},
+        {from: 'event_colonial_resistance', to: 'event_american_revolution_outcome', label: 'causes', title: `{
+  "certainty": 0.8,
+  "description": "Organized colonial resistance contributed to the eventual achievement of American independence."
+}`},
+        {from: 'event_washington_strategy', to: 'event_american_revolution_outcome', label: 'causes', title: `{
+  "certainty": 0.9,
+  "description": "Washington's military strategy enabled the Continental Army's survival and ultimately contributed to the revolution's success."
+}`},
+        {from: 'event_france_alliance', to: 'event_american_revolution_outcome', label: 'causes', title: `{
+  "certainty": 0.9,
+  "description": "The crucial alliance with France provided military and financial support necessary for achieving colonial independence."
+}`},
+        {from: 'evidence_leadership_fundamental_driver', to: 'hypothesis_leadership_drove_revolution', label: 'supports', title: `{
+  "certainty": 1.0,
+  "probative_value": 0.9,
+  "source_text_quote": "The American Revolution of 1776 was fundamentally driven by the emergence of effective revolutionary leadership that successfully mobilized colonial opposition to British taxation policies."
+}`},
+        {from: 'evidence_leaders_provided_vision_capacity', to: 'hypothesis_leadership_drove_revolution', label: 'supports', title: `{
+  "certainty": 1.0,
+  "probative_value": 0.85,
+  "source_text_quote": "Key leaders like George Washington, John Adams, and Thomas Jefferson provided the strategic vision and organizational capacity necessary to transform scattered colonial grievances into a unified independence movement."
+}`},
+        {from: 'evidence_leaders_organized_resistance', to: 'hypothesis_leadership_drove_revolution', label: 'supports', title: `{
+  "certainty": 1.0,
+  "probative_value": 0.8,
+  "source_text_quote": "Leaders organized effective resistance through committees of correspondence and economic boycotts."
+}`},
+        {from: 'evidence_washington_military_impact', to: 'hypothesis_leadership_drove_revolution', label: 'supports', title: `{
+  "certainty": 1.0,
+  "probative_value": 0.85,
+  "source_text_quote": "Washington's strategic decision to avoid major battles while building colonial military capacity enabled the Continental Army to survive British campaigns."
+}`},
+        {from: 'evidence_franklin_diplomatic_impact', to: 'hypothesis_leadership_drove_revolution', label: 'supports', title: `{
+  "certainty": 1.0,
+  "probative_value": 0.85,
+  "source_text_quote": "The alliance with France, negotiated by diplomatic leaders like Benjamin Franklin, provided crucial military and financial support."
+}`},
+        {from: 'evidence_leadership_necessity_for_unity', to: 'hypothesis_leadership_drove_revolution', label: 'supports', title: `{
+  "certainty": 1.0,
+  "probative_value": 0.75,
+  "source_text_quote": "The evidence suggests that without effective leadership coordination, the diverse colonial population would not have achieved unity sufficient for successful revolution."
+}`},
+        {from: 'evidence_refuting_alternative_causes', to: 'alt_hypothesis_economic_sole_cause', label: 'refutes', title: `{
+  "certainty": 1.0,
+  "probative_value": 0.9,
+  "source_text_quote": "Alternative explanations focusing solely on economic grievances or external pressures fail to account for the organizational capacity required to sustain the eight-year conflict."
+}`},
+        {from: 'evidence_refuting_alternative_causes', to: 'hypothesis_leadership_drove_revolution', label: 'supports', title: `{
+  "certainty": 1.0,
+  "probative_value": 0.9,
+  "source_text_quote": "Alternative explanations focusing solely on economic grievances or external pressures fail to account for the organizational capacity required to sustain the eight-year conflict."
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

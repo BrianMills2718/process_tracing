@@ -1,0 +1,404 @@
+{
+  "filename": "output_data/weighs_evidence_test/weighs_evidence_test_20250805_054414_graph.json",
+  "case_identifier": "weighs_evidence_test_20250805_054414_graph",
+  "generated_at": "2025-08-05T06:46:39.263204",
+  "causal_chains": [],
+  "causal_mechanisms": [
+    {
+      "id": "mech_imperial_resistance",
+      "name": "Mechanism by which the Tea Act led to rebellion, involving taxation without representation, economic pressure and ideological mobilization, organized resistance by groups like the Sons of Liberty, and direct action against British property.",
+      "causes": [],
+      "effects": [],
+      "completeness": 48.0,
+      "confidence": 1.0,
+      "level_of_detail": "step-by-step",
+      "llm_elaboration": {
+        "completeness_score": 0.75,
+        "plausibility_score": 1.0,
+        "evidence_support_level": "strong",
+        "missing_elements": [
+          "Specific details on how the Tea Act led to economic pressure (e.g., impact on colonial merchants and smugglers vs. East India Company monopoly).",
+          "The specific mechanisms of 'ideological mobilization' beyond just 'ideological mobilization' itself (e.g., role of pamphlets, newspapers, public assemblies, Committees of Correspondence).",
+          "The direct link and escalation from 'direct action against British property' to 'rebellion' (e.g., British response like the Coercive/Intolerable Acts, colonial reaction, formation of unified bodies like the Continental Congress, and eventual armed conflict).",
+          "The role of specific leaders or key figures in driving the various stages of resistance.",
+          "The transition from localized protests to widespread inter-colonial resistance."
+        ],
+        "improvement_suggestions": [
+          "Elaborate on the specific economic and political implications of the Tea Act for different colonial groups (e.g., merchants, consumers), detailing how it exacerbated existing grievances related to 'taxation without representation'.",
+          "Detail the process of 'ideological mobilization' by describing the communication networks (e.g., Committees of Correspondence) and popular media (e.g., pamphlets, newspapers) that disseminated anti-British sentiments and unified colonial opinion.",
+          "Specify the link between the 'organized resistance' (Sons of Liberty) and the planning and execution of key 'direct actions' (e.g., the Boston Tea Party).",
+          "Add a step detailing the British reaction to the 'direct action' (e.g., the Coercive/Intolerable Acts) and explain how this reaction served as a catalyst for further inter-colonial unity and the move towards full-scale 'rebellion'.",
+          "Include the formation and actions of inter-colonial bodies like the First and Second Continental Congresses as crucial steps in coordinating the 'rebellion' from localized resistance."
+        ],
+        "detailed_reasoning": "The mechanism provides a plausible and historically accurate high-level outline of how the Tea Act contributed to the American Rebellion. Its core causal chain, from the Tea Act leading to grievances, then organized resistance, and finally direct action, is well-established and highly plausible (score 1.0). The level of historical evidence supporting this general chain of events is exceptionally strong, as it constitutes a foundational narrative of the American Revolution. \n\nHowever, the mechanism's completeness is moderate (score 0.75) because it lacks specific details about the *transition* between certain stages and, critically, the final link from 'direct action against British property' to the ultimate outcome of 'rebellion'. While it identifies key components like 'taxation without representation', 'economic pressure', 'ideological mobilization', and 'organized resistance', it does not fully elaborate on the micro-mechanisms or specific events that bridge these concepts. For instance, how did the Tea Act specifically generate 'economic pressure' beyond simply being a tax? How did 'ideological mobilization' translate into 'organized resistance'? Most importantly, the mechanism stops at 'direct action against British property' without explicitly detailing the subsequent British response (e.g., the Intolerable Acts) and the colonial escalation (e.g., the Continental Congresses, formation of militias, armed conflict) that led directly to rebellion. Adding these crucial intervening steps and detailing the specific nature of the causal links would significantly improve its completeness and explanatory power as a 'step-by-step' mechanism."
+      },
+      "completeness_breakdown": {
+        "van_evera_structural": 30,
+        "llm_assessment": 75.0,
+        "combined": 48.0
+      }
+    },
+    {
+      "id": "mech_imperial_control",
+      "name": "Mechanism of British imperial control and revenue extraction.",
+      "causes": [
+        "Legislation that granted the British East India Company a monopoly on tea sales in the American colonies."
+      ],
+      "effects": [],
+      "completeness": 22.0,
+      "confidence": null,
+      "level_of_detail": null,
+      "llm_elaboration": {
+        "completeness_score": 0.1,
+        "plausibility_score": 0.5,
+        "evidence_support_level": "weak",
+        "missing_elements": [
+          "Initial conditions and broader historical context necessitating British imperial control and revenue extraction (e.g., national debt, mercantilist economic theory).",
+          "Explicit British goals and motivations behind imperial policies (e.g., asserting parliamentary sovereignty, increasing Crown revenue, supporting key economic entities like the East India Company).",
+          "A broader range of British policies and actions aimed at control and revenue beyond the Tea Act (e.g., other taxation acts like the Stamp Act or Townshend Acts, Navigation Acts, administrative measures, military presence).",
+          "Intermediate causal steps detailing *how* these policies were intended to lead to imperial control (e.g., through economic dependency, political subjugation) and revenue extraction (e.g., through duties, monopolies, trade regulations).",
+          "Expected and actual colonial responses to these imperial policies (e.g., compliance, economic impact, political resistance, boycotts).",
+          "The direct outcomes and effects on British imperial control and revenue (e.g., did it succeed in increasing revenue or control, or did it lead to unintended consequences like rebellion?).",
+          "Feedback loops or subsequent British actions in response to colonial reactions."
+        ],
+        "improvement_suggestions": [
+          "Expand the mechanism to include the broader historical context that necessitated British imperial control and revenue extraction, such as post-Seven Years' War debt and prevailing mercantilist ideologies.",
+          "Clearly articulate the specific objectives of the British government behind such policies, distinguishing between goals of control (e.g., parliamentary supremacy) and revenue (e.g., EIC solvency, Crown income).",
+          "Incorporate a wider array of key legislative acts and imperial policies (e.g., Stamp Act, Townshend Acts, Navigation Acts, Intolerable Acts) that collectively constituted the British approach to control and revenue, showing their sequence and interrelation.",
+          "Detail the intermediate steps that link these policies to the desired outcomes of control and revenue, explaining the causal pathways (e.g., how a monopoly generates revenue, or how a tax asserts authority and extracts wealth).",
+          "Include the colonial responses (e.g., protests, boycotts, political resistance) to these imperial policies, as these responses significantly influenced the actual outcome of control and revenue.",
+          "Conclude the mechanism with the observed impacts on British imperial control and revenue, noting both successes and failures or unintended consequences, thereby showing the full causal chain from intent to outcome."
+        ],
+        "detailed_reasoning": "The mechanism 'British imperial control and revenue extraction' is a very broad and complex historical process. It currently lists only one constituent event, the Tea Act of 1773. \n\n**Completeness (0.1):** This mechanism is extremely incomplete. A single piece of legislation, while an example of an imperial policy, cannot encapsulate the full causal mechanism of 'imperial control and revenue extraction.' A complete mechanism would describe a sequence of causally linked events and processes that explain *how* control was asserted and revenue extracted. It entirely misses crucial elements such as the initial conditions leading to these policies, the full range of British actions, the intended and actual intermediate effects on colonial behavior or economy, and the ultimate outcomes regarding control and revenue. It's a single data point in a vast, multi-faceted system.\n\n**Plausibility (0.5):** The Tea Act itself is a plausible *component* or *instance* of British attempts at imperial control and revenue extraction. Its aim was indeed to support the financially struggling British East India Company (a key imperial entity) and assert parliamentary authority over the colonies regarding taxation, which aligns with the mechanism's broad description. However, the mechanism, as represented solely by this event, lacks the necessary causal steps and logical flow to fully explain *how* imperial control and revenue extraction *occurred* or *were intended to occur* comprehensively. It illustrates an *attempt* within the broader mechanism, but not the complete causal chain from policy intent to the achievement of broad imperial control and revenue extraction.\n\n**Evidence Support (weak):** The existence, nature, and intent of the Tea Act of 1773 are historically well-documented and strongly supported by evidence. Therefore, the *event* itself is strongly evidenced. However, its isolated presence provides only 'weak' evidence support for the *entire stated mechanism* because it does not illustrate the full, multi-faceted process of British imperial control and revenue extraction. It's one piece of a much larger puzzle and doesn't provide insight into the full causal pathway, the range of other policies, colonial reactions, or ultimate outcomes related to the broad mechanism."
+      },
+      "completeness_breakdown": {
+        "van_evera_structural": 30,
+        "llm_assessment": 10.0,
+        "combined": 22.0
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 7,
+      "Causal_Mechanism": 2,
+      "Alternative_Explanation": 3,
+      "Actor": 4,
+      "Condition": 4,
+      "Hypothesis": 7,
+      "Evidence": 26,
+      "Data_Source": 10
+    },
+    "edge_type_distribution": {
+      "provides_evidence_for": 5,
+      "causes": 1,
+      "infers": 2,
+      "part_of_mechanism": 1,
+      "initiates": 5,
+      "constrains": 2,
+      "enables": 2,
+      "explains_mechanism": 2,
+      "tests_hypothesis": 5,
+      "tests_alternative": 3,
+      "confirms_occurrence": 2,
+      "provides_evidence": 10,
+      "weighs_evidence": 3,
+      "tests_mechanism": 2,
+      "contradicts": 1,
+      "updates_probability": 1,
+      "disproves_occurrence": 2,
+      "supports_alternative": 1,
+      "refutes_alternative": 1,
+      "refutes": 2
+    },
+    "density": 0.013568868407578085,
+    "avg_path_length": "N/A (disconnected graph)",
+    "connectivity_type": "disconnected",
+    "degree_centrality": {
+      "evt_boston_tea_party": 0.087,
+      "hyp_constitutional_principles": 0.084,
+      "mech_imperial_resistance": 0.039,
+      "actor_samuel_adams": 0.032,
+      "mech_imperial_control": 0.029,
+      "actor_king_george_iii": 0.026,
+      "evd_ship_manifests_customs_no_tea_jan_1774": 0.026,
+      "ds_british_parliamentary_records": 0.023,
+      "evt_tea_act_1773": 0.019,
+      "ds_mass_historical_society": 0.019
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hyp_constitutional_principles",
+      "description": "Colonial resistance was primarily driven by constitutional principles, specifically opposition to taxation without representation.",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_enlightenment_influence",
+      "description": "Enlightenment ideas influenced colonial thinking.",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_tea_act_necessary_antecedent",
+      "description": "The Tea Act was a necessary causal antecedent to the Boston Tea Party.",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_coordinated_communication_network",
+      "description": "A coordinated communication network existed among colonial leaders.",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_small_amount_tea_destroyed",
+      "description": "Claims that only a small amount of tea was destroyed during the Boston Tea Party.",
+      "assessment": "Undetermined (Insufficient Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 1,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [
+        "evd_archaeological_boston_harbor"
+      ],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_meetings_at_faneuil_hall",
+      "description": "Organizational meetings for the Boston Tea Party occurred at Faneuil Hall.",
+      "assessment": "Undetermined (Insufficient Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 1,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [
+        "evd_historical_records_meeting_location"
+      ],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_economic_grievance",
+      "description": "The imperial resistance mechanism operates through material interests rather than ideological commitment.",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [
+      {
+        "condition_id": "cond_enlightenment_ideas",
+        "condition": "The spread of Enlightenment philosophy about natural rights and self-governance.",
+        "target": {
+          "id": "evt_boston_tea_party",
+          "description": "American colonists led by Samuel Adams and the Sons of Liberty boarded British ships and dumped 342 chests of tea into Boston Harbor.",
+          "type": "Event"
+        },
+        "necessity": "unknown",
+        "certainty": "medium"
+      },
+      {
+        "condition_id": "cond_colonial_economic_development",
+        "condition": "The colonies' growing economic self-sufficiency by the 1770s.",
+        "target": {
+          "id": "evt_boston_tea_party",
+          "description": "American colonists led by Samuel Adams and the Sons of Liberty boarded British ships and dumped 342 chests of tea into Boston Harbor.",
+          "type": "Event"
+        },
+        "necessity": "unknown",
+        "certainty": "medium"
+      }
+    ],
+    "constraining": []
+  },
+  "actors": [
+    {
+      "id": "actor_samuel_adams",
+      "name": "Samuel Adams",
+      "role": "principal organizer",
+      "initiated_events": [
+        {
+          "id": "evt_boston_tea_party",
+          "description": "American colonists led by Samuel Adams and the Sons of Liberty boarded British ships and dumped 342 chests of tea into Boston Harbor.",
+          "certainty": null,
+          "intention": "organizing the Tea Party"
+        },
+        {
+          "id": "evt_adams_initiated_strategy",
+          "description": "Samuel Adams initiated the specific strategy of disguising participants as Mohawk Indians to deflect blame from the colonial community.",
+          "certainty": null,
+          "intention": "to deflect blame"
+        }
+      ],
+      "influence_score": 28,
+      "beliefs": "that British rule fundamentally violated colonial rights",
+      "intentions": "to mobilize mass resistance against British authority"
+    },
+    {
+      "id": "actor_sons_of_liberty",
+      "name": "Sons of Liberty",
+      "role": "group organizing resistance",
+      "initiated_events": [
+        {
+          "id": "evt_boston_tea_party",
+          "description": "American colonists led by Samuel Adams and the Sons of Liberty boarded British ships and dumped 342 chests of tea into Boston Harbor.",
+          "certainty": "medium",
+          "intention": "unknown"
+        }
+      ],
+      "influence_score": 18,
+      "beliefs": null,
+      "intentions": null
+    },
+    {
+      "id": "actor_king_george_iii",
+      "name": "King George III",
+      "role": "British monarch",
+      "initiated_events": [
+        {
+          "id": "evt_military_response_orders",
+          "description": "King George III issued explicit orders to General Gage to use force against Massachusetts.",
+          "certainty": null,
+          "intention": "military suppression"
+        }
+      ],
+      "influence_score": 17,
+      "beliefs": "the colonies as subordinate territories that existed to benefit Britain",
+      "intentions": "to maintain imperial control and extract revenue"
+    },
+    {
+      "id": "actor_gov_thomas_hutchinson",
+      "name": "Governor Thomas Hutchinson",
+      "role": "British governor of Massachusetts",
+      "initiated_events": [
+        {
+          "id": "evt_boston_tea_party",
+          "description": "American colonists led by Samuel Adams and the Sons of Liberty boarded British ships and dumped 342 chests of tea into Boston Harbor.",
+          "certainty": "medium",
+          "intention": "unknown"
+        }
+      ],
+      "influence_score": 11,
+      "beliefs": "the colonists were ungrateful subjects who needed firm governance",
+      "intentions": "to enforce Parliamentary supremacy"
+    }
+  ],
+  "alternative_explanations": [
+    {
+      "id": "alt_economic_self_interest",
+      "description": "The American Revolution was primarily driven by colonial merchants' economic interests, with wealthy merchants manipulating popular sentiment to protect smuggling and avoid British taxes.",
+      "supporting_evidence": [
+        {
+          "id": "evd_merchant_records_smuggling",
+          "description": "Documentary evidence from merchant records revealing extensive smuggling operations threatened by British enforcement.",
+          "type": "general",
+          "certainty": null,
+          "probative_value": null
+        }
+      ],
+      "refuting_evidence": [],
+      "strength_score": 0.0,
+      "assessment": "Contested alternative explanation",
+      "probability": null,
+      "status": "active"
+    },
+    {
+      "id": "alt_elite_manipulation",
+      "description": "Colonial elites deliberately manufactured popular outrage to advance their own political ambitions.",
+      "supporting_evidence": [],
+      "refuting_evidence": [
+        {
+          "id": "evd_town_meeting_records_grassroots",
+          "description": "Town meeting records showing genuine grassroots participation in anti-British activities.",
+          "type": "general",
+          "certainty": null,
+          "probative_value": null
+        }
+      ],
+      "strength_score": 0.0,
+      "assessment": "Contested alternative explanation",
+      "probability": null,
+      "status": "active"
+    },
+    {
+      "id": "alt_external_influence",
+      "description": "French agents and financial support were the primary drivers of colonial rebellion, seeking to weaken their British rivals.",
+      "supporting_evidence": [],
+      "refuting_evidence": [],
+      "strength_score": 0,
+      "assessment": "Contested alternative explanation",
+      "probability": null,
+      "status": "active"
+    }
+  ],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

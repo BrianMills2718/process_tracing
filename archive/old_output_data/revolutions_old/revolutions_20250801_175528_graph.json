@@ -1,0 +1,186 @@
+```json
+{
+  "nodes": [
+    {
+      "id": "event1",
+      "type": "Event",
+      "properties": {
+        "description": "The French and Indian War concludes in 1763, resulting in a substantial war debt for Great Britain and a shift in control over colonial western lands to British officials in Montreal.  This outcome, despite colonial participation and support in the war effort, led to British attempts to compensate for wartime expenses through new colonial taxation policies.",
+        "timestamp": "1763",
+        "type": "outcome",
+        "date": "1763"
+      }
+    },
+    {
+      "id": "event2",
+      "type": "Event",
+      "properties": {
+        "description": "The British Parliament enacts the Stamp Act in 1765, imposing direct taxes on the colonies for the first time. This act, while the taxes themselves were relatively low, sparked significant colonial resistance due to the lack of representation in Parliament which, colonists believed, violated their rights as Englishmen, triggering widespread protests and boycotts.",
+        "timestamp": "1765",
+        "type": "triggering",
+        "date": "1765"
+      }
+    },
+    {
+      "id": "event3",
+      "type": "Event",
+      "properties": {
+        "description": "The Boston Massacre occurs on March 5, 1770, where British troops fire upon and kill several unarmed civilians, escalating colonial resentment and further fueling the movement against British rule. The event, despite the soldiers' acquittal, became a powerful symbol of British oppression in colonial propaganda.",
+        "timestamp": "1770-03-05",
+        "type": "intermediate",
+        "date": "1770-03-05"
+      }
+    },
+    {
+      "id": "event4",
+      "type": "Event",
+      "properties": {
+        "description": "The Boston Tea Party takes place on December 16, 1773, where colonists, disguised as Native Americans, dump tea into Boston Harbor to protest the Tea Act.  This act of defiance further escalated tensions and prompted the British government to enact punitive measures against Massachusetts, effectively ending self-government in the colony and solidifying revolutionary sentiment.",
+        "timestamp": "1773-12-16",
+        "type": "intermediate",
+        "date": "1773-12-16"
+      }
+    },
+    {
+      "id": "event5",
+      "type": "Event",
+      "properties": {
+        "description": "The British Parliament passes the Intolerable Acts in 1774, further restricting colonial self-governance and intensifying the conflict. These acts, seen as oppressive by the colonists, pushed the Thirteen Colonies closer to open rebellion and spurred the formation of the First Continental Congress.",
+        "timestamp": "1774",
+        "type": "intermediate",
+        "date": "1774"
+      }
+    },
+    {
+      "id": "event6",
+      "type": "Event",
+      "properties": {
+        "description": "The Battles of Lexington and Concord on April 19, 1775, mark the beginning of the American Revolutionary War. These battles, representing the first armed conflict between the colonists and British troops, officially launched the war for independence and solidified the commitment to armed resistance.",
+        "timestamp": "1775-04-19",
+        "type": "triggering",
+        "date": "1775-04-19"
+      }
+    },
+    {
+      "id": "event7",
+      "type": "Event",
+      "properties": {
+        "description": "The Siege of Yorktown concludes on September 28, 1781, with a decisive victory for the Continental Army, aided by French forces. This victory significantly weakened British resolve and paved the way for negotiations that ultimately led to the colonies' independence.",
+        "timestamp": "1781-09-28",
+        "type": "intermediate",
+        "date": "1781-09-28"
+      }
+    },
+    {
+      "id": "event8",
+      "type": "Event",
+      "properties": {
+        "description": "The Treaty of Paris is signed on September 3, 1783, formally recognizing the independence of the United States of America. This treaty marked the end of the American Revolutionary War and the establishment of the United States as a sovereign nation.",
+        "timestamp": "1783-09-03",
+        "type": "outcome",
+        "date": "1783-09-03"
+      }
+    },
+    {
+      "id": "hypothesis1",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "British taxation policies, enacted after the French and Indian War to recoup war costs and implemented without colonial representation, directly caused the American Revolution because they violated the colonists' understanding of their rights as Englishmen and fueled widespread resentment and resistance.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evidence1",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Stamp Act Congress's \"Declaration of Rights and Grievances\" explicitly stated that \"taxation without representation violated their rights as Englishmen.\"",
+        "source_text_quote": "\"taxation without representation violated their rights as Englishmen\"",
+        "probative_value": 0.8,
+        "type_of_claim": "existence",
+        "type": "smoking_gun"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge1",
+      "type": "causes",
+      "source": "event1",
+      "target": "event2",
+      "properties": {
+        "description": "The British war debt (event1) necessitated new taxes (event2)",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "edge2",
+      "type": "causes",
+      "source": "event2",
+      "target": "event3",
+      "properties": {
+        "description": "Colonial resistance to the Stamp Act (event2) led to increased tension and ultimately the Boston Massacre (event3).",
+        "certainty": 0.8
+      }
+    },
+    {
+      "id": "edge3",
+      "type": "causes",
+      "source": "event3",
+      "target": "event4",
+      "properties": {
+        "description": "The Boston Massacre (event3) heightened colonial anger and contributed to the escalation of events culminating in the Boston Tea Party (event4).",
+        "certainty": 0.7
+      }
+    },
+    {
+      "id": "edge4",
+      "type": "causes",
+      "source": "event4",
+      "target": "event5",
+      "properties": {
+        "description": "The Boston Tea Party (event4) prompted the British government's response with the Intolerable Acts (event5)",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "edge5",
+      "type": "causes",
+      "source": "event5",
+      "target": "event6",
+      "properties": {
+        "description": "The Intolerable Acts (event5), perceived as oppressive, pushed the colonies towards armed conflict which began at Lexington and Concord (event6).",
+        "certainty": 0.8
+      }
+    },
+    {
+      "id": "edge6",
+      "type": "causes",
+      "source": "event6",
+      "target": "event7",
+      "properties": {
+        "description": "The start of the Revolutionary War (event6) led to significant military engagements, culminating in the decisive battle at Yorktown (event7).",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "edge7",
+      "type": "causes",
+      "source": "event7",
+      "target": "event8",
+      "properties": {
+        "description": "The victory at Yorktown (event7) led to negotiations and the signing of the Treaty of Paris (event8), formally recognizing American independence.",
+        "certainty": 0.95
+      }
+    },
+    {
+      "id": "edge8",
+      "type": "provides_evidence",
+      "source": "evidence1",
+      "target": "hypothesis1",
+      "properties": {
+        "probative_value": 0.8
+      }
+    }
+  ]
+}
+```

@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (revolutions)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'E1', label: 'Event', title: `{
+  "description": "A triggering event that initiates the causal process",
+  "type": "triggering"
+}`},
+        {id: 'CM1', label: 'Causal_Mechanism', title: `{
+  "description": "Hypothesized mechanism linking E1 to the outcome",
+  "confidence": 0.5,
+  "status": "hypothetical",
+  "level_of_detail": "medium"
+}`},
+        {id: 'E_outcome', label: 'Event', title: `{
+  "description": "The final outcome event of the process",
+  "type": "outcome"
+}`},
+        {id: 'H1', label: 'Hypothesis', title: `{
+  "description": "CM1 explains how E1 leads to E_outcome",
+  "status": "active"
+}`},
+        {id: 'E2', label: 'Event', title: `{
+  "description": "First intermediate step in CM1",
+  "type": "intermediate"
+}`},
+        {id: 'E3', label: 'Event', title: `{
+  "description": "Second intermediate step in CM1",
+  "type": "intermediate"
+}`},
+        {id: 'C1', label: 'Condition', title: `{
+  "description": "An enabling condition for the mechanism",
+  "type": "enabling"
+}`},
+        {id: 'C2', label: 'Condition', title: `{
+  "description": "A constraining condition for the mechanism",
+  "type": "constraining"
+}`},
+        {id: 'EV1', label: 'Evidence', title: `{
+  "description": "Testimony supporting the hypothesis",
+  "type": "straw_in_the_wind"
+}`},
+        {id: 'EV2', label: 'Evidence', title: `{
+  "description": "Document refuting the hypothesis",
+  "type": "hoop"
+}`},
+        {id: 'AE1', label: 'Alternative_Explanation', title: `{
+  "description": "An alternative cause for the outcome event",
+  "status": "active"
+}`},
+        {id: 'EV3', label: 'Evidence', title: `{
+  "description": "Observation supporting the alternative explanation",
+  "type": "general"
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'E1', to: 'CM1', label: 'causes', title: `{}`},
+        {from: 'CM1', to: 'E_outcome', label: 'causes', title: `{}`},
+        {from: 'E2', to: 'CM1', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E3', to: 'CM1', label: 'part_of_mechanism', title: `{}`},
+        {from: 'C1', to: 'CM1', label: 'enables', title: `{}`},
+        {from: 'C2', to: 'CM1', label: 'constrains', title: `{}`},
+        {from: 'EV1', to: 'H1', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "The witness stated 'I saw step E2 occur'."
+}`},
+        {from: 'EV2', to: 'H1', label: 'refutes', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "The official record shows E3 could not have happened."
+}`},
+        {from: 'H1', to: 'CM1', label: 'explains_mechanism', title: `{
+  "type_of_claim": "operational_details"
+}`},
+        {from: 'EV3', to: 'AE1', label: 'supports_alternative', title: `{
+  "probative_value": 0.7
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

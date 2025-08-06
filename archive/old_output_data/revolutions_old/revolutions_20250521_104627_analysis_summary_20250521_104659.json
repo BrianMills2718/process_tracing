@@ -1,0 +1,89 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250521_104627_graph.json",
+  "case_identifier": "revolutions_20250521_104627_graph",
+  "generated_at": "2025-05-21T10:46:59.209446",
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "HY_NA",
+      "description": "Not Applicable (no global hypothesis specified for this run)",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY_TaxationWithoutRepresentation",
+      "description": "Taxation without representation violates the rights of Englishmen.",
+      "assessment": "Supported",
+      "balance_score": 1.2,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV_DeclarationOfRights",
+        "EV_DickinsonLetters"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY_BritishTaxMotiveCost",
+      "description": "British taxes after the French and Indian War were primarily imposed to compensate for wartime costs and the cost of stationing troops.",
+      "assessment": "Contested / Mixed Evidence",
+      "balance_score": 0.5,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV_FranklinTestimonyStampAct"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY_CommitteesRoleResistance",
+      "description": "The Committees of Correspondence became the leaders of American resistance and largely determined the war effort at the state and local level.",
+      "assessment": "Supported",
+      "balance_score": 0.7,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV_CommitteesEnforceBoycott"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY_BostonTeaPartyEscalation",
+      "description": "The Boston Tea Party was a seminal event in the American Revolution's escalation.",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY_IntolerableActsEffect",
+      "description": "The Intolerable Acts, while intended to punish Massachusetts, expanded and intensified the revolutionary cause.",
+      "assessment": "Supported",
+      "balance_score": 1.4,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV_IntolerableActsEndedSelfGovMass",
+        "EV_IntolerableActsExpandedRevolutionaryCause"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "HY_YorktownDecisiveVictory",
+      "description": "The decisive victory at the Siege of Yorktown led King George III and the British to negotiate an end to colonial rule and acknowledge independence.",
+      "assessment": "Supported",
+      "balance_score": 0.9,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV_YorktownOutcome"
+      ],
+      "refuting_evidence_ids": []
+    }
+  ]
+}

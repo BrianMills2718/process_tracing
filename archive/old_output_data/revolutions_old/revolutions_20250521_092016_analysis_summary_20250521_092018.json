@@ -1,0 +1,106 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250521_092016_graph.json",
+  "case_identifier": "revolutions_20250521_092016_graph",
+  "generated_at": "2025-05-21T09:20:18.814166",
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "N/A",
+      "description": "Not Applicable (no global hypothesis specified for this run)",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "NO_TAX_REP_H",
+      "description": "'Taxation without representation' violates the rights of Englishmen",
+      "assessment": "Supported",
+      "balance_score": 2.3,
+      "supporting_evidence_count": 4,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "STAMP_ACT_BOYCOTT_EV",
+        "SOL_VIOLENCE_EV",
+        "DECLARATION_RIGHTS_EV",
+        "FRANKLIN_TESTIMONY_EV"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "PARLIAMENT_SUPREME_H",
+      "description": "Parliament is the supreme lawmaking authority throughout the Empire, entitled to levy any tax without colonial approval",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "COLONIES_SUBORDINATE_H",
+      "description": "The colonies are legally British corporations subordinate to the British Parliament",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "VIRTUAL_REP_H",
+      "description": "Colonists effectively enjoy 'virtual representation' in Parliament",
+      "assessment": "Refuted",
+      "balance_score": -0.7,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 1,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [
+        "LACK_PARLIAMENT_REP_EV"
+      ]
+    },
+    {
+      "hypothesis_id": "TEA_ACT_REVENUE_H",
+      "description": "The purpose of the Townshend Acts (specifically the tea tax) was to raise revenue, not regulate trade",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "SYSTEMATIC_PLOT_H",
+      "description": "Governor Hutchinson's letters reveal a systematic plot against American rights",
+      "assessment": "Supported",
+      "balance_score": 0.8,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "HUTCHINSON_LETTERS_EV"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "SALUTARY_NEGLECT_CAUSE_SELFGOV_H",
+      "description": "The policy of salutary neglect caused Americans to become almost completely self-governing.",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "FRANCE_AID_DECISIVE_H",
+      "description": "French entry into the war and support was decisive for the colonial cause of independence.",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    }
+  ]
+}

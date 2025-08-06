@@ -11,6 +11,7 @@ Date: August 2025
 import io
 import time
 import json
+import textwrap
 from pathlib import Path
 from typing import Generator, Dict, Any, Optional, List, Union
 from contextlib import contextmanager
@@ -110,7 +111,6 @@ class StreamingHTMLWriter:
         .refuting {{ border-left-color: #dc3545; }}
         .card {{ margin-bottom: 1.5rem; overflow: hidden; }}
         .causal-chain {{ margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; }}
-        .loading {{ opacity: 0.5; }}
         .section-complete {{ opacity: 1; transition: opacity 0.3s; }}
         .progress-indicator {{ position: fixed; top: 10px; right: 10px; z-index: 1000; }}
     </style>
@@ -125,18 +125,14 @@ class StreamingHTMLWriter:
         self.write_chunk(header)
     
     def write_section_start(self, section_id: str, title: str, description: str = ""):
-        """Write section start with loading indicator"""
+        """Write section start with clean interface"""
         section_html = f"""
-    <div class="card loading" id="{section_id}">
+    <div class="card" id="{section_id}">
         <div class="card-header">
             <h2 class="card-title mb-0">{title}</h2>
             {f'<p class="text-muted mb-0">{description}</p>' if description else ''}
         </div>
         <div class="card-body">
-            <div class="spinner-border spinner-border-sm" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <span class="ms-2">Generating {title.lower()}...</span>
 """
         self.write_chunk(section_html)
         
@@ -169,15 +165,12 @@ class StreamingHTMLWriter:
     
     def write_network_visualization(self, network_data: Dict, container_id: str = "network-container"):
         """Write network visualization with progressive loading"""
-        # Start with placeholder
+        # Start with clean placeholder
         placeholder_html = f"""
             <div id="{container_id}" style="width: 100%; height: 600px; border: 1px solid #ddd; position: relative;">
                 <div class="d-flex align-items-center justify-content-center h-100">
-                    <div class="text-center">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading network...</span>
-                        </div>
-                        <p class="mt-2 text-muted">Rendering interactive network graph...</p>
+                    <div class="text-center text-muted">
+                        <p>Interactive network graph will render here</p>
                     </div>
                 </div>
             </div>
@@ -402,6 +395,9 @@ class ProgressiveHTMLAnalysis:
             network_data: Network visualization data
             theoretical_insights: Optional theoretical insights
         """
+        # Store results for access in other methods
+        self.results = results
+        
         use_streaming = self.should_use_streaming(results)
         
         if not use_streaming:
@@ -444,9 +440,18 @@ class ProgressiveHTMLAnalysis:
         """Write overview section with streaming"""
         self.writer.write_section_start("overview", "Analysis Overview", "Summary of key findings")
         
+        # Handle both old and new metric structure formats
         metrics = results.get('metrics', {})
-        node_counts = metrics.get('nodes_by_type', {})
-        edge_counts = metrics.get('edges_by_type', {})
+        network_metrics = results.get('network_metrics', {})
+        
+        # Try both possible locations for node/edge counts (fixed priority order)
+        node_counts = (metrics.get('node_type_distribution') or 
+                      network_metrics.get('node_type_distribution') or 
+                      metrics.get('nodes_by_type') or {})
+        edge_counts = (metrics.get('edge_type_distribution') or 
+                      network_metrics.get('edge_type_distribution') or 
+                      metrics.get('edges_by_type') or {})
+        
         
         overview_content = f"""
             <div class="row">
@@ -492,33 +497,166 @@ class ProgressiveHTMLAnalysis:
             self._write_causal_chains_section(results['causal_chains'])
         
         # Evidence analysis section  
+        print(f"[ANALYSIS_DEBUG] Evidence analysis in results: {'evidence_analysis' in results}")
+        print(f"[ANALYSIS_DEBUG] Evidence analysis data: {results.get('evidence_analysis', 'NOT FOUND')}")
+        
         if results.get('evidence_analysis'):
             self._write_evidence_section(results['evidence_analysis'])
+        else:
+            print("[ANALYSIS_DEBUG] No evidence_analysis found, calling with empty dict")
+            self._write_evidence_section({})
+        
+        # Van Evera systematic testing section
+        if results.get('van_evera_assessment'):
+            self._write_van_evera_section(results['van_evera_assessment'])
         
         # Mechanisms section
         if results.get('mechanisms'):
             self._write_mechanisms_section(results['mechanisms'])
     
-    def _write_causal_chains_section(self, chains: List):
-        """Write causal chains section with streaming"""
-        self.writer.write_section_start("causal-chains", "Causal Chains", 
-                                       f"Identified {len(chains)} causal sequences")
+    def filter_causal_chains_intelligently(self, chains: List, max_chains: int = 50) -> List:
+        """Filter and prioritize causal chains for optimal user experience"""
+        if len(chains) <= max_chains:
+            return chains
         
-        for i, chain in enumerate(chains):
+        # Group by length for diversity
+        by_length = {}
+        for chain in chains:
+            path_length = len(chain.get('path_descriptions', chain.get('path', [])))
+            if path_length not in by_length:
+                by_length[path_length] = []
+            by_length[path_length].append(chain)
+        
+        # Select diverse chains across length groups
+        filtered = []
+        lengths_desc = sorted(by_length.keys(), reverse=True)
+        
+        # Take top chains from each length group
+        chains_per_group = max(3, max_chains // len(lengths_desc)) if lengths_desc else 5
+        
+        for length in lengths_desc:
+            group_chains = by_length[length][:chains_per_group]
+            filtered.extend(group_chains)
+            if len(filtered) >= max_chains:
+                break
+        
+        return filtered[:max_chains]
+
+    def _write_causal_chains_section(self, chains: List):
+        """Write causal chains section with intelligent filtering"""
+        # Filter chains for better UX
+        filtered_chains = self.filter_causal_chains_intelligently(chains, max_chains=50)
+        original_count = len(chains)
+        
+        self.writer.write_section_start("causal-chains", "Causal Chains", 
+                                       f"Top {len(filtered_chains)} of {original_count} causal sequences (filtered for clarity)")
+        
+        for i, chain in enumerate(filtered_chains):
+            # Build chain description from path_descriptions
+            path_descriptions = chain.get('path_descriptions', [])
+            if path_descriptions:
+                # Create a flow description: A → B → C
+                chain_description = ' → '.join([textwrap.shorten(desc, width=50, placeholder='...')
+                                               for desc in path_descriptions])
+                chain_length = len(path_descriptions)
+                chain_desc_text = f"**{chain_length}-node chain**: {chain_description}"
+            else:
+                chain_desc_text = chain.get('description', 'No description available')
+            
             chain_html = f"""
                 <div class="causal-chain">
                     <h6>Chain {i+1}</h6>
-                    <p class="chain-description">{chain.get('description', 'No description available')}</p>
+                    <p class="chain-description">{chain_desc_text}</p>
                 </div>
             """
             self.writer.write_section_content(chain_html)
         
         self.writer.write_section_end()
     
+    def extract_hypothesis_evidence_from_graph(self, results: dict) -> dict:
+        """Extract evidence relationships from graph structure"""
+        hypothesis_evidence = {}
+        
+        # Get graph data if available
+        graph_data = results.get('graph_data')
+        print(f"[GRAPH_DEBUG] Graph data available: {graph_data is not None}")
+        if not graph_data:
+            print("[GRAPH_DEBUG] No graph_data found, trying to load from file...")
+            # Try to load from the graph file directly
+            try:
+                import json
+                from pathlib import Path
+                # Try to find the graph file
+                graph_file_pattern = str(Path("output_data/revolutions").glob("*_graph.json"))
+                if graph_file_pattern and graph_file_pattern != 'output_data/revolutions':
+                    # Get the first match
+                    import glob
+                    graph_files = glob.glob("output_data/revolutions/*_graph.json")
+                    if graph_files:
+                        print(f"[GRAPH_DEBUG] Loading from {graph_files[0]}")
+                        with open(graph_files[0]) as f:
+                            graph_data = json.load(f)
+                        print(f"[GRAPH_DEBUG] Loaded {len(graph_data.get('nodes', []))} nodes, {len(graph_data.get('edges', []))} edges")
+            except Exception as e:
+                print(f"[GRAPH_DEBUG] Error loading graph file: {e}")
+                return {}
+        
+        # Build lookup for hypothesis nodes
+        hypothesis_nodes = {}
+        for node in graph_data.get('nodes', []):
+            if node.get('type') == 'Hypothesis':
+                hypothesis_nodes[node['id']] = node.get('properties', {}).get('description', node['id'])
+        
+        # Initialize evidence collections for each hypothesis
+        for hyp_id, hyp_desc in hypothesis_nodes.items():
+            hypothesis_evidence[hyp_id] = {
+                'description': hyp_desc,
+                'supporting_evidence': [],
+                'refuting_evidence': []
+            }
+        
+        # Find evidence relationships from edges
+        for edge in graph_data.get('edges', []):
+            edge_type = edge.get('type')
+            source_id = edge.get('source_id')
+            target_id = edge.get('target_id')
+            
+            # Get source node info
+            source_node = next((n for n in graph_data.get('nodes', []) if n['id'] == source_id), None)
+            if not source_node or source_node.get('type') != 'Evidence':
+                continue
+                
+            # Check if target is a hypothesis
+            if target_id in hypothesis_nodes:
+                evidence_item = {
+                    'id': source_id,
+                    'type': edge.get('properties', {}).get('diagnostic_type', 'general'),
+                    'description': source_node.get('properties', {}).get('description', source_id)
+                }
+                
+                if edge_type in ['supports', 'provides_evidence_for']:
+                    hypothesis_evidence[target_id]['supporting_evidence'].append(evidence_item)
+                elif edge_type in ['refutes']:
+                    hypothesis_evidence[target_id]['refuting_evidence'].append(evidence_item)
+        
+        return hypothesis_evidence
+
     def _write_evidence_section(self, evidence: Dict):
-        """Write evidence analysis section"""
+        """Write evidence analysis section with enhanced graph-based extraction"""
         self.writer.write_section_start("evidence", "Evidence Analysis", 
                                        "Van Evera diagnostic evidence assessment")
+        
+        # Try to extract from graph if evidence dict is sparse
+        print(f"[EVIDENCE_DEBUG] Original evidence: {evidence}")
+        print(f"[EVIDENCE_DEBUG] Evidence length: {len(evidence) if evidence else 0}")
+        
+        if not evidence or len(evidence) < 2:
+            print("[EVIDENCE_DEBUG] Extracting from graph...")
+            graph_evidence = self.extract_hypothesis_evidence_from_graph(self.results)
+            print(f"[EVIDENCE_DEBUG] Graph evidence keys: {list(graph_evidence.keys()) if graph_evidence else []}")
+            if graph_evidence:
+                evidence = graph_evidence
+            print(f"[EVIDENCE_DEBUG] Final evidence keys: {list(evidence.keys()) if evidence else []}")
         
         for hyp_id, hyp_data in evidence.items():
             evidence_html = f"""
@@ -527,9 +665,19 @@ class ProgressiveHTMLAnalysis:
                     <div class="evidence-items">
             """
             
+            # Add supporting evidence
             for evidence_item in hyp_data.get('supporting_evidence', []):
                 evidence_html += f"""
                     <div class="evidence-item supporting">
+                        <strong>{evidence_item.get('type', 'Unknown')}:</strong> 
+                        {evidence_item.get('description', 'No description')}
+                    </div>
+                """
+            
+            # Add refuting evidence
+            for evidence_item in hyp_data.get('refuting_evidence', []):
+                evidence_html += f"""
+                    <div class="evidence-item refuting">
                         <strong>{evidence_item.get('type', 'Unknown')}:</strong> 
                         {evidence_item.get('description', 'No description')}
                     </div>
@@ -544,16 +692,62 @@ class ProgressiveHTMLAnalysis:
         
         self.writer.write_section_end()
     
+    def _write_van_evera_section(self, van_evera_results: Dict):
+        """Write systematic Van Evera hypothesis testing results"""
+        self.writer.write_section_start("van-evera", "Van Evera Systematic Analysis", 
+                                       "Academic process tracing with diagnostic tests")
+        
+        for hyp_id, assessment in van_evera_results.items():
+            assessment_html = f"""
+                <div class="hypothesis-assessment mb-4">
+                    <h6>{assessment.description}</h6>
+                    <div class="assessment-summary">
+                        <p><strong>Status:</strong> {assessment.overall_status}</p>
+                        <p><strong>Posterior Probability:</strong> {assessment.posterior_probability:.2f} 
+                           (CI: {assessment.confidence_interval[0]:.2f}-{assessment.confidence_interval[1]:.2f})</p>
+                    </div>
+                    <div class="test-results">
+                        <h7>Diagnostic Test Results:</h7>
+            """
+            
+            for test in assessment.test_results:
+                test_html = f"""
+                        <div class="test-result {test.test_result.value.lower()}">
+                            <strong>{test.test_result.value}:</strong> {test.reasoning}
+                            <br><small>Confidence: {test.confidence_level:.2f}</small>
+                        </div>
+                """
+                assessment_html += test_html
+            
+            assessment_html += f"""
+                    </div>
+                    <div class="academic-conclusion">
+                        <h7>Academic Conclusion:</h7>
+                        <pre>{assessment.academic_conclusion}</pre>
+                    </div>
+                </div>
+            """
+            
+            self.writer.write_section_content(assessment_html)
+        
+        self.writer.write_section_end()
+    
     def _write_mechanisms_section(self, mechanisms: List):
         """Write mechanisms section"""
         self.writer.write_section_start("mechanisms", "Causal Mechanisms", 
                                        f"Analysis of {len(mechanisms)} causal mechanisms")
         
         for mechanism in mechanisms:
+            # Use 'name' field for mechanism description
+            mech_name = mechanism.get('name') or mechanism.get('description', 'Unknown Mechanism')
+            # Truncate very long mechanism names for display
+            if len(mech_name) > 150:
+                mech_name = mech_name[:150] + '...'
+            
             mech_html = f"""
                 <div class="mechanism mb-3">
-                    <h6>{mechanism.get('description', 'Unknown Mechanism')}</h6>
-                    <p><strong>Completeness:</strong> {mechanism.get('completeness', 'Unknown')}</p>
+                    <h6>{mech_name}</h6>
+                    <p><strong>Completeness:</strong> {mechanism.get('completeness', 'Unknown')}%</p>
                 </div>
             """
             self.writer.write_section_content(mech_html)
@@ -618,9 +812,32 @@ class ProgressiveHTMLAnalysis:
         self.writer.write_section_start("insights", "Theoretical Insights", 
                                        "Key analytical insights and recommendations")
         
+        # Handle both string and dictionary formats for insights
+        if isinstance(insights, dict):
+            # New structured format
+            insights_content = f"<p>{insights.get('summary', 'No insights available')}</p>"
+        elif isinstance(insights, str):
+            # Legacy string format - convert markdown to HTML
+            import re
+            # Replace markdown headers
+            insights_content = re.sub(r'^# (.+)$', r'<h3>\1</h3>', insights, flags=re.MULTILINE)
+            insights_content = re.sub(r'^## (.+)$', r'<h4>\1</h4>', insights_content, flags=re.MULTILINE)
+            # Replace double newlines with paragraph breaks
+            insights_content = re.sub(r'\n\n+', '</p><p>', insights_content)
+            # Replace single newlines with breaks
+            insights_content = insights_content.replace('\n', '<br>')
+            # Wrap in paragraph tags if needed
+            if not insights_content.startswith('<h') and not insights_content.startswith('<p>'):
+                insights_content = f"<p>{insights_content}</p>"
+            # Clean up any empty paragraphs
+            insights_content = re.sub(r'<p></p>', '', insights_content)
+        else:
+            # Fallback for other types
+            insights_content = f"<p>{str(insights) if insights else 'No insights available'}</p>"
+        
         insights_html = f"""
             <div class="insights-content">
-                <p>{insights.get('summary', 'No insights available')}</p>
+                {insights_content}
             </div>
         """
         

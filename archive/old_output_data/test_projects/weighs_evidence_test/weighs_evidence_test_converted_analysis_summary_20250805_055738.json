@@ -1,0 +1,367 @@
+{
+  "filename": "output_data/weighs_evidence_test/weighs_evidence_test_converted.json",
+  "case_identifier": "weighs_evidence_test_converted",
+  "generated_at": "2025-08-05T05:57:38.558904",
+  "causal_chains": [],
+  "causal_mechanisms": [
+    {
+      "id": "mech_imperial_control",
+      "name": "mech_imperial_control",
+      "causes": [
+        "evt_tea_act_1773"
+      ],
+      "effects": [],
+      "completeness": 14.0,
+      "confidence": "unknown",
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "completeness_score": 0.05,
+        "plausibility_score": 0.1,
+        "evidence_support_level": "none",
+        "missing_elements": [
+          "A clear description of the 'mech_imperial_control' itself, defining its specific cause, effect, and the aspect of 'imperial control' it aims to explain (e.g., its establishment, maintenance, or breakdown).",
+          "A detailed description for the constituent event 'evt_tea_act_1773' outlining its specific nature, purpose, and immediate impacts.",
+          "Antecedent events or conditions that led to the 'evt_tea_act_1773' (e.g., prior British taxation policies, economic struggles of the East India Company, British rationale for asserting control).",
+          "Subsequent events that logically follow and result from the 'evt_tea_act_1773' within the context of imperial control (e.g., the Boston Tea Party, the Intolerable Acts, colonial unity and resistance, escalation towards conflict).",
+          "Explicit causal links or connections between 'evt_tea_act_1773' and any implied cause or effect related to 'imperial control'.",
+          "Identification of key actors (e.g., British Parliament, East India Company, colonial assemblies, American colonists) and their motivations, decisions, and actions within the mechanism.",
+          "Contextual factors (e.g., political ideologies, economic conditions, existing power structures) that influence the mechanism."
+        ],
+        "improvement_suggestions": [
+          "Provide a comprehensive description for 'mech_imperial_control' that clearly states the specific causal relationship it describes (e.g., 'British economic policies designed to assert imperial authority and generate revenue led to increased colonial resistance and the erosion of British control').",
+          "Elaborate on the description of 'evt_tea_act_1773' to include key details such as its aim (to save the East India Company and assert parliamentary taxation rights) and its immediate controversial aspects.",
+          "Add events preceding 'evt_tea_act_1773' such as the Stamp Act, Townshend Acts, and the financial crisis of the British East India Company to establish the necessary background and direct antecedents.",
+          "Include events following 'evt_tea_act_1773', such as the Boston Tea Party, the British response (Coercive/Intolerable Acts), and the formation of the Continental Congress, to demonstrate the mechanism's progression and effects on imperial control.",
+          "Articulate the specific causal links between each event: explain how British financial issues led to the Tea Act, how the Tea Act spurred colonial outrage and acts of defiance (like the Boston Tea Party), and how these actions prompted further British punitive measures which, in turn, fueled revolutionary sentiment and undermined imperial control.",
+          "Clearly define the specific inputs (causes) and outputs (effects) that the mechanism is attempting to explain, which currently are only vaguely hinted at by the mechanism's name."
+        ],
+        "detailed_reasoning": "The causal mechanism 'mech_imperial_control' is severely incomplete and largely undefined. Its current state consists solely of a mechanism ID and a single, undescribed constituent event ('evt_tea_act_1773').\n\n**Completeness Score (0.05):** This score is extremely low because a mechanism, by definition, requires a specified cause, a series of intermediate steps (events or processes), and a defined effect, demonstrating *how* an outcome occurs. Here, the mechanism description is empty, leaving its purpose and the causal chain it aims to explain entirely undefined. Listing only one event, without any details, does not constitute a mechanism. All necessary antecedent and consequent steps, as well as the causal logic linking them, are absent.\n\n**Plausibility Score (0.1):** The plausibility is very low due to the mechanism's undefined nature. There is no specific causal claim or pathway to evaluate for logical coherence. While 'evt_tea_act_1773' is a real historical event highly relevant to the concept of 'imperial control', its role within a specific, articulated causal mechanism is not discernible. Therefore, the mechanism, as currently presented, cannot be assessed for its internal consistency or logical soundness.\n\n**Evidence Support Level (none):** While the existence and occurrence of 'evt_tea_act_1773' itself are well-documented and supported by strong historical evidence, the *mechanism* (i.e., the specific causal links and overall process) is not defined. Without a clear causal hypothesis or sequence of events, there are no specific claims for which evidence can be marshaled or evaluated. Evidence can support the existence of an event, but not an unspecified causal relationship.\n\n**Missing Elements & Improvement Suggestions:** The primary missing element is a clear definition of what 'mech_imperial_control' is intended to explain (its cause, its effect, and the specific process). This would then allow for the identification of necessary antecedent and consequent events (e.g., earlier British acts, colonial responses, and later escalations like the Boston Tea Party and Intolerable Acts) and the articulation of the causal links between them. Currently, the mechanism is a placeholder. To improve, it needs a clear narrative of the causal flow, detailing how one event or condition led to the next in the context of imperial control dynamics, ideally leading to a specific outcome like 'intensified colonial resistance' or 'breakdown of British authority'."
+      },
+      "completeness_breakdown": {
+        "van_evera_structural": 20,
+        "llm_assessment": 5.0,
+        "combined": 14.0
+      }
+    },
+    {
+      "id": "mech_imperial_resistance",
+      "name": "mech_imperial_resistance",
+      "causes": [],
+      "effects": [],
+      "completeness": 6.0,
+      "confidence": "unknown",
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "completeness_score": 0.0,
+        "plausibility_score": 0.0,
+        "evidence_support_level": "none",
+        "missing_elements": [
+          "Description of the causal mechanism (what does 'imperial resistance' refer to, and how does it unfold causally?)",
+          "Constituent events or steps of the mechanism (e.g., specific actions, reactions, or conditions that lead to resistance)",
+          "Input conditions/causes (what triggers 'imperial resistance'?)",
+          "Output conditions/effects (what are the consequences or outcomes of 'imperial resistance'?)",
+          "Causal logic connecting events (how do the identified events causally link to produce the outcome?)"
+        ],
+        "improvement_suggestions": [
+          "Provide a clear and concise description of what the 'mech_imperial_resistance' mechanism entails (e.g., 'This mechanism describes how imperial rule leads to popular resistance').",
+          "Identify and list the specific events or steps that constitute this mechanism, in their approximate causal order (e.g., 'Imperial overreach -> Local grievances -> Organized dissent -> Active resistance').",
+          "Specify the initial conditions or causes that activate this mechanism (e.g., 'Presence of an imperial power', 'Perceived oppression').",
+          "Specify the final outcomes or effects that result from this mechanism (e.g., 'Decline of imperial power', 'Increased autonomy', 'Violent conflict').",
+          "Detail the specific causal links (e.g., 'Imperial overreach *causes* local grievances', 'Organized dissent *enables* active resistance').",
+          "If available, provide the original text context from which this mechanism was extracted, as it would offer crucial clues for reconstruction."
+        ],
+        "detailed_reasoning": "The provided causal mechanism 'mech_imperial_resistance' is entirely empty. There is no description of what the mechanism entails, nor are there any constituent events listed. Without any information on its proposed causal logic, its steps, or the context from which it was identified, it is impossible to conduct any meaningful assessment. Consequently, completeness is rated at 0.0 as no steps are present, and plausibility is rated at 0.0 because no causal logic has been articulated to evaluate. The evidence support level is 'none' as there is no claim or context to support. All elements necessary for a functional causal mechanism are missing, as detailed in the 'missing_elements' field. The 'improvement_suggestions' focus on the fundamental task of defining the mechanism itself, including its description, constituent events, and the causal links between them."
+      },
+      "completeness_breakdown": {
+        "van_evera_structural": 10,
+        "llm_assessment": 0.0,
+        "combined": 6.0
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 7,
+      "Causal_Mechanism": 2,
+      "Alternative_Explanation": 3,
+      "Actor": 4,
+      "Condition": 4,
+      "Hypothesis": 7,
+      "Evidence": 26,
+      "Data_Source": 10
+    },
+    "edge_type_distribution": {
+      "provides_evidence_for": 4,
+      "causes": 1,
+      "infers": 2,
+      "part_of_mechanism": 1,
+      "initiates": 3,
+      "constrains": 2,
+      "explains_mechanism": 2,
+      "tests_hypothesis": 5,
+      "tests_alternative": 3,
+      "confirms_occurrence": 1,
+      "provides_evidence": 10,
+      "weighs_evidence": 3,
+      "tests_mechanism": 2,
+      "contradicts": 1,
+      "updates_probability": 1,
+      "disproves_occurrence": 3,
+      "supports_alternative": 1,
+      "refutes_alternative": 1,
+      "refutes": 2
+    },
+    "density": 0.01228878648233487,
+    "avg_path_length": "N/A (disconnected graph)",
+    "connectivity_type": "disconnected",
+    "degree_centrality": {
+      "hyp_constitutional_principles": 0.074,
+      "evt_boston_tea_party": 0.048,
+      "mech_imperial_resistance": 0.039,
+      "actor_samuel_adams": 0.032,
+      "mech_imperial_control": 0.029,
+      "actor_king_george_iii": 0.026,
+      "evd_ship_manifests_customs_no_tea_jan_1774": 0.026,
+      "ds_british_parliamentary_records": 0.023,
+      "evt_tea_act_1773": 0.019,
+      "ds_mass_historical_society": 0.019
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hyp_constitutional_principles",
+      "description": "Description_Not_Found_For_hyp_constitutional_principles",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_enlightenment_influence",
+      "description": "Description_Not_Found_For_hyp_enlightenment_influence",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_tea_act_necessary_antecedent",
+      "description": "Description_Not_Found_For_hyp_tea_act_necessary_antecedent",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_coordinated_communication_network",
+      "description": "Description_Not_Found_For_hyp_coordinated_communication_network",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_small_amount_tea_destroyed",
+      "description": "Description_Not_Found_For_hyp_small_amount_tea_destroyed",
+      "assessment": "Undetermined (Insufficient Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 1,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [
+        "evd_archaeological_boston_harbor"
+      ],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_meetings_at_faneuil_hall",
+      "description": "Description_Not_Found_For_hyp_meetings_at_faneuil_hall",
+      "assessment": "Undetermined (Insufficient Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 1,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [
+        "evd_historical_records_meeting_location"
+      ],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_economic_grievance",
+      "description": "Description_Not_Found_For_hyp_economic_grievance",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [
+    {
+      "id": "actor_samuel_adams",
+      "name": "actor_samuel_adams",
+      "role": "unknown",
+      "initiated_events": [
+        {
+          "id": "evt_boston_tea_party",
+          "description": "evt_boston_tea_party",
+          "certainty": "medium",
+          "intention": "unknown"
+        },
+        {
+          "id": "evt_adams_initiated_strategy",
+          "description": "evt_adams_initiated_strategy",
+          "certainty": "medium",
+          "intention": "unknown"
+        }
+      ],
+      "influence_score": 28,
+      "beliefs": "unknown",
+      "intentions": "unknown"
+    },
+    {
+      "id": "actor_king_george_iii",
+      "name": "actor_king_george_iii",
+      "role": "unknown",
+      "initiated_events": [
+        {
+          "id": "evt_military_response_orders",
+          "description": "evt_military_response_orders",
+          "certainty": "medium",
+          "intention": "unknown"
+        }
+      ],
+      "influence_score": 17,
+      "beliefs": "unknown",
+      "intentions": "unknown"
+    },
+    {
+      "id": "actor_sons_of_liberty",
+      "name": "actor_sons_of_liberty",
+      "role": "unknown",
+      "initiated_events": [],
+      "influence_score": 0,
+      "beliefs": "unknown",
+      "intentions": "unknown"
+    },
+    {
+      "id": "actor_gov_thomas_hutchinson",
+      "name": "actor_gov_thomas_hutchinson",
+      "role": "unknown",
+      "initiated_events": [],
+      "influence_score": 0,
+      "beliefs": "unknown",
+      "intentions": "unknown"
+    }
+  ],
+  "alternative_explanations": [
+    {
+      "id": "alt_economic_self_interest",
+      "description": "alt_economic_self_interest",
+      "supporting_evidence": [
+        {
+          "id": "evd_merchant_records_smuggling",
+          "description": "evd_merchant_records_smuggling",
+          "type": "unknown",
+          "certainty": "medium",
+          "probative_value": 0.0
+        }
+      ],
+      "refuting_evidence": [],
+      "strength_score": 0.0,
+      "assessment": "Contested alternative explanation",
+      "probability": "unknown",
+      "status": "unknown"
+    },
+    {
+      "id": "alt_elite_manipulation",
+      "description": "alt_elite_manipulation",
+      "supporting_evidence": [],
+      "refuting_evidence": [
+        {
+          "id": "evd_town_meeting_records_grassroots",
+          "description": "evd_town_meeting_records_grassroots",
+          "type": "unknown",
+          "certainty": "medium",
+          "probative_value": 0.0
+        }
+      ],
+      "strength_score": 0.0,
+      "assessment": "Contested alternative explanation",
+      "probability": "unknown",
+      "status": "unknown"
+    },
+    {
+      "id": "alt_external_influence",
+      "description": "alt_external_influence",
+      "supporting_evidence": [],
+      "refuting_evidence": [],
+      "strength_score": 0,
+      "assessment": "Contested alternative explanation",
+      "probability": "unknown",
+      "status": "unknown"
+    }
+  ],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

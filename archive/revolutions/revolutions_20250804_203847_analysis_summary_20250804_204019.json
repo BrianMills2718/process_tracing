@@ -1,0 +1,165 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250804_203847_graph.json",
+  "case_identifier": "revolutions_20250804_203847_graph",
+  "generated_at": "2025-08-04T20:40:19.012223",
+  "causal_chains": [
+    {
+      "path": [
+        "event_end_french_indian_war",
+        "event_stamp_act_resistance",
+        "event_townshend_acts_escalation",
+        "event_boston_tea_party_intolerable_acts",
+        "event_first_continental_congress",
+        "event_battles_lexington_concord",
+        "event_declaration_independence",
+        "event_yorktown_treaty_paris"
+      ],
+      "path_descriptions": [
+        "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War in 1763. Even though the colonies had fought in and supported the war, British Parliament imposed new taxes to compensate for wartime costs and turned control of the colonies' western lands over to the British officials in Montreal.",
+        "Parliament passed the Stamp Act in March 1765, which imposed direct taxes on the colonies for the first time, requiring all official documents, newspapers, almanacs, and pamphlets to have stamps. This sparked significant colonial resistance, including the formation of the Sons of Liberty and the Stamp Act Congress.",
+        "In 1767, the British Parliament passed the Townshend Acts, which placed duties on several staple goods, including paper, glass, and tea, and established a Board of Customs in Boston. This led to renewed colonial boycotts and the deployment of British troops to Boston, culminating in the Boston Massacre on March 5, 1770.",
+        "On December 16, 1773, Sons of Liberty activists, dressed to evoke Indigenous people, boarded British East India Company ships and dumped \ufffd10,000 worth of tea into Boston Harbor. London responded by closing Boston Harbor and enacting a series of punitive Intolerable Acts, which effectively ended self-government in Massachusetts.",
+        "In late 1774, 12 of the Thirteen Colonies sent delegates to the First Continental Congress in Philadelphia. This body began coordinating Patriot resistance through underground networks of committees and called for a boycott of all British goods, unifying the Patriots against Parliament.",
+        "The American Revolutionary War was launched on April 19, 1775, in the Battles of Lexington and Concord, marking the commencement of military actions. This led to George Washington and the Continental Army surrounding Boston, forcing a British withdrawal by sea in March 1776, leaving Patriots in control.",
+        "On July 4, 1776, the Second Continental Congress unanimously adopted the Declaration of Independence, primarily authored by Thomas Jefferson. This document formally proclaimed national independence, articulated the political philosophies of liberalism and republicanism, rejected monarchy, and declared 'all men are created equal'.",
+        "On September 28, 1781, Washington, with French support, led the decisive victory in the Siege of Yorktown, capturing roughly 7,500 British troops. This inspired King George III to negotiate an end to colonial rule, codified in the Treaty of Paris on September 3, 1783, establishing the sovereign United States of America."
+      ],
+      "edge_types": [
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes"
+      ],
+      "trigger": "event_end_french_indian_war",
+      "outcome": "event_yorktown_treaty_paris",
+      "length": 8
+    }
+  ],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 8,
+      "Hypothesis": 4,
+      "Evidence": 14
+    },
+    "edge_type_distribution": {
+      "causes": 7,
+      "supports": 14,
+      "confirms_occurrence": 5
+    },
+    "density": 0.04,
+    "avg_path_length": "N/A (disconnected graph)",
+    "connectivity_type": "disconnected",
+    "degree_centrality": {
+      "hypothesis_punitive_measures_escalated_resistance": 0.096,
+      "hypothesis_salutary_neglect_fostered_self_governance": 0.096,
+      "hypothesis_british_policy_caused_discontent": 0.072,
+      "hypothesis_taxation_without_representation_caused_rebellion": 0.072,
+      "event_stamp_act_resistance": 0.064,
+      "event_townshend_acts_escalation": 0.064,
+      "event_boston_tea_party_intolerable_acts": 0.064,
+      "event_first_continental_congress": 0.064,
+      "event_end_french_indian_war": 0.04,
+      "event_battles_lexington_concord": 0.04
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hypothesis_british_policy_caused_discontent",
+      "description": "British policies enacted after the French and Indian War, specifically imposing new taxes to cover war debts and turning control of western lands over to British officials, caused widespread colonial discontent and laid the groundwork for rebellion by infringing upon perceived colonial autonomy and economic interests.",
+      "assessment": "Strongly Supported (Multiple Strong Evidence)",
+      "balance_score": 2.2,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 3,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_post_war_discontent_origin",
+        "evidence_grenville_ministry_money_need",
+        "evidence_royal_proclamation_anger"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis_taxation_without_representation_caused_rebellion",
+      "description": "The colonial argument encapsulated by the slogan 'No taxation without representation' directly caused increased colonial rebellion and unity against British rule because it articulated a fundamental violation of their rights as Englishmen and mobilized opposition to perceived parliamentary overreach.",
+      "assessment": "Strongly Supported (Multiple Strong Evidence)",
+      "balance_score": 2.5,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 3,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_stamp_act_grievance",
+        "evidence_no_representation_objection",
+        "evidence_boycott_determination"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis_punitive_measures_escalated_resistance",
+      "description": "Britain's harsh, punitive responses to colonial protests, such as deploying troops to Boston, closing Boston Harbor, and enacting the Intolerable Acts, escalated colonial resistance into open rebellion by convincing more colonists that their self-governance and liberties were under direct attack, thereby unifying them against British authority.",
+      "assessment": "Strongly Supported (Multiple Strong Evidence)",
+      "balance_score": 3.05,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 4,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_british_troops_boston_massacre",
+        "evidence_london_punitive_laws",
+        "evidence_intolerable_acts_opinion_darkening",
+        "evidence_suffolk_resolves_shadow_government"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis_salutary_neglect_fostered_self_governance",
+      "description": "Britain's long-standing policy of 'salutary neglect,' which allowed colonies to largely run their own affairs for over 150 years, fostered a deeply ingrained expectation of self-governance among colonists, causing direct conflict and rebellion when Britain later attempted to assert more direct control and impose new regulations.",
+      "assessment": "Strongly Supported (Multiple Strong Evidence)",
+      "balance_score": 3.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 4,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_salutary_neglect_custom",
+        "evidence_policy_change_autonomy_seeking",
+        "evidence_levi_preston_quote",
+        "evidence_self_governing_before_revolution"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

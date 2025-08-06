@@ -1,0 +1,616 @@
+{
+  "nodes": [
+    {
+      "id": "E1_French_Indian_War_Ends_British_Debt",
+      "type": "Event",
+      "properties": {
+        "description": "The French and Indian War ended in 1763 with France's defeat, leaving Great Britain with substantial wartime costs, which led the British Parliament to impose new taxes on the colonies and transfer control of western colonial lands to British officials in Montreal, sparking initial colonial discontent.",
+        "date": "1763",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E2_Stamp_Act_Colonial_Opposition",
+      "type": "Event",
+      "properties": {
+        "description": "In March 1765, Parliament passed the Stamp Act, directly taxing official documents, newspapers, and pamphlets for the first time, prompting immediate colonial objections based on their lack of representation in Parliament and leading to the formation of the Sons of Liberty and the Stamp Act Congress.",
+        "date": "March 1765",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E3_Townshend_Acts_Escalating_Tensions",
+      "type": "Event",
+      "properties": {
+        "description": "The British Parliament passed the Townshend Acts in 1767, placing duties on goods like paper and tea and establishing a Board of Customs, which reignited colonial boycotts and resulted in the deployment of British troops to Boston, culminating in the Boston Massacre on March 5, 1770, where soldiers fired on protestors.",
+        "start_date": "1767",
+        "end_date": "1770",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E4_Boston_Tea_Party_Intolerable_Acts",
+      "type": "Event",
+      "properties": {
+        "description": "On December 16, 1773, Sons of Liberty activists, disguised as Native Americans, famously boarded East India Company ships in Boston Harbor and dumped \u00a310,000 worth of tea into the water, leading London to retaliate with the punitive Intolerable Acts, which closed Boston Harbor and ended self-government in Massachusetts, thereby intensifying the revolutionary cause.",
+        "start_date": "December 16, 1773",
+        "end_date": "1774",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E5_Continental_Congress_Coordinated_Resistance",
+      "type": "Event",
+      "properties": {
+        "description": "In late 1774, delegates from 12 colonies convened the First Continental Congress in Philadelphia, initiating coordinated Patriot resistance through underground networks of committees, which began training colonial militias and enforcing boycotts of British goods, thus unifying the colonies against perceived parliamentary oppression.",
+        "start_date": "late 1774",
+        "end_date": "1775",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E6_Declaration_of_Independence",
+      "type": "Event",
+      "properties": {
+        "description": "On July 4, 1776, the Second Continental Congress unanimously adopted the Declaration of Independence, primarily authored by Thomas Jefferson, which formally proclaimed national independence, rejected monarchy and aristocracy based on liberal and republican philosophies, famously stating 'all men are created equal,' and significantly escalated the Revolutionary War.",
+        "date": "July 4, 1776",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "E7_American_Victory_Treaty_of_Paris",
+      "type": "Event",
+      "properties": {
+        "description": "In 1781, George Washington and the Continental Army achieved a decisive victory at the Siege of Yorktown, inspiring King George III and the British to negotiate an end to colonial rule; this was formalized by the Treaty of Paris in 1783, establishing the sovereign United States of America and ending the war.",
+        "start_date": "1781",
+        "end_date": "1783",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "H1_British_Policies_Cause_Discontent",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "British policies regarding new taxes and control of western lands after the French and Indian War caused widespread colonial discontent because they deviated significantly from the established practice of 'salutary neglect' and imposed financial burdens and territorial restrictions without adequate colonial input or consent.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "H2_No_Representation_Primary_Cause",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Colonial opposition to British taxation policies, such as the Stamp Act, was primarily driven by the fundamental belief that 'taxation without representation' violated their inherent rights as Englishmen, rather than simply the financial burden of the taxes themselves, making the principle of representation the core grievance.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "H3_Punitive_Acts_Intensify_Resolve",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "British punitive measures, such as the Intolerable Acts imposed after the Boston Tea Party, inadvertently intensified the revolutionary cause for independence by effectively ending self-government in Massachusetts and thereby galvanizing broader colonial unity and resistance against perceived British tyranny, rather than quelling dissent.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "H4_Self_Governance_Fuels_Independence",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The long-standing British policy of 'salutary neglect' fostered a deep-seated tradition of colonial self-governance, which meant colonists became accustomed to managing their own affairs, thereby making any attempts by Britain to assert direct control or impose taxes a direct trigger for rebellion and the eventual demand for full independence.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "Ev1_1_British_Debt_New_Taxes_1763",
+      "type": "Evidence",
+      "properties": {
+        "description": "The text states that colonial discontent began after the French and Indian War because Britain imposed new taxes and controlled western lands to cover wartime costs, directly linking British financial and territorial policies to the start of colonial unrest.",
+        "source": "American Revolution Article"
+      }
+    },
+    {
+      "id": "Ev1_2_End_Salutary_Neglect_Quote",
+      "type": "Evidence",
+      "properties": {
+        "description": "The text explicitly notes that Britain's policy of salutary neglect 'changed significantly after the French and Indian War,' leading the colonies to 'seek greater autonomy,' indicating a shift in British approach provoked colonial desire for self-rule.",
+        "source": "American Revolution Article"
+      }
+    },
+    {
+      "id": "Ev1_3_Capt_Preston_Quote",
+      "type": "Evidence",
+      "properties": {
+        "description": "Capt. Levi Preston, a colonist, directly attributed the American rebellion to the desire for continued self-governance, stating, '\u2026we always had governed ourselves, and we always meant to. They didn\u2019t mean we should,' providing strong direct testimony.",
+        "source": "American Revolution Article"
+      }
+    },
+    {
+      "id": "Ev2_1_Stamp_Act_Congress_Declaration",
+      "type": "Evidence",
+      "properties": {
+        "description": "The 'Declaration of Rights and Grievances' from the Stamp Act Congress in 1765 explicitly argued that 'taxation without representation violated their rights as Englishmen,' directly supporting the claim that representation was the core issue.",
+        "source": "American Revolution Article"
+      }
+    },
+    {
+      "id": "Ev2_2_Low_Taxes_Not_Issue",
+      "type": "Evidence",
+      "properties": {
+        "description": "The text highlights that colonists' objection to the Stamp Act was not about the 'low' amount of the taxes, but specifically 'their lack of representation in the Parliament,' summarized by 'No taxation without representation,' which rules out tax amount as the primary driver.",
+        "source": "American Revolution Article"
+      }
+    },
+    {
+      "id": "Ev2_3_Rejection_Virtual_Representation",
+      "type": "Evidence",
+      "properties": {
+        "description": "Americans like James Otis countered the British argument of 'virtual representation' by asserting that 'there was no one in Parliament responsible specifically to any colonial constituency,' illustrating their principled stand on direct representation.",
+        "source": "American Revolution Article"
+      }
+    },
+    {
+      "id": "Ev3_1_Intolerable_Acts_Intensify_Cause",
+      "type": "Evidence",
+      "properties": {
+        "description": "The text explicitly states that the punitive Intolerable Acts, enacted in response to the Boston Tea Party, 'effectively ended self-government in Massachusetts but also served to expand and intensify the revolutionary cause,' demonstrating their counterproductive effect.",
+        "source": "American Revolution Article"
+      }
+    },
+    {
+      "id": "Ev3_2_First_Continental_Congress_Coordinate",
+      "type": "Evidence",
+      "properties": {
+        "description": "The convening of the First Continental Congress in late 1774 by 12 colonies to 'coordinat[e] Patriot resistance through underground networks of committees' indicates a broad, unified, and intensified response to British actions.",
+        "source": "American Revolution Article"
+      }
+    },
+    {
+      "id": "Ev4_1_Salutary_Neglect_Self_Governance",
+      "type": "Evidence",
+      "properties": {
+        "description": "The British policy of 'salutary neglect' for over 150 years allowed colonies to be 'mostly left alone,' leading colonists to become 'accustomed to running their own affairs, and they liked it,' establishing a deeply ingrained tradition of self-rule.",
+        "source": "American Revolution Article"
+      }
+    },
+    {
+      "id": "Ev4_2_Middlekauff_Self_Governance",
+      "type": "Evidence",
+      "properties": {
+        "description": "Historian Robert Middlekauff's assessment that 'Americans had become almost completely self-governing' before the Revolution reinforces the extent to which self-governance was an established practice consistent with salutary neglect.",
+        "source": "American Revolution Article"
+      }
+    },
+    {
+      "id": "Ev4_3_King_Philips_War_Identity",
+      "type": "Evidence",
+      "properties": {
+        "description": "The New England colonies fighting King Philip's War (1675\u20131678) 'without military assistance from England' contributed to 'the development of a uniquely American identity separate from that of the British people,' suggesting an early foundation for self-reliance and independence.",
+        "source": "American Revolution Article"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "E1_causes_E2",
+      "type": "causes",
+      "source": "E1_French_Indian_War_Ends_British_Debt",
+      "target": "E2_Stamp_Act_Colonial_Opposition",
+      "properties": {
+        "description": "The financial strain and new policies after the French and Indian War directly led to the imposition of taxes like the Stamp Act.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "E2_causes_E3",
+      "type": "causes",
+      "source": "E2_Stamp_Act_Colonial_Opposition",
+      "target": "E3_Townshend_Acts_Escalating_Tensions",
+      "properties": {
+        "description": "The repeal of the Stamp Act was followed by new attempts at taxation (Townshend Acts) and increased tensions.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "E3_causes_E4",
+      "type": "causes",
+      "source": "E3_Townshend_Acts_Escalating_Tensions",
+      "target": "E4_Boston_Tea_Party_Intolerable_Acts",
+      "properties": {
+        "description": "Continued British taxation and military presence (after Townshend Acts and Boston Massacre) exacerbated colonial frustration, leading to the Boston Tea Party.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "E4_causes_E5",
+      "type": "causes",
+      "source": "E4_Boston_Tea_Party_Intolerable_Acts",
+      "target": "E5_Continental_Congress_Coordinated_Resistance",
+      "properties": {
+        "description": "The punitive Intolerable Acts in response to the Boston Tea Party intensified the revolutionary cause and unified colonies to form the Continental Congress.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "E5_causes_E6",
+      "type": "causes",
+      "source": "E5_Continental_Congress_Coordinated_Resistance",
+      "target": "E6_Declaration_of_Independence",
+      "properties": {
+        "description": "The coordinated resistance and unified action by the Continental Congress set the stage for the formal declaration of independence.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "E6_causes_E7",
+      "type": "causes",
+      "source": "E6_Declaration_of_Independence",
+      "target": "E7_American_Victory_Treaty_of_Paris",
+      "properties": {
+        "description": "The Declaration of Independence formalized and escalated the war, which eventually led to American victory and the Treaty of Paris.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Ev1_1_supports_H1",
+      "type": "supports",
+      "source": "Ev1_1_British_Debt_New_Taxes_1763",
+      "target": "H1_British_Policies_Cause_Discontent",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.7,
+        "source_text_quote": "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War in 1763. Even though the colonies had fought in and supported the war, British Parliament imposed new taxes to compensate for wartime costs and turned control of the colonies' western lands over to the British officials in Montreal.",
+        "target_type": "causal_relationship",
+        "reasoning": "This evidence establishes the starting condition for the discontent, which is necessary for the hypothesis to hold."
+      }
+    },
+    {
+      "id": "Ev1_2_supports_H1",
+      "type": "supports",
+      "source": "Ev1_2_End_Salutary_Neglect_Quote",
+      "target": "H1_British_Policies_Cause_Discontent",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.5,
+        "source_text_quote": "This British policy changed significantly after the French and Indian War, prompting the Thirteen Colonies to seek greater autonomy from Britain.",
+        "target_type": "mechanism_operation",
+        "reasoning": "This quote indicates a shift in policy and a colonial reaction, weakly supporting the causal link without definitive proof of the mechanism's strength."
+      }
+    },
+    {
+      "id": "Ev1_3_supports_H1",
+      "type": "supports",
+      "source": "Ev1_3_Capt_Preston_Quote",
+      "target": "H1_British_Policies_Cause_Discontent",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "After the Revolution, one colonist, Capt. Levi Preston, of Danvers, Massachusetts, was asked why the Americans rebelled against England, responded, '\u2026we always had governed ourselves, and we always meant to. They didn\u2019t mean we should.'",
+        "target_type": "causal_relationship",
+        "reasoning": "This is direct testimony from a participant explicitly stating the underlying reason for rebellion, strongly supporting the hypothesis."
+      }
+    },
+    {
+      "id": "Ev2_1_supports_H2",
+      "type": "supports",
+      "source": "Ev2_1_Stamp_Act_Congress_Declaration",
+      "target": "H2_No_Representation_Primary_Cause",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Representatives from several colonies convened the Stamp Act Congress in 1765; its 'Declaration of Rights and Grievances' argued that taxation without representation violated their rights as Englishmen.",
+        "target_type": "causal_relationship",
+        "reasoning": "This quote directly states the colonists' official grievance, providing strong evidence for representation as the primary cause."
+      }
+    },
+    {
+      "id": "Ev2_2_supports_H2",
+      "type": "supports",
+      "source": "Ev2_2_Low_Taxes_Not_Issue",
+      "target": "H2_No_Representation_Primary_Cause",
+      "properties": {
+        "diagnostic_type": "doubly_decisive",
+        "probative_value": 0.95,
+        "source_text_quote": "The colonists did not object that the taxes were high; they were actually low. They objected to their lack of representation in the Parliament, which gave them no voice concerning legislation that affected them, such as the tax, violating the unwritten English constitution. This grievance was summarized in the slogan 'No taxation without representation'.",
+        "target_type": "causal_relationship",
+        "reasoning": "This evidence simultaneously refutes the alternative hypothesis (high taxes) and confirms the stated hypothesis (lack of representation) as the core issue."
+      }
+    },
+    {
+      "id": "Ev2_3_supports_H2",
+      "type": "supports",
+      "source": "Ev2_3_Rejection_Virtual_Representation",
+      "target": "H2_No_Representation_Primary_Cause",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.8,
+        "source_text_quote": "Parliament insisted that the colonists effectively enjoyed a 'virtual representation', as most British people did, since only a small minority of the British population were eligible to elect representatives to Parliament. However, Americans such as James Otis maintained that there was no one in Parliament responsible specifically to any colonial constituency, so they were not 'virtually represented' by anyone in Parliament.",
+        "target_type": "mechanism_operation",
+        "reasoning": "The colonists' rejection of virtual representation was a necessary component of their 'no taxation without representation' argument, validating the mechanism."
+      }
+    },
+    {
+      "id": "Ev3_1_supports_H3",
+      "type": "supports",
+      "source": "Ev3_1_Intolerable_Acts_Intensify_Cause",
+      "target": "H3_Punitive_Acts_Intensify_Resolve",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "London responded by closing Boston Harbor and enacting a series of punitive laws, which effectively ended self-government in Massachusetts but also served to expand and intensify the revolutionary cause.",
+        "target_type": "causal_relationship",
+        "reasoning": "This quote directly states the causal effect of the Intolerable Acts on intensifying the revolutionary cause."
+      }
+    },
+    {
+      "id": "Ev3_2_supports_H3",
+      "type": "supports",
+      "source": "Ev3_2_First_Continental_Congress_Coordinate",
+      "target": "H3_Punitive_Acts_Intensify_Resolve",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.75,
+        "source_text_quote": "In late 1774, 12 of the Thirteen Colonies sent delegates to the First Continental Congress, which met inside Carpenters' Hall in Philadelphia; the Province of Georgia joined in 1775. The First Continental Congress began coordinating Patriot resistance through underground networks of committees.",
+        "target_type": "event_occurrence",
+        "reasoning": "The formation and coordination efforts of the First Continental Congress are a necessary manifestation of expanded and intensified colonial resolve."
+      }
+    },
+    {
+      "id": "Ev4_1_supports_H4",
+      "type": "supports",
+      "source": "Ev4_1_Salutary_Neglect_Self_Governance",
+      "target": "H4_Self_Governance_Fuels_Independence",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.8,
+        "source_text_quote": "Under the British policy of salutary neglect, Britain traded with the colonies but otherwise mostly left them alone over the first 150 years of the colonies\u2019 existence. The colonists became accustomed to running their own affairs, and they liked it.",
+        "target_type": "mechanism_operation",
+        "reasoning": "This establishes the long-standing condition of self-governance which is a necessary foundation for the hypothesis."
+      }
+    },
+    {
+      "id": "Ev4_2_supports_H4",
+      "type": "supports",
+      "source": "Ev4_2_Middlekauff_Self_Governance",
+      "target": "H4_Self_Governance_Fuels_Independence",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "According to historian Robert Middlekauff, 'Americans had become almost completely self-governing' before the American Revolution, a practice that was consistent with the British monarchy's practice of salutary neglect.",
+        "target_type": "mechanism_operation",
+        "reasoning": "A historian's direct assessment confirming the high degree of self-governance provides strong support for the mechanism."
+      }
+    },
+    {
+      "id": "Ev4_3_supports_H4",
+      "type": "supports",
+      "source": "Ev4_3_King_Philips_War_Identity",
+      "target": "H4_Self_Governance_Fuels_Independence",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.4,
+        "source_text_quote": "In King Philip's War (1675\u20131678), the New England colonies fought a handful of Native American tribes without military assistance from England, thereby contributing to the development of a uniquely American identity separate from that of the British people.",
+        "target_type": "mechanism_operation",
+        "reasoning": "This suggests an early development of a distinct American identity that might foster self-governance, but it's not directly about the self-governance mechanism itself, making it weakly suggestive."
+      }
+    },
+    {
+      "source": "Ev1_3_Capt_Preston_Quote",
+      "target": "H4_Self_Governance_Fuels_Independence",
+      "type": "supports",
+      "properties": {
+        "reasoning": "Captain Preston's quote directly attributes the American rebellion to the desire for continued self-governance, strongly supporting the hypothesis.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev1_2_End_Salutary_Neglect_Quote",
+      "target": "E1_French_Indian_War_Ends_British_Debt",
+      "type": "provides_evidence_for",
+      "properties": {
+        "reasoning": "The quote notes that Britain's policy of salutary neglect 'changed significantly after the French and Indian War', indicating a direct consequence of the war's end.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev1_2_End_Salutary_Neglect_Quote",
+      "target": "H1_British_Policies_Cause_Discontent",
+      "type": "provides_evidence_for",
+      "properties": {
+        "reasoning": "The quote states the change in policy 'prompting the Thirteen Colonies to seek greater autonomy', providing evidence that British policies caused discontent.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev1_1_British_Debt_New_Taxes_1763",
+      "target": "E1_French_Indian_War_Ends_British_Debt",
+      "type": "part_of_mechanism",
+      "properties": {
+        "reasoning": "The text states 'colonial discontent began after the French and Indian War because Britain imposed new taxes', detailing the specific actions that followed E1 and led to discontent.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev1_1_British_Debt_New_Taxes_1763",
+      "target": "H1_British_Policies_Cause_Discontent",
+      "type": "supports",
+      "properties": {
+        "reasoning": "This evidence directly states that Britain imposed 'new taxes' after the war, causing 'colonial discontent', directly supporting the hypothesis.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "H1_British_Policies_Cause_Discontent",
+      "target": "E2_Stamp_Act_Colonial_Opposition",
+      "type": "causes",
+      "properties": {
+        "reasoning": "The hypothesis posits that British policies caused discontent, and the Stamp Act opposition (E2) is a direct manifestation of this discontent.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev2_1_Stamp_Act_Congress_Declaration",
+      "target": "E2_Stamp_Act_Colonial_Opposition",
+      "type": "provides_evidence_for",
+      "properties": {
+        "reasoning": "The 'Declaration of Rights and Grievances' from the Stamp Act Congress is a central piece of evidence for the colonial opposition to the Stamp Act.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev2_1_Stamp_Act_Congress_Declaration",
+      "target": "H2_No_Representation_Primary_Cause",
+      "type": "supports",
+      "properties": {
+        "reasoning": "The declaration explicitly argued that 'taxation without representation violated their rights', directly supporting the hypothesis.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev2_3_Rejection_Virtual_Representation",
+      "target": "H2_No_Representation_Primary_Cause",
+      "type": "supports",
+      "properties": {
+        "reasoning": "Americans' counter-argument to 'virtual representation' directly reinforces that the lack of actual representation was the core issue, supporting the hypothesis.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev2_3_Rejection_Virtual_Representation",
+      "target": "E2_Stamp_Act_Colonial_Opposition",
+      "type": "part_of_mechanism",
+      "properties": {
+        "reasoning": "The rejection of 'virtual representation' was a key argument and component of the opposition during the Stamp Act period.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev2_2_Low_Taxes_Not_Issue",
+      "target": "H2_No_Representation_Primary_Cause",
+      "type": "supports",
+      "properties": {
+        "reasoning": "The text highlights that colonists' objection was 'not about the 'low' amount' but their 'lack of representation', strongly supporting the hypothesis.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev2_2_Low_Taxes_Not_Issue",
+      "target": "E2_Stamp_Act_Colonial_Opposition",
+      "type": "provides_evidence_for",
+      "properties": {
+        "reasoning": "This evidence explains the specific nature of the colonists' objection to the Stamp Act, contributing to the understanding of E2.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "H2_No_Representation_Primary_Cause",
+      "target": "E2_Stamp_Act_Colonial_Opposition",
+      "type": "causes",
+      "properties": {
+        "reasoning": "The hypothesis states that lack of representation was the 'primary cause' driving colonial opposition to policies like the Stamp Act.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev3_1_Intolerable_Acts_Intensify_Cause",
+      "target": "E4_Boston_Tea_Party_Intolerable_Acts",
+      "type": "provides_evidence_for",
+      "properties": {
+        "reasoning": "The text explicitly states the 'punitive Intolerable Acts' were 'enacted in response to the Boston Tea Party', directly linking the two events.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev3_1_Intolerable_Acts_Intensify_Cause",
+      "target": "H3_Punitive_Acts_Intensify_Resolve",
+      "type": "supports",
+      "properties": {
+        "reasoning": "The evidence states the Intolerable Acts 'served to expand and intensify the revolutionary cause', directly supporting the hypothesis.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "H3_Punitive_Acts_Intensify_Resolve",
+      "target": "E5_Continental_Congress_Coordinated_Resistance",
+      "type": "causes",
+      "properties": {
+        "reasoning": "The intensified resolve caused by the punitive acts (H3) directly led to the coordination of Patriot resistance via the First Continental Congress (E5).",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev3_2_First_Continental_Congress_Coordinate",
+      "target": "E5_Continental_Congress_Coordinated_Resistance",
+      "type": "provides_evidence_for",
+      "properties": {
+        "reasoning": "This evidence directly describes the convening and purpose of the First Continental Congress, which is E5.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev4_3_King_Philips_War_Identity",
+      "target": "H4_Self_Governance_Fuels_Independence",
+      "type": "supports",
+      "properties": {
+        "reasoning": "The colonies fighting King Philip's War 'without military assistance from England' contributed to a 'uniquely American identity', supporting the development of self-governance and independence.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev4_2_Middlekauff_Self_Governance",
+      "target": "H4_Self_Governance_Fuels_Independence",
+      "type": "supports",
+      "properties": {
+        "reasoning": "Historian Robert Middlekauff's assessment that 'Americans had become almost completely self-governing' directly supports the hypothesis about self-governance.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev4_1_Salutary_Neglect_Self_Governance",
+      "target": "H4_Self_Governance_Fuels_Independence",
+      "type": "supports",
+      "properties": {
+        "reasoning": "The evidence describes how 'salutary neglect' allowed colonies to be 'mostly left alone' and 'accustomed to running their own affairs', forming the basis of the hypothesis.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "Ev4_1_Salutary_Neglect_Self_Governance",
+      "target": "E1_French_Indian_War_Ends_British_Debt",
+      "type": "part_of_mechanism",
+      "properties": {
+        "reasoning": "The policy of salutary neglect is mentioned as having 'changed significantly after the French and Indian War', indicating E1 as a critical turning point for this long-standing condition.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "H4_Self_Governance_Fuels_Independence",
+      "target": "E6_Declaration_of_Independence",
+      "type": "causes",
+      "properties": {
+        "reasoning": "The hypothesis posits that the tradition of self-governance 'fueled independence', which ultimately culminated in the Declaration of Independence.",
+        "confidence": 0.9,
+        "source": "connectivity_repair"
+      }
+    }
+  ]
+}

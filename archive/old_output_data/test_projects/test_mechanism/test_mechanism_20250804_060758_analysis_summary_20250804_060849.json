@@ -1,0 +1,278 @@
+{
+  "filename": "output_data\\test_mechanism\\test_mechanism_20250804_060758_graph.json",
+  "case_identifier": "test_mechanism_20250804_060758_graph",
+  "generated_at": "2025-08-04T06:08:49.497007",
+  "causal_chains": [
+    {
+      "path": [
+        "Tea_Act_1773",
+        "Boston_Tea_Party"
+      ],
+      "path_descriptions": [
+        "The Tea Act of 1773 was a British parliamentary act that granted the British East India Company a monopoly on tea sales in the American colonies, which directly preceded and precipitated colonial rebellion.",
+        "The Boston Tea Party occurred on December 16, 1773, when Samuel Adams and the Sons of Liberty led American colonists in boarding British ships and dumping 342 chests of tea into Boston Harbor, serving as a dramatic act of rebellion and a decisive trigger event for concrete revolutionary action."
+      ],
+      "edge_types": [
+        "causes"
+      ],
+      "trigger": "Tea_Act_1773",
+      "outcome": "Boston_Tea_Party",
+      "length": 2
+    }
+  ],
+  "causal_mechanisms": [
+    {
+      "id": "Imperial_Resistance_Mechanism",
+      "name": "The process by which the Tea Act led to colonial rebellion, involving taxation without representation violating principles, economic pressure on merchants, ideological mobilization, and organized resistance by groups like the Sons of Liberty. Steps include: (1) The Tea Act imposed taxation without colonial representation in Parliament, violating fundamental principles of self-governance; (2) This created both economic pressure on local merchants who were undercut by the monopoly and ideological mobilization around constitutional principles; (3) Groups like the Sons of Liberty channeled this discontent into organized resistance; (4) The resistance culminated in direct action against British property.",
+      "causes": [],
+      "effects": [],
+      "completeness": 44.0,
+      "confidence": "unknown",
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "completeness_score": 0.8,
+        "plausibility_score": 1.0,
+        "evidence_support_level": "strong",
+        "missing_elements": [
+          "The British punitive response to the direct action (e.g., the Coercive/Intolerable Acts).",
+          "The subsequent escalation of inter-colonial unity and the formation of unified governing bodies (e.g., the First Continental Congress) as a direct result of British retaliation.",
+          "The broader historical context of previous British taxation attempts (e.g., Stamp Act, Townshend Acts) that established the grievance of 'taxation without representation' and pre-existing resistance networks.",
+          "The role of communication channels (e.g., Committees of Correspondence) in disseminating information and coordinating resistance across colonies."
+        ],
+        "improvement_suggestions": [
+          "Add a step after 'direct action against British property' to describe the British government's punitive response, specifically mentioning the Coercive/Intolerable Acts.",
+          "Introduce a new step demonstrating how these British punitive measures further escalated tensions, fostered inter-colonial unity, and led to the formation of coordinated bodies like the First Continental Congress, explicitly linking to the broader concept of 'colonial rebellion' and moves towards revolution.",
+          "Incorporate a brief contextual statement about prior British taxation acts (e.g., Stamp Act, Townshend Acts) that built up the colonial grievance and established precedents for resistance.",
+          "Explicitly cite the Boston Tea Party as the primary example of 'direct action against British property' to enhance specificity.",
+          "Consider adding a step about the role of communication networks, such as the Committees of Correspondence, in mobilizing widespread colonial discontent."
+        ],
+        "detailed_reasoning": "The 'Imperial_Resistance_Mechanism' provides a highly plausible and well-supported causal chain explaining how the Tea Act spurred significant acts of resistance leading towards colonial rebellion. Its strength lies in clearly articulating the dual drivers of economic pressure and ideological principles, the role of organized groups, and the culmination in direct action. This aligns perfectly with established historical accounts of the American Revolution's origins.\n\n**Plausibility (1.0):** The causal logic is exceptionally sound. The progression from a specific legislative act (Tea Act) creating defined grievances (economic harm to merchants, violation of self-governance principles) to the mobilization of discontent by organized groups (Sons of Liberty) and culminating in direct action is historically accurate and logically coherent. This mechanism effectively captures the immediate catalysts and the pathways of colonial reaction.\n\n**Evidence Support (Strong):** Each step in this mechanism is robustly supported by extensive historical evidence. Primary sources, including colonial legislative records, pamphlets, newspaper accounts, merchant documents, and personal correspondences, alongside a vast body of secondary historical scholarship, confirm the specifics of the Tea Act, the widespread colonial opposition based on 'taxation without representation,' the activities of the Sons of Liberty, and events like the Boston Tea Party. This mechanism represents a foundational understanding of the lead-up to the American Revolution.\n\n**Completeness (0.8):** While excellent in detailing the pathway from the Tea Act to immediate, impactful acts of organized resistance (e.g., the Boston Tea Party), the mechanism is slightly less complete in fully tracing the path to 'colonial rebellion' in its broadest sense, implying a unified, widespread, and ultimately armed conflict leading to revolution. The mechanism effectively ends with 'direct action against British property.' To achieve a higher completeness score, it needs to explicitly incorporate the British response to these direct actions (e.g., the Coercive Acts) and how these punitive measures further escalated tensions, solidified inter-colonial unity, and catalyzed the formal steps towards war and independence (e.g., the convening of the First Continental Congress). Without these crucial subsequent steps, the direct link from the described 'direct action' to a full-scale 'colonial rebellion' remains implicitly assumed rather than explicitly detailed within the mechanism's steps."
+      },
+      "completeness_breakdown": {
+        "van_evera_structural": 20,
+        "llm_assessment": 80.0,
+        "combined": 44.0
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 3,
+      "Causal_Mechanism": 1,
+      "Hypothesis": 1,
+      "Alternative_Explanation": 3,
+      "Actor": 3,
+      "Condition": 4,
+      "Evidence": 22,
+      "Inferential_Test": 4,
+      "Inference_Rule": 2,
+      "Data_Source": 2
+    },
+    "edge_type_distribution": {
+      "causes": 1,
+      "explains_mechanism": 1,
+      "part_of_mechanism": 1,
+      "initiates": 2,
+      "provides_evidence": 6,
+      "constrains": 2,
+      "enables": 2,
+      "supports": 3,
+      "refutes": 3,
+      "confirms_occurrence": 1,
+      "updates_probability": 1,
+      "contradicts": 1,
+      "disproves_occurrence": 1,
+      "supports_alternative": 2,
+      "refutes_alternative": 2,
+      "tests_hypothesis": 2,
+      "tests_mechanism": 2,
+      "infers": 2
+    },
+    "density": 0.017676767676767676,
+    "avg_path_length": "N/A (disconnected graph)",
+    "connectivity_type": "disconnected",
+    "degree_centrality": {
+      "Constitutional_Principle_Hypothesis": 0.082,
+      "Boston_Tea_Party": 0.055,
+      "Colonial_Rebellion": 0.055,
+      "Imperial_Resistance_Mechanism": 0.05,
+      "Economic_Self_Interest_Hypothesis": 0.041,
+      "External_Influence_Hypothesis": 0.041,
+      "Tea_Act_1773": 0.032,
+      "King_George_III": 0.032,
+      "Elite_Manipulation_Hypothesis": 0.027,
+      "Enlightenment_Ideas_Spread": 0.023
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "Constitutional_Principle_Hypothesis",
+      "description": "The American Revolution was primarily driven by colonial commitment to fundamental constitutional principles, specifically opposing taxation without representation and defending self-governance, rather than mere economic grievances, leading to organized resistance.",
+      "assessment": "Strongly Supported (Multiple Strong Evidence)",
+      "balance_score": 2.6,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 3,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "Evidence_ColonialPamphlets_Taxation",
+        "Evidence_WidespreadColonialSupport",
+        "Evidence_ContinentalCongress_Declarations"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [
+      {
+        "condition_id": "Colonial_Economic_Development",
+        "condition": "The colonies' growing economic self-sufficiency by the 1770s enabling them to contemplate independence as economically viable.",
+        "target": {
+          "id": "Colonial_Rebellion",
+          "description": "A broader process of organized resistance and direct action against British authority by American colonists, culminating from grievances and mobilization, of which the Boston Tea Party was a significant part.",
+          "type": "Event"
+        },
+        "necessity": "unknown",
+        "certainty": "medium"
+      }
+    ],
+    "constraining": [
+      {
+        "condition_id": "British_Naval_Supremacy",
+        "condition": "The Royal Navy's dominance of the Atlantic initially prevented foreign assistance to the colonies and enabled British force projection.",
+        "target": {
+          "id": "Colonial_Rebellion",
+          "description": "A broader process of organized resistance and direct action against British authority by American colonists, culminating from grievances and mobilization, of which the Boston Tea Party was a significant part.",
+          "type": "Event"
+        },
+        "certainty": "medium",
+        "type": "constrains"
+      },
+      {
+        "condition_id": "Geographic_Distance",
+        "condition": "The 3,000-mile separation between Britain and America creating communication delays of 6-12 weeks, fundamentally shaping the dynamics of imperial governance and colonial autonomy.",
+        "target": {
+          "id": "Imperial_Resistance_Mechanism",
+          "description": "The process by which the Tea Act led to colonial rebellion, involving taxation without representation violating principles, economic pressure on merchants, ideological mobilization, and organized resistance by groups like the Sons of Liberty. Steps include: (1) The Tea Act imposed taxation without colonial representation in Parliament, violating fundamental principles of self-governance; (2) This created both economic pressure on local merchants who were undercut by the monopoly and ideological mobilization around constitutional principles; (3) Groups like the Sons of Liberty channeled this discontent into organized resistance; (4) The resistance culminated in direct action against British property.",
+          "type": "Causal_Mechanism"
+        },
+        "certainty": "medium",
+        "type": "constrains"
+      }
+    ]
+  },
+  "actors": [
+    {
+      "id": "King_George_III",
+      "name": "King George III",
+      "role": "British monarch.",
+      "initiated_events": [
+        {
+          "id": "Colonial_Rebellion",
+          "description": "A broader process of organized resistance and direct action against British authority by American colonists, culminating from grievances and mobilization, of which the Boston Tea Party was a significant part.",
+          "certainty": "medium",
+          "intention": "unknown"
+        }
+      ],
+      "influence_score": 18,
+      "beliefs": "the colonies as subordinate territories that existed to benefit Britain",
+      "intentions": "to maintain imperial control and extract revenue"
+    },
+    {
+      "id": "Samuel_Adams",
+      "name": "Samuel Adams",
+      "role": "Principal organizer of the Boston Tea Party and a key figure in mobilizing mass resistance.",
+      "initiated_events": [
+        {
+          "id": "Boston_Tea_Party",
+          "description": "The Boston Tea Party occurred on December 16, 1773, when Samuel Adams and the Sons of Liberty led American colonists in boarding British ships and dumping 342 chests of tea into Boston Harbor, serving as a dramatic act of rebellion and a decisive trigger event for concrete revolutionary action.",
+          "certainty": "medium",
+          "intention": "unknown"
+        }
+      ],
+      "influence_score": 15,
+      "beliefs": "British rule fundamentally violated colonial rights",
+      "intentions": "to mobilize mass resistance against British authority"
+    },
+    {
+      "id": "Governor_Thomas_Hutchinson",
+      "name": "Governor Thomas Hutchinson",
+      "role": "British authority in Massachusetts.",
+      "initiated_events": [],
+      "influence_score": 3,
+      "beliefs": "the colonists were ungrateful subjects who needed firm governance",
+      "intentions": "to enforce Parliamentary supremacy"
+    }
+  ],
+  "alternative_explanations": [
+    {
+      "id": "External_Influence_Hypothesis",
+      "description": "French agents and financial support were the primary drivers of colonial rebellion, seeking to weaken their British rivals, and this hypothesis predicts early French involvement and financial backing before 1775.",
+      "supporting_evidence": [
+        {
+          "id": "Evidence_FrenchDiplomaticArchives",
+          "description": "New evidence from previously sealed French diplomatic archives showing French agents provided strategic advice (though not financial support) earlier than commonly believed.",
+          "type": "unknown",
+          "certainty": "medium",
+          "probative_value": 0.6
+        }
+      ],
+      "refuting_evidence": [],
+      "strength_score": 0.6,
+      "assessment": "Plausible alternative explanation",
+      "probability": "unknown",
+      "status": "refuted"
+    },
+    {
+      "id": "Economic_Self_Interest_Hypothesis",
+      "description": "The revolution was primarily driven by colonial merchants' economic interests rather than constitutional principles, asserting that wealthy merchants manipulated popular sentiment to protect their smuggling operations and avoid British taxes.",
+      "supporting_evidence": [
+        {
+          "id": "Evidence_MerchantRecords_Smuggling",
+          "description": "Documentary evidence from merchant records revealing extensive smuggling operations that would have been threatened by British enforcement.",
+          "type": "unknown",
+          "certainty": "medium",
+          "probative_value": 0.8
+        }
+      ],
+      "refuting_evidence": [
+        {
+          "id": "Evidence_EconomicAnalysis_TradePatterns",
+          "description": "Economic analysis of colonial trade patterns showing many merchants actually opposed the Tea Party due to its negative impact on their legitimate trade relationships.",
+          "type": "unknown",
+          "certainty": "medium",
+          "probative_value": 0.9
+        }
+      ],
+      "strength_score": -0.09999999999999998,
+      "assessment": "Contested alternative explanation",
+      "probability": "unknown",
+      "status": "refuted"
+    },
+    {
+      "id": "Elite_Manipulation_Hypothesis",
+      "description": "Colonial elites deliberately manufactured popular outrage to advance their own political ambitions, with this theory predicting that revolutionary rhetoric would be concentrated among the educated elite rather than emerging organically from popular sentiment.",
+      "supporting_evidence": [],
+      "refuting_evidence": [
+        {
+          "id": "Evidence_TownMeetingRecords_Grassroots",
+          "description": "Town meeting records showing genuine grassroots participation in anti-British activities across different social classes and geographic regions.",
+          "type": "unknown",
+          "certainty": "medium",
+          "probative_value": 0.9
+        }
+      ],
+      "strength_score": -0.9,
+      "assessment": "Weak alternative explanation",
+      "probability": "unknown",
+      "status": "refuted"
+    }
+  ],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

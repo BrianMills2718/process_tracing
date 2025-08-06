@@ -1,0 +1,53 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250521_095659_graph.json",
+  "case_identifier": "revolutions_20250521_095659_graph",
+  "generated_at": "2025-05-21T09:57:16.164326",
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "AR_Hypothesis_TaxationWithoutRepresentationViolatedRights",
+      "description": "Taxation without representation violated the colonists' rights as Englishmen.",
+      "assessment": "Supported",
+      "balance_score": 0.8,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "AR_Evidence_DeclarationRightsGrievancesClaim"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "AR_Hypothesis_PlotAgainstAmericanRights",
+      "description": "Existence of a systematic plot against American rights by British officials.",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "AR_Hypothesis_RevolutionaryWarOutcomeUncertain",
+      "description": "The outcome of the Revolutionary War appeared uncertain for most of its eight-year duration.",
+      "assessment": "Supported",
+      "balance_score": 0.7,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "AR_Evidence_OutcomeAppearedUncertain"
+      ],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "AR_Hypothesis_SelfGovernanceDesireCause",
+      "description": "The colonists' long-standing practice and desire for self-governance was a primary cause of the rebellion.",
+      "assessment": "Supported",
+      "balance_score": 0.9,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "AR_Evidence_CaptLeviPrestonQuote"
+      ],
+      "refuting_evidence_ids": []
+    }
+  ]
+}

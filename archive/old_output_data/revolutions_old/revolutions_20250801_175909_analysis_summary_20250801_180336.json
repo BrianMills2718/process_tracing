@@ -1,0 +1,143 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250801_175909_graph.json",
+  "case_identifier": "revolutions_20250801_175909_graph",
+  "generated_at": "2025-08-01T18:03:36.142112",
+  "causal_chains": [
+    {
+      "path": [
+        "event1",
+        "event2",
+        "event3",
+        "event4",
+        "event5",
+        "event6",
+        "event7",
+        "event8"
+      ],
+      "path_descriptions": [
+        "The French and Indian War concludes in 1763 with a British victory, resulting in substantial war debts and prompting the British Parliament to impose new taxes on the American colonies to offset these costs.  Additionally, the British government takes control of the colonies' western lands, transferring authority to officials in Montreal.",
+        "The Stamp Act of 1765, imposing direct taxes on various colonial documents and materials, is enacted by the British Parliament. This action sparks widespread colonial protest due to the perceived violation of the principle of \"no taxation without representation.\"",
+        "The Boston Massacre occurs on March 5, 1770, when British troops fire upon and kill several unarmed civilians, escalating tensions and fueling anti-British sentiment among the colonists.",
+        "The Boston Tea Party, a demonstrative act of rebellion against British taxation, takes place on December 16, 1773.  Sons of Liberty activists, disguised as Native Americans, dumped tea into Boston Harbor to protest the Tea Act.",
+        "The Battles of Lexington and Concord, marking the beginning of the American Revolutionary War, erupt on April 19, 1775. These battles represent the initial armed conflict between British troops and American colonists.",
+        "The Second Continental Congress adopts the Declaration of Independence on July 4, 1776, formally declaring the thirteen colonies' independence from Great Britain and escalating the war to a fight for full sovereignty.",
+        "The Siege of Yorktown concludes in October 1781 with a decisive victory for the Continental Army, aided by French forces. This victory significantly weakens British resolve and paves the way for negotiations leading to the end of the war.",
+        "The Treaty of Paris is signed on September 3, 1783, officially recognizing the independence of the United States of America from Great Britain, ending the Revolutionary War and establishing the sovereign nation."
+      ],
+      "edge_types": [
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes"
+      ],
+      "trigger": "event1",
+      "outcome": "event8",
+      "length": 8
+    }
+  ],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 8,
+      "Hypothesis": 2,
+      "Evidence": 3
+    },
+    "edge_type_distribution": {
+      "causes": 7,
+      "provides_evidence": 3
+    },
+    "density": 0.0641025641025641,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "event2": 0.167,
+      "event3": 0.167,
+      "event4": 0.167,
+      "event5": 0.167,
+      "event6": 0.167,
+      "event7": 0.167,
+      "hypothesis1": 0.167,
+      "event1": 0.083,
+      "event8": 0.083,
+      "evidence1": 0.083
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hypothesis1",
+      "description": "British taxation policies, particularly those implemented after the French and Indian War, were a significant cause of the American Revolution because they violated the colonists' understanding of their rights as Englishmen, leading to widespread resentment and ultimately armed rebellion.  The lack of colonial representation in Parliament fueled this resentment.",
+      "assessment": "Conditionally Supported (Passed Hoop Test)",
+      "balance_score": 1.6,
+      "van_evera_applied": true,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence1",
+        "evidence2"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [
+          {
+            "id": "evidence1",
+            "description": "The Stamp Act Congress's \"Declaration of Rights and Grievances\" explicitly states that taxation without representation violated the colonists' rights as Englishmen, highlighting a key grievance that fueled colonial resistance.",
+            "type": "hoop",
+            "probative_value": 0.9,
+            "source_text_quote": "",
+            "edge_type": "provides_evidence"
+          }
+        ],
+        "smoking_gun": [],
+        "straw_in_wind": [
+          {
+            "id": "evidence2",
+            "description": "The widespread colonial boycotts of British goods, such as those following the Stamp Act and the Townshend Acts, demonstrate the colonists' collective resistance to perceived unjust taxation and their willingness to engage in economic warfare to oppose British policies.",
+            "type": "straw_in_the_wind",
+            "probative_value": 0.7,
+            "source_text_quote": "",
+            "edge_type": "provides_evidence"
+          }
+        ],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis2",
+      "description": "The British deployment of troops to Boston and the subsequent Boston Massacre served as a catalyst for the American Revolution by intensifying colonial distrust of and animosity towards the British government and military, pushing colonial sentiment toward more radical measures and ultimately armed resistance.",
+      "assessment": "Weakly Supported (Straw-in-Wind)",
+      "balance_score": 0.8,
+      "van_evera_applied": true,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence3"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [
+          {
+            "id": "evidence3",
+            "description": "The text describes the Boston Massacre as an event that quickly turned colonial sentiment against the British, accelerating the downward spiral in the relationship between Britain and the colonies, indicating its role in escalating tensions.",
+            "type": "straw_in_the_wind",
+            "probative_value": 0.8,
+            "source_text_quote": "",
+            "edge_type": "provides_evidence"
+          }
+        ],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

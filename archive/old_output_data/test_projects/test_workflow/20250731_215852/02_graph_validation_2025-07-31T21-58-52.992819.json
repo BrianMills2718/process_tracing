@@ -1,0 +1,7 @@
+{
+  "stage": "02_graph_validation",
+  "timestamp": "2025-07-31T21:58:52.992819",
+  "data": {
+    "plugin_id": "graph_validation",
+    "result": {
+      "original_graph": 

@@ -1,0 +1,55 @@
+{
+  "filename": "output_data\\demo\\revolutions_20250801_000840_graph.json",
+  "case_identifier": "revolutions_20250801_000840_graph",
+  "generated_at": "2025-08-01T00:08:48.290051",
+  "causal_chains": [],
+  "causal_mechanisms": [
+    {
+      "id": "CM1",
+      "name": "Emergence of American Revolutionary sentiment",
+      "causes": [],
+      "effects": [],
+      "completeness": 0,
+      "confidence": 0.9,
+      "level_of_detail": "high",
+      "llm_elaboration": {
+        "response": "{\n  \"completeness_score\": 0.7,\n  \"detailed_reasoning\": \"The mechanism currently lacks specific events and the connections between them. While the description 'Emergence of American Revolutionary sentiment' is broad, it needs to be broken down into a sequence of events and their causal links.  For example, it needs to include events such as the Stamp Act, the Boston Massacre, the Intolerable Acts, and the growing intellectual influence of Enlightenment ideals.  Without these detailed events and the causal chain showing how one led to the other and to the overall sentiment, the mechanism's completeness is limited.\",\n  \"evidence_support_level\": \"strong\",\n  \"improvement_suggestions\": [\n    \"Include specific historical events leading to revolutionary sentiment (e.g., Stamp Act, Boston Tea Party, Intolerable Acts).\",\n    \"Clearly articulate the causal links between events.  Show how each event influenced the development of revolutionary sentiment.\",\n    \"Specify the actors involved (e.g., colonists, British government, specific groups within the colonies).\",\n    \"Consider adding contextual factors, such as economic grievances, ideological shifts (e.g., Enlightenment ideals), and communication networks that spread revolutionary ideas.\"\n  ],\n  \"mechanism_id\": \"CM1\",\n  \"missing_elements\": [\n    \"Specific historical events leading to revolutionary sentiment\",\n    \"Causal links between those events\",\n    \"Actors involved in each event\",\n    \"Contextual factors influencing the development of sentiment\"\n  ],\n  \"plausibility_score\": 0.95\n}"
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "triggering": 1,
+      "intermediate": 23,
+      "outcome": 2,
+      "Causal_Mechanism": 1
+    },
+    "edge_type_distribution": {
+      "direct": 21,
+      "part_of_mechanism": 4
+    },
+    "density": 0.03561253561253561,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "CM1": 0.269,
+      "E2": 0.077,
+      "E3": 0.077,
+      "E4": 0.077,
+      "E5": 0.077,
+      "E6": 0.077,
+      "E7": 0.077,
+      "E8": 0.077,
+      "E9": 0.077,
+      "E10": 0.077
+    }
+  },
+  "hypotheses_evaluation": [],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

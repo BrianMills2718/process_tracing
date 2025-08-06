@@ -1,0 +1,2658 @@
+{
+  "nodes": [
+    {
+      "id": "HY1",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "British tax policies imposed without colonial representation caused colonial resistance.",
+        "status": "active"
+      }
+    },
+    {
+      "id": "HY2",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The actions of the Sons of Liberty (protests, boycotts, threats of violence) made British tax laws unenforceable.",
+        "status": "active"
+      }
+    },
+    {
+      "id": "HY3",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The Intolerable Acts, intended to punish Massachusetts, instead expanded and intensified the revolutionary cause across the colonies.",
+        "status": "active"
+      }
+    },
+    {
+      "id": "HY4",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The Committees of Correspondence provided the essential framework for rebel government and coordinated colonial resistance.",
+        "status": "active"
+      }
+    },
+    {
+      "id": "HY5",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Salutary neglect accustomed colonists to self-governance, fueling resistance when Britain changed its policy.",
+        "status": "active"
+      }
+    },
+    {
+      "id": "HY6",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The development of a unique American identity separate from British identity contributed to the desire for independence.",
+        "status": "active"
+      }
+    },
+    {
+      "id": "HY7",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "French military and naval support was decisive in securing American independence.",
+        "status": "active"
+      }
+    },
+    {
+      "id": "CM1",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Mechanism of Tax Imposition and Colonial Resistance: Britain imposes taxes/regulations -> Colonists object based on rights/representation -> Organized protest/boycott/violence -> British response (enforcement/repeal/punishment) -> Escalation of conflict.",
+        "confidence": 0.9,
+        "status": "supported",
+        "level_of_detail": "high"
+      }
+    },
+    {
+      "id": "CM2",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Mechanism of Political Mobilization and Coordination: Need for unified action -> Formation of inter-colonial communication networks (Committees of Correspondence) -> Organization of collective action (boycotts, conventions) -> Establishment of governing bodies (Continental Congress).",
+        "confidence": 0.9,
+        "status": "supported",
+        "level_of_detail": "high"
+      }
+    },
+    {
+      "id": "CM3",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Mechanism of Military Conflict and Victory: Colonial military organization (militias, Continental Army) -> Engagement in battles -> Securing foreign alliances -> Decisive military engagements -> Negotiation and formal recognition of independence.",
+        "confidence": 0.9,
+        "status": "supported",
+        "level_of_detail": "high"
+      }
+    },
+    {
+      "id": "EV1",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Stamp Act Congress issued a 'Declaration of Rights and Grievances' stating taxation without representation violated their rights as Englishmen.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "EV2",
+      "type": "Evidence",
+      "properties": {
+        "description": "Sons of Liberty used public demonstrations, boycotts, and threats of violence.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV3",
+      "type": "Evidence",
+      "properties": {
+        "description": "Sons of Liberty actions ensured British tax laws became unenforceable.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "EV4",
+      "type": "Evidence",
+      "properties": {
+        "description": "In Boston, the Sons of Liberty burned records and looted Chief Justice Thomas Hutchinson's home.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV5",
+      "type": "Evidence",
+      "properties": {
+        "description": "John Dickinson argued in 'Letters from a Farmer in Pennsylvania' against the constitutionality of Townshend Acts because their purpose was revenue.",
+        "type": "hoop"
+      }
+    },
+    {
+      "id": "EV6",
+      "type": "Evidence",
+      "properties": {
+        "description": "Colonists responded to Townshend Acts by organizing new boycotts of British goods.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV7",
+      "type": "Evidence",
+      "properties": {
+        "description": "British deployed troops to Boston following a riot over the seizure of John Hancock's sloop 'Liberty'.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV8",
+      "type": "Evidence",
+      "properties": {
+        "description": "A Boston town meeting declared no obedience was due to parliamentary laws.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV9",
+      "type": "Evidence",
+      "properties": {
+        "description": "Reactivation of the Treason Act 1543 caused widespread outrage.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV10",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Boston Massacre: British soldiers fired into a crowd, killing civilians.",
+        "type": "doubly_decisive"
+      }
+    },
+    {
+      "id": "EV11",
+      "type": "Evidence",
+      "properties": {
+        "description": "Description of low taxes imposed by the Stamp Act.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "EV12",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Gaspee Affair: American patriots burned a British warship enforcing trade regulations.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV13",
+      "type": "Evidence",
+      "properties": {
+        "description": "Publication of Governor Hutchinson's letters claiming colonists couldn't enjoy all English liberties.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "EV14",
+      "type": "Evidence",
+      "properties": {
+        "description": "Samuel Adams created new Committees of Correspondence linking Patriots.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV15",
+      "type": "Evidence",
+      "properties": {
+        "description": "Virginia set up its Committee of Correspondence, including Patrick Henry and Thomas Jefferson.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV16",
+      "type": "Evidence",
+      "properties": {
+        "description": "Committees of Correspondence became leaders of resistance and determined war effort at state/local level.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "EV17",
+      "type": "Evidence",
+      "properties": {
+        "description": "Committees of Correspondence enforced the boycott of British products.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV18",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Boston Tea Party: Sons of Liberty activists dumped tea into Boston Harbor.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "EV19",
+      "type": "Evidence",
+      "properties": {
+        "description": "London responded to the Tea Party by closing Boston Harbor and enacting punitive laws (Intolerable Acts).",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "EV20",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Intolerable Acts effectively ended self-government in Massachusetts.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV21",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Intolerable Acts served to expand and intensify the revolutionary cause.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "EV22",
+      "type": "Evidence",
+      "properties": {
+        "description": "Massachusetts patriots issued the Suffolk Resolves and formed an alternative shadow government (Provincial Congress).",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV23",
+      "type": "Evidence",
+      "properties": {
+        "description": "Provincial Congress began training militia.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV24",
+      "type": "Evidence",
+      "properties": {
+        "description": "First Continental Congress convened to deliberate and take collective action.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV25",
+      "type": "Evidence",
+      "properties": {
+        "description": "First Continental Congress called for a boycott of all British goods starting Dec 1, 1774.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV26",
+      "type": "Evidence",
+      "properties": {
+        "description": "Patriots were armed and unified against Parliament for the first time.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV27",
+      "type": "Evidence",
+      "properties": {
+        "description": "Description of colonists becoming accustomed to running their own affairs during salutary neglect.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV28",
+      "type": "Evidence",
+      "properties": {
+        "description": "Capt. Levi Preston quote: \"...we always had governed ourselves, and we always meant to. They didn\u2019t mean we should.\"",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV29",
+      "type": "Evidence",
+      "properties": {
+        "description": "New England colonies fought King Philip's War (1675-1678) without military assistance from England.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV30",
+      "type": "Evidence",
+      "properties": {
+        "description": "Colonists fiercely opposed King James II's attempt to bring New England under direct English control via the Dominion of New England.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV31",
+      "type": "Evidence",
+      "properties": {
+        "description": "Dominion rule triggered bitter resentment throughout New England.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV32",
+      "type": "Evidence",
+      "properties": {
+        "description": "The 1689 Boston revolt overthrew Dominion rule.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV33",
+      "type": "Evidence",
+      "properties": {
+        "description": "Local democratic self-government was restored after the Glorious Revolution and Boston revolt.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV34",
+      "type": "Evidence",
+      "properties": {
+        "description": "Colonists protested the Molasses Act 1733 as taxation without representation.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV35",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Molasses Act increased smuggling of foreign molasses.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV36",
+      "type": "Evidence",
+      "properties": {
+        "description": "The British government ceased enforcement efforts for the Molasses Act after the 1740s.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV37",
+      "type": "Evidence",
+      "properties": {
+        "description": "Colonial shipbuilding industry, particularly in New England, benefitted from Navigation Act limits on foreign-built ships.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "EV38",
+      "type": "Evidence",
+      "properties": {
+        "description": "French ultimately entered the war, supporting the colonial cause.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "EV39",
+      "type": "Evidence",
+      "properties": {
+        "description": "Decisive victory by Washington and Continental Army in the Siege of Yorktown in 1781.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "EV40",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Siege of Yorktown inspired King George III and the British to negotiate an end to colonial rule.",
+        "type": "doubly_decisive"
+      }
+    },
+    {
+      "id": "EV41",
+      "type": "Evidence",
+      "properties": {
+        "description": "Treaty of Paris in 1783 codified American independence.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "C1",
+      "type": "Condition",
+      "properties": {
+        "description": "British policy of salutary neglect over 150 years.",
+        "type": "background"
+      }
+    },
+    {
+      "id": "C2",
+      "type": "Condition",
+      "properties": {
+        "description": "Colonists accustomed to running their own affairs.",
+        "type": "enabling"
+      }
+    },
+    {
+      "id": "C3",
+      "type": "Condition",
+      "properties": {
+        "description": "Significant British national debt after the French and Indian War.",
+        "type": "background"
+      }
+    },
+    {
+      "id": "C4",
+      "type": "Condition",
+      "properties": {
+        "description": "British belief in Parliament's supreme lawmaking authority and 'virtual representation'.",
+        "type": "background"
+      }
+    },
+    {
+      "id": "C5",
+      "type": "Condition",
+      "properties": {
+        "description": "Colonial belief in their rights as Englishmen and 'no taxation without representation'.",
+        "type": "background"
+      }
+    },
+    {
+      "id": "C6",
+      "type": "Condition",
+      "properties": {
+        "description": "Development of a unique American identity.",
+        "type": "background"
+      }
+    },
+    {
+      "id": "C7",
+      "type": "Condition",
+      "properties": {
+        "description": "Influence of Radical Whig ideology on American political philosophy (love of liberty, opposition to tyranny).",
+        "type": "background"
+      }
+    },
+    {
+      "id": "C8",
+      "type": "Condition",
+      "properties": {
+        "description": "Limited British resources and information for colonial control prior to 1763.",
+        "type": "enabling"
+      }
+    },
+    {
+      "id": "C9",
+      "type": "Condition",
+      "properties": {
+        "description": "Colonial militias existed and had military experience from French and Indian War.",
+        "type": "enabling"
+      }
+    },
+    {
+      "id": "A1",
+      "type": "Actor",
+      "properties": {
+        "name": "British Parliament",
+        "role": "Governing body",
+        "beliefs": "Supreme lawmaking authority throughout the Empire; colonies were legally British corporations subordinate to Parliament; colonists had 'virtual representation'."
+      }
+    },
+    {
+      "id": "A2",
+      "type": "Actor",
+      "properties": {
+        "name": "King George III",
+        "role": "British Monarch"
+      }
+    },
+    {
+      "id": "A3",
+      "type": "Actor",
+      "properties": {
+        "name": "Sons of Liberty",
+        "role": "Colonial activist group"
+      }
+    },
+    {
+      "id": "A4",
+      "type": "Actor",
+      "properties": {
+        "name": "Continental Congress",
+        "role": "Colonial governing body (initially coordinating resistance, later provisional government)"
+      }
+    },
+    {
+      "id": "A5",
+      "type": "Actor",
+      "properties": {
+        "name": "George Washington",
+        "role": "Commander-in-chief of Continental Army"
+      }
+    },
+    {
+      "id": "A6",
+      "type": "Actor",
+      "properties": {
+        "name": "Thomas Jefferson",
+        "role": "Author of Declaration of Independence, member of Committee of Correspondence"
+      }
+    },
+    {
+      "id": "A7",
+      "type": "Actor",
+      "properties": {
+        "name": "John Dickinson",
+        "role": "Moderate leader, author of 'Letters from a Farmer in Pennsylvania'"
+      }
+    },
+    {
+      "id": "A8",
+      "type": "Actor",
+      "properties": {
+        "name": "Samuel Adams",
+        "role": "Radical patriot, leader of Sons of Liberty, creator of Committees of Correspondence"
+      }
+    },
+    {
+      "id": "A9",
+      "type": "Actor",
+      "properties": {
+        "name": "James Otis",
+        "role": "American spokesman"
+      }
+    },
+    {
+      "id": "A10",
+      "type": "Actor",
+      "properties": {
+        "name": "John Hancock",
+        "role": "American spokesman, owner of sloop 'Liberty'"
+      }
+    },
+    {
+      "id": "A11",
+      "type": "Actor",
+      "properties": {
+        "name": "Thomas Paine",
+        "role": "American spokesman"
+      }
+    },
+    {
+      "id": "A12",
+      "type": "Actor",
+      "properties": {
+        "name": "Thomas Hutchinson",
+        "role": "Governor of Massachusetts"
+      }
+    },
+    {
+      "id": "A13",
+      "type": "Actor",
+      "properties": {
+        "name": "Benjamin Franklin",
+        "role": "Postmaster general for the colonies, argued for repeal of Stamp Act"
+      }
+    },
+    {
+      "id": "A14",
+      "type": "Actor",
+      "properties": {
+        "name": "Patrick Henry",
+        "role": "Member of Virginia Committee of Correspondence"
+      }
+    },
+    {
+      "id": "A15",
+      "type": "Actor",
+      "properties": {
+        "name": "French Monarchy",
+        "role": "Foreign Ally"
+      }
+    },
+    {
+      "id": "A16",
+      "type": "Actor",
+      "properties": {
+        "name": "Charles Cornwallis",
+        "role": "British General"
+      }
+    },
+    {
+      "id": "E1",
+      "type": "Event",
+      "properties": {
+        "description": "French and Indian War ends.",
+        "timestamp": "1763",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E2",
+      "type": "Event",
+      "properties": {
+        "description": "British Parliament imposes new taxes to compensate for wartime costs (Policy Change).",
+        "timestamp": "1763 onwards",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E3",
+      "type": "Event",
+      "properties": {
+        "description": "Sugar Act passed by Parliament.",
+        "timestamp": "1764",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E4",
+      "type": "Event",
+      "properties": {
+        "description": "Stamp Act passed by Parliament, imposing direct taxes.",
+        "timestamp": "March 1765",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E5",
+      "type": "Event",
+      "properties": {
+        "description": "Colonists object to Stamp Act based on lack of representation.",
+        "timestamp": "1765",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E6",
+      "type": "Event",
+      "properties": {
+        "description": "Sons of Liberty formed.",
+        "timestamp": "Shortly following Stamp Act",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E7",
+      "type": "Event",
+      "properties": {
+        "description": "Sons of Liberty use protests, boycotts, threats of violence.",
+        "timestamp": "1765 onwards",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E8",
+      "type": "Event",
+      "properties": {
+        "description": "Stamp Act Congress convenes in New York City.",
+        "timestamp": "October 1765",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E9",
+      "type": "Event",
+      "properties": {
+        "description": "Stamp Act Congress draws up Declaration of Rights and Grievances.",
+        "timestamp": "October 1765",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E10",
+      "type": "Event",
+      "properties": {
+        "description": "Stamp Act Congress organizes boycott on imports of British merchandise.",
+        "timestamp": "October 1765",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E11",
+      "type": "Event",
+      "properties": {
+        "description": "Parliament debates repealing or enforcing the Stamp Act.",
+        "timestamp": "1766",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E12",
+      "type": "Event",
+      "properties": {
+        "description": "Benjamin Franklin makes case for repeal before Parliament.",
+        "timestamp": "1766",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E13",
+      "type": "Event",
+      "properties": {
+        "description": "Stamp Act repealed by Parliament.",
+        "timestamp": "February 21, 1766",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E14",
+      "type": "Event",
+      "properties": {
+        "description": "Declaratory Act passed, asserting Parliament's full power over colonies.",
+        "timestamp": "March 1766",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E15",
+      "type": "Event",
+      "properties": {
+        "description": "Passage of Townshend Acts.",
+        "timestamp": "1767",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E16",
+      "type": "Event",
+      "properties": {
+        "description": "John Dickinson argues against Townshend Acts in 'Letters from a Farmer in Pennsylvania'.",
+        "timestamp": "1767",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E17",
+      "type": "Event",
+      "properties": {
+        "description": "Colonists organize new boycotts of British goods in response to Townshend Acts.",
+        "timestamp": "1767 onwards",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E18",
+      "type": "Event",
+      "properties": {
+        "description": "Assembly of Massachusetts Bay Colony issues circular letter urging coordinated resistance.",
+        "timestamp": "February 1768",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E19",
+      "type": "Event",
+      "properties": {
+        "description": "Governor dissolves Massachusetts Assembly for refusing to rescind letter.",
+        "timestamp": "1768",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E20",
+      "type": "Event",
+      "properties": {
+        "description": "Riot breaks out in Boston over seizure of sloop 'Liberty'.",
+        "timestamp": "June 1768",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E21",
+      "type": "Event",
+      "properties": {
+        "description": "British deploy troops to Boston.",
+        "timestamp": "1768",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E22",
+      "type": "Event",
+      "properties": {
+        "description": "Parliament reacts to unrest by reactivating Treason Act 1543.",
+        "timestamp": "January 1769",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E23",
+      "type": "Event",
+      "properties": {
+        "description": "Boston Massacre occurs.",
+        "timestamp": "March 5, 1770",
+        "location": "Boston",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E24",
+      "type": "Event",
+      "properties": {
+        "description": "Parliament repeals most Townshend duties except the tax on tea.",
+        "timestamp": "1770",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E25",
+      "type": "Event",
+      "properties": {
+        "description": "Gaspee Affair: Patriots burn British warship enforcing trade regulations.",
+        "timestamp": "June 1772",
+        "location": "Narragansett Bay",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E26",
+      "type": "Event",
+      "properties": {
+        "description": "Private letters of Governor Hutchinson and Lt. Governor Oliver claiming plot against American rights are published.",
+        "timestamp": "1773",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E27",
+      "type": "Event",
+      "properties": {
+        "description": "Samuel Adams creates new Committees of Correspondence.",
+        "timestamp": "1773",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E28",
+      "type": "Event",
+      "properties": {
+        "description": "Virginia sets up its Committee of Correspondence.",
+        "timestamp": "Early 1773",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E29",
+      "type": "Event",
+      "properties": {
+        "description": "Parliament passes the Tea Act.",
+        "timestamp": "1773",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E30",
+      "type": "Event",
+      "properties": {
+        "description": "Demonstrators warn merchants not to bring in taxed tea.",
+        "timestamp": "1773",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E31",
+      "type": "Event",
+      "properties": {
+        "description": "Consignees are forced to resign or tea turned back (in most colonies).",
+        "timestamp": "1773",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E32",
+      "type": "Event",
+      "properties": {
+        "description": "Governor Hutchinson refuses to allow Boston merchants to give in to pressure.",
+        "timestamp": "1773",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E33",
+      "type": "Event",
+      "properties": {
+        "description": "Boston Tea Party occurs.",
+        "timestamp": "December 16, 1773",
+        "location": "Boston Harbor",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E34",
+      "type": "Event",
+      "properties": {
+        "description": "British government responds by passing Intolerable Acts.",
+        "timestamp": "1774",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E35",
+      "type": "Event",
+      "properties": {
+        "description": "Intolerable Acts close the port of Boston.",
+        "timestamp": "1774",
+        "location": "Boston",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E36",
+      "type": "Event",
+      "properties": {
+        "description": "Intolerable Acts alter Massachusetts charter and restrict town meetings.",
+        "timestamp": "1774",
+        "location": "Massachusetts",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E37",
+      "type": "Event",
+      "properties": {
+        "description": "Intolerable Acts order British soldiers to be tried in Britain, not colonies.",
+        "timestamp": "1774",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E38",
+      "type": "Event",
+      "properties": {
+        "description": "Quartering Act of 1774 passed, allowing housing of troops in private homes.",
+        "timestamp": "1774",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E39",
+      "type": "Event",
+      "properties": {
+        "description": "Massachusetts patriots issue the Suffolk Resolves.",
+        "timestamp": "1774",
+        "location": "Massachusetts",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E40",
+      "type": "Event",
+      "properties": {
+        "description": "Massachusetts Provincial Congress (shadow government) formed.",
+        "timestamp": "1774",
+        "location": "Massachusetts",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E41",
+      "type": "Event",
+      "properties": {
+        "description": "Provincial Congress begins training militia.",
+        "timestamp": "1774 onwards",
+        "location": "Massachusetts",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E42",
+      "type": "Event",
+      "properties": {
+        "description": "First Continental Congress convenes.",
+        "timestamp": "September 1774",
+        "location": "Philadelphia",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E43",
+      "type": "Event",
+      "properties": {
+        "description": "First Continental Congress begins coordinating Patriot resistance through underground networks (Committees).",
+        "timestamp": "Late 1774",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E44",
+      "type": "Event",
+      "properties": {
+        "description": "First Continental Congress calls for boycott of British goods.",
+        "timestamp": "1774",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E45",
+      "type": "Event",
+      "properties": {
+        "description": "Battles of Lexington and Concord.",
+        "timestamp": "April 19, 1775",
+        "location": "Massachusetts",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E46",
+      "type": "Event",
+      "properties": {
+        "description": "Second Continental Congress convenes.",
+        "timestamp": "1775",
+        "location": "Philadelphia",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E47",
+      "type": "Event",
+      "properties": {
+        "description": "Second Continental Congress forms the Continental Army.",
+        "timestamp": "June 1775",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E48",
+      "type": "Event",
+      "properties": {
+        "description": "George Washington appointed commander-in-chief of Continental Army.",
+        "timestamp": "June 1775",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E49",
+      "type": "Event",
+      "properties": {
+        "description": "Washington and Continental Army surround Boston.",
+        "timestamp": "After Battles of Lexington and Concord",
+        "location": "Boston",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E50",
+      "type": "Event",
+      "properties": {
+        "description": "British forces withdraw from Boston by sea.",
+        "timestamp": "March 1776",
+        "location": "Boston",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E51",
+      "type": "Event",
+      "properties": {
+        "description": "Patriots gain control in every colony.",
+        "timestamp": "March 1776",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E52",
+      "type": "Event",
+      "properties": {
+        "description": "King George III proclaims Massachusetts in a state of open defiance and rebellion.",
+        "timestamp": "August 1775",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E53",
+      "type": "Event",
+      "properties": {
+        "description": "Second Continental Congress debates and deliberates on the Articles of Confederation.",
+        "timestamp": "1776",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E54",
+      "type": "Event",
+      "properties": {
+        "description": "Lee Resolution passed, affirming support for national independence.",
+        "timestamp": "July 2, 1776",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E55",
+      "type": "Event",
+      "properties": {
+        "description": "Declaration of Independence unanimously adopted by Second Continental Congress.",
+        "timestamp": "July 4, 1776",
+        "location": "Philadelphia",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E56",
+      "type": "Event",
+      "properties": {
+        "description": "Revolutionary War continues for another five years.",
+        "timestamp": "1776-1781",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E57",
+      "type": "Event",
+      "properties": {
+        "description": "France enters the war supporting the colonial cause.",
+        "timestamp": "Post-1776",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E58",
+      "type": "Event",
+      "properties": {
+        "description": "Siege of Yorktown occurs.",
+        "timestamp": "September 28, 1781",
+        "location": "Yorktown",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E59",
+      "type": "Event",
+      "properties": {
+        "description": "Washington and Continental Army (with French support) capture British troops at Yorktown.",
+        "timestamp": "September 28, 1781",
+        "location": "Yorktown",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E60",
+      "type": "Event",
+      "properties": {
+        "description": "Collapse of King George's control of Parliament and consensus in Parliament that war should end on American terms.",
+        "timestamp": "Post-Yorktown 1781",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E61",
+      "type": "Event",
+      "properties": {
+        "description": "British sign the Treaty of Paris.",
+        "timestamp": "September 3, 1783",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "E62",
+      "type": "Event",
+      "properties": {
+        "description": "Independence of the United States of America from Great Britain is established.",
+        "timestamp": "1783",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "E63",
+      "type": "Event",
+      "properties": {
+        "description": "Formation of British North America and Spanish Florida.",
+        "timestamp": "1783",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "E64",
+      "type": "Event",
+      "properties": {
+        "description": "End of the First British Empire.",
+        "timestamp": "1783",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "E65",
+      "type": "Event",
+      "properties": {
+        "description": "Beginning of the Age of Revolution.",
+        "timestamp": "1783",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "E66",
+      "type": "Event",
+      "properties": {
+        "description": "World's first federal republic founded on consent of the governed is established.",
+        "timestamp": "1783",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "E67",
+      "type": "Event",
+      "properties": {
+        "description": "First permanently successful overthrow of monarchical colonial rule occurs.",
+        "timestamp": "1783",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "E68",
+      "type": "Event",
+      "properties": {
+        "description": "Colonists became accustomed to running their own affairs.",
+        "timestamp": "17th-18th Century (under C1)",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E69",
+      "type": "Event",
+      "properties": {
+        "description": "British policy of salutary neglect changes significantly after the French and Indian War.",
+        "timestamp": "Post-1763",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E70",
+      "type": "Event",
+      "properties": {
+        "description": "Thirteen Colonies seek greater autonomy from Britain.",
+        "timestamp": "Post-1763",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E71",
+      "type": "Event",
+      "properties": {
+        "description": "English Civil War occurs, Puritan colonies support Commonwealth.",
+        "timestamp": "1642-1651",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E72",
+      "type": "Event",
+      "properties": {
+        "description": "Stuart Restoration occurs, Massachusetts does not recognize Charles II.",
+        "timestamp": "1660",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E73",
+      "type": "Event",
+      "properties": {
+        "description": "King Philip's War fought by New England colonies without English military assistance.",
+        "timestamp": "1675-1678",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E74",
+      "type": "Event",
+      "properties": {
+        "description": "Charles II and James II attempt to bring New England under direct English control.",
+        "timestamp": "1680s",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E75",
+      "type": "Event",
+      "properties": {
+        "description": "Crown nullifies colonial charters.",
+        "timestamp": "1680s",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E76",
+      "type": "Event",
+      "properties": {
+        "description": "Dominion of New England consolidated.",
+        "timestamp": "1686",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E77",
+      "type": "Event",
+      "properties": {
+        "description": "Edmund Andros appointed royal governor of Dominion.",
+        "timestamp": "1686",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E78",
+      "type": "Event",
+      "properties": {
+        "description": "Colonial assemblies and town meetings restricted, new taxes levied, rights abridged under Dominion rule.",
+        "timestamp": "1686 onwards",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E79",
+      "type": "Event",
+      "properties": {
+        "description": "Dominion rule triggers bitter resentment.",
+        "timestamp": "1686 onwards",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E80",
+      "type": "Event",
+      "properties": {
+        "description": "Glorious Revolution occurs in England (James II removed).",
+        "timestamp": "1688",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "E81",
+      "type": "Event",
+      "properties": {
+        "description": "1689 Boston revolt overthrows Dominion rule.",
+        "timestamp": "1689",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "E82",
+      "type": "Event",
+      "properties": {
+        "description": "Colonial governments reassert their control after the revolt.",
+        "timestamp": "Post-1689",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E83",
+      "type": "Event",
+      "properties": {
+        "description": "William and Mary grant new charters to individual New England colonies.",
+        "timestamp": "Post-1689",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "E84",
+      "type": "Event",
+      "properties": {
+        "description": "Local democratic self-government is restored.",
+        "timestamp": "Post-1689",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "H_NA",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Not Applicable (no global hypothesis specified for this run)",
+        "status": "undetermined"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_e1_e2",
+      "type": "causes",
+      "source": "E1",
+      "target": "E2",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e2_cm1",
+      "type": "causes",
+      "source": "E2",
+      "target": "CM1",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e4_cm1",
+      "type": "causes",
+      "source": "E4",
+      "target": "CM1",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e15_cm1",
+      "type": "causes",
+      "source": "E15",
+      "target": "CM1",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e29_cm1",
+      "type": "causes",
+      "source": "E29",
+      "target": "CM1",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e5_cm1",
+      "type": "part_of_mechanism",
+      "source": "E5",
+      "target": "CM1",
+      "properties": {
+        "role": "Colonial Objection"
+      }
+    },
+    {
+      "id": "e_e7_cm1",
+      "type": "part_of_mechanism",
+      "source": "E7",
+      "target": "CM1",
+      "properties": {
+        "role": "Organized Protest/Boycott/Violence"
+      }
+    },
+    {
+      "id": "e_e17_cm1",
+      "type": "part_of_mechanism",
+      "source": "E17",
+      "target": "CM1",
+      "properties": {
+        "role": "Organized Protest/Boycott/Violence"
+      }
+    },
+    {
+      "id": "e_e13_cm1",
+      "type": "part_of_mechanism",
+      "source": "E13",
+      "target": "CM1",
+      "properties": {
+        "role": "British Response (Partial Repeal)"
+      }
+    },
+    {
+      "id": "e_e14_cm1",
+      "type": "part_of_mechanism",
+      "source": "E14",
+      "target": "CM1",
+      "properties": {
+        "role": "British Response (Assertion of Authority)"
+      }
+    },
+    {
+      "id": "e_e23_cm1",
+      "type": "part_of_mechanism",
+      "source": "E23",
+      "target": "CM1",
+      "properties": {
+        "role": "Escalation Event"
+      }
+    },
+    {
+      "id": "e_e25_cm1",
+      "type": "part_of_mechanism",
+      "source": "E25",
+      "target": "CM1",
+      "properties": {
+        "role": "Escalation Event"
+      }
+    },
+    {
+      "id": "e_e33_cm1",
+      "type": "part_of_mechanism",
+      "source": "E33",
+      "target": "CM1",
+      "properties": {
+        "role": "Escalation Event (Seminal)"
+      }
+    },
+    {
+      "id": "e_e34_cm1",
+      "type": "part_of_mechanism",
+      "source": "E34",
+      "target": "CM1",
+      "properties": {
+        "role": "British Response (Punitive Laws)"
+      }
+    },
+    {
+      "id": "e_e16_cm1",
+      "type": "part_of_mechanism",
+      "source": "E16",
+      "target": "CM1",
+      "properties": {
+        "role": "Articulation of Objection"
+      }
+    },
+    {
+      "id": "e_e26_cm1",
+      "type": "part_of_mechanism",
+      "source": "E26",
+      "target": "CM1",
+      "properties": {
+        "role": "Articulation of Grievance"
+      }
+    },
+    {
+      "id": "e_e27_cm2",
+      "type": "causes",
+      "source": "E27",
+      "target": "CM2",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e28_cm2",
+      "type": "causes",
+      "source": "E28",
+      "target": "CM2",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e42_cm2",
+      "type": "causes",
+      "source": "E42",
+      "target": "CM2",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e27_part_cm2",
+      "type": "part_of_mechanism",
+      "source": "E27",
+      "target": "CM2",
+      "properties": {
+        "role": "Formation of Communication Network"
+      }
+    },
+    {
+      "id": "e_e28_part_cm2",
+      "type": "part_of_mechanism",
+      "source": "E28",
+      "target": "CM2",
+      "properties": {
+        "role": "Expansion of Communication Network"
+      }
+    },
+    {
+      "id": "e_e43_part_cm2",
+      "type": "part_of_mechanism",
+      "source": "E43",
+      "target": "CM2",
+      "properties": {
+        "role": "Coordination of Resistance"
+      }
+    },
+    {
+      "id": "e_e44_part_cm2",
+      "type": "part_of_mechanism",
+      "source": "E44",
+      "target": "CM2",
+      "properties": {
+        "role": "Organization of Collective Action (Boycott)"
+      }
+    },
+    {
+      "id": "e_e42_part_cm2",
+      "type": "part_of_mechanism",
+      "source": "E42",
+      "target": "CM2",
+      "properties": {
+        "role": "Establishment of Governing Body"
+      }
+    },
+    {
+      "id": "e_e46_part_cm2",
+      "type": "part_of_mechanism",
+      "source": "E46",
+      "target": "CM2",
+      "properties": {
+        "role": "Continuation of Governing Body"
+      }
+    },
+    {
+      "id": "e_e47_cm3",
+      "type": "causes",
+      "source": "E47",
+      "target": "CM3",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e57_cm3",
+      "type": "causes",
+      "source": "E57",
+      "target": "CM3",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e47_part_cm3",
+      "type": "part_of_mechanism",
+      "source": "E47",
+      "target": "CM3",
+      "properties": {
+        "role": "Military Organization (Army)"
+      }
+    },
+    {
+      "id": "e_e41_part_cm3",
+      "type": "part_of_mechanism",
+      "source": "E41",
+      "target": "CM3",
+      "properties": {
+        "role": "Military Organization (Militia)"
+      }
+    },
+    {
+      "id": "e_c9_enables_cm3",
+      "type": "enables",
+      "source": "C9",
+      "target": "CM3",
+      "properties": {
+        "type": "facilitating"
+      }
+    },
+    {
+      "id": "e_e45_part_cm3",
+      "type": "part_of_mechanism",
+      "source": "E45",
+      "target": "CM3",
+      "properties": {
+        "role": "Military Engagement (Initial Battles)"
+      }
+    },
+    {
+      "id": "e_e58_part_cm3",
+      "type": "part_of_mechanism",
+      "source": "E58",
+      "target": "CM3",
+      "properties": {
+        "role": "Decisive Military Engagement (Siege)"
+      }
+    },
+    {
+      "id": "e_e57_part_cm3",
+      "type": "part_of_mechanism",
+      "source": "E57",
+      "target": "CM3",
+      "properties": {
+        "role": "Securing Foreign Aid"
+      }
+    },
+    {
+      "id": "e_e61_part_cm3",
+      "type": "part_of_mechanism",
+      "source": "E61",
+      "target": "CM3",
+      "properties": {
+        "role": "Negotiation and Formal Recognition"
+      }
+    },
+    {
+      "id": "e_ev1_supports_hy1",
+      "type": "supports",
+      "source": "EV1",
+      "target": "HY1",
+      "properties": {
+        "probative_value": 0.9,
+        "source_text_quote": "its \"Declaration of Rights and Grievances\" argued that taxation without representation violated their rights as Englishmen"
+      }
+    },
+    {
+      "id": "e_ev3_supports_hy2",
+      "type": "supports",
+      "source": "EV3",
+      "target": "HY2",
+      "properties": {
+        "probative_value": 0.9,
+        "source_text_quote": "began using public demonstrations, boycotts, and threats of violence to ensure that the British tax laws became unenforceable"
+      }
+    },
+    {
+      "id": "e_ev4_supports_ev3",
+      "type": "supports",
+      "source": "EV4",
+      "target": "EV3",
+      "properties": {
+        "probative_value": 0.5,
+        "source_text_quote": "In Boston, the Sons of Liberty burned the records of the vice admiralty court and looted the home of chief justice Thomas Hutchinson."
+      }
+    },
+    {
+      "id": "e_ev19_supports_hy3",
+      "type": "supports",
+      "source": "EV19",
+      "target": "HY3",
+      "properties": {
+        "probative_value": 0.9,
+        "source_text_quote": "London responded by closing Boston Harbor and enacting a series of punitive laws, which effectively ended self-government in Massachusetts but also served to expand and intensify the revolutionary cause."
+      }
+    },
+    {
+      "id": "e_ev21_supports_hy3",
+      "type": "supports",
+      "source": "EV21",
+      "target": "HY3",
+      "properties": {
+        "probative_value": 0.9,
+        "source_text_quote": "but also served to expand and intensify the revolutionary cause."
+      }
+    },
+    {
+      "id": "e_ev14_supports_hy4",
+      "type": "supports",
+      "source": "EV14",
+      "target": "HY4",
+      "properties": {
+        "probative_value": 0.6,
+        "source_text_quote": "Samuel Adams set about creating new Committees of Correspondence, which linked Patriots in all 13 colonies"
+      }
+    },
+    {
+      "id": "e_ev16_supports_hy4",
+      "type": "supports",
+      "source": "EV16",
+      "target": "HY4",
+      "properties": {
+        "probative_value": 0.9,
+        "source_text_quote": "The committees became the leaders of the American resistance to British actions, and later largely determined the war effort at the state and local level."
+      }
+    },
+    {
+      "id": "e_ev17_supports_hy4",
+      "type": "supports",
+      "source": "EV17",
+      "target": "HY4",
+      "properties": {
+        "probative_value": 0.7,
+        "source_text_quote": "When the First Continental Congress decided to boycott British products, the colonial and local Committees took charge, examining merchant records and publishing the names of merchants who attempted to defy the boycott by importing British goods."
+      }
+    },
+    {
+      "id": "e_ev27_supports_hy5",
+      "type": "supports",
+      "source": "EV27",
+      "target": "HY5",
+      "properties": {
+        "probative_value": 0.8,
+        "source_text_quote": "The colonists became accustomed to running their own affairs, and they liked it."
+      }
+    },
+    {
+      "id": "e_ev28_supports_hy5",
+      "type": "supports",
+      "source": "EV28",
+      "target": "HY5",
+      "properties": {
+        "probative_value": 0.8,
+        "source_text_quote": "\"\u2026we always had governed ourselves, and we always meant to. They didn\u2019t mean we should.\""
+      }
+    },
+    {
+      "id": "e_ev29_supports_hy6",
+      "type": "supports",
+      "source": "EV29",
+      "target": "HY6",
+      "properties": {
+        "probative_value": 0.6,
+        "source_text_quote": "In King Philip's War (1675\u20131678), the New England colonies fought a handful of Native American tribes without military assistance from England, thereby contributing to the development of a uniquely American identity separate from that of the British people."
+      }
+    },
+    {
+      "id": "e_ev30_supports_hy6",
+      "type": "supports",
+      "source": "EV30",
+      "target": "HY6",
+      "properties": {
+        "probative_value": 0.5,
+        "source_text_quote": "The colonists fiercely opposed this"
+      }
+    },
+    {
+      "id": "e_ev31_supports_hy6",
+      "type": "supports",
+      "source": "EV31",
+      "target": "HY6",
+      "properties": {
+        "probative_value": 0.6,
+        "source_text_quote": "Dominion rule triggered bitter resentment throughout New England."
+      }
+    },
+    {
+      "id": "e_ev32_supports_hy6",
+      "type": "supports",
+      "source": "EV32",
+      "target": "HY6",
+      "properties": {
+        "probative_value": 0.7,
+        "source_text_quote": "This was followed by the 1689 Boston revolt, which overthrew Dominion rule."
+      }
+    },
+    {
+      "id": "e_ev33_supports_hy6",
+      "type": "supports",
+      "source": "EV33",
+      "target": "HY6",
+      "properties": {
+        "probative_value": 0.6,
+        "source_text_quote": "Local democratic self-government was restored."
+      }
+    },
+    {
+      "id": "e_ev38_supports_hy7",
+      "type": "supports",
+      "source": "EV38",
+      "target": "HY7",
+      "properties": {
+        "probative_value": 0.5,
+        "source_text_quote": "during which France ultimately entered the war, supporting the colonial cause of independence."
+      }
+    },
+    {
+      "id": "e_ev39_supports_hy7",
+      "type": "supports",
+      "source": "EV39",
+      "target": "HY7",
+      "properties": {
+        "probative_value": 0.8,
+        "source_text_quote": "But in 1781, a decisive victory by Washington and the Continental Army in the Siege of Yorktown inspired King George III and the British to negotiate an end to colonial rule"
+      }
+    },
+    {
+      "id": "e_ev40_supports_hy7",
+      "type": "supports",
+      "source": "EV40",
+      "target": "HY7",
+      "properties": {
+        "probative_value": 0.9,
+        "source_text_quote": "leading to the collapse of King George's control of Parliament and consensus in Parliament that the war should be ended on American terms."
+      }
+    },
+    {
+      "id": "e_hy1_explains_cm1",
+      "type": "explains_mechanism",
+      "source": "HY1",
+      "target": "CM1",
+      "properties": {
+        "type_of_claim": "existence"
+      }
+    },
+    {
+      "id": "e_hy2_explains_cm1",
+      "type": "explains_mechanism",
+      "source": "HY2",
+      "target": "CM1",
+      "properties": {
+        "type_of_claim": "component_role"
+      }
+    },
+    {
+      "id": "e_hy4_explains_cm2",
+      "type": "explains_mechanism",
+      "source": "HY4",
+      "target": "CM2",
+      "properties": {
+        "type_of_claim": "significance"
+      }
+    },
+    {
+      "id": "e_hy7_explains_cm3",
+      "type": "explains_mechanism",
+      "source": "HY7",
+      "target": "CM3",
+      "properties": {
+        "type_of_claim": "significance"
+      }
+    },
+    {
+      "id": "e_c1_enables_c2",
+      "type": "enables",
+      "source": "C1",
+      "target": "C2",
+      "properties": {}
+    },
+    {
+      "id": "e_c2_enables_e70",
+      "type": "enables",
+      "source": "C2",
+      "target": "E70",
+      "properties": {}
+    },
+    {
+      "id": "e_c3_causes_e2",
+      "type": "causes",
+      "source": "C3",
+      "target": "E2",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_c5_enables_e5",
+      "type": "enables",
+      "source": "C5",
+      "target": "E5",
+      "properties": {}
+    },
+    {
+      "id": "e_c5_enables_e9",
+      "type": "enables",
+      "source": "C5",
+      "target": "E9",
+      "properties": {}
+    },
+    {
+      "id": "e_c6_enables_e70",
+      "type": "enables",
+      "source": "C6",
+      "target": "E70",
+      "properties": {}
+    },
+    {
+      "id": "e_c7_enables_hy1",
+      "type": "enables",
+      "source": "C7",
+      "target": "HY1",
+      "properties": {
+        "type": "facilitating"
+      }
+    },
+    {
+      "id": "e_c8_enables_c1",
+      "type": "enables",
+      "source": "C8",
+      "target": "C1",
+      "properties": {}
+    },
+    {
+      "id": "e_e4_causes_e5",
+      "type": "causes",
+      "source": "E4",
+      "target": "E5",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e4_causes_e6",
+      "type": "causes",
+      "source": "E4",
+      "target": "E6",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e6_causes_e7",
+      "type": "causes",
+      "source": "E6",
+      "target": "E7",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e5_causes_e8",
+      "type": "causes",
+      "source": "E5",
+      "target": "E8",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e8_causes_e9",
+      "type": "causes",
+      "source": "E8",
+      "target": "E9",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e9_causes_e10",
+      "type": "causes",
+      "source": "E9",
+      "target": "E10",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e7_causes_ev3",
+      "type": "causes",
+      "source": "E7",
+      "target": "EV3",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e10_causes_e11",
+      "type": "causes",
+      "source": "E10",
+      "target": "E11",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e13_causes_e14",
+      "type": "causes",
+      "source": "E13",
+      "target": "E14",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e15_causes_e16",
+      "type": "causes",
+      "source": "E15",
+      "target": "E16",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e15_causes_e17",
+      "type": "causes",
+      "source": "E15",
+      "target": "E17",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e17_causes_e18",
+      "type": "causes",
+      "source": "E17",
+      "target": "E18",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e18_causes_e19",
+      "type": "causes",
+      "source": "E18",
+      "target": "E19",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e20_causes_e21",
+      "type": "causes",
+      "source": "E20",
+      "target": "E21",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e21_causes_e23",
+      "type": "causes",
+      "source": "E21",
+      "target": "E23",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_e23_causes_ev10",
+      "type": "causes",
+      "source": "E23",
+      "target": "EV10",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e23_causes_e24",
+      "type": "causes",
+      "source": "E23",
+      "target": "E24",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_e24_causes_e25",
+      "type": "causes",
+      "source": "E24",
+      "target": "E25",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_e26_causes_ev13",
+      "type": "causes",
+      "source": "E26",
+      "target": "EV13",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e26_causes_e27",
+      "type": "causes",
+      "source": "E26",
+      "target": "E27",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e27_causes_e28",
+      "type": "causes",
+      "source": "E27",
+      "target": "E28",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_e29_causes_e30",
+      "type": "causes",
+      "source": "E29",
+      "target": "E30",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e30_causes_e31",
+      "type": "causes",
+      "source": "E30",
+      "target": "E31",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e31_causes_e32",
+      "type": "causes",
+      "source": "E31",
+      "target": "E32",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_e32_causes_e33",
+      "type": "causes",
+      "source": "E32",
+      "target": "E33",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e33_causes_e34",
+      "type": "causes",
+      "source": "E33",
+      "target": "E34",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e34_causes_e35",
+      "type": "causes",
+      "source": "E34",
+      "target": "E35",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e34_causes_e36",
+      "type": "causes",
+      "source": "E34",
+      "target": "E36",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e34_causes_e37",
+      "type": "causes",
+      "source": "E34",
+      "target": "E37",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e34_causes_e38",
+      "type": "causes",
+      "source": "E34",
+      "target": "E38",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e34_causes_e39",
+      "type": "causes",
+      "source": "E34",
+      "target": "E39",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e34_causes_e42",
+      "type": "causes",
+      "source": "E34",
+      "target": "E42",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e39_causes_e40",
+      "type": "causes",
+      "source": "E39",
+      "target": "E40",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e40_causes_e41",
+      "type": "causes",
+      "source": "E40",
+      "target": "E41",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e42_causes_e43",
+      "type": "causes",
+      "source": "E42",
+      "target": "E43",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e42_causes_e44",
+      "type": "causes",
+      "source": "E42",
+      "target": "E44",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e45_causes_e46",
+      "type": "causes",
+      "source": "E45",
+      "target": "E46",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e46_causes_e47",
+      "type": "causes",
+      "source": "E46",
+      "target": "E47",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e47_causes_e48",
+      "type": "causes",
+      "source": "E47",
+      "target": "E48",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e45_causes_e49",
+      "type": "causes",
+      "source": "E45",
+      "target": "E49",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e49_causes_e50",
+      "type": "causes",
+      "source": "E49",
+      "target": "E50",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e50_causes_e51",
+      "type": "causes",
+      "source": "E50",
+      "target": "E51",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e46_causes_e53",
+      "type": "causes",
+      "source": "E46",
+      "target": "E53",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e53_causes_e54",
+      "type": "causes",
+      "source": "E53",
+      "target": "E54",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e54_causes_e55",
+      "type": "causes",
+      "source": "E54",
+      "target": "E55",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e55_causes_e56",
+      "type": "causes",
+      "source": "E55",
+      "target": "E56",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e56_causes_e57",
+      "type": "causes",
+      "source": "E56",
+      "target": "E57",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_e57_causes_e58",
+      "type": "causes",
+      "source": "E57",
+      "target": "E58",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_e58_causes_e59",
+      "type": "causes",
+      "source": "E58",
+      "target": "E59",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e59_causes_e60",
+      "type": "causes",
+      "source": "E59",
+      "target": "E60",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e60_causes_e61",
+      "type": "causes",
+      "source": "E60",
+      "target": "E61",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e61_causes_e62",
+      "type": "causes",
+      "source": "E61",
+      "target": "E62",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e61_causes_e63",
+      "type": "causes",
+      "source": "E61",
+      "target": "E63",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e61_causes_e64",
+      "type": "causes",
+      "source": "E61",
+      "target": "E64",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e62_causes_e65",
+      "type": "causes",
+      "source": "E62",
+      "target": "E65",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e62_causes_e66",
+      "type": "causes",
+      "source": "E62",
+      "target": "E66",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e62_causes_e67",
+      "type": "causes",
+      "source": "E62",
+      "target": "E67",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_c1_enables_e68",
+      "type": "enables",
+      "source": "C1",
+      "target": "E68",
+      "properties": {
+        "type": "facilitating"
+      }
+    },
+    {
+      "id": "e_e68_causes_e70",
+      "type": "causes",
+      "source": "E68",
+      "target": "E70",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_e69_causes_e70",
+      "type": "causes",
+      "source": "E69",
+      "target": "E70",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e71_causes_e72",
+      "type": "causes",
+      "source": "E71",
+      "target": "E72",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e73_causes_c6",
+      "type": "causes",
+      "source": "E73",
+      "target": "C6",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_e74_causes_e75",
+      "type": "causes",
+      "source": "E74",
+      "target": "E75",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e75_causes_e76",
+      "type": "causes",
+      "source": "E75",
+      "target": "E76",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e76_causes_e77",
+      "type": "causes",
+      "source": "E76",
+      "target": "E77",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e77_causes_e78",
+      "type": "causes",
+      "source": "E77",
+      "target": "E78",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e78_causes_e79",
+      "type": "causes",
+      "source": "E78",
+      "target": "E79",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e79_causes_e81",
+      "type": "causes",
+      "source": "E79",
+      "target": "E81",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_e80_causes_e81",
+      "type": "causes",
+      "source": "E80",
+      "target": "E81",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_e81_causes_e82",
+      "type": "causes",
+      "source": "E81",
+      "target": "E82",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e82_causes_e83",
+      "type": "causes",
+      "source": "E82",
+      "target": "E83",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e83_causes_e84",
+      "type": "causes",
+      "source": "E83",
+      "target": "E84",
+      "properties": {
+        "type": "direct"
+      }
+    },
+    {
+      "id": "e_e84_causes_c2",
+      "type": "causes",
+      "source": "E84",
+      "target": "C2",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_c6_causes_hy6",
+      "type": "causes",
+      "source": "C6",
+      "target": "HY6",
+      "properties": {
+        "type": "indirect"
+      }
+    },
+    {
+      "id": "e_c2_causes_hy5",
+      "type": "causes",
+      "source": "C2",
+      "target": "HY5",
+      "properties": {
+        "type": "indirect"
+      }
+    }
+  ]
+}

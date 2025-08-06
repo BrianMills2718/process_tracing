@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (revolutions)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'node1', label: 'Event', title: `{
+  "description": "Defeat of France in the French and Indian War, leading to British war debt and new colonial taxation policies.",
+  "type": "triggering"
+}`},
+        {id: 'node2', label: 'Event', title: `{
+  "description": "British Parliament imposes new taxes on the American colonies to cover war debt from the French and Indian War, leading to colonial resentment.",
+  "type": "intermediate"
+}`},
+        {id: 'node3', label: 'Event', title: `{
+  "description": "Colonists organize protests and boycotts against British taxation policies, escalating tensions and resistance.",
+  "type": "intermediate"
+}`},
+        {id: 'node4', label: 'Event', title: `{
+  "description": "American Revolutionary War begins with the Battles of Lexington and Concord, followed by the Declaration of Independence and the establishment of the United States.",
+  "type": "outcome"
+}`},
+        {id: 'node5', label: 'Evidence', title: `{
+  "description": "Taxation without representation was a key grievance among American colonists, fueling the American Revolution.",
+  "type": "unspecified"
+}`},
+        {id: 'node6', label: 'Hypothesis', title: `{
+  "description": "British taxation policies caused colonial rebellion because they violated colonial understanding of their rights as Englishmen.",
+  "type": "unspecified"
+}`},
+        {id: 'node7', label: 'Evidence', title: `{
+  "description": "The Stamp Act imposed direct taxes on the colonies, triggering widespread protests and boycotts because of the lack of representation in Parliament.",
+  "type": "unspecified"
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'node1', to: 'node2', label: 'causes', title: `{
+  "type": "direct",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'node2', to: 'node3', label: 'causes', title: `{
+  "type": "direct",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'node3', to: 'node4', label: 'causes', title: `{
+  "type": "direct",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'node5', to: 'node6', label: 'supports', title: `{
+  "label": "supports",
+  "source_text_quote": "\"taxation without representation violated their rights as Englishmen\"",
+  "type": "direct",
+  "type_of_claim": "component_role"
+}`},
+        {from: 'node7', to: 'node6', label: 'supports', title: `{
+  "label": "supports",
+  "source_text_quote": "The colonists did not object that the taxes were high; they were actually low. They objected to their lack of representation in the Parliament, which gave them no voice concerning legislation that affected them, such as the tax, violating the unwritten English constitution.",
+  "type": "direct",
+  "type_of_claim": "component_role"
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

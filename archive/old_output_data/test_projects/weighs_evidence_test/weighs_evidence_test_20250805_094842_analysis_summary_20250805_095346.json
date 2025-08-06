@@ -1,0 +1,480 @@
+{
+  "filename": "output_data\\weighs_evidence_test\\weighs_evidence_test_20250805_094842_graph.json",
+  "case_identifier": "weighs_evidence_test_20250805_094842_graph",
+  "generated_at": "2025-08-05T09:53:46.317274",
+  "causal_chains": [
+    {
+      "path": [
+        "evt_tea_act_1773",
+        "evt_bostontp"
+      ],
+      "path_descriptions": [
+        "Tea Act of 1773 passed, which granted the British East India Company a monopoly on tea sales in the American colonies.",
+        "Boston Tea Party: Samuel Adams and Sons of Liberty led American colonists in boarding British ships and dumping 342 chests of tea into Boston Harbor."
+      ],
+      "edge_types": [
+        "causes"
+      ],
+      "trigger": "evt_tea_act_1773",
+      "outcome": "evt_bostontp",
+      "length": 2
+    }
+  ],
+  "causal_mechanisms": [
+    {
+      "id": "mech_imperial_resistance",
+      "name": "The mechanism through which the Tea Act led to rebellion: (1) The Tea Act imposed taxation without colonial representation; (2) This created economic pressure and ideological mobilization; (3) Groups like the Sons of Liberty channeled this discontent into organized resistance; (4) The resistance culminated in direct action against British property.",
+      "causes": [
+        "Tea Act of 1773 passed, which granted the British East India Company a monopoly on tea sales in the American colonies.",
+        "The Tea Act imposed taxation without colonial representation in Parliament, violating fundamental principles of self-governance.",
+        "Economic pressure on local merchants (undercut by monopoly) and ideological mobilization around constitutional principles created.",
+        "Groups like the Sons of Liberty channeled discontent into organized resistance.",
+        "The resistance culminated in direct action against British property."
+      ],
+      "effects": [],
+      "completeness": 63.0,
+      "confidence": 0.9,
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "completeness_score": 0.75,
+        "plausibility_score": 0.95,
+        "evidence_support_level": "strong",
+        "missing_elements": [
+          "Specific details on the 'how' for each step (e.g., how the Tea Act compelled purchase of taxed tea; how Sons of Liberty organized discontent).",
+          "The immediate British response to the 'direct action' (e.g., the Coercive/Intolerable Acts).",
+          "The subsequent colonial response to British punitive measures, leading to broader inter-colonial unity and the path to outright rebellion.",
+          "The explicit link from specific 'direct action' (e.g., Boston Tea Party) to the broader and more sustained state of 'rebellion'."
+        ],
+        "improvement_suggestions": [
+          "Expand on the first step (ID: evt_tea_act_1773) to explicitly detail how the Tea Act imposed 'taxation without representation' by making taxed tea more economically appealing than smuggled tea, thereby coercing colonists into paying the tax.",
+          "Elaborate on the 'channeling' step (ID: evt_sons_of_lib_channeling) by specifying the methods used by groups like the Sons of Liberty (e.g., organizing boycotts, public demonstrations, disseminating pamphlets, building networks of resistance).",
+          "Add a new constituent event after 'evt_direct_action' detailing the specific British punitive measures enacted in response (e.g., the Coercive Acts, including the Boston Port Act and Massachusetts Government Act).",
+          "Add a final constituent event detailing how these British punitive measures further unified the colonies and escalated the conflict, leading to the convening of the First Continental Congress and the formation of militias, thus progressing to broader 'rebellion'."
+        ],
+        "detailed_reasoning": "The causal mechanism provides a clear and generally accurate high-level outline of how the Tea Act contributed to the American Revolution. Its plausibility is very high, as it aligns with widely accepted historical accounts. The sequence of events \u2013 from an act of imperial taxation without representation, to economic and ideological mobilization, organized resistance, and culminating in direct action \u2013 is logically sound and historically validated. The evidence support is strong, given the extensive primary and secondary historical sources available for this period and these specific events.\n\nHowever, the mechanism's completeness, while good for a high-level overview, could be improved by adding more granular detail, particularly regarding the 'how' of certain transitions. For instance, while the Tea Act imposed taxation without representation, the mechanism could specify that this was achieved by granting a monopoly and reducing the price of East India Company tea, thereby making the taxed tea cheaper than smuggled alternatives and implicitly forcing acceptance of the tax. Similarly, the methods by which groups like the Sons of Liberty 'channeled discontent' could be explicated (e.g., boycotts, public demonstrations, propaganda).\n\nCrucially, the mechanism ends with 'direct action against British property' but states its overall outcome is 'rebellion'. While direct action (like the Boston Tea Party) was a pivotal moment, 'rebellion' implies a broader and sustained challenge to authority, often involving a British response and a subsequent colonial escalation. The mechanism currently omits the critical step of the British reaction to the direct action (e.g., the Coercive Acts), and the subsequent colonial response to those punitive measures, which were vital in galvanizing inter-colonial unity and escalating the conflict toward outright rebellion and war. Including these elements would significantly enhance the mechanism's completeness and better trace the path from a specific act of resistance to the broader concept of 'rebellion'."
+      },
+      "completeness_breakdown": {
+        "van_evera_structural": 55,
+        "llm_assessment": 75.0,
+        "combined": 63.0
+      }
+    },
+    {
+      "id": "mech_imperial_control",
+      "name": "Imperial control mechanism: legislative components create economic and political pressures necessary to test colonial loyalty and extract revenue.",
+      "causes": [
+        "Tea Act of 1773 passed, which granted the British East India Company a monopoly on tea sales in the American colonies."
+      ],
+      "effects": [],
+      "completeness": 30.2,
+      "confidence": 0.7,
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "completeness_score": 0.2,
+        "plausibility_score": 0.9,
+        "evidence_support_level": "weak",
+        "missing_elements": [
+          "Events detailing the creation and manifestation of specific economic pressures resulting from the legislative components (e.g., actual financial impacts on colonists, merchants, or market disruption).",
+          "Events detailing the creation and manifestation of specific political pressures resulting from the legislative components (e.g., public outcry, organized protests, debates in colonial assemblies).",
+          "Events demonstrating the colonial response to these pressures, which would constitute the 'testing of colonial loyalty' (e.g., boycotts, acts of defiance like the Boston Tea Party, formation of resistance committees).",
+          "Events detailing the actual extraction or attempted extraction of revenue as a result of the legislative components.",
+          "Events showing the British government's interpretation of colonial actions as a test of loyalty or disloyalty, and their subsequent reactions."
+        ],
+        "improvement_suggestions": [
+          "Add events describing the immediate economic impact of the Tea Act on colonial merchants and consumers, showing how it created 'economic pressures'.",
+          "Add events detailing the political discourse and organization of opposition in the colonies in response to the Tea Act, demonstrating 'political pressures'.",
+          "Include events like the 'Boston Tea Party' as a direct manifestation of colonial resistance and a 'test of loyalty'.",
+          "Add events describing attempts by the British East India Company or the Crown to collect revenue under the Tea Act.",
+          "Include events that illustrate the British perception of the colonial response as defiance or disloyalty, leading to further imperial actions."
+        ],
+        "detailed_reasoning": "The causal mechanism describes a multi-stage process: 'legislative components' -> 'create economic and political pressures' -> 'necessary to test colonial loyalty and extract revenue'. Currently, only one event, 'evt_tea_act_1773' (Tea Act of 1773 passed), is linked. This event accurately represents a 'legislative component' and is a necessary first step. However, it provides no direct evidence for the subsequent stages of the mechanism.\n\n**Plausibility:** The mechanism is highly plausible (0.9). Historically, imperial powers frequently used legislative measures to assert control, generate revenue, and gauge the loyalty of their colonies. The Tea Act itself is a well-known example designed to aid the British East India Company and indirectly assert British authority, which indeed led to significant economic and political pressures in the colonies, ultimately escalating the conflict and testing colonial allegiance. The causal logic holds true within the historical context.\n\n**Completeness:** The completeness is very low (0.2). While the initial cause (legislative component) is present, the critical intermediary steps (creation of economic/political pressures) and the ultimate outcomes (testing loyalty, extracting revenue) are entirely unrepresented by linked events. The mechanism, as currently supported, is more of a 'seed' than a developed causal chain. Many crucial events that would demonstrate the 'creation' of pressures, the 'testing' of loyalty through colonial reactions, and the 'extraction' of revenue are missing.\n\n**Evidence Support:** The evidence support for the *entire mechanism* is weak. The single linked event only supports the *first part* ('legislative components') of the mechanism's description. It provides a foundational piece but does not trace the subsequent causal effects (pressures, loyalty test, revenue extraction). To strengthen the evidence, events demonstrating the 'effects' side of the causal arrow would be necessary."
+      },
+      "completeness_breakdown": {
+        "van_evera_structural": 37,
+        "llm_assessment": 20.0,
+        "combined": 30.2
+      }
+    },
+    {
+      "id": "mech_ideological_mobilization",
+      "name": "Ideological mobilization transforms abstract principles into concrete collective action.",
+      "causes": [],
+      "effects": [],
+      "completeness": 10.0,
+      "confidence": 0.8,
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "completeness_score": 0.1,
+        "plausibility_score": 0.9,
+        "evidence_support_level": "moderate",
+        "missing_elements": [
+          "Specific actions or processes of 'ideological mobilization' (e.g., framing, rhetoric, dissemination, recruitment, indoctrination)",
+          "The cognitive and emotional processes by which 'abstract principles' are internalized by individuals (e.g., resonance, identity formation, grievance crystallization, moral outrage)",
+          "The social and organizational processes that translate individual internalization into 'concrete collective action' (e.g., network building, resource mobilization, leadership, coordination)",
+          "Specific examples or types of 'concrete collective action' (e.g., protests, boycotts, violence, voting)",
+          "Contextual factors that enable or constrain this transformation (e.g., political opportunities, state repression, existing grievances)"
+        ],
+        "improvement_suggestions": [
+          "Break down 'ideological mobilization' into discrete, observable steps, such as the initial dissemination of ideas, the active recruitment of adherents, and the reinforcement of beliefs through shared experiences.",
+          "Elaborate on the 'transformation' process by detailing how abstract principles become personally meaningful and actionable, potentially through mechanisms like 'moral shock,' 'frame alignment,' or the construction of a collective identity.",
+          "Specify the pathways through which individual commitment translates into 'collective action,' including the role of social networks, organizational structures, and strategic decision-making.",
+          "Define the scope and nature of 'concrete collective action' to provide a clearer target for the mechanism's outcome.",
+          "Incorporate feedback loops or iterative processes, acknowledging that collective action can further solidify ideological commitment and refinement."
+        ],
+        "detailed_reasoning": "The causal mechanism 'Ideological mobilization transforms abstract principles into concrete collective action' is a very high-level statement that describes a broad phenomenon rather than a detailed causal chain. \n\n**Completeness Score (0.1):** The mechanism is extremely incomplete. It asserts a transformation from A to B but provides absolutely no intermediate steps, agents, or processes that explain *how* this transformation occurs. It's a black box. For instance, what constitutes 'ideological mobilization'? How do 'abstract principles' become 'concrete'? What kind of 'collective action' is implied? Without any constituent events or process details, it's impossible to trace the causal flow.\n\n**Plausibility Score (0.9):** Despite its lack of detail, the core assertion that ideology can drive collective action is highly plausible and widely supported by social science theory and empirical observation across fields like political science, sociology, and social psychology. The mechanism, as stated, does not contain any illogical or contradictory elements; rather, it is simply underspecified.\n\n**Evidence Support Level (moderate):** The general phenomenon described by this mechanism (that ideological mobilization leads to collective action) is robustly supported by extensive research on social movements, revolutions, political participation, and collective behavior. There is strong theoretical and empirical evidence for the existence of this causal link. However, because the mechanism itself is so underspecified in terms of its internal workings (i.e., the *process* of transformation), there is no *specific* process articulated that could be strongly supported or refuted by evidence. The support is for the conceptual linkage, but not for a detailed, testable process. Therefore, 'moderate' reflects this dual reality: strong conceptual support for the phenomenon, but weak support for the *specific, undetailed mechanism* as a process.\n\n**Missing Elements & Improvement Suggestions:** A complete mechanism would articulate the specific steps, actors, and contextual factors involved. This would include detailing the methods of mobilization, the cognitive and emotional pathways of individual belief adoption, and the organizational and social processes that aggregate individual actions into collective behavior."
+      },
+      "completeness_breakdown": {
+        "van_evera_structural": 10,
+        "llm_assessment": 10.0,
+        "combined": 10.0
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 15,
+      "Causal_Mechanism": 3,
+      "Hypothesis": 5,
+      "Alternative_Explanation": 3,
+      "Actor": 4,
+      "Condition": 4,
+      "Evidence": 29,
+      "Data_Source": 2
+    },
+    "edge_type_distribution": {
+      "provides_evidence_for": 13,
+      "causes": 1,
+      "part_of_mechanism": 6,
+      "explains_mechanism": 3,
+      "part_of_hypothesis_testing": 1,
+      "enables": 4,
+      "initiates": 5,
+      "constrains": 3,
+      "tests_hypothesis": 7,
+      "refutes_alternative": 5,
+      "confirms_occurrence": 1,
+      "tests_mechanism": 2,
+      "weighs_evidence": 1,
+      "supports": 2,
+      "disproves_occurrence": 3,
+      "supports_alternative": 2,
+      "provides_evidence": 7,
+      "refutes": 2
+    },
+    "density": 0.016346153846153847,
+    "avg_path_length": "N/A (disconnected graph)",
+    "connectivity_type": "disconnected",
+    "degree_centrality": {
+      "hyp_constitutional_principle": 0.116,
+      "mech_imperial_resistance": 0.112,
+      "evt_bostontp": 0.075,
+      "mech_imperial_control": 0.037,
+      "alt_econ_self_interest": 0.034,
+      "evt_tea_act_1773": 0.028,
+      "actor_samuel_adams": 0.028,
+      "mech_ideological_mobilization": 0.028,
+      "ds_mass_hist_society": 0.025,
+      "ds_brit_parliamentary_records": 0.025
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hyp_constitutional_principle",
+      "description": "The revolution was primarily driven by constitutional principles, specifically principled opposition to taxation without representation.",
+      "assessment": "Supported (Strong Evidence)",
+      "balance_score": 0.9,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evd_principled_args_econ_disadv"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_principled_opposition",
+      "description": "Principled opposition, rather than mere economic grievance, drove colonial resistance.",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_genuine_beliefs",
+      "description": "Constitutional language in private correspondence indicates genuine beliefs rather than political rhetoric.",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_constitutional_concerns_override",
+      "description": "Constitutional concerns override economic interests for colonists.",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hyp_enlightenment_influence",
+      "description": "Enlightenment ideas influenced colonial thinking.",
+      "assessment": "Supported (Strong Evidence)",
+      "balance_score": 0.85,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evd_correspondence_enlightenment"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [
+      {
+        "condition_id": "cond_enlightenment_ideas",
+        "condition": "The spread of Enlightenment philosophy about natural rights and self-governance",
+        "target": {
+          "id": "mech_imperial_resistance",
+          "description": "The mechanism through which the Tea Act led to rebellion: (1) The Tea Act imposed taxation without colonial representation; (2) This created economic pressure and ideological mobilization; (3) Groups like the Sons of Liberty channeled this discontent into organized resistance; (4) The resistance culminated in direct action against British property.",
+          "type": "Causal_Mechanism"
+        },
+        "necessity": 0.8,
+        "certainty": 0.8
+      },
+      {
+        "condition_id": "cond_colonial_econ_dev",
+        "condition": "The colonies' growing economic self-sufficiency by the 1770s.",
+        "target": {
+          "id": "evt_direct_action",
+          "description": "The resistance culminated in direct action against British property.",
+          "type": "Event"
+        },
+        "necessity": 0.7,
+        "certainty": 0.7
+      }
+    ],
+    "constraining": [
+      {
+        "condition_id": "cond_brit_naval_supremacy",
+        "condition": "The Royal Navy's dominance of the Atlantic",
+        "target": {
+          "id": "mech_imperial_resistance",
+          "description": "The mechanism through which the Tea Act led to rebellion: (1) The Tea Act imposed taxation without colonial representation; (2) This created economic pressure and ideological mobilization; (3) Groups like the Sons of Liberty channeled this discontent into organized resistance; (4) The resistance culminated in direct action against British property.",
+          "type": "Causal_Mechanism"
+        },
+        "certainty": 0.8,
+        "type": "constrains"
+      },
+      {
+        "condition_id": "cond_geographic_distance",
+        "condition": "3,000-mile separation between Britain and America created communication delays of 6-12 weeks.",
+        "target": {
+          "id": "mech_imperial_control",
+          "description": "Imperial control mechanism: legislative components create economic and political pressures necessary to test colonial loyalty and extract revenue.",
+          "type": "Causal_Mechanism"
+        },
+        "certainty": "medium",
+        "type": "constrains"
+      }
+    ]
+  },
+  "actors": [
+    {
+      "id": "actor_samuel_adams",
+      "name": "Samuel Adams",
+      "role": "Principal organizer, colonial leader",
+      "initiated_events": [
+        {
+          "id": "evt_bostontp",
+          "description": "Boston Tea Party: Samuel Adams and Sons of Liberty led American colonists in boarding British ships and dumping 342 chests of tea into Boston Harbor.",
+          "certainty": 0.9,
+          "intention": "unknown"
+        },
+        {
+          "id": "evt_planning_meetings_btp",
+          "description": "Samuel Adams initiated the planning meetings for the Boston Tea Party through his direct organizational efforts.",
+          "certainty": 0.9,
+          "intention": "unknown"
+        },
+        {
+          "id": "evt_strategy_mohawk_disguise",
+          "description": "Samuel Adams initiated the specific strategy of disguising participants as Mohawk Indians to deflect blame.",
+          "certainty": 0.85,
+          "intention": "unknown"
+        }
+      ],
+      "influence_score": 36,
+      "beliefs": "British rule fundamentally violated colonial rights",
+      "intentions": "Mobilize mass resistance against British authority"
+    },
+    {
+      "id": "actor_sons_of_liberty",
+      "name": "Sons of Liberty",
+      "role": "Organized resistance group",
+      "initiated_events": [
+        {
+          "id": "evt_bostontp",
+          "description": "Boston Tea Party: Samuel Adams and Sons of Liberty led American colonists in boarding British ships and dumping 342 chests of tea into Boston Harbor.",
+          "certainty": 0.8,
+          "intention": "unknown"
+        }
+      ],
+      "influence_score": 18,
+      "beliefs": "unknown",
+      "intentions": "Channel discontent into organized resistance"
+    },
+    {
+      "id": "actor_king_george_iii",
+      "name": "King George III",
+      "role": "British monarch",
+      "initiated_events": [
+        {
+          "id": "evt_military_response",
+          "description": "King George III initiated the military response to colonial resistance by issuing explicit orders to General Gage.",
+          "certainty": 0.9,
+          "intention": "unknown"
+        }
+      ],
+      "influence_score": 14,
+      "beliefs": "Colonies as subordinate territories that existed to benefit Britain",
+      "intentions": "Maintain imperial control and extract revenue"
+    },
+    {
+      "id": "actor_thomas_hutchinson",
+      "name": "Governor Thomas Hutchinson",
+      "role": "Representative of British authority in Massachusetts",
+      "initiated_events": [],
+      "influence_score": 3,
+      "beliefs": "Colonists were ungrateful subjects who needed firm governance",
+      "intentions": "Enforce Parliamentary supremacy"
+    }
+  ],
+  "alternative_explanations": [
+    {
+      "id": "alt_external_influence",
+      "description": "French agents and financial support were the primary drivers of colonial rebellion, seeking to weaken their British rivals.",
+      "supporting_evidence": [
+        {
+          "id": "evd_french_diplomatic_archives",
+          "description": "New evidence from previously sealed French diplomatic archives showing French agents provided strategic advice earlier than commonly believed.",
+          "type": "unknown",
+          "certainty": 0.8,
+          "probative_value": 0.8
+        }
+      ],
+      "refuting_evidence": [
+        {
+          "id": "evd_absence_french_support_pre1776",
+          "description": "Absence of French support before 1776",
+          "type": "unknown",
+          "certainty": 0.8,
+          "probative_value": 0.8
+        }
+      ],
+      "strength_score": 0.0,
+      "assessment": "Contested alternative explanation",
+      "probability": 0.2,
+      "status": "active"
+    },
+    {
+      "id": "alt_econ_self_interest",
+      "description": "The revolution was primarily driven by colonial merchants' economic interests rather than constitutional principles. Wealthy merchants manipulated popular sentiment to protect smuggling and avoid taxes.",
+      "supporting_evidence": [
+        {
+          "id": "evd_merchant_records_smuggling",
+          "description": "Documentary evidence from merchant records revealing extensive smuggling operations that would have been threatened by British enforcement.",
+          "type": "unknown",
+          "certainty": 0.8,
+          "probative_value": 0.8
+        }
+      ],
+      "refuting_evidence": [
+        {
+          "id": "evd_non_merchant_leadership",
+          "description": "Non-merchant leadership in many revolutionary committees",
+          "type": "unknown",
+          "certainty": 0.6,
+          "probative_value": 0.6
+        },
+        {
+          "id": "evd_econ_analysis_trade_patterns",
+          "description": "Economic analysis of colonial trade patterns showing many merchants actually opposed the Tea Party due to its negative impact on their legitimate trade relationships.",
+          "type": "unknown",
+          "certainty": 0.7,
+          "probative_value": 0.7
+        }
+      ],
+      "strength_score": -0.4999999999999998,
+      "assessment": "Contested alternative explanation",
+      "probability": 0.4,
+      "status": "active"
+    },
+    {
+      "id": "alt_elite_manipulation",
+      "description": "Colonial elites deliberately manufactured popular outrage to advance their own political ambitions.",
+      "supporting_evidence": [],
+      "refuting_evidence": [
+        {
+          "id": "evd_working_class_partic",
+          "description": "Working-class participation in protests",
+          "type": "unknown",
+          "certainty": 0.8,
+          "probative_value": 0.8
+        },
+        {
+          "id": "evd_town_meeting_records",
+          "description": "Town meeting records showing genuine grassroots participation in anti-British activities.",
+          "type": "unknown",
+          "certainty": 0.9,
+          "probative_value": 0.9
+        }
+      ],
+      "strength_score": -1.7000000000000002,
+      "assessment": "Weak alternative explanation",
+      "probability": 0.3,
+      "status": "active"
+    }
+  ],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

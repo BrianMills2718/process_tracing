@@ -1,0 +1,695 @@
+{
+  "nodes": [
+    {
+      "id": "Ev1",
+      "type": "Event",
+      "properties": {
+        "description": "The French and Indian War concluded in 1763 with France's defeat, leading to Great Britain acquiring its territory east of the Mississippi River, which subsequently prompted a significant shift in British colonial policy as Parliament imposed new taxes to compensate for wartime costs and turned control of the colonies' western lands over to British officials in Montreal.",
+        "type": "triggering",
+        "date": "1763"
+      }
+    },
+    {
+      "id": "Ev2",
+      "type": "Event",
+      "properties": {
+        "description": "In March 1765, Parliament passed the Stamp Act, which imposed direct taxes on all official documents, newspapers, almanacs, pamphlets, and even decks of playing cards in the colonies, leading to immediate widespread colonial objection based on the principle of 'No taxation without representation' and the formation of groups like the Sons of Liberty.",
+        "type": "intermediate",
+        "date": "1765"
+      }
+    },
+    {
+      "id": "Ev3",
+      "type": "Event",
+      "properties": {
+        "description": "On March 5, 1770, a large crowd gathered around British soldiers on a Boston street, throwing snowballs, rocks, and debris, causing the soldiers to panic and fire into the crowd without an order, hitting 11 people and killing three civilians at the scene, with two more dying shortly after, an event that quickly turned colonial sentiment against the British.",
+        "type": "intermediate",
+        "date": "1770-03-05"
+      }
+    },
+    {
+      "id": "Ev4",
+      "type": "Event",
+      "properties": {
+        "description": "On December 16, 1773, a seminal event in the American Revolution's escalation occurred when Sons of Liberty activists, wearing costumes to evoke Indigenous people, instigated the Boston Tea Party, during which they boarded ships of the East India Company and dumped approximately \u00a310,000 worth of tea into Boston Harbor in protest of the Tea Act.",
+        "type": "intermediate",
+        "date": "1773-12-16"
+      }
+    },
+    {
+      "id": "Ev5",
+      "type": "Event",
+      "properties": {
+        "description": "The British government responded to the Boston Tea Party by passing four punitive laws, collectively known as the Intolerable Acts, which closed Boston Harbor, altered the Massachusetts charter, restricted town meetings, and allowed British soldiers to be tried in Britain for crimes committed in the colonies, effectively ending self-government in Massachusetts.",
+        "type": "intermediate",
+        "date": "1774"
+      }
+    },
+    {
+      "id": "Ev6",
+      "type": "Event",
+      "properties": {
+        "description": "In late 1774, 12 of the Thirteen Colonies sent delegates to the First Continental Congress, which met inside Carpenters' Hall in Philadelphia to deliberate and coordinate Patriot resistance through underground networks of committees, culminating in a boycott of all British goods enforced by new local committees.",
+        "type": "intermediate",
+        "date": "1774-09"
+      }
+    },
+    {
+      "id": "Ev7",
+      "type": "Event",
+      "properties": {
+        "description": "The American Revolutionary War was launched on April 19, 1775, with the Battles of Lexington and Concord, which marked the first military engagements between British forces and colonial militias, signaling the outbreak of open armed conflict that forced the British to withdraw from Boston by sea in March 1776.",
+        "type": "triggering",
+        "date": "1775-04-19"
+      }
+    },
+    {
+      "id": "Ev8",
+      "type": "Event",
+      "properties": {
+        "description": "On July 4, 1776, the Second Continental Congress unanimously adopted the Declaration of Independence, primarily authored by Thomas Jefferson, which formally declared the Thirteen Colonies' separation from Great Britain, embodying the political philosophies of liberalism and republicanism, rejecting monarchy, and escalating the war.",
+        "type": "intermediate",
+        "date": "1776-07-04"
+      }
+    },
+    {
+      "id": "Ev9",
+      "type": "Event",
+      "properties": {
+        "description": "In 1781, George Washington and the Continental Army, with crucial support from the French Army and Navy, achieved their most decisive victory in the Siege of Yorktown, capturing roughly 7,500 British troops led by General Charles Cornwallis, leading to the collapse of King George's control of Parliament and consensus in Parliament that the war should be ended.",
+        "type": "intermediate",
+        "date": "1781"
+      }
+    },
+    {
+      "id": "Ev10",
+      "type": "Event",
+      "properties": {
+        "description": "On September 3, 1783, the British signed the Treaty of Paris, formally granting their former colonies independence and nearly all the territory east of the Mississippi River and south of the Great Lakes, thereby leading to the establishment of the sovereign United States of America as the world's first constitutional republic founded on the consent of the governed and the rule of law.",
+        "type": "outcome",
+        "date": "1783-09-03"
+      }
+    },
+    {
+      "id": "H1",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The shift in British policy after the French and Indian War, specifically the imposition of new taxes and tighter control over western lands, directly caused increased colonial discontent because colonists felt unjustly burdened after contributing to the war effort and resented the loss of accustomed autonomy.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "H2",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The long-standing British policy of 'salutary neglect' cultivated a tradition of colonial self-governance, which, when abruptly altered by post-1763 British attempts at direct control and taxation, inevitably led to colonial resistance and demands for greater autonomy.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "H3",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The principle of 'taxation without representation' became a central grievance for colonists, who argued that parliamentary taxation without their elected voice violated their fundamental rights as Englishmen, thereby galvanizing unified opposition to British tax laws.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "H4",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "British attempts to quell colonial unrest through military deployment and punitive legislation, such as sending troops to Boston and enacting the Intolerable Acts, proved counterproductive, inadvertently escalating tensions and unifying colonial resistance rather than suppressing it.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "H5",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The actions of radical Patriots, exemplified by groups like the Sons of Liberty and events such as the Boston Tea Party, played a critical role in escalating the conflict by directly challenging British authority and provoking punitive responses that further inflamed colonial sentiment.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "H6",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The coordinated resistance by colonial delegates through bodies like the First Continental Congress and the establishment of local committees significantly unified American opposition, enabling collective action like boycotts and militia training, which became foundational for the war effort.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "Evid1.1",
+      "type": "Evidence",
+      "properties": {
+        "description": "Statement that colonial discontent began shortly after the French and Indian War.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid1.2",
+      "type": "Evidence",
+      "properties": {
+        "description": "Description of British Parliament imposing new taxes and controlling western lands.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid2.1",
+      "type": "Evidence",
+      "properties": {
+        "description": "Colonists became accustomed to self-governance under salutary neglect.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid2.2",
+      "type": "Evidence",
+      "properties": {
+        "description": "British policy changed significantly after the French and Indian War, prompting colonies to seek greater autonomy.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid3.1",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Stamp Act Congress declared taxation without representation violated rights as Englishmen.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid3.2",
+      "type": "Evidence",
+      "properties": {
+        "description": "The grievance of lacking representation was summarized by 'No taxation without representation'.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid4.1",
+      "type": "Evidence",
+      "properties": {
+        "description": "King George III deployed British troops to Boston, leading to the Boston Massacre.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid4.2",
+      "type": "Evidence",
+      "properties": {
+        "description": "London's punitive laws in response to the Boston Tea Party expanded and intensified the revolutionary cause.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid5.1",
+      "type": "Evidence",
+      "properties": {
+        "description": "Sons of Liberty instigated the Boston Tea Party as a seminal event in the American Revolution's escalation.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid5.2",
+      "type": "Evidence",
+      "properties": {
+        "description": "London's response to the Boston Tea Party served to expand and intensify the revolutionary cause.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid6.1",
+      "type": "Evidence",
+      "properties": {
+        "description": "The First Continental Congress coordinated Patriot resistance through committees.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid6.2",
+      "type": "Evidence",
+      "properties": {
+        "description": "Patriots were armed and unified against Parliament for the first time due to coordination.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid_Ev1_occ",
+      "type": "Evidence",
+      "properties": {
+        "description": "Text describing the French and Indian War's end and its aftermath.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid_Ev2_occ",
+      "type": "Evidence",
+      "properties": {
+        "description": "Text describing the passage of the Stamp Act in March 1765.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid_Ev3_occ",
+      "type": "Evidence",
+      "properties": {
+        "description": "Text detailing the Boston Massacre on March 5, 1770.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid_Ev4_occ",
+      "type": "Evidence",
+      "properties": {
+        "description": "Text describing the Boston Tea Party on December 16, 1773.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid_Ev5_occ",
+      "type": "Evidence",
+      "properties": {
+        "description": "Text outlining London's response with the Intolerable Acts.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid_Ev6_occ",
+      "type": "Evidence",
+      "properties": {
+        "description": "Text stating the First Continental Congress convened in late 1774.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid_Ev7_occ",
+      "type": "Evidence",
+      "properties": {
+        "description": "Text stating the Revolutionary War was launched on April 19, 1775, with Battles of Lexington and Concord.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid_Ev8_occ",
+      "type": "Evidence",
+      "properties": {
+        "description": "Text confirming the adoption of the Declaration of Independence on July 4, 1776.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid_Ev9_occ",
+      "type": "Evidence",
+      "properties": {
+        "description": "Text detailing the decisive victory at the Siege of Yorktown in 1781.",
+        "source": "text"
+      }
+    },
+    {
+      "id": "Evid_Ev10_occ",
+      "type": "Evidence",
+      "properties": {
+        "description": "Text describing the signing of the Treaty of Paris on September 3, 1783.",
+        "source": "text"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "Edge_Ev1_causes_Ev2",
+      "type": "causes",
+      "source": "Ev1",
+      "target": "Ev2",
+      "properties": {
+        "description": "The financial strain and new territorial control after the French and Indian War led Britain to impose new taxes like the Stamp Act.",
+        "reasoning": "The text states 'Discontent with colonial rule began shortly after the defeat of France in the French and Indian War in 1763. Even though the colonies had fought in and supported the war, British Parliament imposed new taxes to compensate for wartime costs'. This directly leads to events like the Stamp Act.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Edge_Ev2_causes_Ev3",
+      "type": "causes",
+      "source": "Ev2",
+      "target": "Ev3",
+      "properties": {
+        "description": "The Stamp Act and subsequent Townshend Acts generated significant colonial unrest and boycotts, escalating tensions that contributed to events like the Boston Massacre.",
+        "reasoning": "The text mentions 'tensions flared again following British Parliament's passage of the Townshend Acts' and 'In an effort to quell the mounting rebellion, King George III deployed British troops to Boston, where British troops killed protesters in the Boston Massacre'. This implies a causal chain from taxation to deployment and then to the massacre.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Edge_Ev3_causes_Ev4",
+      "type": "causes",
+      "source": "Ev3",
+      "target": "Ev4",
+      "properties": {
+        "description": "The Boston Massacre and continued presence of British troops and unpopular trade regulations fostered an environment of anti-tax demonstration and radical action, such as the Boston Tea Party.",
+        "reasoning": "The text states the Boston Massacre 'accelerated the downward spiral in the relationship' and then mentions the Gaspee Affair and Boston Tea Party as subsequent anti-tax demonstrations, implying a continued escalation.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Edge_Ev4_causes_Ev5",
+      "type": "causes",
+      "source": "Ev4",
+      "target": "Ev5",
+      "properties": {
+        "description": "The Boston Tea Party directly provoked London's punitive response through the enactment of the Intolerable Acts.",
+        "reasoning": "The text explicitly states 'London responded by closing Boston Harbor and enacting a series of punitive laws' in reaction to the Boston Tea Party.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Edge_Ev5_causes_Ev6",
+      "type": "causes",
+      "source": "Ev5",
+      "target": "Ev6",
+      "properties": {
+        "description": "The harshness of the Intolerable Acts, which effectively ended self-government in Massachusetts, galvanized inter-colonial cooperation and led to the convening of the First Continental Congress.",
+        "reasoning": "The text states the Intolerable Acts 'also served to expand and intensify the revolutionary cause' and 'In response, Massachusetts patriots issued the Suffolk Resolves and formed an alternative shadow government... In September 1774, the First Continental Congress convened, consisting of representatives from each colony'. This indicates a direct causal link.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Edge_Ev6_causes_Ev7",
+      "type": "causes",
+      "source": "Ev6",
+      "target": "Ev7",
+      "properties": {
+        "description": "The coordinated Patriot resistance and militia training organized by the First Continental Congress prepared the colonists for armed conflict, leading directly to the Battles of Lexington and Concord and the start of the Revolutionary War.",
+        "reasoning": "The text says 'Congress began coordinating Patriot resistance through underground networks of committees... It also began coordinating Patriot resistance by militias... For the first time, the Patriots were armed and unified against Parliament. Following the Battles of Lexington and Concord, Washington and the Continental Army responded by surrounding Boston'. This shows the preparations led to the outbreak of war.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Edge_Ev7_causes_Ev8",
+      "type": "causes",
+      "source": "Ev7",
+      "target": "Ev8",
+      "properties": {
+        "description": "The outbreak of open warfare at Lexington and Concord solidified the need for formal independence, leading the Second Continental Congress to adopt the Declaration of Independence.",
+        "reasoning": "The sequence of events shows the war launched in April 1775, followed by the Second Continental Congress forming the army in June 1775, and then adopting the Declaration in July 1776, implying the armed conflict necessitated formalizing the cause of independence.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Edge_Ev8_causes_Ev9",
+      "type": "causes",
+      "source": "Ev8",
+      "target": "Ev9",
+      "properties": {
+        "description": "The Declaration of Independence escalated and formalized the war, which continued for five years and ultimately led to decisive victories like the Siege of Yorktown, which secured British concession.",
+        "reasoning": "The text states the Declaration of Independence 'inspired, formalized, and escalated the war' and that 'The Revolutionary War continued for another five years during which France ultimately entered the war, supporting the colonial cause of independence' leading to Yorktown.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Edge_Ev9_causes_Ev10",
+      "type": "causes",
+      "source": "Ev9",
+      "target": "Ev10",
+      "properties": {
+        "description": "The decisive victory at Yorktown inspired King George III and the British to negotiate an end to colonial rule and acknowledge American independence, codified in the Treaty of Paris.",
+        "reasoning": "The text explicitly states that the victory at Yorktown 'inspired King George III and the British to negotiate an end to colonial rule in the colonies and acknowledge their independence, which was codified in the Treaty of Paris'.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Edge_Evid1.1_supports_H1",
+      "type": "supports",
+      "source": "Evid1.1",
+      "target": "H1",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.4,
+        "source_text_quote": "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War in 1763.",
+        "target_type": "causal_relationship",
+        "reasoning": "This quote indicates a correlation between the war's end and the start of discontent, weakly suggesting causation but not proving the specific mechanisms."
+      }
+    },
+    {
+      "id": "Edge_Evid1.2_supports_H1",
+      "type": "supports",
+      "source": "Evid1.2",
+      "target": "H1",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.7,
+        "source_text_quote": "Even though the colonies had fought in and supported the war, British Parliament imposed new taxes to compensate for wartime costs and turned control of the colonies' western lands over to the British officials in Montreal.",
+        "target_type": "causal_relationship",
+        "reasoning": "This describes the specific British actions (new taxes, land control) that the hypothesis claims caused discontent. If these actions didn't occur, the specific hypothesis fails."
+      }
+    },
+    {
+      "id": "Edge_Evid2.1_supports_H2",
+      "type": "supports",
+      "source": "Evid2.1",
+      "target": "H2",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.8,
+        "source_text_quote": "Under the British policy of salutary neglect, Britain traded with the colonies but otherwise mostly left them alone over the first 150 years of the colonies\u2019 existence. The colonists became accustomed to running their own affairs, and they liked it.",
+        "target_type": "causal_relationship",
+        "reasoning": "This establishes the premise of 'salutary neglect' fostering self-governance, which is a necessary condition for the hypothesis that changing this policy caused resistance. Without this history, the claim of accustomed autonomy is unsupported."
+      }
+    },
+    {
+      "id": "Edge_Evid2.2_supports_H2",
+      "type": "supports",
+      "source": "Evid2.2",
+      "target": "H2",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "This British policy changed significantly after the French and Indian War, prompting the Thirteen Colonies to seek greater autonomy from Britain.",
+        "target_type": "causal_relationship",
+        "reasoning": "This quote directly states that the change in policy 'prompted' the seeking of autonomy, providing strong, explicit support for the causal link asserted by the hypothesis."
+      }
+    },
+    {
+      "id": "Edge_Evid3.1_supports_H3",
+      "type": "supports",
+      "source": "Evid3.1",
+      "target": "H3",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.95,
+        "source_text_quote": "Representatives from several colonies convened the Stamp Act Congress in 1765; its 'Declaration of Rights and Grievances' argued that taxation without representation violated their rights as Englishmen.",
+        "target_type": "causal_relationship",
+        "reasoning": "This quote is definitive evidence that 'taxation without representation' was the explicit reason cited by colonists for their opposition, directly confirming the hypothesis's core mechanism."
+      }
+    },
+    {
+      "id": "Edge_Evid3.2_supports_H3",
+      "type": "supports",
+      "source": "Evid3.2",
+      "target": "H3",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.5,
+        "source_text_quote": "This grievance was summarized in the slogan 'No taxation without representation'.",
+        "target_type": "causal_relationship",
+        "reasoning": "This shows the popularization of the grievance but doesn't, by itself, prove it was the *cause* of unified opposition, only that it was a widely used phrase representing colonial sentiment."
+      }
+    },
+    {
+      "id": "Edge_Evid4.1_supports_H4",
+      "type": "supports",
+      "source": "Evid4.1",
+      "target": "H4",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.7,
+        "source_text_quote": "In an effort to quell the mounting rebellion, King George III deployed British troops to Boston, where British troops killed protesters in the Boston Massacre on March 5, 1770.",
+        "target_type": "causal_relationship",
+        "reasoning": "This shows the British *attempted* to quell unrest with troops and that an incident occurred, which is necessary for the hypothesis that these actions were counterproductive. If no troops were sent or no incident happened, the mechanism wouldn't be testable."
+      }
+    },
+    {
+      "id": "Edge_Evid4.2_supports_H4",
+      "type": "supports",
+      "source": "Evid4.2",
+      "target": "H4",
+      "properties": {
+        "diagnostic_type": "doubly_decisive",
+        "probative_value": 0.95,
+        "source_text_quote": "London responded by closing Boston Harbor and enacting a series of punitive laws, which effectively ended self-government in Massachusetts but also served to expand and intensify the revolutionary cause.",
+        "target_type": "causal_relationship",
+        "reasoning": "This quote directly confirms the counterproductive nature of the British actions, stating they 'served to expand and intensify the revolutionary cause' despite being intended to punish. This is strong evidence for the hypothesis."
+      }
+    },
+    {
+      "id": "Edge_Evid5.1_supports_H5",
+      "type": "supports",
+      "source": "Evid5.1",
+      "target": "H5",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "On December 16, 1773, in a seminal event in the American Revolution's escalation, Sons of Liberty activists wearing costumes of Native Americans instigated the Boston Tea Party, during which they boarded and dumped chests of tea owned by the British East India Company into Boston Harbor.",
+        "target_type": "causal_relationship",
+        "reasoning": "This explicitly describes the Sons of Liberty's action as a 'seminal event in the American Revolution's escalation,' directly linking their radical actions to the conflict's intensity as per the hypothesis."
+      }
+    },
+    {
+      "id": "Edge_Evid5.2_supports_H5",
+      "type": "supports",
+      "source": "Evid5.2",
+      "target": "H5",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.6,
+        "source_text_quote": "London responded by closing Boston Harbor and enacting a series of punitive laws, which effectively ended self-government in Massachusetts but also served to expand and intensify the revolutionary cause.",
+        "target_type": "causal_relationship",
+        "reasoning": "While this supports the idea that radical actions provoked a response that inflamed sentiment, it's not solely about the Patriots' role but the *effect* of the British response. It indirectly supports the hypothesis by showing the consequence of radical actions."
+      }
+    },
+    {
+      "id": "Edge_Evid6.1_supports_H6",
+      "type": "supports",
+      "source": "Evid6.1",
+      "target": "H6",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.8,
+        "source_text_quote": "The First Continental Congress began coordinating Patriot resistance through underground networks of committees.",
+        "target_type": "causal_relationship",
+        "reasoning": "This quote describes the mechanism of coordination, which is a necessary component of the hypothesis that coordinated resistance unified opposition. Without this action, the claim of coordinated resistance would fail."
+      }
+    },
+    {
+      "id": "Edge_Evid6.2_supports_H6",
+      "type": "supports",
+      "source": "Evid6.2",
+      "target": "H6",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "For the first time, the Patriots were armed and unified against Parliament.",
+        "target_type": "causal_relationship",
+        "reasoning": "This directly states that the Patriots became 'unified' and 'armed' in a way not seen before, providing strong evidence for the hypothesis that the coordination led to a unified, prepared opposition foundational for the war."
+      }
+    },
+    {
+      "id": "Evid_Ev1_occ_confirms",
+      "type": "confirms_occurrence",
+      "source": "Evid_Ev1_occ",
+      "target": "Ev1",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War in 1763.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Evid_Ev2_occ_confirms",
+      "type": "confirms_occurrence",
+      "source": "Evid_Ev2_occ",
+      "target": "Ev2",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "Parliament passed the Stamp Act in March 1765, which imposed direct taxes on the colonies for the first time.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Evid_Ev3_occ_confirms",
+      "type": "confirms_occurrence",
+      "source": "Evid_Ev3_occ",
+      "target": "Ev3",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "On March 5, 1770, a large crowd gathered around a group of British soldiers on a Boston street. ...They hit 11 people; three civilians died of wounds at the scene of the shooting, and two died shortly after. The event quickly came to be called the Boston Massacre.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Evid_Ev4_occ_confirms",
+      "type": "confirms_occurrence",
+      "source": "Evid_Ev4_occ",
+      "target": "Ev4",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "On December 16, 1773, in a seminal event in the American Revolution's escalation, Sons of Liberty activists wearing costumes of Native Americans instigated the Boston Tea Party, during which they boarded and dumped chests of tea owned by the British East India Company into Boston Harbor.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Evid_Ev5_occ_confirms",
+      "type": "confirms_occurrence",
+      "source": "Evid_Ev5_occ",
+      "target": "Ev5",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "The British government responded by passing four laws that came to be known as the Intolerable Acts, further darkening colonial opinion towards England.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Evid_Ev6_occ_confirms",
+      "type": "confirms_occurrence",
+      "source": "Evid_Ev6_occ",
+      "target": "Ev6",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "In late 1774, 12 of the Thirteen Colonies sent delegates to the First Continental Congress, which met inside Carpenters' Hall in Philadelphia; the Province of Georgia joined in 1775.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Evid_Ev7_occ_confirms",
+      "type": "confirms_occurrence",
+      "source": "Evid_Ev7_occ",
+      "target": "Ev7",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "The revolution culminated in the American Revolutionary War, which was launched on April 19, 1775, in the Battles of Lexington and Concord.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Evid_Ev8_occ_confirms",
+      "type": "confirms_occurrence",
+      "source": "Evid_Ev8_occ",
+      "target": "Ev8",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "on July 4, 1776, they unanimously adopted the Declaration of Independence, authored primarily by Thomas Jefferson, which embodied the political philosophies of liberalism and republicanism, rejected monarchy and aristocracy, and famously proclaimed that 'all men are created equal'.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Evid_Ev9_occ_confirms",
+      "type": "confirms_occurrence",
+      "source": "Evid_Ev9_occ",
+      "target": "Ev9",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "But in 1781, a decisive victory by Washington and the Continental Army in the Siege of Yorktown inspired King George III and the British to negotiate an end to colonial rule in the colonies and acknowledge their independence.",
+        "target_type": "event_occurrence"
+      }
+    },
+    {
+      "id": "Evid_Ev10_occ_confirms",
+      "type": "confirms_occurrence",
+      "source": "Evid_Ev10_occ",
+      "target": "Ev10",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 1.0,
+        "source_text_quote": "On September 3, 1783, the British signed the Treaty of Paris, granting their former colonies nearly all the territory east of the Mississippi River and south of the Great Lakes.",
+        "target_type": "event_occurrence"
+      }
+    }
+  ]
+}

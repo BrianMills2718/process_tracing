@@ -386,8 +386,8 @@ class ConnectionInferenceEngine:
         
         return {
             'id': edge_id,
-            'source': source_id,
-            'target': target_id,
+            'source_id': source_id,
+            'target_id': target_id,
             'type': edge_type,
             'properties': {
                 'reasoning': reasoning,
@@ -753,8 +753,8 @@ TASK: Based on the original text, identify missing relationships that should con
                 # Convert to expected format
                 validated_edge = {
                     'id': f"llm_repair_{source_id}_{target_id}_{edge_type}",
-                    'source': source_id,
-                    'target': target_id,
+                    'source_id': source_id,
+                    'target_id': target_id,
                     'type': edge_type,
                     'properties': edge.get('properties', {})
                 }

@@ -1,0 +1,147 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250521_105313_graph.json",
+  "case_identifier": "revolutions_20250521_105313_graph",
+  "generated_at": "2025-05-21T10:53:57.940473",
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "H_NA",
+      "description": "Not Applicable (no global hypothesis specified for this run)",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_TaxesForCosts",
+      "description": "Grenville believed colonies should help pay troop costs",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_ParliamentAuthority",
+      "description": "Parliament believed it was entitled to levy any tax without colonial approval",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_VirtualRepresentation",
+      "description": "Parliament argued colonists had 'virtual representation'",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_NoVirtualRepresentation",
+      "description": "Americans like James Otis maintained no one in Parliament was responsible to a colonial constituency",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_FranklinArgument",
+      "description": "Franklin argued further taxes after war contributions were unjust and might cause rebellion",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_TownshendGoal",
+      "description": "Parliament's goal with Townshend Acts was to assert authority, not primarily collect revenue",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_AmericansOnlyObjectInternalTaxes",
+      "description": "New taxes enacted on belief Americans only objected to internal taxes",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_DickinsonArgumentTownshend",
+      "description": "Dickinson argued Townshend Acts were unconstitutional because purpose was revenue, not trade regulation",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_HutchinsonBeliefs",
+      "description": "Hutchinson claimed colonists could not enjoy all English liberties and called for direct payment of officials",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_SystematicPlot",
+      "description": "Letters' contents used as evidence of a systematic plot against American rights",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_TeaActOppositionReasons",
+      "description": "Tea Act opposed by those resisting taxes and smugglers losing business",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_SelfGoverningBeforeRevolution",
+      "description": "Americans had become almost completely self-governing before the American Revolution (Middlekauff)",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    },
+    {
+      "hypothesis_id": "H_WhyBritishGarrison",
+      "description": "Garrison allowed officers to remain on pay, provided defense, prevented conflict with Natives, helped collect duties",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": []
+    }
+  ]
+}

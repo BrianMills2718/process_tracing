@@ -1,0 +1,199 @@
+{
+  "nodes": [
+    {
+      "id": "event_tea_act",
+      "type": "Event",
+      "properties": {
+        "description": "The Tea Act was a legislative measure that specifically granted the British East India Company an extensive and commercially advantageous monopoly on all tea sales directly within the American colonies, fundamentally altering existing trade practices.",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "event_boston_tea_party",
+      "type": "Event",
+      "properties": {
+        "description": "The Boston Tea Party was a significant act of colonial rebellion that transpired in December 1773, orchestrated by American colonists, prominently led by Samuel Adams, who defiantly disposed of British tea into Boston Harbor.",
+        "type": "outcome",
+        "date": "December 1773"
+      }
+    },
+    {
+      "id": "hypothesis_tea_act_causes_btp",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "This hypothesis asserts that the specific economic policy implemented through the Tea Act, which conferred a monopoly on the British East India Company, directly and causally triggered the act of rebellion known as the Boston Tea Party.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "hypothesis_taxation_mechanism",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "This hypothesis posits that the core causal mechanism driving the rebellion against the Tea Act was the act's perceived violation of deeply held colonial principles of self-governance, specifically through the imposition of taxation without direct representation in the British Parliament.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "mechanism_violation_of_principles",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "The foundational mechanism explaining colonial rebellion, asserting that the Tea Act directly infringed upon the colonists' fundamental rights to self-governance by imposing taxes and economic control without their consent or direct representation in the British Parliament."
+      }
+    },
+    {
+      "id": "mechanism_economic_pressure",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "A specific operational pathway within the broader mechanism, describing how the Tea Act's monopoly directly created financial hardship and competitive disadvantage for local colonial merchants, thereby fueling their opposition."
+      }
+    },
+    {
+      "id": "mechanism_political_mobilization",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Another key operational pathway, detailing how organized groups like the Sons of Liberty actively rallied colonial sentiment, coordinated protests, and facilitated direct actions, amplifying resistance against the Tea Act's provisions."
+      }
+    },
+    {
+      "id": "evidence_colonial_pamphlets",
+      "type": "Evidence",
+      "properties": {
+        "description": "Various written materials and publications circulated among the colonists, articulating strong intellectual and political arguments specifically protesting the concept of 'taxation without representation' and similar constitutional grievances."
+      }
+    },
+    {
+      "id": "evidence_widespread_support",
+      "type": "Evidence",
+      "properties": {
+        "description": "The broad and significant backing shown by the colonial population across different regions for the actions taken during the Boston Tea Party, indicating a shared understanding and endorsement of the underlying grievances and the rebellious act itself."
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_tea_act_causes_btp",
+      "type": "causes",
+      "source": "event_tea_act",
+      "target": "event_boston_tea_party",
+      "properties": {
+        "source_text_quote": "This act of rebellion was caused by the Tea Act, which gave the British East India Company a monopoly on tea sales in the American colonies.",
+        "target_type": "event_occurrence",
+        "probative_value": 0.8,
+        "reasoning": "The text explicitly states this causal link directly after describing the Boston Tea Party."
+      }
+    },
+    {
+      "id": "edge_event_to_hypothesis_1",
+      "type": "provides_evidence_for",
+      "source": "event_boston_tea_party",
+      "target": "hypothesis_tea_act_causes_btp",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.3,
+        "source_text_quote": "The Boston Tea Party occurred when American colonists, led by Samuel Adams, dumped British tea into Boston Harbor in December 1773.",
+        "target_type": "causal_relationship",
+        "reasoning": "The occurrence of the effect (Boston Tea Party) is a weak indicator that its stated cause (Tea Act) was indeed a cause, but it doesn't confirm the specific mechanism."
+      }
+    },
+    {
+      "id": "edge_mechanism_explains_hypothesis",
+      "type": "explains_mechanism",
+      "source": "mechanism_violation_of_principles",
+      "target": "hypothesis_tea_act_causes_btp",
+      "properties": {
+        "source_text_quote": "The causal mechanism behind this rebellion was that the Tea Act violated colonial principles of self-governance by imposing taxation without representation in Parliament.",
+        "target_type": "causal_relationship",
+        "probative_value": 0.9,
+        "reasoning": "The text directly states this mechanism is 'behind this rebellion,' thereby explaining the causal link."
+      }
+    },
+    {
+      "id": "edge_mechanism_defines_hypothesis",
+      "type": "supports",
+      "source": "mechanism_violation_of_principles",
+      "target": "hypothesis_taxation_mechanism",
+      "properties": {
+        "source_text_quote": "The causal mechanism behind this rebellion was that the Tea Act violated colonial principles of self-governance by imposing taxation without representation in Parliament.",
+        "target_type": "mechanism_operation",
+        "probative_value": 1.0,
+        "reasoning": "The hypothesis is a rephrasing of the described mechanism, making the mechanism's existence direct support for the hypothesis."
+      }
+    },
+    {
+      "id": "edge_mechanism_part_economic",
+      "type": "part_of_mechanism",
+      "source": "mechanism_economic_pressure",
+      "target": "mechanism_violation_of_principles",
+      "properties": {
+        "source_text_quote": "This mechanism operated through economic pressure on local merchants...",
+        "target_type": "mechanism_operation",
+        "probative_value": 0.9,
+        "reasoning": "The text explicitly states this was how the broader mechanism 'operated'."
+      }
+    },
+    {
+      "id": "edge_mechanism_part_political",
+      "type": "part_of_mechanism",
+      "source": "mechanism_political_mobilization",
+      "target": "mechanism_violation_of_principles",
+      "properties": {
+        "source_text_quote": "...and political mobilization by groups like the Sons of Liberty.",
+        "target_type": "mechanism_operation",
+        "probative_value": 0.9,
+        "reasoning": "The text explicitly states this was how the broader mechanism 'operated'."
+      }
+    },
+    {
+      "id": "edge_evidence_pamphlets_supports_mechanism_hypothesis",
+      "type": "supports",
+      "source": "evidence_colonial_pamphlets",
+      "target": "hypothesis_taxation_mechanism",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.7,
+        "source_text_quote": "Evidence supporting this mechanism includes the colonial pamphlets arguing against taxation without representation, which provided a hoop test for the constitutional principle mechanism.",
+        "target_type": "mechanism_operation",
+        "reasoning": "The pamphlets establish the existence of the constitutional principle among colonists, which is necessary for the mechanism to operate as described."
+      }
+    },
+    {
+      "id": "edge_evidence_pamphlets_tests_mechanism",
+      "type": "tests_mechanism",
+      "source": "evidence_colonial_pamphlets",
+      "target": "mechanism_violation_of_principles",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.7,
+        "source_text_quote": "Evidence supporting this mechanism includes the colonial pamphlets arguing against taxation without representation, which provided a hoop test for the constitutional principle mechanism.",
+        "target_type": "mechanism_operation",
+        "reasoning": "The existence of these pamphlets is a prerequisite (hoop test) for the mechanism of 'violation of principles' to be considered plausible."
+      }
+    },
+    {
+      "id": "edge_evidence_widespread_supports_mechanism_hypothesis",
+      "type": "supports",
+      "source": "evidence_widespread_support",
+      "target": "hypothesis_taxation_mechanism",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "The widespread colonial support for the Boston Tea Party provided smoking gun evidence that the mechanism was operating effectively across multiple colonies.",
+        "target_type": "mechanism_operation",
+        "reasoning": "The widespread support is presented as strong, definitive proof that the underlying causal mechanism (taxation without representation leading to rebellion) was indeed active and impactful."
+      }
+    },
+    {
+      "id": "edge_evidence_widespread_tests_mechanism",
+      "type": "tests_mechanism",
+      "source": "evidence_widespread_support",
+      "target": "mechanism_violation_of_principles",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "The widespread colonial support for the Boston Tea Party provided smoking gun evidence that the mechanism was operating effectively across multiple colonies.",
+        "target_type": "mechanism_operation",
+        "reasoning": "Widespread support confirms that the stated mechanism of violation of principles was effective enough to mobilize broad colonial action."
+      }
+    }
+  ]
+}

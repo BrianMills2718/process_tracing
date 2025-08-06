@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (revolutions)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'E1', label: 'Event', title: `{
+  "description": "Defeat of France in the French and Indian War",
+  "type": "triggering"
+}`},
+        {id: 'E2', label: 'Event', title: `{
+  "description": "British imposition of new taxes and control of western lands",
+  "type": "intermediate"
+}`},
+        {id: 'E3', label: 'Event', title: `{
+  "description": "Convening of the Stamp Act Congress and Declaration of Rights and Grievances",
+  "type": "intermediate"
+}`},
+        {id: 'E4', label: 'Event', title: `{
+  "description": "Passage of the Townshend Acts",
+  "type": "intermediate"
+}`},
+        {id: 'E5', label: 'Event', title: `{
+  "description": "Deployment of British troops to Boston and the Boston Massacre",
+  "type": "intermediate"
+}`},
+        {id: 'E6', label: 'Event', title: `{
+  "description": "Destruction of the Gaspee schooner",
+  "type": "intermediate"
+}`},
+        {id: 'E7', label: 'Event', title: `{
+  "description": "Boston Tea Party",
+  "type": "intermediate"
+}`},
+        {id: 'E8', label: 'Event', title: `{
+  "description": "British response to the Boston Tea Party",
+  "type": "intermediate"
+}`},
+        {id: 'E9', label: 'Event', title: `{
+  "description": "First Continental Congress",
+  "type": "intermediate"
+}`},
+        {id: 'E10', label: 'Event', title: `{
+  "description": "Coordination of Patriot resistance",
+  "type": "intermediate"
+}`},
+        {id: 'E11', label: 'Event', title: `{
+  "description": "Battles of Lexington and Concord and British withdrawal from Boston",
+  "type": "intermediate"
+}`},
+        {id: 'E12', label: 'Event', title: `{
+  "description": "King George III's declaration of rebellion in Massachusetts",
+  "type": "intermediate"
+}`},
+        {id: 'E13', label: 'Event', title: `{
+  "description": "Second Continental Congress's deliberation on the Articles of Confederation",
+  "type": "intermediate"
+}`},
+        {id: 'E14', label: 'Event', title: `{
+  "description": "Passage of the Lee Resolution and adoption of the Declaration of Independence",
+  "type": "intermediate"
+}`},
+        {id: 'E15', label: 'Event', title: `{
+  "description": "Start of the Revolutionary War and French involvement",
+  "type": "intermediate"
+}`},
+        {id: 'E16', label: 'Event', title: `{
+  "description": "Siege of Yorktown",
+  "type": "intermediate"
+}`},
+        {id: 'E17', label: 'Event', title: `{
+  "description": "Signing of the Treaty of Paris",
+  "type": "intermediate"
+}`},
+        {id: 'E18', label: 'Event', title: `{
+  "description": "Establishment of the United States",
+  "type": "outcome"
+}`},
+        {id: 'E19', label: 'Event', title: `{
+  "description": "The United States became the first constitutional republic in world history founded on the consent of the governed and the rule of law",
+  "type": "outcome"
+}`},
+        {id: 'E20', label: 'Event', title: `{
+  "description": "Colonists' accustomed self-governance",
+  "type": "intermediate"
+}`},
+        {id: 'E21', label: 'Event', title: `{
+  "description": "British policy change after French and Indian War",
+  "type": "intermediate"
+}`},
+        {id: 'E22', label: 'Event', title: `{
+  "description": "Colonists' desire for greater autonomy",
+  "type": "intermediate"
+}`},
+        {id: 'E23', label: 'Event', title: `{
+  "description": "Patriots' armed resistance",
+  "type": "intermediate"
+}`},
+        {id: 'E24', label: 'Event', title: `{
+  "description": "Salutary Neglect",
+  "type": "intermediate"
+}`},
+        {id: 'E25', label: 'Event', title: `{
+  "description": "End of French and Indian War",
+  "type": "intermediate"
+}`},
+        {id: 'E26', label: 'Event', title: `{
+  "description": "Capt. Levi Preston's statement on self-governance",
+  "type": "intermediate"
+}`},
+        {id: 'CM1', label: 'Causal_Mechanism', title: `{
+  "confidence": 0.9,
+  "description": "Emergence of American Revolutionary sentiment",
+  "level_of_detail": "high"
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'E1', to: 'E2', label: 'causes', title: `{
+  "source_text_quote": "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War in 1763.",
+  "type": "direct"
+}`},
+        {from: 'E2', to: 'E3', label: 'causes', title: `{
+  "source_text_quote": "Even though the colonies had fought in and supported the war, British Parliament imposed new taxes to compensate for wartime costs and turned control of the colonies' western lands over to the British officials in Montreal.",
+  "type": "direct"
+}`},
+        {from: 'E3', to: 'E4', label: 'causes', title: `{
+  "source_text_quote": "Representatives from several colonies convened the Stamp Act Congress in 1765; its \"Declaration of Rights and Grievances\" argued that taxation without representation violated their rights as Englishmen.",
+  "type": "direct"
+}`},
+        {from: 'E4', to: 'E5', label: 'causes', title: `{
+  "source_text_quote": "In 1767, tensions flared again following British Parliament's passage of the Townshend Acts.",
+  "type": "direct"
+}`},
+        {from: 'E5', to: 'E6', label: 'causes', title: `{
+  "source_text_quote": "In an effort to quell the mounting rebellion, King George III deployed British troops to Boston, where British troops killed protesters in the Boston Massacre on March 5, 1770.",
+  "type": "direct"
+}`},
+        {from: 'E6', to: 'E7', label: 'causes', title: `{
+  "source_text_quote": "In 1772, anti-tax demonstrators destroyed the Royal Navy customs schooner Gaspee off present-day Warwick, Rhode Island.",
+  "type": "direct"
+}`},
+        {from: 'E7', to: 'E8', label: 'causes', title: `{
+  "source_text_quote": "On December 16, 1773, in a seminal event in the American Revolution's escalation, Sons of Liberty activists wearing costumes of Native Americans instigated the Boston Tea Party, during which they boarded and dumped chests of tea owned by the British East India Company into Boston Harbor.",
+  "type": "direct"
+}`},
+        {from: 'E8', to: 'E9', label: 'causes', title: `{
+  "source_text_quote": "London responded by closing Boston Harbor and enacting a series of punitive laws, which effectively ended self-government in Massachusetts but also served to expand and intensify the revolutionary cause.",
+  "type": "direct"
+}`},
+        {from: 'E9', to: 'E10', label: 'causes', title: `{
+  "source_text_quote": "In late 1774, 12 of the Thirteen Colonies sent delegates to the First Continental Congress, which met inside Carpenters' Hall in Philadelphia; the Province of Georgia joined in 1775.",
+  "type": "direct"
+}`},
+        {from: 'E10', to: 'E11', label: 'causes', title: `{
+  "source_text_quote": "The First Continental Congress began coordinating Patriot resistance through underground networks of committees.",
+  "type": "direct"
+}`},
+        {from: 'E11', to: 'E12', label: 'causes', title: `{
+  "source_text_quote": "Following the Battles of Lexington and Concord, Washington and the Continental Army responded by surrounding Boston, forcing the British to withdraw by sea in March 1776, and leaving Patriots in control in every colony.",
+  "type": "direct"
+}`},
+        {from: 'E12', to: 'E13', label: 'causes', title: `{
+  "source_text_quote": "In August 1775, King George III proclaimed Massachusetts to be in a state of open defiance and rebellion.",
+  "type": "direct"
+}`},
+        {from: 'E13', to: 'E14', label: 'causes', title: `{
+  "source_text_quote": "In 1776, the Second Continental Congress began debating and deliberating on the Articles of Confederation, an effort to establish a self-governing rule of law in the Thirteen Colonies.",
+  "type": "direct"
+}`},
+        {from: 'E14', to: 'E15', label: 'causes', title: `{
+  "source_text_quote": "On July 2, they passed the Lee Resolution, affirming their support for national independence, and on July 4, 1776, they unanimously adopted the Declaration of Independence, which embodied the political philosophies of liberalism and republicanism, rejected monarchy and aristocracy, and famously proclaimed that \"all men are created equal\".",
+  "type": "direct"
+}`},
+        {from: 'E15', to: 'E16', label: 'causes', title: `{
+  "source_text_quote": "The Revolutionary War continued for another five years during which France ultimately entered the war, supporting the colonial cause of independence.",
+  "type": "direct"
+}`},
+        {from: 'E16', to: 'E17', label: 'causes', title: `{
+  "source_text_quote": "On September 28, 1781, Washington, with support from Marquis de Lafayette, the French Army, and French Navy, led the Continental Army's most decisive victory, capturing roughly 7,500 British troops led by British general Charles Cornwallis during the Siege of Yorktown, leading to the collapse of King George's control of Parliament and consensus in Parliament that the war should be ended on American terms.",
+  "type": "direct"
+}`},
+        {from: 'E17', to: 'E18', label: 'causes', title: `{
+  "source_text_quote": "On September 3, 1783, the British signed the Treaty of Paris, granting their former colonies nearly all the territory east of the Mississippi River and south of the Great Lakes.",
+  "type": "direct"
+}`},
+        {from: 'E18', to: 'E19', label: 'causes', title: `{
+  "source_text_quote": "With its victory in the American Revolution, the United States became the first constitutional republic in world history founded on the consent of the governed and the rule of law.",
+  "type": "direct"
+}`},
+        {from: 'CM1', to: 'E20', label: 'part_of_mechanism', title: `{}`},
+        {from: 'CM1', to: 'E21', label: 'part_of_mechanism', title: `{}`},
+        {from: 'CM1', to: 'E22', label: 'part_of_mechanism', title: `{}`},
+        {from: 'CM1', to: 'E23', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E24', to: 'CM1', label: 'causes', title: `{
+  "source_text_quote": "The colonists became accustomed to running their own affairs, and they liked it.",
+  "type": "direct"
+}`},
+        {from: 'E25', to: 'CM1', label: 'causes', title: `{
+  "source_text_quote": "This British policy changed significantly after the French and Indian War, prompting the Thirteen Colonies to seek greater autonomy from Britain.",
+  "type": "direct"
+}`},
+        {from: 'E26', to: 'CM1', label: 'provides_evidence', title: `{
+  "source_text_quote": "After the Revolution, one colonist, Capt. Levi Preston, of Danvers, Massachusetts, was asked why the Americans rebelled against England, responded, \".\\u2026we always had governed ourselves, and we always meant to. They didn\u2019t mean we should.\"[1]",
+  "type": "direct"
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250804_064742_graph.json",
+  "case_identifier": "revolutions_20250804_064742_graph",
+  "generated_at": "2025-08-04T06:48:28.106094",
+  "causal_chains": [
+    {
+      "path": [
+        "event_1763_french_indian_war_end",
+        "event_1765_stamp_act",
+        "event_1765_1773_escalating_colonial_resistance",
+        "event_1774_intolerable_acts",
+        "event_1774_first_continental_congress",
+        "event_1775_lexington_concord",
+        "event_1776_declaration_independence",
+        "event_1781_1783_yorktown_paris_treaty"
+      ],
+      "path_descriptions": [
+        "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War in 1763. Even though the colonies had fought in and supported the war, British Parliament imposed new taxes to compensate for wartime costs and turned control of the colonies' western lands over to the British officials in Montreal.",
+        "Parliament passed the Stamp Act in March 1765, which imposed direct taxes on the colonies for the first time. All official documents, newspapers, almanacs, and pamphlets were required to have the stamps?even decks of playing cards.",
+        "Following the Stamp Act, colonial groups like the Sons of Liberty organized public demonstrations, boycotts, and violence, leading to the Stamp Act's repeal but followed by new duties in the Townshend Acts, and later culminating in seminal events like the Boston Massacre and the Boston Tea Party.",
+        "The British government responded to the Boston Tea Party by passing four punitive laws known as the Intolerable Acts, which closed Boston Harbor, restricted town meetings, altered Massachusetts' charter, and allowed trials of British soldiers in Britain, further fueling colonial outrage.",
+        "In September 1774, representatives from 12 colonies formed the First Continental Congress, initiating a unified colonial response by coordinating Patriot resistance through committees, calling for boycotts of British goods, and organizing militias.",
+        "The American Revolutionary War was launched on April 19, 1775, in the Battles of Lexington and Concord, marking the commencement of open armed conflict between British forces and American Patriots and escalating the political movement into military confrontation.",
+        "On July 4, 1776, the Second Continental Congress unanimously adopted the Declaration of Independence, primarily authored by Thomas Jefferson, which formally proclaimed American national independence and articulated foundational political philosophies of liberalism and republicanism.",
+        "The Continental Army achieved a decisive victory at the Siege of Yorktown in 1781, leading King George III and the British to negotiate an end to colonial rule, which was formally codified in the Treaty of Paris in 1783, establishing the sovereign United States of America."
+      ],
+      "edge_types": [
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes"
+      ],
+      "trigger": "event_1763_french_indian_war_end",
+      "outcome": "event_1781_1783_yorktown_paris_treaty",
+      "length": 8
+    },
+    {
+      "path": [
+        "event_1765_stamp_act",
+        "event_1765_1773_escalating_colonial_resistance",
+        "event_1774_intolerable_acts",
+        "event_1774_first_continental_congress",
+        "event_1775_lexington_concord",
+        "event_1776_declaration_independence",
+        "event_1781_1783_yorktown_paris_treaty"
+      ],
+      "path_descriptions": [
+        "Parliament passed the Stamp Act in March 1765, which imposed direct taxes on the colonies for the first time. All official documents, newspapers, almanacs, and pamphlets were required to have the stamps?even decks of playing cards.",
+        "Following the Stamp Act, colonial groups like the Sons of Liberty organized public demonstrations, boycotts, and violence, leading to the Stamp Act's repeal but followed by new duties in the Townshend Acts, and later culminating in seminal events like the Boston Massacre and the Boston Tea Party.",
+        "The British government responded to the Boston Tea Party by passing four punitive laws known as the Intolerable Acts, which closed Boston Harbor, restricted town meetings, altered Massachusetts' charter, and allowed trials of British soldiers in Britain, further fueling colonial outrage.",
+        "In September 1774, representatives from 12 colonies formed the First Continental Congress, initiating a unified colonial response by coordinating Patriot resistance through committees, calling for boycotts of British goods, and organizing militias.",
+        "The American Revolutionary War was launched on April 19, 1775, in the Battles of Lexington and Concord, marking the commencement of open armed conflict between British forces and American Patriots and escalating the political movement into military confrontation.",
+        "On July 4, 1776, the Second Continental Congress unanimously adopted the Declaration of Independence, primarily authored by Thomas Jefferson, which formally proclaimed American national independence and articulated foundational political philosophies of liberalism and republicanism.",
+        "The Continental Army achieved a decisive victory at the Siege of Yorktown in 1781, leading King George III and the British to negotiate an end to colonial rule, which was formally codified in the Treaty of Paris in 1783, establishing the sovereign United States of America."
+      ],
+      "edge_types": [
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes"
+      ],
+      "trigger": "event_1765_stamp_act",
+      "outcome": "event_1781_1783_yorktown_paris_treaty",
+      "length": 7
+    },
+    {
+      "path": [
+        "event_1775_lexington_concord",
+        "event_1776_declaration_independence",
+        "event_1781_1783_yorktown_paris_treaty"
+      ],
+      "path_descriptions": [
+        "The American Revolutionary War was launched on April 19, 1775, in the Battles of Lexington and Concord, marking the commencement of open armed conflict between British forces and American Patriots and escalating the political movement into military confrontation.",
+        "On July 4, 1776, the Second Continental Congress unanimously adopted the Declaration of Independence, primarily authored by Thomas Jefferson, which formally proclaimed American national independence and articulated foundational political philosophies of liberalism and republicanism.",
+        "The Continental Army achieved a decisive victory at the Siege of Yorktown in 1781, leading King George III and the British to negotiate an end to colonial rule, which was formally codified in the Treaty of Paris in 1783, establishing the sovereign United States of America."
+      ],
+      "edge_types": [
+        "causes",
+        "causes"
+      ],
+      "trigger": "event_1775_lexington_concord",
+      "outcome": "event_1781_1783_yorktown_paris_treaty",
+      "length": 3
+    }
+  ],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 8,
+      "Hypothesis": 5,
+      "Evidence": 10
+    },
+    "edge_type_distribution": {
+      "causes": 7,
+      "provides_evidence_for": 5,
+      "supports": 10
+    },
+    "density": 0.043478260869565216,
+    "avg_path_length": "N/A (disconnected graph)",
+    "connectivity_type": "disconnected",
+    "degree_centrality": {
+      "hypothesis_punitive_measures_escalated_sentiment": 0.136,
+      "hypothesis_no_taxation_without_representation": 0.109,
+      "event_1765_stamp_act": 0.064,
+      "event_1774_intolerable_acts": 0.064,
+      "event_1774_first_continental_congress": 0.064,
+      "event_1776_declaration_independence": 0.064,
+      "hypothesis_british_fiscal_policies_discontent": 0.055,
+      "hypothesis_self_governance_fostered_autonomy": 0.055,
+      "hypothesis_autonomy_to_independence_shift": 0.055,
+      "event_1765_1773_escalating_colonial_resistance": 0.045
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hypothesis_british_fiscal_policies_discontent",
+      "description": "The British Parliament's decision to impose new taxes on the colonies and assert control over western lands after the French and Indian War directly caused widespread colonial discontent because these policies were perceived as unjust burdens and infringements on established colonial autonomy.",
+      "assessment": "Supported (Strong Evidence)",
+      "balance_score": 0.9,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_post_war_tax_land"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis_self_governance_fostered_autonomy",
+      "description": "The long-standing British policy of salutary neglect, which allowed the Thirteen Colonies significant self-governance, cultivated a deeply ingrained expectation of autonomy among colonists, making them highly resistant to any subsequent attempts by Britain to impose direct control.",
+      "assessment": "Strongly Supported (Multiple Strong Evidence)",
+      "balance_score": 1.7000000000000002,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_levi_preston_quote",
+        "evidence_salutary_neglect_impact"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis_no_taxation_without_representation",
+      "description": "The British Parliament's imposition of taxes without direct colonial representation, specifically highlighted by the Stamp Act, fundamentally violated the colonists' understanding of their rights as Englishmen, serving as the primary ideological catalyst for organized resistance and rebellion.",
+      "assessment": "Strongly Supported (Multiple Strong Evidence)",
+      "balance_score": 2.5,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 3,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_stamp_act_congress_grievances",
+        "evidence_tax_amount_vs_representation",
+        "evidence_radical_whig_ideology"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis_punitive_measures_escalated_sentiment",
+      "description": "British punitive responses to colonial protests, such as the deployment of troops to Boston and the enactment of the Intolerable Acts, inadvertently escalated revolutionary sentiment and unified the colonies by demonstrating Britain's willingness to suppress colonial liberties through force.",
+      "assessment": "Strongly Supported (Multiple Strong Evidence)",
+      "balance_score": 2.7,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 3,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_intolerable_acts_impact",
+        "evidence_first_continental_congress_formation",
+        "evidence_boston_massacre_sentiment_shift"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis_autonomy_to_independence_shift",
+      "description": "Colonial separatist leaders, initially seeking incremental autonomy, were driven to embrace the cause of full independence as a necessary outcome due to the British government's escalating impositions and refusal to acknowledge colonial grievances.",
+      "assessment": "Supported (Strong Evidence)",
+      "balance_score": 0.95,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_declaration_independence_adoption"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

@@ -1,0 +1,538 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (revolutions)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'node_E1', label: 'Event', title: `{
+  "description": "French and Indian War ends",
+  "timestamp": "1763",
+  "type": "triggering"
+}`},
+        {id: 'node_E2', label: 'Event', title: `{
+  "description": "British Parliament imposes new taxes (e.g., Sugar Act)",
+  "timestamp": "1764",
+  "type": "triggering"
+}`},
+        {id: 'node_E3', label: 'Event', title: `{
+  "description": "Control of colonies' western lands turned over to British officials in Montreal (Royal Proclamation of 1763)",
+  "timestamp": "1763",
+  "type": "triggering"
+}`},
+        {id: 'node_E4', label: 'Event', title: `{
+  "description": "Stamp Act Congress convenes in New York City",
+  "timestamp": "1765",
+  "location": "New York City",
+  "type": "intermediate"
+}`},
+        {id: 'node_E5', label: 'Event', title: `{
+  "description": "Declaration of Rights and Grievances adopted by Stamp Act Congress",
+  "timestamp": "1765",
+  "type": "intermediate"
+}`},
+        {id: 'node_E6', label: 'Event', title: `{
+  "description": "British Parliament passes Townshend Acts",
+  "timestamp": "1767",
+  "type": "triggering"
+}`},
+        {id: 'node_E7', label: 'Event', title: `{
+  "description": "British troops deployed to Boston",
+  "type": "intermediate"
+}`},
+        {id: 'node_E8', label: 'Event', title: `{
+  "description": "Boston Massacre",
+  "timestamp": "1770-03-05",
+  "location": "Boston",
+  "type": "intermediate"
+}`},
+        {id: 'node_E9', label: 'Event', title: `{
+  "description": "Gaspee Affair",
+  "timestamp": "1772-06-09",
+  "location": "Narragansett Bay",
+  "type": "intermediate"
+}`},
+        {id: 'node_E10', label: 'Event', title: `{
+  "description": "Boston Tea Party",
+  "timestamp": "1773-12-16",
+  "location": "Boston Harbor",
+  "type": "intermediate"
+}`},
+        {id: 'node_E11', label: 'Event', title: `{
+  "description": "London closes Boston Harbor",
+  "type": "intermediate"
+}`},
+        {id: 'node_E12', label: 'Event', title: `{
+  "description": "Parliament enacts punitive laws (Intolerable Acts)",
+  "type": "intermediate"
+}`},
+        {id: 'node_E13', label: 'Event', title: `{
+  "description": "First Continental Congress convenes",
+  "timestamp": "1774",
+  "location": "Philadelphia",
+  "type": "intermediate"
+}`},
+        {id: 'node_E14', label: 'Event', title: `{
+  "description": "Patriot resistance coordinated through underground networks (Committees of Correspondence)",
+  "type": "intermediate"
+}`},
+        {id: 'node_E15', label: 'Event', title: `{
+  "description": "Battles of Lexington and Concord",
+  "timestamp": "1775-04-19",
+  "type": "triggering"
+}`},
+        {id: 'node_E16', label: 'Event', title: `{
+  "description": "Continental Army surrounds Boston",
+  "timestamp": "1775",
+  "location": "Boston",
+  "type": "intermediate"
+}`},
+        {id: 'node_E17', label: 'Event', title: `{
+  "description": "British withdraw from Boston by sea",
+  "timestamp": "1776-03",
+  "location": "Boston",
+  "type": "intermediate"
+}`},
+        {id: 'node_E18', label: 'Event', title: `{
+  "description": "Patriots gain control in every colony",
+  "timestamp": "1776-03",
+  "type": "intermediate"
+}`},
+        {id: 'node_E19', label: 'Event', title: `{
+  "description": "King George III proclaims Massachusetts in state of open defiance and rebellion",
+  "timestamp": "1775-08",
+  "type": "intermediate"
+}`},
+        {id: 'node_E20', label: 'Event', title: `{
+  "description": "Second Continental Congress convenes",
+  "timestamp": "1775",
+  "location": "Philadelphia",
+  "type": "intermediate"
+}`},
+        {id: 'node_E21', label: 'Event', title: `{
+  "description": "Continental Army formed",
+  "timestamp": "1775-06",
+  "type": "intermediate"
+}`},
+        {id: 'node_E22', label: 'Event', title: `{
+  "description": "George Washington appointed Commander-in-Chief",
+  "timestamp": "1775-06",
+  "type": "intermediate"
+}`},
+        {id: 'node_E23', label: 'Event', title: `{
+  "description": "Articles of Confederation debated",
+  "timestamp": "1776",
+  "type": "intermediate"
+}`},
+        {id: 'node_E24', label: 'Event', title: `{
+  "description": "Lee Resolution passed (affirming support for independence)",
+  "timestamp": "1776-07-02",
+  "type": "intermediate"
+}`},
+        {id: 'node_E25', label: 'Event', title: `{
+  "description": "Declaration of Independence adopted",
+  "timestamp": "1776-07-04",
+  "type": "intermediate"
+}`},
+        {id: 'node_E26', label: 'Event', title: `{
+  "description": "Revolutionary War continues",
+  "timestamp": "1776-1781",
+  "type": "intermediate"
+}`},
+        {id: 'node_E27', label: 'Event', title: `{
+  "description": "France enters the war supporting the colonial cause",
+  "type": "intermediate"
+}`},
+        {id: 'node_E28', label: 'Event', title: `{
+  "description": "Siege of Yorktown (Continental Army victory)",
+  "timestamp": "1781-09-28",
+  "location": "Yorktown",
+  "type": "intermediate"
+}`},
+        {id: 'node_E29', label: 'Event', title: `{
+  "description": "British negotiate an end to colonial rule and acknowledge independence",
+  "type": "intermediate"
+}`},
+        {id: 'node_E30', label: 'Event', title: `{
+  "description": "Treaty of Paris signed",
+  "timestamp": "1783-09-03",
+  "type": "outcome"
+}`},
+        {id: 'node_E31', label: 'Event', title: `{
+  "description": "Establishment of the sovereign United States of America",
+  "timestamp": "1783",
+  "type": "outcome"
+}`},
+        {id: 'node_E32', label: 'Event', title: `{
+  "description": "Migration of Loyalists to other British territories",
+  "type": "outcome"
+}`},
+        {id: 'node_E33', label: 'Event', title: `{
+  "description": "United States becomes the first constitutional republic founded on consent of governed and rule of law",
+  "type": "outcome"
+}`},
+        {id: 'node_A1', label: 'Actor', title: `{
+  "name": "British Parliament",
+  "role": "Legislative body of Great Britain"
+}`},
+        {id: 'node_A2', label: 'Actor', title: `{
+  "name": "Colonial separatist leaders",
+  "role": "Leaders advocating for colonial rights and independence"
+}`},
+        {id: 'node_A3', label: 'Actor', title: `{
+  "name": "Second Continental Congress",
+  "role": "Governing body of the United Colonies/States"
+}`},
+        {id: 'node_A4', label: 'Actor', title: `{
+  "name": "George Washington",
+  "role": "Commander-in-Chief of the Continental Army"
+}`},
+        {id: 'node_A5', label: 'Actor', title: `{
+  "name": "Committee of Five",
+  "role": "Drafting committee for the Declaration of Independence"
+}`},
+        {id: 'node_A6', label: 'Actor', title: `{
+  "name": "King George III",
+  "role": "Monarch of Great Britain"
+}`},
+        {id: 'node_A7', label: 'Actor', title: `{
+  "name": "British East India Company",
+  "role": "British trading company"
+}`},
+        {id: 'node_A8', label: 'Actor', title: `{
+  "name": "Sons of Liberty",
+  "role": "Patriot political organization"
+}`},
+        {id: 'node_A9', label: 'Actor', title: `{
+  "name": "First Continental Congress",
+  "role": "Coordinating body for Patriot resistance"
+}`},
+        {id: 'node_A10', label: 'Actor', title: `{
+  "name": "Patriots",
+  "role": "Colonists supporting the revolution"
+}`},
+        {id: 'node_A11', label: 'Actor', title: `{
+  "name": "John Dickinson",
+  "role": "Pennsylvania politician, author of Letters from a Farmer"
+}`},
+        {id: 'node_A12', label: 'Actor', title: `{
+  "name": "Samuel Adams",
+  "role": "Patriot leader, organizer"
+}`},
+        {id: 'node_A13', label: 'Actor', title: `{
+  "name": "James Otis",
+  "role": "Massachusetts politician, lawyer"
+}`},
+        {id: 'node_A14', label: 'Actor', title: `{
+  "name": "John Hancock",
+  "role": "Massachusetts merchant, Patriot leader"
+}`},
+        {id: 'node_A15', label: 'Actor', title: `{
+  "name": "Thomas Paine",
+  "role": "Author, political activist"
+}`},
+        {id: 'node_A16', label: 'Actor', title: `{
+  "name": "Captain Levi Preston",
+  "role": "Colonist, quote source"
+}`},
+        {id: 'node_A17', label: 'Actor', title: `{
+  "name": "Thomas Jefferson",
+  "role": "Author of the Declaration of Independence"
+}`},
+        {id: 'node_A18', label: 'Actor', title: `{
+  "name": "Lord North",
+  "role": "British Prime Minister"
+}`},
+        {id: 'node_A19', label: 'Actor', title: `{
+  "name": "John Brown",
+  "role": "American patriot involved in Gaspee affair"
+}`},
+        {id: 'node_A20', label: 'Actor', title: `{
+  "name": "Thomas Hutchinson",
+  "role": "Governor of Massachusetts"
+}`},
+        {id: 'node_A21', label: 'Actor', title: `{
+  "name": "Andrew Oliver",
+  "role": "Lieutenant Governor of Massachusetts"
+}`},
+        {id: 'node_A22', label: 'Actor', title: `{
+  "name": "Benjamin Franklin",
+  "role": "Colonial representative, postmaster general"
+}`},
+        {id: 'node_A23', label: 'Actor', title: `{
+  "name": "Patrick Henry",
+  "role": "Virginia politician, Patriot leader"
+}`},
+        {id: 'node_A24', label: 'Actor', title: `{
+  "name": "Marquis de Lafayette",
+  "role": "French military officer supporting Continental Army"
+}`},
+        {id: 'node_A25', label: 'Actor', title: `{
+  "name": "French Army",
+  "role": "Military force supporting Continental Army"
+}`},
+        {id: 'node_A26', label: 'Actor', title: `{
+  "name": "French Navy",
+  "role": "Naval force supporting Continental Army"
+}`},
+        {id: 'node_A27', label: 'Actor', title: `{
+  "name": "Charles Cornwallis",
+  "role": "British General"
+}`},
+        {id: 'node_A28', label: 'Actor', title: `{
+  "name": "Loyalists",
+  "role": "Colonists supporting the British Crown"
+}`},
+        {id: 'node_C1', label: 'Condition', title: `{
+  "description": "British policy of salutary neglect",
+  "type": "background"
+}`},
+        {id: 'node_C2', label: 'Condition', title: `{
+  "description": "Colonists accustomed to running their own affairs (self-governance)",
+  "type": "background"
+}`},
+        {id: 'node_C3', label: 'Condition', title: `{
+  "description": "Development of a unique American identity separate from British identity",
+  "type": "background"
+}`},
+        {id: 'node_C4', label: 'Condition', title: `{
+  "description": "Unwritten British constitution guaranteeing rights",
+  "type": "background"
+}`},
+        {id: 'node_C5', label: 'Condition', title: `{
+  "description": "Perceived rights of Englishmen",
+  "type": "background"
+}`},
+        {id: 'node_C6', label: 'Condition', title: `{
+  "description": "Radical Whig ideology emphasizing liberty and opposing tyranny",
+  "type": "background"
+}`},
+        {id: 'node_C7', label: 'Condition', title: `{
+  "description": "British policy of mercantilism",
+  "type": "background"
+}`},
+        {id: 'node_C8', label: 'Condition', title: `{
+  "description": "Increased British national debt and need for revenue after French and Indian War",
+  "type": "enabling"
+}`},
+        {id: 'node_C9', label: 'Condition', title: `{
+  "description": "The principle/belief that 'taxation without representation violates rights'",
+  "type": "enabling"
+}`},
+        {id: 'node_C10', label: 'Condition', title: `{
+  "description": "Widespread adoption of the belief that 'taxation without representation violated rights'",
+  "type": "enabling"
+}`},
+        {id: 'node_C11', label: 'Condition', title: `{
+  "description": "Prevailing political philosophy of republicanism in the colonies",
+  "type": "background"
+}`},
+        {id: 'node_C12', label: 'Condition', title: `{
+  "description": "Stationing a standing army in Great Britain during peacetime was politically unacceptable",
+  "type": "constraining"
+}`},
+        {id: 'node_C14', label: 'Condition', title: `{
+  "description": "Existing colonial militias with military experience from the French and Indian War",
+  "type": "enabling"
+}`},
+        {id: 'node_CM1', label: 'Causal_Mechanism', title: `{
+  "description": "Inter-colonial communication and coordination network facilitated by Committees of Correspondence",
+  "confidence": 0.7,
+  "level_of_detail": "medium-high"
+}`},
+        {id: 'node_CM2', label: 'Causal_Mechanism', title: `{
+  "description": "Cycle of British taxation/repression eliciting colonial resistance and leading to escalation towards revolution",
+  "confidence": 0.8,
+  "level_of_detail": "medium"
+}`},
+        {id: 'node_H1', label: 'Hypothesis', title: `{
+  "description": "Americans only objected to internal taxes and not to external taxes such as custom duties",
+  "status": "refuted"
+}`},
+        {id: 'node_H2', label: 'Hypothesis', title: `{
+  "description": "The inter-colonial communication network fostered by the Committees of Correspondence was a primary mechanism driving colonial unity and organized resistance.",
+  "status": "supported"
+}`},
+        {id: 'node_EV1', label: 'Evidence', title: `{
+  "description": "Captain Levi Preston's quote on why Americans rebelled",
+  "type": "smoking_gun"
+}`},
+        {id: 'node_EV2', label: 'Evidence', title: `{
+  "description": "Declaration of Rights and Grievances adopted by Stamp Act Congress",
+  "type": "hoop"
+}`},
+        {id: 'node_EV3', label: 'Evidence', title: `{
+  "description": "Colonial boycotts of British goods (Stamp Act, Townshend Acts)",
+  "type": "general"
+}`},
+        {id: 'node_EV4', label: 'Evidence', title: `{
+  "description": "John Dickinson's argument in Letters from a Farmer in Pennsylvania",
+  "type": "smoking_gun"
+}`},
+        {id: 'node_EV5', label: 'Evidence', title: `{
+  "description": "Details of the Boston Massacre (killing of protesters)",
+  "type": "general"
+}`},
+        {id: 'node_EV6', label: 'Evidence', title: `{
+  "description": "Account of the Gaspee Affair (burning of British warship)",
+  "type": "general"
+}`},
+        {id: 'node_EV7', label: 'Evidence', title: `{
+  "description": "Details of the Boston Tea Party (destruction of tea cargo)",
+  "type": "smoking_gun"
+}`},
+        {id: 'node_EV8', label: 'Evidence', title: `{
+  "description": "Publication of Governor Hutchinson and Lt. Governor Oliver's private letters",
+  "type": "general"
+}`},
+        {id: 'node_EV9', label: 'Evidence', title: `{
+  "description": "Formation and existence of Committees of Correspondence linking colonies",
+  "type": "hoop"
+}`},
+        {id: 'node_EV10', label: 'Evidence', title: `{
+  "description": "Committees of Correspondence enforcing boycotts",
+  "type": "hoop"
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'node_C1', to: 'node_C2', label: 'enables', title: `{}`},
+        {from: 'node_C1', to: 'node_C3', label: 'enables', title: `{}`},
+        {from: 'node_C2', to: 'node_CM2', label: 'enables', title: `{}`},
+        {from: 'node_E1', to: 'node_C8', label: 'causes', title: `{}`},
+        {from: 'node_E1', to: 'node_E2', label: 'causes', title: `{}`},
+        {from: 'node_E1', to: 'node_E3', label: 'causes', title: `{}`},
+        {from: 'node_C8', to: 'node_E2', label: 'causes', title: `{}`},
+        {from: 'node_E2', to: 'node_E4', label: 'causes', title: `{}`},
+        {from: 'node_E4', to: 'node_E5', label: 'causes', title: `{}`},
+        {from: 'node_E5', to: 'node_C9', label: 'causes', title: `{}`},
+        {from: 'node_C9', to: 'node_C10', label: 'enables', title: `{}`},
+        {from: 'node_C10', to: 'node_CM1', label: 'enables', title: `{}`},
+        {from: 'node_C10', to: 'node_CM2', label: 'causes', title: `{}`},
+        {from: 'node_A1', to: 'node_E2', label: 'initiates', title: `{}`},
+        {from: 'node_A2', to: 'node_E4', label: 'initiates', title: `{}`},
+        {from: 'node_A1', to: 'node_E6', label: 'initiates', title: `{}`},
+        {from: 'node_E6', to: 'node_CM2', label: 'causes', title: `{}`},
+        {from: 'node_EV4', to: 'node_H1', label: 'refutes', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "argued against the constitutionality of the acts because their purpose was to raise revenue and not to regulate trade."
+}`},
+        {from: 'node_EV3', to: 'node_H1', label: 'refutes', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "Colonists responded to the taxes by organizing new boycotts of British goods."
+}`},
+        {from: 'node_C12', to: 'node_E7', label: 'enables', title: `{}`},
+        {from: 'node_A6', to: 'node_E7', label: 'initiates', title: `{}`},
+        {from: 'node_E7', to: 'node_E8', label: 'causes', title: `{}`},
+        {from: 'node_E8', to: 'node_CM2', label: 'causes', title: `{}`},
+        {from: 'node_A19', to: 'node_E9', label: 'initiates', title: `{}`},
+        {from: 'node_E9', to: 'node_CM2', label: 'causes', title: `{}`},
+        {from: 'node_E6', to: 'node_E10', label: 'causes', title: `{}`},
+        {from: 'node_A8', to: 'node_E10', label: 'initiates', title: `{}`},
+        {from: 'node_E10', to: 'node_E11', label: 'causes', title: `{}`},
+        {from: 'node_E11', to: 'node_E12', label: 'causes', title: `{}`},
+        {from: 'node_A1', to: 'node_E12', label: 'initiates', title: `{}`},
+        {from: 'node_E12', to: 'node_CM2', label: 'causes', title: `{}`},
+        {from: 'node_E12', to: 'node_E13', label: 'causes', title: `{}`},
+        {from: 'node_A2', to: 'node_E13', label: 'initiates', title: `{}`},
+        {from: 'node_E13', to: 'node_CM1', label: 'initiates', title: `{}`},
+        {from: 'node_CM1', to: 'node_E14', label: 'causes', title: `{}`},
+        {from: 'node_C14', to: 'node_E14', label: 'enables', title: `{}`},
+        {from: 'node_E14', to: 'node_E15', label: 'causes', title: `{}`},
+        {from: 'node_C14', to: 'node_E15', label: 'enables', title: `{}`},
+        {from: 'node_E15', to: 'node_E16', label: 'causes', title: `{}`},
+        {from: 'node_E16', to: 'node_E17', label: 'causes', title: `{}`},
+        {from: 'node_E17', to: 'node_E18', label: 'causes', title: `{}`},
+        {from: 'node_CM1', to: 'node_E18', label: 'causes', title: `{}`},
+        {from: 'node_E15', to: 'node_E19', label: 'causes', title: `{}`},
+        {from: 'node_A6', to: 'node_E19', label: 'initiates', title: `{}`},
+        {from: 'node_A2', to: 'node_E20', label: 'initiates', title: `{}`},
+        {from: 'node_A3', to: 'node_E21', label: 'initiates', title: `{}`},
+        {from: 'node_A3', to: 'node_E22', label: 'initiates', title: `{}`},
+        {from: 'node_A4', to: 'node_E22', label: 'initiates', title: `{}`},
+        {from: 'node_A3', to: 'node_E23', label: 'initiates', title: `{}`},
+        {from: 'node_A3', to: 'node_E24', label: 'initiates', title: `{}`},
+        {from: 'node_A3', to: 'node_E25', label: 'initiates', title: `{}`},
+        {from: 'node_A5', to: 'node_E25', label: 'initiates', title: `{}`},
+        {from: 'node_A17', to: 'node_E25', label: 'initiates', title: `{}`},
+        {from: 'node_E25', to: 'node_E26', label: 'causes', title: `{}`},
+        {from: 'node_E26', to: 'node_E27', label: 'enables', title: `{}`},
+        {from: 'node_E26', to: 'node_E28', label: 'causes', title: `{}`},
+        {from: 'node_A4', to: 'node_E28', label: 'initiates', title: `{}`},
+        {from: 'node_A24', to: 'node_E28', label: 'enables', title: `{}`},
+        {from: 'node_A25', to: 'node_E28', label: 'enables', title: `{}`},
+        {from: 'node_A26', to: 'node_E28', label: 'enables', title: `{}`},
+        {from: 'node_E28', to: 'node_E29', label: 'causes', title: `{}`},
+        {from: 'node_E29', to: 'node_E30', label: 'causes', title: `{}`},
+        {from: 'node_E30', to: 'node_E31', label: 'causes', title: `{}`},
+        {from: 'node_E31', to: 'node_E33', label: 'causes', title: `{}`},
+        {from: 'node_C11', to: 'node_E33', label: 'enables', title: `{}`},
+        {from: 'node_EV1', to: 'node_C2', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "source_text_quote": "...we always had governed ourselves, and we always meant to. They didn\u2019t mean we should."
+}`},
+        {from: 'node_EV1', to: 'node_CM2', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "...we always had governed ourselves, and we always meant to. They didn\u2019t mean we should."
+}`},
+        {from: 'node_EV2', to: 'node_C9', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "source_text_quote": "taxation without representation violated their rights as Englishmen."
+}`},
+        {from: 'node_EV3', to: 'node_CM2', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "organized a boycott on imports of all British merchandise."
+}`},
+        {from: 'node_EV5', to: 'node_CM2', label: 'supports', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "British troops killed protesters in the Boston Massacre"
+}`},
+        {from: 'node_EV6', to: 'node_CM2', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "American patriots... burned a British warship"
+}`},
+        {from: 'node_EV7', to: 'node_CM2', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "source_text_quote": "dumped \u00a310,000 worth of tea... into Boston Harbor"
+}`},
+        {from: 'node_E13', to: 'node_CM1', label: 'part_of_mechanism', title: `{
+  "role": "initiation"
+}`},
+        {from: 'node_E14', to: 'node_CM1', label: 'part_of_mechanism', title: `{
+  "role": "function"
+}`},
+        {from: 'node_EV9', to: 'node_CM1', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "source_text_quote": "set about creating new Committees of Correspondence, which linked Patriots in all 13 colonies"
+}`},
+        {from: 'node_EV10', to: 'node_CM1', label: 'supports', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "the colonial and local Committees took charge, examining merchant records and publishing the names of merchants who attempted to defy the boycott"
+}`},
+        {from: 'node_H2', to: 'node_CM1', label: 'explains_mechanism', title: `{
+  "type_of_claim": "operational_details"
+}`},
+        {from: 'node_E5', to: 'node_E13', label: 'causes', title: `{}`},
+        {from: 'node_E6', to: 'node_EV4', label: 'causes', title: `{}`},
+        {from: 'node_E6', to: 'node_EV3', label: 'causes', title: `{}`},
+        {from: 'node_EV10', to: 'node_CM2', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "Committees took charge... enforcing the boycott"
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

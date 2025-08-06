@@ -1,0 +1,1224 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (revolutions)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'ar_movement', label: 'Event', title: `{
+  "description": "The American Revolution (1765\u20131783) as an ideological and political movement",
+  "start_date": "1765",
+  "end_date": "1783",
+  "type": "unspecified",
+  "certainty": 1.0
+}`},
+        {id: 'ar_war_launched', label: 'Event', title: `{
+  "description": "American Revolutionary War launched in Battles of Lexington and Concord",
+  "date": "April 19, 1775",
+  "location": "Lexington and Concord",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'sc_congress_formed_army', label: 'Event', title: `{
+  "description": "Second Continental Congress formed the Continental Army and appointed George Washington commander-in-chief",
+  "date": "June 1775",
+  "location": "Philadelphia",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'decl_independence_adopted', label: 'Event', title: `{
+  "description": "Declaration of Independence unanimously adopted by Second Continental Congress",
+  "date": "July 4, 1776",
+  "location": "Philadelphia",
+  "type": "outcome",
+  "certainty": 1.0
+}`},
+        {id: 'yorktown_victory', label: 'Event', title: `{
+  "description": "Decisive victory by Washington and the Continental Army in the Siege of Yorktown",
+  "date": "September 28, 1781",
+  "location": "Yorktown",
+  "type": "outcome",
+  "certainty": 1.0
+}`},
+        {id: 'treaty_of_paris', label: 'Event', title: `{
+  "description": "Treaty of Paris signed, codifying US independence and granting territory",
+  "date": "September 3, 1783",
+  "type": "outcome",
+  "certainty": 1.0
+}`},
+        {id: 'usa_established', label: 'Event', title: `{
+  "description": "Establishment of the sovereign United States of America",
+  "date": "1783",
+  "type": "outcome",
+  "certainty": 1.0
+}`},
+        {id: 'discontent_post_fiw', label: 'Event', title: `{
+  "description": "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War",
+  "date": "1763",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'parliament_imposed_new_taxes', label: 'Event', title: `{
+  "description": "British Parliament imposed new taxes to compensate for wartime costs and turned control of western lands to British officials",
+  "date": "1763",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'stamp_act_congress_convened', label: 'Event', title: `{
+  "description": "Representatives from several colonies convened the Stamp Act Congress",
+  "date": "1765",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'declaration_rights_grievances_issued', label: 'Event', title: `{
+  "description": "Declaration of Rights and Grievances argued 'taxation without representation violated their rights'",
+  "date": "1765",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'townshend_acts_passed', label: 'Event', title: `{
+  "description": "British Parliament's passage of the Townshend Acts",
+  "date": "1767",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'troops_deployed_boston', label: 'Event', title: `{
+  "description": "King George III deployed British troops to Boston",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'boston_massacre', label: 'Event', title: `{
+  "description": "British troops killed protesters in the Boston Massacre",
+  "date": "March 5, 1770",
+  "location": "Boston",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'gaspee_destroyed', label: 'Event', title: `{
+  "description": "Anti-tax demonstrators destroyed the Royal Navy customs schooner Gaspee",
+  "date": "1772",
+  "location": "off Warwick, Rhode Island",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'boston_tea_party', label: 'Event', title: `{
+  "description": "Sons of Liberty activists instigated the Boston Tea Party",
+  "date": "December 16, 1773",
+  "location": "Boston Harbor",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'london_punitive_laws', label: 'Event', title: `{
+  "description": "London responded by closing Boston Harbor and enacting a series of punitive laws (Intolerable Acts)",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'first_continental_congress', label: 'Event', title: `{
+  "description": "First Continental Congress convened, coordinating Patriot resistance",
+  "date": "late 1774",
+  "location": "Philadelphia",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'patriots_control_colonies', label: 'Event', title: `{
+  "description": "Patriots in control in every colony after British withdrawal from Boston",
+  "date": "March 1776",
+  "type": "outcome",
+  "certainty": 1.0
+}`},
+        {id: 'king_george_proclaims_rebellion', label: 'Event', title: `{
+  "description": "King George III proclaimed Massachusetts to be in a state of open defiance and rebellion",
+  "date": "August 1775",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'lee_resolution_passed', label: 'Event', title: `{
+  "description": "Second Continental Congress passed the Lee Resolution, affirming support for national independence",
+  "date": "July 2, 1776",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'france_entered_war', label: 'Event', title: `{
+  "description": "France entered the Revolutionary War, supporting the colonial cause",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'colonial_self_governance_accustomed', label: 'Event', title: `{
+  "description": "Colonists became accustomed to running their own affairs under salutary neglect",
+  "type": "background",
+  "certainty": 1.0
+}`},
+        {id: 'english_civil_war', label: 'Event', title: `{
+  "description": "English Civil War (1642\u20131651) and its aftermath",
+  "start_date": "1642",
+  "end_date": "1651",
+  "type": "background",
+  "certainty": 1.0
+}`},
+        {id: 'king_philips_war', label: 'Event', title: `{
+  "description": "King Philip's War (1675\u20131678) fought without English military assistance",
+  "start_date": "1675",
+  "end_date": "1678",
+  "type": "background",
+  "certainty": 1.0
+}`},
+        {id: 'attempt_direct_english_control_ne', label: 'Event', title: `{
+  "description": "Charles II and James II attempted to bring New England under direct English control",
+  "date": "1680s",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'dominion_of_new_england_formed', label: 'Event', title: `{
+  "description": "Consolidation of New England colonies, New York, and New Jersey into Dominion of New England",
+  "date": "1686",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'glorious_revolution', label: 'Event', title: `{
+  "description": "English aristocracy removed James II from power in the Glorious Revolution",
+  "date": "1688",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'boston_revolt_1689', label: 'Event', title: `{
+  "description": "Boston revolt which overthrew Dominion rule",
+  "date": "1689",
+  "type": "outcome",
+  "certainty": 1.0
+}`},
+        {id: 'new_charters_granted', label: 'Event', title: `{
+  "description": "William and Mary granted new charters to individual New England colonies, restoring local democratic self-government",
+  "type": "outcome",
+  "certainty": 1.0
+}`},
+        {id: 'navigation_acts_passed', label: 'Event', title: `{
+  "description": "Parliament passed the first in a series of Navigation Acts, restricting colonial trade",
+  "date": "1651",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'molasses_act_1733', label: 'Event', title: `{
+  "description": "Molasses Act 1733 placed a duty on foreign molasses imported into the colonies",
+  "date": "1733",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'british_ceased_molasses_enforcement', label: 'Event', title: `{
+  "description": "British government ceased Molasses Act enforcement efforts",
+  "date": "after 1740s",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'french_indian_war', label: 'Event', title: `{
+  "description": "French and Indian War",
+  "start_date": "1754",
+  "end_date": "1763",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'bute_ministry_garrison_decision', label: 'Event', title: `{
+  "description": "Bute ministry decided to permanently garrison 10,000 soldiers in North America",
+  "date": "early 1763",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'pontiacs_war_launched', label: 'Event', title: `{
+  "description": "Native Americans launched Pontiac's War",
+  "start_date": "1763",
+  "end_date": "1766",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'royal_proclamation_1763', label: 'Event', title: `{
+  "description": "Grenville ministry issued the Royal Proclamation of 1763, designating Indian Reserve",
+  "date": "1763",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'sugar_act_1764', label: 'Event', title: `{
+  "description": "Parliament passed the Sugar Act, decreasing duties but stricter enforcement",
+  "date": "1764",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'grenville_proposed_direct_taxes', label: 'Event', title: `{
+  "description": "Grenville proposed direct taxes on the colonies to raise revenue",
+  "date": "1764",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'stamp_act_1765', label: 'Event', title: `{
+  "description": "Parliament passed the Stamp Act, imposing direct taxes for the first time",
+  "date": "March 1765",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'sol_formed_actions', label: 'Event', title: `{
+  "description": "Sons of Liberty formed and used public demonstrations, boycotts, and threats of violence",
+  "date": "1765",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'colonial_boycott_stamp_act', label: 'Event', title: `{
+  "description": "Boycott on imports of all British merchandise organized by Stamp Act Congress",
+  "date": "October 1765",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'stamp_act_repealed', label: 'Event', title: `{
+  "description": "Stamp Act repealed by Parliament",
+  "date": "February 21, 1766",
+  "type": "outcome",
+  "certainty": 1.0
+}`},
+        {id: 'declaratory_act_1766', label: 'Event', title: `{
+  "description": "Declaratory Act of March 1766, asserting Parliament's full power",
+  "date": "March 1766",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'mass_assembly_circular_letter', label: 'Event', title: `{
+  "description": "Assembly of Massachusetts Bay Colony issued a circular letter urging coordinated resistance",
+  "date": "February 1768",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'gov_dissolved_assembly', label: 'Event', title: `{
+  "description": "Governor dissolved the Massachusetts assembly for refusing to rescind the letter",
+  "date": "1768",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'riot_sloop_liberty', label: 'Event', title: `{
+  "description": "Riot broke out in Boston over the seizure of the sloop Liberty",
+  "date": "June 1768",
+  "location": "Boston",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'british_troops_to_boston', label: 'Event', title: `{
+  "description": "British deployed troops to Boston due to unrest",
+  "date": "1768",
+  "location": "Boston",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'treason_act_reactivated', label: 'Event', title: `{
+  "description": "Parliament reactivated the Treason Act 1543, threatening trials in England",
+  "date": "January 1769",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'townshend_duties_repealed_except_tea', label: 'Event', title: `{
+  "description": "Most Townshend duties repealed, except the tax on tea",
+  "date": "1770",
+  "type": "outcome",
+  "certainty": 1.0
+}`},
+        {id: 'hutchinson_oliver_letters_published', label: 'Event', title: `{
+  "description": "Private letters of Massachusetts Governor Hutchinson and Lt. Governor Oliver published",
+  "date": "1773",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'committees_of_correspondence_formed', label: 'Event', title: `{
+  "description": "Samuel Adams created new Committees of Correspondence, linking Patriots",
+  "date": "1773",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'tea_act_passed', label: 'Event', title: `{
+  "description": "Parliament passed the Tea Act, lowering price of taxed tea but bypassing merchants",
+  "date": "1773",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'intolerable_acts_passed', label: 'Event', title: `{
+  "description": "British government passed the Intolerable Acts",
+  "date": "1774",
+  "type": "triggering",
+  "certainty": 1.0
+}`},
+        {id: 'suffolk_resolves_prov_congress', label: 'Event', title: `{
+  "description": "Massachusetts patriots issued Suffolk Resolves and formed Provincial Congress",
+  "date": "1774",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'congress_boycott_1774', label: 'Event', title: `{
+  "description": "First Continental Congress called for a boycott of all British goods",
+  "date": "December 1, 1774",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'continental_army_surrounded_boston', label: 'Event', title: `{
+  "description": "Washington and the Continental Army responded to Lexington and Concord by surrounding Boston",
+  "type": "intermediate",
+  "certainty": 1.0
+}`},
+        {id: 'british_withdraw_boston', label: 'Event', title: `{
+  "description": "British forced to withdraw from Boston by sea",
+  "date": "March 1776",
+  "location": "Boston",
+  "type": "outcome",
+  "certainty": 1.0
+}`},
+        {id: 'colonial_separatist_leaders', label: 'Actor', title: `{
+  "name": "Colonial Separatist Leaders",
+  "role": "Leaders of the American Revolution",
+  "intentions": "Initially sought incremental autonomy, then full independence",
+  "beliefs": "Necessity of prevailing in Revolutionary War for independence"
+}`},
+        {id: 'second_continental_congress', label: 'Actor', title: `{
+  "name": "Second Continental Congress",
+  "role": "Representative body of the colonies",
+  "intentions": "Forming army, declaring independence, establishing self-governing rule of law"
+}`},
+        {id: 'george_washington', label: 'Actor', title: `{
+  "name": "George Washington",
+  "role": "Commander-in-Chief of Continental Army",
+  "capabilities": "Military leadership"
+}`},
+        {id: 'king_george_iii', label: 'Actor', title: `{
+  "name": "King George III",
+  "role": "Monarch of Great Britain",
+  "intentions": "Quell rebellion, maintain colonial rule"
+}`},
+        {id: 'british_parliament', label: 'Actor', title: `{
+  "name": "British Parliament",
+  "role": "Lawmaking authority throughout the Empire",
+  "beliefs": "Supreme lawmaking authority, entitled to levy taxes without colonial approval",
+  "constraints": "Political unacceptability of standing army in peacetime Britain"
+}`},
+        {id: 'george_grenville', label: 'Actor', title: `{
+  "name": "George Grenville",
+  "role": "Prime Minister (1763)",
+  "intentions": "Address national debt, make colonies pay troop costs"
+}`},
+        {id: 'sons_of_liberty', label: 'Actor', title: `{
+  "name": "Sons of Liberty",
+  "role": "Anti-tax demonstrators, Patriot activists",
+  "intentions": "Ensure British tax laws became unenforceable, instigate resistance"
+}`},
+        {id: 'john_dickinson', label: 'Actor', title: `{
+  "name": "John Dickinson",
+  "role": "Moderate leader, pamphlet author",
+  "beliefs": "Taxation without representation violated rights, Townshend Acts unconstitutional"
+}`},
+        {id: 'samuel_adams', label: 'Actor', title: `{
+  "name": "Samuel Adams",
+  "role": "Radical Patriot, leader of Committees of Correspondence",
+  "intentions": "Agitate for resistance, create rebel government framework"
+}`},
+        {id: 'john_brown', label: 'Actor', title: `{
+  "name": "John Brown",
+  "role": "American Patriot",
+  "intentions": "Resist unpopular trade regulations"
+}`},
+        {id: 'thomas_hutchinson', label: 'Actor', title: `{
+  "name": "Thomas Hutchinson",
+  "role": "Massachusetts Governor",
+  "beliefs": "Colonists could not enjoy all English liberties",
+  "constraints": "Refused to yield to pressure from demonstrators"
+}`},
+        {id: 'andrew_oliver', label: 'Actor', title: `{
+  "name": "Andrew Oliver",
+  "role": "Lieutenant Governor",
+  "intentions": "Direct payment of colonial officials to reduce colonial influence"
+}`},
+        {id: 'thomas_jefferson', label: 'Actor', title: `{
+  "name": "Thomas Jefferson",
+  "role": "Primary author of Declaration of Independence, Committee of Correspondence member",
+  "beliefs": "Liberalism and republicanism"
+}`},
+        {id: 'first_continental_congress_actor', label: 'Actor', title: `{
+  "name": "First Continental Congress",
+  "role": "Representative body coordinating Patriot resistance",
+  "intentions": "Deliberation and collective action against British policies"
+}`},
+        {id: 'france_actor', label: 'Actor', title: `{
+  "name": "France",
+  "role": "Foreign power supporting American independence",
+  "intentions": "Support colonial cause of independence"
+}`},
+        {id: 'marquis_de_lafayette', label: 'Actor', title: `{
+  "name": "Marquis de Lafayette",
+  "role": "French military leader",
+  "capabilities": "Military support to Continental Army"
+}`},
+        {id: 'charles_cornwallis', label: 'Actor', title: `{
+  "name": "Charles Cornwallis",
+  "role": "British general",
+  "constraints": "Commanded troops captured at Yorktown"
+}`},
+        {id: 'hyp_tax_wo_rep_violated_rights', label: 'Hypothesis', title: `{
+  "description": "Taxation without representation violated rights as Englishmen",
+  "status": "supported"
+}`},
+        {id: 'hyp_parliament_supreme_authority', label: 'Hypothesis', title: `{
+  "description": "Parliament at Westminster saw itself as the supreme lawmaking authority throughout the Empire and entitled to levy any tax without colonial approval",
+  "status": "supported"
+}`},
+        {id: 'hyp_virtual_representation', label: 'Hypothesis', title: `{
+  "description": "Colonists effectively enjoyed 'virtual representation' in Parliament (British argument)",
+  "status": "refuted"
+}`},
+        {id: 'hyp_merchants_economic_impact_minimal', label: 'Hypothesis', title: `{
+  "description": "The economic impact of British mercantilist policies was minimal on colonists",
+  "status": "partially_supported"
+}`},
+        {id: 'hyp_political_friction_more_serious', label: 'Hypothesis', title: `{
+  "description": "The political friction triggered by British acts was more serious than their economic impact, especially among politically active merchants",
+  "status": "supported"
+}`},
+        {id: 'hyp_townshend_purpose_revenue', label: 'Hypothesis', title: `{
+  "description": "The purpose of the Townshend Acts was to raise revenue, not merely regulate trade",
+  "status": "supported"
+}`},
+        {id: 'hyp_plot_against_american_rights', label: 'Hypothesis', title: `{
+  "description": "Hutchinson/Oliver letters were evidence of a systematic plot against American rights",
+  "status": "supported"
+}`},
+        {id: 'hyp_republicanism_suited_america', label: 'Hypothesis', title: `{
+  "description": "Republicanism as political philosophy best suited to American conditions, rejecting monarchy and aristocracy",
+  "status": "supported"
+}`},
+        {id: 'mech_escalation_to_independence', label: 'Causal_Mechanism', title: `{
+  "description": "Initial colonial discontent and demands for autonomy escalated to a full-blown independence movement and war due to British punitive measures and colonial coordinated resistance.",
+  "confidence": 0.9,
+  "completeness": 0.8,
+  "status": "supported"
+}`},
+        {id: 'mech_british_fiscal_policy_to_colonial_resentment', label: 'Causal_Mechanism', title: `{
+  "description": "British post-war fiscal needs led to imposition of new taxes, which, when perceived as violating 'no taxation without representation' principle, generated colonial resentment and organized opposition.",
+  "confidence": 0.9,
+  "completeness": 0.8,
+  "status": "supported"
+}`},
+        {id: 'mech_direct_rule_resistance_self_governance', label: 'Causal_Mechanism', title: `{
+  "description": "British attempts to exert direct control over colonial governance (e.g., Dominion of New England) met with fierce colonial resistance, reinforcing their desire for self-governance.",
+  "confidence": 0.8,
+  "completeness": 0.7,
+  "status": "supported"
+}`},
+        {id: 'mech_communication_coordination_of_resistance', label: 'Causal_Mechanism', title: `{
+  "description": "The establishment of inter-colonial communication networks (e.g., Committees of Correspondence) facilitated the coordination and mobilization of Patriot resistance, providing a framework for rebel government.",
+  "confidence": 0.9,
+  "completeness": 0.8,
+  "status": "supported"
+}`},
+        {id: 'mech_military_defeat_forces_negotiation', label: 'Causal_Mechanism', title: `{
+  "description": "Decisive military victories by the Continental Army, particularly with French support, inflicted enough cost and political pressure on Britain to compel them to negotiate an end to colonial rule and acknowledge independence.",
+  "confidence": 0.9,
+  "completeness": 0.8,
+  "status": "supported"
+}`},
+        {id: 'alt_economic_interests_primary_driver', label: 'Alternative_Explanation', title: `{
+  "description": "Economic interests of merchants were the primary driver of colonial opposition, rather than ideological grievances.",
+  "probability": 0.3,
+  "status": "eliminated",
+  "key_predictions": [
+    "Colonial objections would primarily focus on the burden of taxes, not representation",
+    "Merchant resistance would be stronger and more consistent than general colonial unrest"
+  ]
+}`},
+        {id: 'cond_salutary_neglect', label: 'Condition', title: `{
+  "description": "British policy of salutary neglect, allowing colonies self-governance",
+  "type": "enabling",
+  "temporal_scope": "first 150 years of colonies\u2019 existence",
+  "necessity": 0.8
+}`},
+        {id: 'cond_mercantilism_policy', label: 'Condition', title: `{
+  "description": "British government's policy of mercantilism, colonies existing for mother country's economic benefit",
+  "type": "background",
+  "necessity": 0.7
+}`},
+        {id: 'cond_british_national_debt', label: 'Condition', title: `{
+  "description": "Significant growth of British national debt after French and Indian War",
+  "type": "enabling",
+  "temporal_scope": "post-1763",
+  "necessity": 0.9
+}`},
+        {id: 'cond_standing_army_unacceptable_uk', label: 'Condition', title: `{
+  "description": "Stationing a standing army in Great Britain during peacetime was politically unacceptable",
+  "type": "constraining",
+  "necessity": 0.7
+}`},
+        {id: 'cond_unwritten_british_constitution', label: 'Condition', title: `{
+  "description": "Unwritten British constitution with guarantees of rights of Englishmen, serving as model for colonial governments",
+  "type": "background",
+  "necessity": 0.8
+}`},
+        {id: 'cond_radical_whig_ideology_influence', label: 'Condition', title: `{
+  "description": "Radical Whig ideology profoundly influenced American political philosophy with its love of liberty and opposition to tyrannical government",
+  "type": "enabling",
+  "necessity": 0.7
+}`},
+        {id: 'cond_british_govt_lacked_resources_info', label: 'Condition', title: `{
+  "description": "British government lacked the resources and information needed to control the colonies effectively",
+  "type": "constraining",
+  "necessity": 0.6
+}`},
+        {id: 'ds_wikipedia_article', label: 'Data_Source', title: `{
+  "type": "document",
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {id: 'ds_colonial_newspaper', label: 'Data_Source', title: `{
+  "type": "document",
+  "credibility": 0.7,
+  "bias_risk": 0.3
+}`},
+        {id: 'ds_john_dickinson_pamphlet', label: 'Data_Source', title: `{
+  "type": "document",
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {id: 'ds_robert_middlekauff', label: 'Data_Source', title: `{
+  "type": "document",
+  "credibility": 0.9,
+  "bias_risk": 0.1
+}`},
+        {id: 'ds_captain_levi_preston', label: 'Data_Source', title: `{
+  "type": "interview",
+  "credibility": 0.7,
+  "bias_risk": 0.3
+}`},
+        {id: 'evd_discontent_post_fiw', label: 'Evidence', title: `{
+  "description": "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War in 1763.",
+  "type": "straw_in_the_wind",
+  "certainty": 0.9
+}`},
+        {id: 'evd_parliament_imposed_taxes_fiw_costs', label: 'Evidence', title: `{
+  "description": "British Parliament imposed new taxes to compensate for wartime costs and turned control of western lands over to British officials in Montreal.",
+  "type": "general",
+  "certainty": 0.9
+}`},
+        {id: 'evd_declaration_rights_grievances_argued', label: 'Evidence', title: `{
+  "description": "The Stamp Act Congress's 'Declaration of Rights and Grievances' argued that taxation without representation violated their rights as Englishmen.",
+  "type": "hoop",
+  "certainty": 0.9
+}`},
+        {id: 'evd_sons_of_liberty_unenforceable', label: 'Evidence', title: `{
+  "description": "Sons of Liberty formed and began using public demonstrations, boycotts, and threats of violence to ensure that the British tax laws became unenforceable.",
+  "type": "general",
+  "certainty": 0.9
+}`},
+        {id: 'evd_boston_massacre_turn_sentiment', label: 'Evidence', title: `{
+  "description": "Widespread descriptions of the Boston Massacre quickly began to turn colonial sentiment against the British, accelerating the downward spiral in relationship.",
+  "type": "straw_in_the_wind",
+  "certainty": 0.8
+}`},
+        {id: 'evd_boston_tea_party_seminal', label: 'Evidence', title: `{
+  "description": "The Boston Tea Party was a seminal event in the American Revolution's escalation.",
+  "type": "general",
+  "certainty": 0.9
+}`},
+        {id: 'evd_london_response_escalated', label: 'Evidence', title: `{
+  "description": "London's response (closing Boston Harbor, punitive laws) effectively ended self-government in Massachusetts but also served to expand and intensify the revolutionary cause.",
+  "type": "general",
+  "certainty": 0.9
+}`},
+        {id: 'evd_first_congress_coordinated_resistance', label: 'Evidence', title: `{
+  "description": "The First Continental Congress began coordinating Patriot resistance through underground networks of committees.",
+  "type": "general",
+  "certainty": 0.9
+}`},
+        {id: 'evd_battles_lexington_concord_launch', label: 'Evidence', title: `{
+  "description": "The Battles of Lexington and Concord launched the American Revolutionary War.",
+  "type": "smoking_gun",
+  "certainty": 1.0
+}`},
+        {id: 'evd_yorktown_decisive_victory_outcome', label: 'Evidence', title: `{
+  "description": "A decisive victory by Washington and the Continental Army in the Siege of Yorktown inspired King George III and the British to negotiate an end to colonial rule.",
+  "type": "smoking_gun",
+  "certainty": 0.95
+}`},
+        {id: 'evd_colonists_accustomed_self_governance', label: 'Evidence', title: `{
+  "description": "Colonists became accustomed to running their own affairs under salutary neglect.",
+  "type": "general",
+  "certainty": 0.9
+}`},
+        {id: 'evd_captain_levi_preston_quote', label: 'Evidence', title: `{
+  "description": "Capt. Levi Preston's quote: '\u2026we always had governed ourselves, and we always meant to. They didn\u2019t mean we should.'",
+  "type": "straw_in_the_wind",
+  "source": "ds_captain_levi_preston",
+  "certainty": 0.7,
+  "credibility": 0.7
+}`},
+        {id: 'evd_king_philips_war_identity', label: 'Evidence', title: `{
+  "description": "In King Philip's War (1675\u20131678), New England colonies fought Native American tribes without military assistance from England, contributing to a unique American identity.",
+  "type": "straw_in_the_wind",
+  "certainty": 0.8
+}`},
+        {id: 'evd_dominion_rule_resentment', label: 'Evidence', title: `{
+  "description": "Dominion rule triggered bitter resentment throughout New England due to restricted assemblies, new taxes, and abridged rights.",
+  "type": "general",
+  "certainty": 0.9
+}`},
+        {id: 'evd_boston_revolt_overthrew_dominion', label: 'Evidence', title: `{
+  "description": "The 1689 Boston revolt overthrew Dominion rule, and colonial governments reasserted control.",
+  "type": "general",
+  "certainty": 0.9
+}`},
+        {id: 'evd_parliament_navigation_acts', label: 'Evidence', title: `{
+  "description": "Parliament passed the first in a series of Navigation Acts (1651), which restricted colonial trade with foreign countries.",
+  "type": "general",
+  "certainty": 0.95
+}`},
+        {id: 'evd_molasses_act_protested_tax_wo_rep', label: 'Evidence', title: `{
+  "description": "The Molasses Act 1733 was protested by New England colonists as 'taxation without representation'.",
+  "type": "hoop",
+  "certainty": 0.9
+}`},
+        {id: 'evd_economic_impact_minimal_claim', label: 'Evidence', title: `{
+  "description": "Some argue that the economic impact of mercantilist policies was minimal on the colonists.",
+  "type": "general",
+  "certainty": 0.6
+}`},
+        {id: 'evd_political_friction_more_serious', label: 'Evidence', title: `{
+  "description": "The political friction that the acts triggered was more serious, as the merchants most directly affected were also the most politically active.",
+  "type": "general",
+  "certainty": 0.8
+}`},
+        {id: 'evd_grenville_need_money', label: 'Evidence', title: `{
+  "description": "'The need for money played a part in every important decision made by Grenville regarding the colonies\u2014and for that matter by the ministries that followed up to 1776.'",
+  "type": "general",
+  "certainty": 0.9,
+  "source": "ds_wikipedia_article"
+}`},
+        {id: 'evd_colonists_objected_lack_representation', label: 'Evidence', title: `{
+  "description": "Colonists objected to their lack of representation in Parliament, which gave them no voice concerning legislation that affected them, such as the tax, violating the unwritten English constitution.",
+  "type": "hoop",
+  "certainty": 0.9
+}`},
+        {id: 'evd_declaratory_act_parliament_power', label: 'Evidence', title: `{
+  "description": "Declaratory Act insisted that Parliament retained full power to make laws for the colonies 'in all cases whatsoever'.",
+  "type": "general",
+  "certainty": 0.95
+}`},
+        {id: 'evd_dickinson_argued_townshend', label: 'Evidence', title: `{
+  "description": "John Dickinson argued against the constitutionality of the Townshend Acts because their purpose was to raise revenue and not to regulate trade.",
+  "type": "general",
+  "certainty": 0.9,
+  "source": "ds_john_dickinson_pamphlet"
+}`},
+        {id: 'evd_hutchinson_oliver_letters_plot', label: 'Evidence', title: `{
+  "description": "The Hutchinson/Oliver letters' contents were used as evidence of a systematic plot against American rights, discrediting Hutchinson.",
+  "type": "straw_in_the_wind",
+  "certainty": 0.8
+}`},
+        {id: 'evd_committees_coordination_framework', label: 'Evidence', title: `{
+  "description": "Committees of Correspondence linked Patriots in all 13 colonies and eventually provided the framework for a rebel government.",
+  "type": "general",
+  "certainty": 0.9
+}`},
+        {id: 'evd_tea_act_opposition_reasons', label: 'Evidence', title: `{
+  "description": "The Tea Act was opposed by those who resisted the taxes and also by smugglers who stood to lose business.",
+  "type": "general",
+  "certainty": 0.8
+}`},
+        {id: 'evd_intolerable_acts_darkened_opinion', label: 'Evidence', title: `{
+  "description": "The British government responded by passing four laws that came to be known as the Intolerable Acts, further darkening colonial opinion towards England.",
+  "type": "general",
+  "certainty": 0.9
+}`},
+        {id: 'evd_patriots_armed_unified', label: 'Evidence', title: `{
+  "description": "For the first time, the Patriots were armed and unified against Parliament due to coordinated resistance and militias.",
+  "type": "smoking_gun",
+  "certainty": 0.9
+}`},
+        {id: 'evd_DOI_political_philosophies', label: 'Evidence', title: `{
+  "description": "The Declaration of Independence embodied the political philosophies of liberalism and republicanism, rejected monarchy and aristocracy, and proclaimed 'all men are created equal'.",
+  "type": "general",
+  "certainty": 0.95
+}`},
+        {id: 'evd_yorktown_collapse_king_george_control', label: 'Evidence', title: `{
+  "description": "Siege of Yorktown led to the collapse of King George's control of Parliament and consensus that the war should be ended on American terms.",
+  "type": "smoking_gun",
+  "certainty": 0.95
+}`},
+        {id: 'evd_loyalist_migration', label: 'Evidence', title: `{
+  "description": "About 60,000 Loyalists migrated to other British territories in Canada and elsewhere, but the great majority remained in the United States.",
+  "type": "general",
+  "certainty": 0.9
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "culmination",
+  "sequence_position": 2,
+  "necessity": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "trigger",
+  "sequence_position": 1
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "intermediate",
+  "sequence_position": 2
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "trigger",
+  "sequence_position": 1
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "intermediate",
+  "sequence_position": 3
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "intermediate",
+  "sequence_position": 2
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "intermediate",
+  "sequence_position": 4
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "intermediate",
+  "sequence_position": 5
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "intermediate",
+  "sequence_position": 6
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "intermediate",
+  "sequence_position": 7
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "intermediate",
+  "sequence_position": 8
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "outcome",
+  "sequence_position": 9
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "outcome",
+  "sequence_position": 10
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "outcome",
+  "sequence_position": 11
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "outcome",
+  "sequence_position": 12
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "outcome",
+  "sequence_position": 13
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.8
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.95
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.8
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'explains_mechanism', title: `{
+  "certainty": 0.9,
+  "type_of_claim": "operation"
+}`},
+        {from: 'None', to: 'None', label: 'explains_mechanism', title: `{
+  "certainty": 0.8,
+  "type_of_claim": "significance"
+}`},
+        {from: 'None', to: 'None', label: 'explains_mechanism', title: `{
+  "certainty": 0.8,
+  "type_of_claim": "operation"
+}`},
+        {from: 'None', to: 'None', label: 'enables', title: `{
+  "necessity": 0.8,
+  "enabling_type": "background"
+}`},
+        {from: 'None', to: 'None', label: 'enables', title: `{
+  "necessity": 0.7,
+  "enabling_type": "background",
+  "temporal_scope": "pre-1763"
+}`},
+        {from: 'None', to: 'None', label: 'enables', title: `{
+  "necessity": 0.7,
+  "enabling_type": "background"
+}`},
+        {from: 'None', to: 'None', label: 'enables', title: `{
+  "necessity": 0.9,
+  "enabling_type": "contingent"
+}`},
+        {from: 'None', to: 'None', label: 'constrains', title: `{
+  "constraint_strength": 0.8,
+  "constraint_type": "channels"
+}`},
+        {from: 'None', to: 'None', label: 'enables', title: `{
+  "necessity": 0.8,
+  "enabling_type": "background"
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence', title: `{
+  "credibility": 0.8,
+  "bias_risk": 0.2
+}`},
+        {from: 'None', to: 'None', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "diagnostic_type": "hoop",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'None', to: 'None', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "diagnostic_type": "hoop",
+  "target_type": "causal_relationship"
+}`},
+        {from: 'None', to: 'None', label: 'supports', title: `{
+  "probative_value": 0.95,
+  "diagnostic_type": "smoking_gun",
+  "target_type": "general"
+}`},
+        {from: 'None', to: 'None', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "diagnostic_type": "straw_in_the_wind"
+}`},
+        {from: 'None', to: 'None', label: 'supports', title: `{
+  "probative_value": 0.8,
+  "diagnostic_type": "general"
+}`},
+        {from: 'None', to: 'None', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "diagnostic_type": "smoking_gun"
+}`},
+        {from: 'None', to: 'None', label: 'supports', title: `{
+  "probative_value": 0.8,
+  "diagnostic_type": "straw_in_the_wind"
+}`},
+        {from: 'None', to: 'None', label: 'supports', title: `{
+  "probative_value": 0.95,
+  "diagnostic_type": "smoking_gun"
+}`},
+        {from: 'None', to: 'None', label: 'supports_alternative', title: `{
+  "probative_value": 0.6,
+  "diagnostic_type": "straw_in_the_wind"
+}`},
+        {from: 'None', to: 'None', label: 'refutes_alternative', title: `{
+  "probative_value": 0.8,
+  "diagnostic_type": "general",
+  "refutation_strength": "moderate"
+}`},
+        {from: 'None', to: 'None', label: 'refutes_alternative', title: `{
+  "probative_value": 0.7,
+  "diagnostic_type": "hoop",
+  "refutation_strength": "moderate",
+  "reasoning": "Highlights ideological objection over purely economic."
+}`},
+        {from: 'None', to: 'None', label: 'refutes_alternative', title: `{
+  "probative_value": 0.8,
+  "diagnostic_type": "hoop",
+  "refutation_strength": "strong",
+  "reasoning": "Directly states primary objection was lack of representation, not just tax amount."
+}`},
+        {from: 'None', to: 'None', label: 'weighs_evidence', title: `{
+  "comparison_strength": 0.7,
+  "comparison_type": "contradicts",
+  "reasoning": "The text explicitly states 'some argue that the economic impact was minimal... but the political friction that the acts triggered was more serious.'"
+}`},
+        {from: 'None', to: 'None', label: 'causes', title: `{
+  "certainty": 0.9,
+  "mechanism_id": "mech_british_fiscal_policy_to_colonial_resentment",
+  "type": "direct"
+}`},
+        {from: 'None', to: 'None', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence_for', title: `{
+  "probative_value": 0.9,
+  "diagnostic_type": "general",
+  "reasoning": "The act itself triggered the protest."
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence_for', title: `{
+  "probative_value": 0.9,
+  "diagnostic_type": "general",
+  "reasoning": "The passage of the act was the context for the objection."
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence_for', title: `{
+  "probative_value": 0.95,
+  "diagnostic_type": "general",
+  "reasoning": "The act itself states this power."
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence_for', title: `{
+  "probative_value": 0.9,
+  "diagnostic_type": "general",
+  "reasoning": "The acts were the subject of Dickinson's argument."
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence_for', title: `{
+  "probative_value": 0.9,
+  "diagnostic_type": "general",
+  "reasoning": "The publication was the event that made the letters evidence."
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence_for', title: `{
+  "probative_value": 0.8,
+  "diagnostic_type": "general",
+  "reasoning": "The act was the cause of the opposition."
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence_for', title: `{
+  "probative_value": 0.9,
+  "diagnostic_type": "general",
+  "reasoning": "The passage of these acts directly led to the darkening of opinion."
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence_for', title: `{
+  "probative_value": 0.95,
+  "diagnostic_type": "smoking_gun",
+  "reasoning": "The Declaration itself is the primary source for its content."
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence_for', title: `{
+  "probative_value": 0.95,
+  "diagnostic_type": "smoking_gun",
+  "reasoning": "The outcome of the battle directly caused the political shift."
+}`},
+        {from: 'None', to: 'None', label: 'enables', title: `{
+  "necessity": 0.7,
+  "enabling_type": "background"
+}`},
+        {from: 'None', to: 'None', label: 'enables', title: `{
+  "necessity": 0.6,
+  "enabling_type": "background"
+}`},
+        {from: 'None', to: 'None', label: 'causes', title: `{
+  "certainty": 0.9,
+  "mechanism_id": "mech_direct_rule_resistance_self_governance"
+}`},
+        {from: 'None', to: 'None', label: 'provides_evidence_for', title: `{
+  "probative_value": 0.9,
+  "diagnostic_type": "general"
+}`},
+        {from: 'None', to: 'None', label: 'causes', title: `{
+  "certainty": 0.8,
+  "type": "direct"
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "outcome",
+  "sequence_position": 4
+}`},
+        {from: 'None', to: 'None', label: 'tests_mechanism', title: `{
+  "probative_value": 0.8,
+  "test_result": "passed",
+  "diagnostic_type": "general",
+  "mechanism_aspect": "operation"
+}`},
+        {from: 'None', to: 'None', label: 'tests_mechanism', title: `{
+  "probative_value": 0.9,
+  "test_result": "passed",
+  "diagnostic_type": "smoking_gun",
+  "mechanism_aspect": "operation"
+}`},
+        {from: 'None', to: 'None', label: 'initiates', title: `{
+  "intentionality": "deliberate",
+  "capability_assessment": 0.9
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "trigger",
+  "sequence_position": 1
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "outcome",
+  "sequence_position": 2
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "outcome",
+  "sequence_position": 3
+}`},
+        {from: 'None', to: 'None', label: 'tests_mechanism', title: `{
+  "probative_value": 0.9,
+  "test_result": "passed",
+  "diagnostic_type": "general",
+  "mechanism_aspect": "operation"
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "trigger",
+  "sequence_position": 1
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "facilitating",
+  "sequence_position": 2
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "intermediate",
+  "sequence_position": 3
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "outcome",
+  "sequence_position": 4
+}`},
+        {from: 'None', to: 'None', label: 'part_of_mechanism', title: `{
+  "role": "outcome",
+  "sequence_position": 5
+}`},
+        {from: 'None', to: 'None', label: 'tests_mechanism', title: `{
+  "probative_value": 0.95,
+  "test_result": "passed",
+  "diagnostic_type": "smoking_gun",
+  "mechanism_aspect": "operation"
+}`},
+        {from: 'None', to: 'None', label: 'tests_mechanism', title: `{
+  "probative_value": 0.95,
+  "test_result": "passed",
+  "diagnostic_type": "smoking_gun",
+  "mechanism_aspect": "operation"
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

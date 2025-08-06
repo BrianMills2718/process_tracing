@@ -1,0 +1,466 @@
+{
+  "nodes": [
+    {
+      "id": "evt_boston_tea_party",
+      "type": "Event",
+      "properties": {
+        "description": "Colonists dumped tea into Boston Harbor",
+        "timestamp": "1773-12-16",
+        "location": "Boston Harbor",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "evt_tea_act_passed",
+      "type": "Event",
+      "properties": {
+        "description": "Tea Act passed"
+      }
+    },
+    {
+      "id": "evt_beic_monopoly_granted",
+      "type": "Event",
+      "properties": {
+        "description": "British East India Company granted monopoly on tea sales in America"
+      }
+    },
+    {
+      "id": "act_samuel_adams",
+      "type": "Actor",
+      "properties": {
+        "name": "Samuel Adams",
+        "role": "Organizer",
+        "intentions": "Organize resistance against British policies"
+      }
+    },
+    {
+      "id": "act_sons_of_liberty",
+      "type": "Actor",
+      "properties": {
+        "name": "Sons of Liberty",
+        "role": "Perpetrators of Tea Party",
+        "intentions": "Carry out direct action against British policies"
+      }
+    },
+    {
+      "id": "act_king_george_iii",
+      "type": "Actor",
+      "properties": {
+        "name": "King George III",
+        "role": "British Monarch",
+        "intentions": "Respond to colonial unrest, assert British authority"
+      }
+    },
+    {
+      "id": "evt_intolerable_acts_passed",
+      "type": "Event",
+      "properties": {
+        "description": "Intolerable Acts passed"
+      }
+    },
+    {
+      "id": "evt_boston_harbor_closed",
+      "type": "Event",
+      "properties": {
+        "description": "Boston Harbor closed"
+      }
+    },
+    {
+      "id": "evt_economic_pressure_on_merchants",
+      "type": "Event",
+      "properties": {
+        "description": "Economic pressure on colonial merchants",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "evt_organized_resistance",
+      "type": "Event",
+      "properties": {
+        "description": "Organized resistance by colonists",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "evt_american_revolution",
+      "type": "Event",
+      "properties": {
+        "description": "American Revolution",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "mech_pathway_to_revolution",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "The Tea Act's grant of monopoly created economic pressure on colonial merchants, which led to organized resistance among colonists, eventually causing the American Revolution.",
+        "confidence": 0.8,
+        "status": "supported"
+      }
+    },
+    {
+      "id": "hyp_taxation_without_representation",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Taxation without representation motivated the colonists",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evt_tea_act_design_british_authority",
+      "type": "Event",
+      "properties": {
+        "description": "Tea Act designed to assert British authority",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "hyp_colonial_willingness_direct_action",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Colonial willingness to resist British policies through direct action",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "alt_economic_self_interest",
+      "type": "Alternative_Explanation",
+      "properties": {
+        "description": "Economic self-interest rather than constitutional principles motivated colonial resistance",
+        "status": "refuted"
+      }
+    },
+    {
+      "id": "evd_textual_btp_occurrence",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Boston Tea Party occurred on December 16, 1773, when colonists dumped tea into Boston Harbor.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "evd_general_taxation_motivation",
+      "type": "Evidence",
+      "properties": {
+        "description": "Evidence shows that taxation without representation motivated the colonists.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "ds_parliamentary_records",
+      "type": "Data_Source",
+      "properties": {
+        "type": "document",
+        "credibility": 0.8
+      }
+    },
+    {
+      "id": "evd_parliamentary_records_tea_act_design",
+      "type": "Evidence",
+      "properties": {
+        "description": "Parliamentary records confirm that the Tea Act was designed to assert British authority.",
+        "type": "smoking_gun",
+        "source": "ds_parliamentary_records"
+      }
+    },
+    {
+      "id": "evd_working_class_participation",
+      "type": "Evidence",
+      "properties": {
+        "description": "evidence from working-class participation refutes this economic self-interest theory.",
+        "type": "hoop",
+        "source": "ds_historical_records"
+      }
+    },
+    {
+      "id": "ds_historical_records",
+      "type": "Data_Source",
+      "properties": {
+        "type": "general",
+        "credibility": 0.7
+      }
+    },
+    {
+      "id": "act_colonists",
+      "type": "Actor",
+      "properties": {
+        "name": "Colonists",
+        "role": "Participants in the Boston Tea Party"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source_id": "evd_textual_btp_occurrence",
+      "target_id": "evt_boston_tea_party",
+      "type": "confirms_occurrence",
+      "properties": {
+        "certainty": 1.0,
+        "diagnostic_type": "general"
+      }
+    },
+    {
+      "source_id": "evt_tea_act_passed",
+      "target_id": "evt_beic_monopoly_granted",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "type": "direct"
+      }
+    },
+    {
+      "source_id": "evt_beic_monopoly_granted",
+      "target_id": "evt_boston_tea_party",
+      "type": "enables",
+      "properties": {
+        "necessity": 0.7,
+        "enabling_type": "structural"
+      }
+    },
+    {
+      "source_id": "act_samuel_adams",
+      "target_id": "act_sons_of_liberty",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.8,
+        "constraint_factors": "Political environment"
+      }
+    },
+    {
+      "source_id": "act_sons_of_liberty",
+      "target_id": "evt_boston_tea_party",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9
+      }
+    },
+    {
+      "source_id": "act_colonists",
+      "target_id": "evt_boston_tea_party",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.8
+      }
+    },
+    {
+      "source_id": "act_king_george_iii",
+      "target_id": "evt_intolerable_acts_passed",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9
+      }
+    },
+    {
+      "source_id": "evt_intolerable_acts_passed",
+      "target_id": "evt_boston_harbor_closed",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.95,
+        "type": "direct"
+      }
+    },
+    {
+      "source_id": "evt_tea_act_passed",
+      "target_id": "mech_pathway_to_revolution",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "trigger",
+        "sequence_position": 1,
+        "necessity": 0.8
+      }
+    },
+    {
+      "source_id": "evt_tea_act_passed",
+      "target_id": "evt_economic_pressure_on_merchants",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "mechanism_id": "mech_pathway_to_revolution",
+        "type": "direct"
+      }
+    },
+    {
+      "source_id": "evt_economic_pressure_on_merchants",
+      "target_id": "mech_pathway_to_revolution",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 2,
+        "necessity": 0.9
+      }
+    },
+    {
+      "source_id": "evt_economic_pressure_on_merchants",
+      "target_id": "evt_organized_resistance",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.85,
+        "mechanism_id": "mech_pathway_to_revolution",
+        "type": "direct"
+      }
+    },
+    {
+      "source_id": "evt_organized_resistance",
+      "target_id": "mech_pathway_to_revolution",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 3,
+        "necessity": 0.9
+      }
+    },
+    {
+      "source_id": "evt_organized_resistance",
+      "target_id": "evt_american_revolution",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.8,
+        "mechanism_id": "mech_pathway_to_revolution",
+        "type": "direct"
+      }
+    },
+    {
+      "source_id": "evt_american_revolution",
+      "target_id": "mech_pathway_to_revolution",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 4,
+        "necessity": 1.0
+      }
+    },
+    {
+      "source_id": "evd_general_taxation_motivation",
+      "target_id": "hyp_taxation_without_representation",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.7,
+        "diagnostic_type": "general",
+        "target_type": "causal_relationship"
+      }
+    },
+    {
+      "source_id": "ds_parliamentary_records",
+      "target_id": "evd_parliamentary_records_tea_act_design",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "certainty": 0.9
+      }
+    },
+    {
+      "source_id": "evd_parliamentary_records_tea_act_design",
+      "target_id": "evt_tea_act_design_british_authority",
+      "type": "confirms_occurrence",
+      "properties": {
+        "certainty": 0.9,
+        "diagnostic_type": "smoking_gun"
+      }
+    },
+    {
+      "source_id": "evt_boston_tea_party",
+      "target_id": "hyp_colonial_willingness_direct_action",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "smoking_gun",
+        "reasoning": "The event itself served as a direct demonstration of the colonists' active resistance."
+      }
+    },
+    {
+      "source_id": "ds_historical_records",
+      "target_id": "evd_working_class_participation",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.7,
+        "certainty": 0.8
+      }
+    },
+    {
+      "source_id": "evd_working_class_participation",
+      "target_id": "alt_economic_self_interest",
+      "type": "refutes_alternative",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "hoop",
+        "refutation_strength": "decisive"
+      }
+    },
+    {
+      "source": "evt_boston_harbor_closed",
+      "target": "evt_economic_pressure_on_merchants",
+      "type": "causes",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.7,
+        "source_text_quote": "King George III responded by passing the Intolerable Acts which closed Boston Harbor.",
+        "reasoning": "Closing a major port like Boston Harbor would logically and directly create economic pressure on colonial merchants, aligning with the concept of economic pressure on merchants in the main graph, even if not explicitly stated as 'caused economic pressure' in this specific sentence.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "hyp_taxation_without_representation",
+      "target": "evt_organized_resistance",
+      "type": "causes",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.8,
+        "source_text_quote": "Evidence shows that taxation without representation motivated the colonists.",
+        "reasoning": "The hypothesis posits a motivation ('motivated the colonists') that would serve as a necessary underlying cause for the organized resistance that followed.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "evd_general_taxation_motivation",
+      "target": "evt_organized_resistance",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Evidence shows that taxation without representation motivated the colonists.",
+        "reasoning": "The text directly states that this evidence ('Evidence shows that...') confirms the motivation of the colonists, which is directly linked to organized resistance.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "evt_tea_act_design_british_authority",
+      "target": "evt_tea_act_passed",
+      "type": "causes",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.8,
+        "source_text_quote": "Parliamentary records confirm that the Tea Act was designed to assert British authority.",
+        "reasoning": "The design or intention behind a legislative act is a direct causal factor for the act being passed.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "evd_parliamentary_records_tea_act_design",
+      "target": "evt_tea_act_passed",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Parliamentary records confirm that the Tea Act was designed to assert British authority.",
+        "reasoning": "This evidence directly confirms the stated design and purpose of the Tea Act, thereby providing evidence for the nature of the act itself.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source": "alt_economic_self_interest",
+      "target": "evt_organized_resistance",
+      "type": "causes",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.4,
+        "source_text_quote": "Alternative explanations suggest that economic self-interest rather than constitutional principles motivated colonial resistance.",
+        "reasoning": "This is presented as a suggested alternative motivation (cause) for 'colonial resistance', which corresponds to 'organized resistance' in the main graph. The low probative value reflects that it is immediately presented as an 'alternative' and then refuted.",
+        "source": "connectivity_repair"
+      }
+    }
+  ]
+}

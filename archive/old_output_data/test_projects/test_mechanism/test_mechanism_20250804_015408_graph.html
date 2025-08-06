@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (test_mechanism)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'event_tea_act_enactment', label: 'Event', title: `{
+  "description": "The Tea Act was a specific British parliamentary act passed in 1773, which granted the British East India Company an exclusive and significant monopoly on all tea sales within the American colonies, profoundly impacting colonial trade.",
+  "type": "triggering",
+  "date": "1773"
+}`},
+        {id: 'event_boston_tea_party', label: 'Event', title: `{
+  "description": "The Boston Tea Party occurred in December 1773 when American colonists, notably led by Samuel Adams, defiantly boarded British ships and dumped British East India Company tea into Boston Harbor, signifying a major act of colonial rebellion.",
+  "type": "outcome",
+  "date": "December 1773",
+  "location": "Boston Harbor"
+}`},
+        {id: 'causal_mechanism_violation_self_governance', label: 'Causal_Mechanism', title: `{
+  "description": "This mechanism describes how the Tea Act led to colonial rebellion by fundamentally violating deeply held colonial principles of self-governance through the imposition of taxation without direct representation in Parliament, which further generated economic pressure on local merchants and political mobilization by groups like the Sons of Liberty."
+}`},
+        {id: 'hypothesis_tea_act_caused_btp', label: 'Hypothesis', title: `{
+  "description": "The Tea Act directly caused the Boston Tea Party because it gave the British East India Company a significant monopoly on tea sales in the American colonies, which was perceived by colonists as an unjust economic and political imposition leading to rebellion.",
+  "status": "supported"
+}`},
+        {id: 'hypothesis_violation_principles_caused_rebellion', label: 'Hypothesis', title: `{
+  "description": "Colonial rebellion, specifically exemplified by the Boston Tea Party, was primarily caused because the Tea Act violated fundamental colonial principles of self-governance by imposing taxation without representation in Parliament, which spurred widespread political and economic opposition.",
+  "status": "supported"
+}`},
+        {id: 'evidence_colonial_pamphlets_taxation', label: 'Evidence', title: `{
+  "description": "Colonial pamphlets were widely distributed, specifically articulating detailed arguments and grievances against the British policy of taxation without direct representation, demonstrating a prevailing ideological opposition among colonists.",
+  "source": "Historical texts"
+}`},
+        {id: 'evidence_widespread_colonial_support_btp', label: 'Evidence', title: `{
+  "description": "The Boston Tea Party garnered substantial and widespread support across numerous American colonies, indicating a broad consensus among the populace and demonstrating the effective operation of the underlying rebellious causal mechanism.",
+  "source": "Historical observation"
+}`},
+        {id: 'evidence_text_occurrence_btp', label: 'Evidence', title: `{
+  "description": "The historical text explicitly confirms the occurrence of the Boston Tea Party, detailing the key actors and specific actions taken, providing direct affirmation of the event's reality as described."
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'event_tea_act_enactment', to: 'event_boston_tea_party', label: 'causes', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "This act of rebellion was caused by the Tea Act, which gave the British East India Company a monopoly on tea sales in the American colonies.",
+  "target_type": "event_occurrence",
+  "reasoning": "The text directly states the Tea Act caused the Boston Tea Party."
+}`},
+        {from: 'event_tea_act_enactment', to: 'hypothesis_tea_act_caused_btp', label: 'provides_evidence_for', title: `{
+  "diagnostic_type": "general",
+  "probative_value": 0.8,
+  "source_text_quote": "This act of rebellion was caused by the Tea Act, which gave the British East India Company a monopoly on tea sales in the American colonies.",
+  "target_type": "causal_relationship",
+  "reasoning": "The event itself, as described by the text, directly supports the general hypothesis that the Tea Act caused the rebellion."
+}`},
+        {from: 'causal_mechanism_violation_self_governance', to: 'hypothesis_violation_principles_caused_rebellion', label: 'explains_mechanism', title: `{
+  "probative_value": 1.0,
+  "source_text_quote": "The causal mechanism behind this rebellion was that the Tea Act violated colonial principles of self-governance by imposing taxation without representation in Parliament.",
+  "target_type": "causal_relationship",
+  "reasoning": "The text explicitly defines this mechanism as the cause underlying the rebellion, making it integral to the detailed hypothesis."
+}`},
+        {from: 'evidence_colonial_pamphlets_taxation', to: 'causal_mechanism_violation_self_governance', label: 'tests_mechanism', title: `{
+  "diagnostic_type": "hoop",
+  "probative_value": 0.7,
+  "source_text_quote": "Evidence supporting this mechanism includes the colonial pamphlets arguing against taxation without representation, which provided a hoop test for the constitutional principle mechanism.",
+  "target_type": "mechanism_operation",
+  "reasoning": "The existence of pamphlets arguing against taxation without representation is a necessary condition for the mechanism of 'violation of principles' to be plausible."
+}`},
+        {from: 'evidence_widespread_colonial_support_btp', to: 'causal_mechanism_violation_self_governance', label: 'tests_mechanism', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "The widespread colonial support for the Boston Tea Party provided smoking gun evidence that the mechanism was operating effectively across multiple colonies.",
+  "target_type": "mechanism_operation",
+  "reasoning": "Widespread support for the Tea Party strongly indicates that the underlying mechanism of colonial principles being violated was indeed effective and resonated broadly."
+}`},
+        {from: 'evidence_colonial_pamphlets_taxation', to: 'hypothesis_violation_principles_caused_rebellion', label: 'supports', title: `{
+  "diagnostic_type": "hoop",
+  "probative_value": 0.7,
+  "source_text_quote": "Evidence supporting this mechanism includes the colonial pamphlets arguing against taxation without representation, which provided a hoop test for the constitutional principle mechanism.",
+  "target_type": "causal_relationship",
+  "reasoning": "The presence of these pamphlets provides necessary evidence that the principle of taxation without representation was a contentious issue for colonists, which is central to the hypothesis."
+}`},
+        {from: 'evidence_widespread_colonial_support_btp', to: 'hypothesis_violation_principles_caused_rebellion', label: 'supports', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "source_text_quote": "The widespread colonial support for the Boston Tea Party provided smoking gun evidence that the mechanism was operating effectively across multiple colonies.",
+  "target_type": "causal_relationship",
+  "reasoning": "The extensive support for the Tea Party serves as strong evidence that the underlying grievances related to violated principles were widely shared and acted upon, supporting the hypothesis."
+}`},
+        {from: 'evidence_text_occurrence_btp', to: 'event_boston_tea_party', label: 'confirms_occurrence', title: `{
+  "diagnostic_type": "doubly_decisive",
+  "probative_value": 1.0,
+  "source_text_quote": "The Boston Tea Party occurred when American colonists, led by Samuel Adams, dumped British tea into Boston Harbor in December 1773.",
+  "target_type": "event_occurrence",
+  "reasoning": "The source text directly and unequivocally states the occurrence of the Boston Tea Party, confirming its historical reality within the context of this document."
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

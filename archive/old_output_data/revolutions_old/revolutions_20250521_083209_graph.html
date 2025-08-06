@@ -1,0 +1,1032 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (revolutions)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'E_F_I_WAR_END', label: 'Event', title: `{
+  "description": "End of the French and Indian War",
+  "timestamp": "1763",
+  "type": "triggering"
+}`},
+        {id: 'E_BRITISH_IMPOSE_TAXES', label: 'Event', title: `{
+  "description": "British Parliament imposes new taxes to compensate for wartime costs",
+  "timestamp": "1764",
+  "type": "intermediate"
+}`},
+        {id: 'E_WESTERN_LANDS_CONTROL', label: 'Event', title: `{
+  "description": "Control of colonies' western lands turned over to British officials in Montreal",
+  "timestamp": "1763",
+  "type": "intermediate"
+}`},
+        {id: 'E_STAMP_ACT_CONGRESS_CONVENES', label: 'Event', title: `{
+  "description": "Representatives from several colonies convene the Stamp Act Congress",
+  "timestamp": "1765",
+  "location": "New York City",
+  "type": "intermediate"
+}`},
+        {id: 'E_DECL_RIGHTS_GRIEVANCES', label: 'Event', title: `{
+  "description": "Stamp Act Congress issues Declaration of Rights and Grievances",
+  "timestamp": "1765",
+  "type": "intermediate"
+}`},
+        {id: 'E_TOWNSHEND_ACTS_PASSED', label: 'Event', title: `{
+  "description": "British Parliament passes the Townshend Acts",
+  "timestamp": "1767",
+  "type": "triggering"
+}`},
+        {id: 'E_BRITISH_DEPLOY_TROOPS_BOSTON', label: 'Event', title: `{
+  "description": "King George III deploys British troops to Boston to quell rebellion",
+  "location": "Boston",
+  "type": "intermediate"
+}`},
+        {id: 'E_BOSTON_MASSACRE', label: 'Event', title: `{
+  "description": "British troops kill protesters in the Boston Massacre",
+  "timestamp": "1770-03-05",
+  "location": "Boston",
+  "type": "intermediate"
+}`},
+        {id: 'E_GASPEE_AFFAIR', label: 'Event', title: `{
+  "description": "Anti-tax demonstrators destroy the Royal Navy customs schooner Gaspee",
+  "timestamp": "1772",
+  "location": "Narragansett Bay",
+  "type": "intermediate"
+}`},
+        {id: 'E_BOSTON_TEA_PARTY', label: 'Event', title: `{
+  "description": "Sons of Liberty activists dump chests of tea into Boston Harbor",
+  "timestamp": "1773-12-16",
+  "location": "Boston Harbor",
+  "type": "triggering"
+}`},
+        {id: 'E_LONDON_CLOSES_BOSTON_HARBOR', label: 'Event', title: `{
+  "description": "London responds to Boston Tea Party by closing Boston Harbor",
+  "timestamp": "1774",
+  "location": "Boston",
+  "type": "intermediate"
+}`},
+        {id: 'E_INTOLERABLE_ACTS_ENACTED', label: 'Event', title: `{
+  "description": "London enacts a series of punitive laws (Intolerable Acts)",
+  "timestamp": "1774",
+  "type": "intermediate"
+}`},
+        {id: 'E_FIRST_CONT_CONGRESS_CONVENES', label: 'Event', title: `{
+  "description": "12 of the Thirteen Colonies send delegates to the First Continental Congress",
+  "timestamp": "1774",
+  "location": "Philadelphia",
+  "type": "intermediate"
+}`},
+        {id: 'E_PATRIOTS_COORDINATE_RESISTANCE', label: 'Event', title: `{
+  "description": "First Continental Congress begins coordinating Patriot resistance through underground networks of committees",
+  "timestamp": "1774",
+  "type": "intermediate"
+}`},
+        {id: 'E_BATTLES_LEX_CONCORD', label: 'Event', title: `{
+  "description": "Battles of Lexington and Concord are launched, marking the start of the war",
+  "timestamp": "1775-04-19",
+  "type": "triggering"
+}`},
+        {id: 'E_SECOND_CONT_CONGRESS_CONVENES', label: 'Event', title: `{
+  "description": "Second Continental Congress convenes",
+  "timestamp": "1775",
+  "location": "Philadelphia",
+  "type": "intermediate"
+}`},
+        {id: 'E_CONTINENTAL_ARMY_FORMED', label: 'Event', title: `{
+  "description": "Second Continental Congress forms the Continental Army",
+  "timestamp": "1775-06",
+  "type": "intermediate"
+}`},
+        {id: 'E_WASHINGTON_APPOINTED', label: 'Event', title: `{
+  "description": "George Washington appointed commander-in-chief of the Continental Army",
+  "timestamp": "1775-06",
+  "type": "intermediate"
+}`},
+        {id: 'E_WASHINGTON_SURROUNDS_BOSTON', label: 'Event', title: `{
+  "description": "Washington and the Continental Army respond by surrounding Boston",
+  "timestamp": "1775",
+  "location": "Boston",
+  "type": "intermediate"
+}`},
+        {id: 'E_BRITISH_WITHDRAW_BOSTON', label: 'Event', title: `{
+  "description": "British forced to withdraw from Boston by sea",
+  "timestamp": "1776-03",
+  "location": "Boston",
+  "type": "intermediate"
+}`},
+        {id: 'E_PATRIOTS_CONTROL_COLONIES', label: 'Event', title: `{
+  "description": "Patriots left in control in every colony",
+  "timestamp": "1776-03",
+  "type": "outcome"
+}`},
+        {id: 'E_KING_GEORGE_PROCLAIMS_REBELLION', label: 'Event', title: `{
+  "description": "King George III proclaims Massachusetts to be in a state of open defiance and rebellion",
+  "timestamp": "1775-08",
+  "type": "intermediate"
+}`},
+        {id: 'E_DEBATE_ARTICLES_CONFEDERATION', label: 'Event', title: `{
+  "description": "Second Continental Congress begins debating and deliberating on the Articles of Confederation",
+  "timestamp": "1776",
+  "type": "intermediate"
+}`},
+        {id: 'E_LEE_RESOLUTION_PASSED', label: 'Event', title: `{
+  "description": "Lee Resolution passed, affirming support for national independence",
+  "timestamp": "1776-07-02",
+  "type": "intermediate"
+}`},
+        {id: 'E_DECLARATION_INDEPENDENCE_ADOPTED', label: 'Event', title: `{
+  "description": "Declaration of Independence unanimously adopted by Second Continental Congress",
+  "timestamp": "1776-07-04",
+  "type": "triggering"
+}`},
+        {id: 'E_REVOLUTIONARY_WAR_CONTINUES', label: 'Event', title: `{
+  "description": "The Revolutionary War continues for another five years",
+  "timestamp": "1776-1781",
+  "type": "intermediate"
+}`},
+        {id: 'E_FRANCE_ENTERS_WAR', label: 'Event', title: `{
+  "description": "France enters the war, supporting the colonial cause of independence",
+  "type": "intermediate"
+}`},
+        {id: 'E_SIEGE_YORKTOWN', label: 'Event', title: `{
+  "description": "Siege of Yorktown led by Washington with support from France",
+  "timestamp": "1781-09-28",
+  "location": "Yorktown",
+  "type": "intermediate"
+}`},
+        {id: 'E_YORKTOWN_VICTORY', label: 'Event', title: `{
+  "description": "Decisive victory by Washington and the Continental Army at Yorktown, capturing British troops",
+  "timestamp": "1781",
+  "location": "Yorktown",
+  "type": "triggering"
+}`},
+        {id: 'E_BRITISH_NEGOTIATE_END', label: 'Event', title: `{
+  "description": "King George III and the British negotiate an end to colonial rule",
+  "timestamp": "1781-1783",
+  "type": "intermediate"
+}`},
+        {id: 'E_BRITISH_ACKNOWLEDGE_INDEPENDENCE', label: 'Event', title: `{
+  "description": "British acknowledge the independence of the United States",
+  "timestamp": "1783",
+  "type": "intermediate"
+}`},
+        {id: 'E_TREATY_PARIS_SIGNED', label: 'Event', title: `{
+  "description": "The British sign the Treaty of Paris, codifying independence and granting territory",
+  "timestamp": "1783-09-03",
+  "type": "outcome"
+}`},
+        {id: 'E_ESTABLISHMENT_USA', label: 'Event', title: `{
+  "description": "Establishment of the sovereign United States of America",
+  "timestamp": "1783",
+  "type": "outcome"
+}`},
+        {id: 'E_FORMATION_BRITISH_NORTH_AMERICA', label: 'Event', title: `{
+  "description": "Formation of British North America and Spanish Florida",
+  "timestamp": "1783",
+  "type": "outcome"
+}`},
+        {id: 'E_END_FIRST_BRITISH_EMPIRE', label: 'Event', title: `{
+  "description": "End of the First British Empire",
+  "timestamp": "1783",
+  "type": "outcome"
+}`},
+        {id: 'E_BEGIN_AGE_REVOLUTION', label: 'Event', title: `{
+  "description": "Began the Age of Revolution",
+  "timestamp": "1783",
+  "type": "outcome"
+}`},
+        {id: 'E_FOUNDING_FIRST_REPUBLIC', label: 'Event', title: `{
+  "description": "World's first federal republic founded on the consent of the governed",
+  "timestamp": "1783",
+  "type": "outcome"
+}`},
+        {id: 'E_OVERTHROW_MONARCHICAL_RULE', label: 'Event', title: `{
+  "description": "First permanently successful overthrow of monarchical colonial rule",
+  "timestamp": "1783",
+  "type": "outcome"
+}`},
+        {id: 'E_LOYALISTS_MIGRATE', label: 'Event', title: `{
+  "description": "About 60,000 Loyalists migrated to other British territories",
+  "timestamp": "1783",
+  "type": "outcome"
+}`},
+        {id: 'C_SALUTARY_NEGLECT', label: 'Condition', title: `{
+  "description": "British policy of salutary neglect towards the colonies",
+  "type": "background"
+}`},
+        {id: 'C_COLONISTS_SELF_GOVERNED', label: 'Condition', title: `{
+  "description": "Colonists accustomed to running their own affairs/self-governance",
+  "type": "enabling"
+}`},
+        {id: 'C_NATIONAL_DEBT', label: 'Condition', title: `{
+  "description": "British national debt grown to \u00a3133 million after French and Indian War",
+  "type": "constraining"
+}`},
+        {id: 'C_LACK_COLONY_REPRESENTATION', label: 'Condition', title: `{
+  "description": "Colonists lack direct representation in Parliament",
+  "type": "background"
+}`},
+        {id: 'C_MILITIAS_EXPERIENCE', label: 'Condition', title: `{
+  "description": "Militias existed in every colony and had gained military experience in the French and Indian War",
+  "type": "enabling"
+}`},
+        {id: 'A_BRITISH_PARLIAMENT', label: 'Actor', title: `{
+  "name": "British Parliament",
+  "role": "Legislative body of Great Britain"
+}`},
+        {id: 'A_KING_GEORGE_III', label: 'Actor', title: `{
+  "name": "King George III",
+  "role": "Monarch of Great Britain"
+}`},
+        {id: 'A_COLONIAL_SEPARATIST_LEADERS', label: 'Actor', title: `{
+  "name": "Colonial Separatist Leaders",
+  "role": "Leaders of the American Revolution"
+}`},
+        {id: 'A_SONS_OF_LIBERTY', label: 'Actor', title: `{
+  "name": "Sons of Liberty",
+  "role": "Colonial resistance organization"
+}`},
+        {id: 'A_STAMP_ACT_CONGRESS', label: 'Actor', title: `{
+  "name": "Stamp Act Congress",
+  "role": "Delegates from nine colonies"
+}`},
+        {id: 'A_JOHN_DICKINSON', label: 'Actor', title: `{
+  "name": "John Dickinson",
+  "role": "Moderate leader, author of Letters from a Farmer"
+}`},
+        {id: 'A_PATRIOTS', label: 'Actor', title: `{
+  "name": "Patriots",
+  "role": "Colonists supporting resistance and independence"
+}`},
+        {id: 'A_FIRST_CONT_CONGRESS', label: 'Actor', title: `{
+  "name": "First Continental Congress",
+  "role": "Delegates from 12 colonies, coordinating body"
+}`},
+        {id: 'A_SECOND_CONT_CONGRESS', label: 'Actor', title: `{
+  "name": "Second Continental Congress",
+  "role": "Delegates from Thirteen Colonies, governing body during war"
+}`},
+        {id: 'A_CONTINENTAL_ARMY', label: 'Actor', title: `{
+  "name": "Continental Army",
+  "role": "Military force of the United Colonies/States"
+}`},
+        {id: 'A_GEORGE_WASHINGTON', label: 'Actor', title: `{
+  "name": "George Washington",
+  "role": "Commander-in-chief of the Continental Army"
+}`},
+        {id: 'A_THOMAS_JEFFERSON', label: 'Actor', title: `{
+  "name": "Thomas Jefferson",
+  "role": "Primary author of the Declaration of Independence"
+}`},
+        {id: 'A_FRANCE', label: 'Actor', title: `{
+  "name": "France",
+  "role": "Foreign power supporting American independence"
+}`},
+        {id: 'A_CHARLES_CORNWALLIS', label: 'Actor', title: `{
+  "name": "Charles Cornwallis",
+  "role": "British general captured at Yorktown"
+}`},
+        {id: 'A_COMMITTEES_CORRESPONDENCE', label: 'Actor', title: `{
+  "name": "Committees of Correspondence",
+  "role": "Networks linking patriots, coordinating resistance"
+}`},
+        {id: 'CM_BRITISH_FISCAL_RESPONSE', label: 'Causal_Mechanism', title: `{
+  "description": "British government's response to post-war debt by imposing taxes and asserting control over colonies.",
+  "confidence": 0.9,
+  "status": "supported",
+  "level_of_detail": "moderate"
+}`},
+        {id: 'CM_COLONIAL_RESISTANCE_TAXES', label: 'Causal_Mechanism', title: `{
+  "description": "Process by which colonists organized political action and boycotts in response to British taxation without representation.",
+  "confidence": 0.9,
+  "status": "supported",
+  "level_of_detail": "high"
+}`},
+        {id: 'CM_ESCALATION_TENSIONS', label: 'Causal_Mechanism', title: `{
+  "description": "Cycle of British legislative action, colonial resistance, and violent incidents that increased animosity.",
+  "confidence": 0.9,
+  "status": "supported",
+  "level_of_detail": "high"
+}`},
+        {id: 'CM_INTOLERABLE_ACTS_BACKFIRE', label: 'Causal_Mechanism', title: `{
+  "description": "Process where British punitive measures against Massachusetts galvanized broader colonial unity and organized resistance.",
+  "confidence": 0.9,
+  "status": "supported",
+  "level_of_detail": "high"
+}`},
+        {id: 'CM_TRANSITION_TO_INDEPENDENCE', label: 'Causal_Mechanism', title: `{
+  "description": "Shift from coordinated resistance to formal declaration of independence and establishment of a unified military force.",
+  "confidence": 0.9,
+  "status": "supported",
+  "level_of_detail": "high"
+}`},
+        {id: 'CM_MILITARY_VICTORY_SECURES_INDEPENDENCE', label: 'Causal_Mechanism', title: `{
+  "description": "Process by which key military outcomes and foreign support led to British negotiation and recognition of independence.",
+  "confidence": 0.9,
+  "status": "supported",
+  "level_of_detail": "high"
+}`},
+        {id: 'H_POST_WAR_POLICY_TRIGGER', label: 'Hypothesis', title: `{
+  "description": "British post-French and Indian War policies, particularly taxation and control over western lands, triggered colonial discontent leading to the Revolution.",
+  "status": "supported"
+}`},
+        {id: 'H_NO_TAX_WITHOUT_REP', label: 'Hypothesis', title: `{
+  "description": "The principle 'No taxation without representation' was a fundamental grievance and core driver of colonial resistance against British policy.",
+  "status": "supported"
+}`},
+        {id: 'H_RESISTANCE_UNIFIES', label: 'Hypothesis', title: `{
+  "description": "Colonial resistance efforts, including congresses, boycotts, and committees of correspondence, fostered unity and provided infrastructure for rebellion.",
+  "status": "supported"
+}`},
+        {id: 'H_ACTS_INCIDENTS_ESCALATE', label: 'Hypothesis', title: `{
+  "description": "A cycle of British legislative actions (Townshend, Tea Act) and related incidents (Massacre, Gaspee) significantly escalated tensions and radicalized colonists.",
+  "status": "supported"
+}`},
+        {id: 'H_INTOLERABLE_ACTS_BACKFIRE_STRATEGY', label: 'Hypothesis', title: `{
+  "description": "The Intolerable Acts, intended to isolate and punish Massachusetts, were counterproductive and served to unite colonies and intensify the revolutionary cause.",
+  "status": "supported"
+}`},
+        {id: 'H_MILITARY_POLITICAL_ORG_CRITICAL', label: 'Hypothesis', title: `{
+  "description": "The formation of the Continental Army, appointment of Washington, and establishment of unified political bodies (Cont. Congress) were critical steps in transitioning from resistance to a war for independence.",
+  "status": "supported"
+}`},
+        {id: 'H_DECLARATION_FORMALIZED_GOAL', label: 'Hypothesis', title: `{
+  "description": "The Declaration of Independence formalized the goal of full independence and provided ideological justification, inspiring and escalating the war.",
+  "status": "supported"
+}`},
+        {id: 'H_FRANCE_YORKTOWN_DECISIVE', label: 'Hypothesis', title: `{
+  "description": "French military support and the decisive victory at the Siege of Yorktown were the key factors that compelled Britain to negotiate and recognize American independence.",
+  "status": "supported"
+}`},
+        {id: 'H_SALUTARY_NEGLECT_EXPECTATION', label: 'Hypothesis', title: `{
+  "description": "The long period of salutary neglect created an expectation of self-governance among colonists, making post-1763 attempts at direct control unacceptable.",
+  "status": "supported"
+}`},
+        {id: 'E_DECL_RIGHTS_GRIEVANCES_TEXT', label: 'Evidence', title: `{
+  "description": "Text of the Stamp Act Congress's Declaration of Rights and Grievances stating taxation without representation violated their rights as Englishmen.",
+  "type": "hoop"
+}`},
+        {id: 'E_SOL_ACTIONS', label: 'Evidence', title: `{
+  "description": "Actions by the Sons of Liberty, including public demonstrations, boycotts, threats of violence, burning records, and looting.",
+  "type": "general"
+}`},
+        {id: 'E_STAMP_ACT_BOYCOTT', label: 'Evidence', title: `{
+  "description": "Boycott on imports of all British merchandise organized by the Stamp Act Congress.",
+  "type": "general"
+}`},
+        {id: 'E_DICKINSON_PAMPHLET', label: 'Evidence', title: `{
+  "description": "John Dickinson's pamphlet arguing against the constitutionality of the Townshend Acts for revenue purposes.",
+  "type": "straw_in_the_wind"
+}`},
+        {id: 'E_TOWNSHEND_BOYCOTTS', label: 'Evidence', title: `{
+  "description": "Colonial boycotts of British goods in response to the Townshend Acts.",
+  "type": "general"
+}`},
+        {id: 'E_MASS_CIRCULAR_LETTER', label: 'Evidence', title: `{
+  "description": "Massachusetts Bay Colony Assembly issuing a circular letter urging colonies to coordinate resistance.",
+  "type": "general"
+}`},
+        {id: 'E_GOV_DISSOLVES_ASSEMBLY', label: 'Evidence', title: `{
+  "description": "Governor dissolving the Massachusetts Assembly when it refused to rescind the circular letter.",
+  "type": "general"
+}`},
+        {id: 'E_LIBERTY_RIOT_TROOP_DEPLOY', label: 'Evidence', title: `{
+  "description": "Riot over seizure of sloop Liberty, customs officials flee, prompting deployment of British troops to Boston.",
+  "type": "general"
+}`},
+        {id: 'E_BOSTON_TOWN_MEETING_ACTIONS', label: 'Evidence', title: `{
+  "description": "Boston town meeting declaring no obedience to parliamentary laws and calling for a convention.",
+  "type": "general"
+}`},
+        {id: 'E_TREASON_ACT_REACTIVATED', label: 'Evidence', title: `{
+  "description": "Reactivation of the Treason Act 1543 calling for subjects outside the realm to face trials in England.",
+  "type": "general"
+}`},
+        {id: 'E_MASSACRE_DESCRIPTIONS', label: 'Evidence', title: `{
+  "description": "Widespread descriptions of the Boston Massacre turning colonial sentiment against the British.",
+  "type": "straw_in_the_wind"
+}`},
+        {id: 'E_HUTCHINSON_OLIVER_LETTERS', label: 'Evidence', title: `{
+  "description": "Private letters published showing Governor Hutchinson claiming colonists couldn't enjoy all English liberties and Lt. Gov. Oliver calling for direct payment of officials.",
+  "type": "general"
+}`},
+        {id: 'E_COMMITTEES_CORRESPONDENCE_CREATION', label: 'Evidence', title: `{
+  "description": "Creation of new Committees of Correspondence linking Patriots in all 13 colonies, providing a framework for rebel government.",
+  "type": "general"
+}`},
+        {id: 'E_COMMITTEES_ENFORCING_BOYCOTT', label: 'Evidence', title: `{
+  "description": "Committees of Correspondence enforcing the boycott of British products by examining merchant records and publishing names.",
+  "type": "general"
+}`},
+        {id: 'E_TEA_ACT_PROVISIONS', label: 'Evidence', title: `{
+  "description": "The Tea Act provisions lowering the price of taxed tea to help the British East India Company undersell smuggled tea.",
+  "type": "general"
+}`},
+        {id: 'E_OPPOSITION_TEA_ACT', label: 'Evidence', title: `{
+  "description": "Opposition to the Tea Act by tax resisters and smugglers who stood to lose business.",
+  "type": "straw_in_the_wind"
+}`},
+        {id: 'E_TEA_PARTY_DESCRIPTION', label: 'Evidence', title: `{
+  "description": "Description of the Boston Tea Party incident, including men dressed as Native Americans boarding ships and dumping tea.",
+  "type": "smoking_gun"
+}`},
+        {id: 'E_INTOLERABLE_ACTS_DESCRIPTION', label: 'Evidence', title: `{
+  "description": "Description of the four Intolerable Acts: Massachusetts Government Act, Administration of Justice Act, Boston Port Act, Quartering Act.",
+  "type": "straw_in_the_wind"
+}`},
+        {id: 'E_DARKENING_OPINION', label: 'Evidence', title: `{
+  "description": "The Intolerable Acts 'further darkening colonial opinion towards England'.",
+  "type": "straw_in_the_wind"
+}`},
+        {id: 'E_SUFFOLK_RESOLVES', label: 'Evidence', title: `{
+  "description": "Massachusetts patriots issuing the Suffolk Resolves and forming an alternative shadow government.",
+  "type": "general"
+}`},
+        {id: 'E_FIRST_CONT_CONGRESS_ROLE', label: 'Evidence', title: `{
+  "description": "The First Continental Congress serving as a vehicle for deliberation and collective action.",
+  "type": "general"
+}`},
+        {id: 'E_CONGRESS_BOYCOTT_CALL', label: 'Evidence', title: `{
+  "description": "First Continental Congress calling for a boycott of all British goods beginning December 1, 1774.",
+  "type": "general"
+}`},
+        {id: 'E_MILITIA_COORDINATION', label: 'Evidence', title: `{
+  "description": "First Continental Congress beginning coordinating Patriot resistance by militias.",
+  "type": "general"
+}`},
+        {id: 'E_PATRIOTS_ARMED_UNIFIED', label: 'Evidence', title: `{
+  "description": "Statement that 'For the first time, the Patriots were armed and unified against Parliament' after the First Continental Congress actions.",
+  "type": "general"
+}`},
+        {id: 'E_WASHINGTON_APPOINTMENT_FACT', label: 'Evidence', title: `{
+  "description": "Second Continental Congress appointed George Washington as its commander-in-chief in June 1775.",
+  "type": "general"
+}`},
+        {id: 'E_BRITISH_WITHDRAW_BOSTON_OUTCOME', label: 'Evidence', title: `{
+  "description": "Washington and Continental Army forcing the British to withdraw by sea from Boston in March 1776.",
+  "type": "general"
+}`},
+        {id: 'E_PATRIOTS_CONTROL_OUTCOME', label: 'Evidence', title: `{
+  "description": "Patriots left in control in every colony after the British withdrew from Boston.",
+  "type": "general"
+}`},
+        {id: 'E_LEE_RESOLUTION_CONTENT', label: 'Evidence', title: `{
+  "description": "Passage of the Lee Resolution on July 2, 1776, affirming support for national independence.",
+  "type": "general"
+}`},
+        {id: 'E_DECLARATION_ADOPTED_FACT', label: 'Evidence', title: `{
+  "description": "Unanimous adoption of the Declaration of Independence on July 4, 1776.",
+  "type": "hoop"
+}`},
+        {id: 'E_DECLARATION_CONTENT', label: 'Evidence', title: `{
+  "description": "The Declaration of Independence embodying political philosophies of liberalism and republicanism, rejecting monarchy/aristocracy, proclaiming equality.",
+  "type": "general"
+}`},
+        {id: 'E_FRANCE_ENTRY_FACT', label: 'Evidence', title: `{
+  "description": "Fact that France ultimately entered the war, supporting the colonial cause of independence.",
+  "type": "general"
+}`},
+        {id: 'E_YORKTOWN_VICTORY_DESCRIPTION', label: 'Evidence', title: `{
+  "description": "Description of the decisive victory at the Siege of Yorktown on September 28, 1781, including capture of British troops.",
+  "type": "smoking_gun"
+}`},
+        {id: 'E_YORKTOWN_EFFECT_PARLIAMENT', label: 'Evidence', title: `{
+  "description": "Victory at Yorktown inspiring King George III and leading to collapse of his control and consensus in Parliament that the war should end.",
+  "type": "general"
+}`},
+        {id: 'E_TREATY_PARIS_PROVISIONS', label: 'Evidence', title: `{
+  "description": "Provisions of the Treaty of Paris signed September 3, 1783, granting independence and territory.",
+  "type": "hoop"
+}`},
+        {id: 'E_SALUTARY_NEGLECT_DESCRIPTION', label: 'Evidence', title: `{
+  "description": "Description of the British policy of salutary neglect where Britain traded but mostly left colonies alone, leading colonists to become accustomed to running their own affairs.",
+  "type": "general"
+}`},
+        {id: 'E_LEVI_PRESTON_QUOTE', label: 'Evidence', title: `{
+  "description": "Quote from Capt. Levi Preston on why Americans rebelled: '...we always had governed ourselves, and we always meant to. They didn\u2019t mean we should.'",
+  "type": "smoking_gun"
+}`},
+        {id: 'E_COLONIAL_OPPOSITION_1680S', label: 'Evidence', title: `{
+  "description": "Colonists fiercely opposed attempts in the 1680s to bring New England under direct English control.",
+  "type": "general"
+}`},
+        {id: 'E_BOSTON_REVOLT_1689', label: 'Evidence', title: `{
+  "description": "The 1689 Boston revolt which overthrew Dominion rule.",
+  "type": "general"
+}`},
+        {id: 'E_RESTORATION_LOCAL_GOV', label: 'Evidence', title: `{
+  "description": "New monarchs granting new charters and restoring local democratic self-government after 1689.",
+  "type": "general"
+}`},
+        {id: 'E_RARE_MILITARY_PRESENCE', label: 'Evidence', title: `{
+  "description": "Statement that the British government rarely sent military forces to America before 1755.",
+  "type": "general"
+}`},
+        {id: 'E_MIDDLEKAUFF_QUOTE', label: 'Evidence', title: `{
+  "description": "Historian Robert Middlekauff quote: 'Americans had become almost completely self-governing' before the Revolution.",
+  "type": "general"
+}`},
+        {id: 'E_GRENVILLE_BELIEF', label: 'Evidence', title: `{
+  "description": "Grenville's belief that the colonies should help pay the troop costs.",
+  "type": "general"
+}`},
+        {id: 'E_TRIAL_ACQUITTAL_SOLDIERS', label: 'Evidence', title: `{
+  "description": "Trial and acquittal of the soldiers involved in the Boston Massacre.",
+  "type": "general"
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'E_F_I_WAR_END', to: 'E_BRITISH_IMPOSE_TAXES', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_F_I_WAR_END', to: 'E_WESTERN_LANDS_CONTROL', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_BRITISH_IMPOSE_TAXES', to: 'E_STAMP_ACT_CONGRESS_CONVENES', label: 'causes', title: `{
+  "certainty": 0.9,
+  "mechanism_id": "CM_COLONIAL_RESISTANCE_TAXES",
+  "type": "indirect"
+}`},
+        {from: 'E_STAMP_ACT_CONGRESS_CONVENES', to: 'E_DECL_RIGHTS_GRIEVANCES', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_DECL_RIGHTS_GRIEVANCES', to: 'CM_COLONIAL_RESISTANCE_TAXES', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'E_TOWNSHEND_ACTS_PASSED', to: 'CM_ESCALATION_TENSIONS', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'E_BOSTON_MASSACRE', to: 'CM_ESCALATION_TENSIONS', label: 'causes', title: `{
+  "certainty": 0.85,
+  "type": "direct"
+}`},
+        {from: 'E_BOSTON_TEA_PARTY', to: 'E_LONDON_CLOSES_BOSTON_HARBOR', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_LONDON_CLOSES_BOSTON_HARBOR', to: 'E_INTOLERABLE_ACTS_ENACTED', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_INTOLERABLE_ACTS_ENACTED', to: 'CM_INTOLERABLE_ACTS_BACKFIRE', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'E_INTOLERABLE_ACTS_ENACTED', to: 'E_FIRST_CONT_CONGRESS_CONVENES', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'E_FIRST_CONT_CONGRESS_CONVENES', to: 'E_PATRIOTS_COORDINATE_RESISTANCE', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'E_PATRIOTS_COORDINATE_RESISTANCE', to: 'E_BATTLES_LEX_CONCORD', label: 'causes', title: `{
+  "certainty": 0.85,
+  "type": "direct"
+}`},
+        {from: 'E_BATTLES_LEX_CONCORD', to: 'E_SECOND_CONT_CONGRESS_CONVENES', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_SECOND_CONT_CONGRESS_CONVENES', to: 'CM_TRANSITION_TO_INDEPENDENCE', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'E_SECOND_CONT_CONGRESS_CONVENES', to: 'E_CONTINENTAL_ARMY_FORMED', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_CONTINENTAL_ARMY_FORMED', to: 'E_WASHINGTON_APPOINTED', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_WASHINGTON_APPOINTED', to: 'E_WASHINGTON_SURROUNDS_BOSTON', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'E_WASHINGTON_SURROUNDS_BOSTON', to: 'E_BRITISH_WITHDRAW_BOSTON', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_BRITISH_WITHDRAW_BOSTON', to: 'E_PATRIOTS_CONTROL_COLONIES', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_SECOND_CONT_CONGRESS_CONVENES', to: 'E_DEBATE_ARTICLES_CONFEDERATION', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'E_DEBATE_ARTICLES_CONFEDERATION', to: 'E_LEE_RESOLUTION_PASSED', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_LEE_RESOLUTION_PASSED', to: 'E_DECLARATION_INDEPENDENCE_ADOPTED', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_DECLARATION_INDEPENDENCE_ADOPTED', to: 'E_REVOLUTIONARY_WAR_CONTINUES', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'E_REVOLUTIONARY_WAR_CONTINUES', to: 'E_FRANCE_ENTERS_WAR', label: 'causes', title: `{
+  "certainty": 0.85,
+  "mechanism_id": "CM_MILITARY_VICTORY_SECURES_INDEPENDENCE",
+  "type": "indirect"
+}`},
+        {from: 'E_FRANCE_ENTERS_WAR', to: 'E_SIEGE_YORKTOWN', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'E_SIEGE_YORKTOWN', to: 'E_YORKTOWN_VICTORY', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_YORKTOWN_VICTORY', to: 'E_BRITISH_NEGOTIATE_END', label: 'causes', title: `{
+  "certainty": 0.95,
+  "mechanism_id": "CM_MILITARY_VICTORY_SECURES_INDEPENDENCE",
+  "type": "direct"
+}`},
+        {from: 'E_BRITISH_NEGOTIATE_END', to: 'E_BRITISH_ACKNOWLEDGE_INDEPENDENCE', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_BRITISH_ACKNOWLEDGE_INDEPENDENCE', to: 'E_TREATY_PARIS_SIGNED', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_TREATY_PARIS_SIGNED', to: 'E_ESTABLISHMENT_USA', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'E_ESTABLISHMENT_USA', to: 'E_FOUNDING_FIRST_REPUBLIC', label: 'causes', title: `{
+  "certainty": 0.95,
+  "type": "direct"
+}`},
+        {from: 'C_NATIONAL_DEBT', to: 'CM_BRITISH_FISCAL_RESPONSE', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct"
+}`},
+        {from: 'C_COLONISTS_SELF_GOVERNED', to: 'CM_COLONIAL_RESISTANCE_TAXES', label: 'enables', title: `{
+  "certainty": 0.9,
+  "type": "background"
+}`},
+        {from: 'C_COLONISTS_SELF_GOVERNED', to: 'CM_TRANSITION_TO_INDEPENDENCE', label: 'enables', title: `{
+  "certainty": 0.9,
+  "type": "background"
+}`},
+        {from: 'C_MILITIAS_EXPERIENCE', to: 'E_PATRIOTS_COORDINATE_RESISTANCE', label: 'enables', title: `{
+  "certainty": 0.85,
+  "type": "facilitating"
+}`},
+        {from: 'A_BRITISH_PARLIAMENT', to: 'E_BRITISH_IMPOSE_TAXES', label: 'initiates', title: `{
+  "certainty": 0.95
+}`},
+        {from: 'A_BRITISH_PARLIAMENT', to: 'E_TOWNSHEND_ACTS_PASSED', label: 'initiates', title: `{
+  "certainty": 0.95
+}`},
+        {from: 'A_BRITISH_PARLIAMENT', to: 'E_INTOLERABLE_ACTS_ENACTED', label: 'initiates', title: `{
+  "certainty": 0.95
+}`},
+        {from: 'A_KING_GEORGE_III', to: 'E_BRITISH_DEPLOY_TROOPS_BOSTON', label: 'initiates', title: `{
+  "certainty": 0.9
+}`},
+        {from: 'A_KING_GEORGE_III', to: 'E_KING_GEORGE_PROCLAIMS_REBELLION', label: 'initiates', title: `{
+  "certainty": 0.9
+}`},
+        {from: 'A_SONS_OF_LIBERTY', to: 'E_BOSTON_TEA_PARTY', label: 'initiates', title: `{
+  "certainty": 0.95
+}`},
+        {from: 'A_STAMP_ACT_CONGRESS', to: 'E_STAMP_ACT_CONGRESS_CONVENES', label: 'initiates', title: `{
+  "certainty": 0.95
+}`},
+        {from: 'A_STAMP_ACT_CONGRESS', to: 'E_DECL_RIGHTS_GRIEVANCES', label: 'initiates', title: `{
+  "certainty": 0.95
+}`},
+        {from: 'A_FIRST_CONT_CONGRESS', to: 'E_FIRST_CONT_CONGRESS_CONVENES', label: 'initiates', title: `{
+  "certainty": 0.95
+}`},
+        {from: 'A_FIRST_CONT_CONGRESS', to: 'E_PATRIOTS_COORDINATE_RESISTANCE', label: 'initiates', title: `{
+  "certainty": 0.9
+}`},
+        {from: 'A_SECOND_CONT_CONGRESS', to: 'E_SECOND_CONT_CONGRESS_CONVENES', label: 'initiates', title: `{
+  "certainty": 0.95
+}`},
+        {from: 'A_SECOND_CONT_CONGRESS', to: 'E_CONTINENTAL_ARMY_FORMED', label: 'initiates', title: `{
+  "certainty": 0.95
+}`},
+        {from: 'A_SECOND_CONT_CONGRESS', to: 'E_DECLARATION_INDEPENDENCE_ADOPTED', label: 'initiates', title: `{
+  "certainty": 0.95
+}`},
+        {from: 'A_GEORGE_WASHINGTON', to: 'E_WASHINGTON_APPOINTED', label: 'initiates', title: `{
+  "certainty": 0.95
+}`},
+        {from: 'A_GEORGE_WASHINGTON', to: 'E_WASHINGTON_SURROUNDS_BOSTON', label: 'initiates', title: `{
+  "certainty": 0.9
+}`},
+        {from: 'A_GEORGE_WASHINGTON', to: 'E_SIEGE_YORKTOWN', label: 'initiates', title: `{
+  "certainty": 0.9
+}`},
+        {from: 'A_FRANCE', to: 'E_FRANCE_ENTERS_WAR', label: 'initiates', title: `{
+  "certainty": 0.85
+}`},
+        {from: 'A_COMMITTEES_CORRESPONDENCE', to: 'E_PATRIOTS_COORDINATE_RESISTANCE', label: 'initiates', title: `{
+  "certainty": 0.85
+}`},
+        {from: 'E_BRITISH_IMPOSE_TAXES', to: 'CM_BRITISH_FISCAL_RESPONSE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_WESTERN_LANDS_CONTROL', to: 'CM_BRITISH_FISCAL_RESPONSE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_STAMP_ACT_CONGRESS_CONVENES', to: 'CM_COLONIAL_RESISTANCE_TAXES', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_DECL_RIGHTS_GRIEVANCES', to: 'CM_COLONIAL_RESISTANCE_TAXES', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_TOWNSHEND_ACTS_PASSED', to: 'CM_ESCALATION_TENSIONS', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_BRITISH_DEPLOY_TROOPS_BOSTON', to: 'CM_ESCALATION_TENSIONS', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_BOSTON_MASSACRE', to: 'CM_ESCALATION_TENSIONS', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_GASPEE_AFFAIR', to: 'CM_ESCALATION_TENSIONS', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_BOSTON_TEA_PARTY', to: 'CM_ESCALATION_TENSIONS', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_LONDON_CLOSES_BOSTON_HARBOR', to: 'CM_INTOLERABLE_ACTS_BACKFIRE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_INTOLERABLE_ACTS_ENACTED', to: 'CM_INTOLERABLE_ACTS_BACKFIRE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_FIRST_CONT_CONGRESS_CONVENES', to: 'CM_INTOLERABLE_ACTS_BACKFIRE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_PATRIOTS_COORDINATE_RESISTANCE', to: 'CM_INTOLERABLE_ACTS_BACKFIRE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_BATTLES_LEX_CONCORD', to: 'CM_TRANSITION_TO_INDEPENDENCE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_SECOND_CONT_CONGRESS_CONVENES', to: 'CM_TRANSITION_TO_INDEPENDENCE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_CONTINENTAL_ARMY_FORMED', to: 'CM_TRANSITION_TO_INDEPENDENCE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_WASHINGTON_APPOINTED', to: 'CM_TRANSITION_TO_INDEPENDENCE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_DECLARATION_INDEPENDENCE_ADOPTED', to: 'CM_TRANSITION_TO_INDEPENDENCE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_FRANCE_ENTERS_WAR', to: 'CM_MILITARY_VICTORY_SECURES_INDEPENDENCE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_SIEGE_YORKTOWN', to: 'CM_MILITARY_VICTORY_SECURES_INDEPENDENCE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_YORKTOWN_VICTORY', to: 'CM_MILITARY_VICTORY_SECURES_INDEPENDENCE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_BRITISH_NEGOTIATE_END', to: 'CM_MILITARY_VICTORY_SECURES_INDEPENDENCE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_BRITISH_ACKNOWLEDGE_INDEPENDENCE', to: 'CM_MILITARY_VICTORY_SECURES_INDEPENDENCE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'E_TREATY_PARIS_SIGNED', to: 'CM_MILITARY_VICTORY_SECURES_INDEPENDENCE', label: 'part_of_mechanism', title: `{}`},
+        {from: 'H_POST_WAR_POLICY_TRIGGER', to: 'CM_BRITISH_FISCAL_RESPONSE', label: 'explains_mechanism', title: `{
+  "certainty": 0.9,
+  "type_of_claim": "operational_details"
+}`},
+        {from: 'H_NO_TAX_WITHOUT_REP', to: 'CM_COLONIAL_RESISTANCE_TAXES', label: 'explains_mechanism', title: `{
+  "certainty": 0.95,
+  "type_of_claim": "operational_details"
+}`},
+        {from: 'H_RESISTANCE_UNIFIES', to: 'CM_COLONIAL_RESISTANCE_TAXES', label: 'explains_mechanism', title: `{
+  "certainty": 0.9,
+  "type_of_claim": "significance"
+}`},
+        {from: 'H_ACTS_INCIDENTS_ESCALATE', to: 'CM_ESCALATION_TENSIONS', label: 'explains_mechanism', title: `{
+  "certainty": 0.9,
+  "type_of_claim": "operational_details"
+}`},
+        {from: 'H_INTOLERABLE_ACTS_BACKFIRE_STRATEGY', to: 'CM_INTOLERABLE_ACTS_BACKFIRE', label: 'explains_mechanism', title: `{
+  "certainty": 0.9,
+  "type_of_claim": "operational_details"
+}`},
+        {from: 'H_MILITARY_POLITICAL_ORG_CRITICAL', to: 'CM_TRANSITION_TO_INDEPENDENCE', label: 'explains_mechanism', title: `{
+  "certainty": 0.95,
+  "type_of_claim": "significance"
+}`},
+        {from: 'H_DECLARATION_FORMALIZED_GOAL', to: 'CM_TRANSITION_TO_INDEPENDENCE', label: 'explains_mechanism', title: `{
+  "certainty": 0.9,
+  "type_of_claim": "component_role"
+}`},
+        {from: 'H_FRANCE_YORKTOWN_DECISIVE', to: 'CM_MILITARY_VICTORY_SECURES_INDEPENDENCE', label: 'explains_mechanism', title: `{
+  "certainty": 0.95,
+  "type_of_claim": "significance"
+}`},
+        {from: 'H_SALUTARY_NEGLECT_EXPECTATION', to: 'E_BRITISH_IMPOSE_TAXES', label: 'causes', title: `{
+  "certainty": 0.8,
+  "type": "indirect"
+}`},
+        {from: 'E_DECL_RIGHTS_GRIEVANCES_TEXT', to: 'H_NO_TAX_WITHOUT_REP', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "source_text_quote": "\"Declaration of Rights and Grievances\" argued that taxation without representation violated their rights as Englishmen",
+  "certainty": 0.95
+}`},
+        {from: 'E_DECL_RIGHTS_GRIEVANCES_TEXT', to: 'H_RESISTANCE_UNIFIES', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "drawn up a Declaration of Rights and Grievances stating that the colonists were equal to all other British citizens... and Congress emphasized their determination by organizing a boycott on imports of all British merchandise",
+  "certainty": 0.9
+}`},
+        {from: 'E_SOL_ACTIONS', to: 'H_RESISTANCE_UNIFIES', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "Shortly following adoption of the Stamp Act, the Sons of Liberty formed, and began using public demonstrations, boycotts, and threats of violence to ensure that the British tax laws became unenforceable. In Boston, the Sons of Liberty burned the records of the vice admiralty court and looted the home of chief justice Thomas Hutchinson.",
+  "certainty": 0.9
+}`},
+        {from: 'E_STAMP_ACT_BOYCOTT', to: 'H_RESISTANCE_UNIFIES', label: 'supports', title: `{
+  "probative_value": 0.75,
+  "source_text_quote": "Congress emphasized their determination by organizing a boycott on imports of all British merchandise.",
+  "certainty": 0.9
+}`},
+        {from: 'E_DICKINSON_PAMPHLET', to: 'H_NO_TAX_WITHOUT_REP', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "in his widely read pamphlet, Letters from a Farmer in Pennsylvania, John Dickinson argued against the constitutionality of the acts because their purpose was to raise revenue and not to regulate trade.",
+  "certainty": 0.85
+}`},
+        {from: 'E_TOWNSHEND_BOYCOTTS', to: 'H_RESISTANCE_UNIFIES', label: 'supports', title: `{
+  "probative_value": 0.5,
+  "source_text_quote": "Colonists responded to the taxes by organizing new boycotts of British goods.",
+  "certainty": 0.8
+}`},
+        {from: 'E_MASS_CIRCULAR_LETTER', to: 'H_RESISTANCE_UNIFIES', label: 'supports', title: `{
+  "probative_value": 0.65,
+  "source_text_quote": "In February 1768, the Assembly of Massachusetts Bay Colony issued a circular letter to the other colonies urging them to coordinate resistance.",
+  "certainty": 0.85
+}`},
+        {from: 'E_GOV_DISSOLVES_ASSEMBLY', to: 'H_ACTS_INCIDENTS_ESCALATE', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "The governor dissolved the assembly when it refused to rescind the letter.",
+  "certainty": 0.85
+}`},
+        {from: 'E_LIBERTY_RIOT_TROOP_DEPLOY', to: 'H_ACTS_INCIDENTS_ESCALATE', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "a riot broke out in Boston in June 1768 over the seizure of the sloop Liberty, owned by John Hancock, for alleged smuggling. Customs officials were forced to flee, prompting the British to deploy troops to Boston.",
+  "certainty": 0.9
+}`},
+        {from: 'E_BOSTON_TOWN_MEETING_ACTIONS', to: 'H_RESISTANCE_UNIFIES', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "A Boston town meeting declared that no obedience was due to parliamentary laws and called for the convening of a convention.",
+  "certainty": 0.85
+}`},
+        {from: 'E_TREASON_ACT_REACTIVATED', to: 'H_ACTS_INCIDENTS_ESCALATE', label: 'supports', title: `{
+  "probative_value": 0.5,
+  "source_text_quote": "In January 1769, Parliament responded to the unrest by reactivating the Treason Act 1543 which called for subjects outside the realm to face trials for treason in England... and the threat caused widespread outrage",
+  "certainty": 0.8
+}`},
+        {from: 'E_MASSACRE_DESCRIPTIONS', to: 'H_ACTS_INCIDENTS_ESCALATE', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "the widespread descriptions soon began to turn colonial sentiment against the British. This accelerated the downward spiral in the relationship between Britain and the province of Massachusetts.",
+  "certainty": 0.9
+}`},
+        {from: 'E_HUTCHINSON_OLIVER_LETTERS', to: 'H_ACTS_INCIDENTS_ESCALATE', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "In 1773, private letters were published in which Massachusetts Governor Thomas Hutchinson claimed that the colonists could not enjoy all English liberties, and in which Lieutenant Governor Andrew Oliver called for the direct payment of colonial officials... The letters' contents were used as evidence of a systematic plot against American rights, and discredited Hutchinson in the eyes of the people",
+  "certainty": 0.85
+}`},
+        {from: 'E_COMMITTEES_CORRESPONDENCE_CREATION', to: 'H_RESISTANCE_UNIFIES', label: 'supports', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "In Boston, Samuel Adams set about creating new Committees of Correspondence, which linked Patriots in all 13 colonies and eventually provided the framework for a rebel government.",
+  "certainty": 0.95
+}`},
+        {from: 'E_COMMITTEES_ENFORCING_BOYCOTT', to: 'H_RESISTANCE_UNIFIES', label: 'supports', title: `{
+  "probative_value": 0.75,
+  "source_text_quote": "When the First Continental Congress decided to boycott British products, the colonial and local Committees took charge, examining merchant records and publishing the names of merchants who attempted to defy the boycott by importing British goods.",
+  "certainty": 0.9
+}`},
+        {from: 'E_TEA_ACT_PROVISIONS', to: 'H_ACTS_INCIDENTS_ESCALATE', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "Parliament passed the Tea Act lowering the price of taxed tea exported to the colonies, to help the British East India Company undersell smuggled untaxed Dutch tea.",
+  "certainty": 0.85
+}`},
+        {from: 'E_OPPOSITION_TEA_ACT', to: 'H_ACTS_INCIDENTS_ESCALATE', label: 'supports', title: `{
+  "probative_value": 0.65,
+  "source_text_quote": "The act was opposed by those who resisted the taxes and also by smugglers who stood to lose business.",
+  "certainty": 0.85
+}`},
+        {from: 'E_TEA_PARTY_DESCRIPTION', to: 'H_ACTS_INCIDENTS_ESCALATE', label: 'supports', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "On December 16, 1773, in a seminal event in the American Revolution's escalation, Sons of Liberty activists wearing costumes of Native Americans instigated the Boston Tea Party, during which they boarded and dumped chests of tea owned by the British East India Company into Boston Harbor.",
+  "certainty": 0.95
+}`},
+        {from: 'E_INTOLERABLE_ACTS_DESCRIPTION', to: 'H_INTOLERABLE_ACTS_BACKFIRE_STRATEGY', label: 'supports', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "The British government responded by passing four laws that came to be known as the Intolerable Acts... The first was the Massachusetts Government Act... The second was the Administration of Justice Act... The third was the Boston Port Act... The fourth was the Quartering Act of 1774",
+  "certainty": 0.9
+}`},
+        {from: 'E_DARKENING_OPINION', to: 'H_INTOLERABLE_ACTS_BACKFIRE_STRATEGY', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "...further darkening colonial opinion towards England.",
+  "certainty": 0.85
+}`},
+        {from: 'E_SUFFOLK_RESOLVES', to: 'H_INTOLERABLE_ACTS_BACKFIRE_STRATEGY', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "In response, Massachusetts patriots issued the Suffolk Resolves and formed an alternative shadow government known as the Provincial Congress, which began training militia outside British-occupied Boston.",
+  "certainty": 0.9
+}`},
+        {from: 'E_FIRST_CONT_CONGRESS_ROLE', to: 'H_INTOLERABLE_ACTS_BACKFIRE_STRATEGY', label: 'supports', title: `{
+  "probative_value": 0.75,
+  "source_text_quote": "In September 1774, the First Continental Congress convened, consisting of representatives from each colony, to serve as a vehicle for deliberation and collective action.",
+  "certainty": 0.9
+}`},
+        {from: 'E_CONGRESS_BOYCOTT_CALL', to: 'H_INTOLERABLE_ACTS_BACKFIRE_STRATEGY', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "Congress called for a boycott beginning on December 1, 1774, of all British goods; it was enforced by new local committees authorized by the Congress.",
+  "certainty": 0.9
+}`},
+        {from: 'E_MILITIA_COORDINATION', to: 'H_INTOLERABLE_ACTS_BACKFIRE_STRATEGY', label: 'supports', title: `{
+  "probative_value": 0.65,
+  "source_text_quote": "It also began coordinating Patriot resistance by militias which existed in every colony",
+  "certainty": 0.85
+}`},
+        {from: 'E_PATRIOTS_ARMED_UNIFIED', to: 'H_INTOLERABLE_ACTS_BACKFIRE_STRATEGY', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "For the first time, the Patriots were armed and unified against Parliament.",
+  "certainty": 0.9
+}`},
+        {from: 'E_WASHINGTON_APPOINTMENT_FACT', to: 'H_MILITARY_POLITICAL_ORG_CRITICAL', label: 'supports', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "The Second Continental Congress... formed the Continental Army and appointed George Washington as its commander-in-chief in June 1775",
+  "certainty": 0.95
+}`},
+        {from: 'E_BRITISH_WITHDRAW_BOSTON_OUTCOME', to: 'H_MILITARY_POLITICAL_ORG_CRITICAL', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "Washington and the Continental Army responded by surrounding Boston, forcing the British to withdraw by sea in March 1776, and leaving Patriots in control in every colony.",
+  "certainty": 0.9
+}`},
+        {from: 'E_PATRIOTS_CONTROL_OUTCOME', to: 'H_MILITARY_POLITICAL_ORG_CRITICAL', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "leaving Patriots in control in every colony.",
+  "certainty": 0.9
+}`},
+        {from: 'E_LEE_RESOLUTION_CONTENT', to: 'H_DECLARATION_FORMALIZED_GOAL', label: 'supports', title: `{
+  "probative_value": 0.75,
+  "source_text_quote": "On July 2, they passed the Lee Resolution, affirming their support for national independence",
+  "certainty": 0.9
+}`},
+        {from: 'E_DECLARATION_ADOPTED_FACT', to: 'H_DECLARATION_FORMALIZED_GOAL', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "source_text_quote": "on July 4, 1776, they unanimously adopted the Declaration of Independence... which inspired, formalized, and escalated the war.",
+  "certainty": 0.95
+}`},
+        {from: 'E_DECLARATION_CONTENT', to: 'H_DECLARATION_FORMALIZED_GOAL', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "which embodied the political philosophies of liberalism and republicanism, rejected monarchy and aristocracy, and famously proclaimed that \"all men are created equal\".",
+  "certainty": 0.85
+}`},
+        {from: 'E_FRANCE_ENTRY_FACT', to: 'H_FRANCE_YORKTOWN_DECISIVE', label: 'supports', title: `{
+  "probative_value": 0.75,
+  "source_text_quote": "during which France ultimately entered the war, supporting the colonial cause of independence.",
+  "certainty": 0.9
+}`},
+        {from: 'E_YORKTOWN_VICTORY_DESCRIPTION', to: 'H_FRANCE_YORKTOWN_DECISIVE', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "source_text_quote": "On September 28, 1781, Washington, with support from Marquis de Lafayette, the French Army, and French Navy, led the Continental Army's most decisive victory, capturing roughly 7,500 British troops led by British general Charles Cornwallis during the Siege of Yorktown",
+  "certainty": 0.95
+}`},
+        {from: 'E_YORKTOWN_EFFECT_PARLIAMENT', to: 'H_FRANCE_YORKTOWN_DECISIVE', label: 'supports', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "leading to the collapse of King George's control of Parliament and consensus in Parliament that the war should be ended on American terms.",
+  "certainty": 0.9
+}`},
+        {from: 'E_TREATY_PARIS_PROVISIONS', to: 'H_FRANCE_YORKTOWN_DECISIVE', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "source_text_quote": "On September 3, 1783, the British signed the Treaty of Paris, granting their former colonies nearly all the territory east of the Mississippi River and south of the Great Lakes.",
+  "certainty": 0.95
+}`},
+        {from: 'E_SALUTARY_NEGLECT_DESCRIPTION', to: 'H_SALUTARY_NEGLECT_EXPECTATION', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "Under the British policy of salutary neglect, Britain traded with the colonies but otherwise mostly left them alone over the first 150 years of the colonies\u2019 existence. The colonists became accustomed to running their own affairs, and they liked it.",
+  "certainty": 0.9
+}`},
+        {from: 'E_LEVI_PRESTON_QUOTE', to: 'H_SALUTARY_NEGLECT_EXPECTATION', label: 'supports', title: `{
+  "probative_value": 0.9,
+  "source_text_quote": "\"\u2026we always had governed ourselves, and we always meant to. They didn\u2019t mean we should.\"",
+  "certainty": 0.95
+}`},
+        {from: 'E_COLONIAL_OPPOSITION_1680S', to: 'H_SALUTARY_NEGLECT_EXPECTATION', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "In the 1680s, Charles and his brother, James II, attempted to bring New England under direct English control. The colonists fiercely opposed this...",
+  "certainty": 0.8
+}`},
+        {from: 'E_BOSTON_REVOLT_1689', to: 'H_SALUTARY_NEGLECT_EXPECTATION', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "This was followed by the 1689 Boston revolt, which overthrew Dominion rule.",
+  "certainty": 0.8
+}`},
+        {from: 'E_RESTORATION_LOCAL_GOV', to: 'H_SALUTARY_NEGLECT_EXPECTATION', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "The new monarchs... granted new charters to the individual New England colonies, and local democratic self-government was restored.",
+  "certainty": 0.8
+}`},
+        {from: 'E_RARE_MILITARY_PRESENCE', to: 'H_SALUTARY_NEGLECT_EXPECTATION', label: 'supports', title: `{
+  "probative_value": 0.7,
+  "source_text_quote": "the British government rarely sent military forces to America before 1755.",
+  "certainty": 0.9
+}`},
+        {from: 'E_MIDDLEKAUFF_QUOTE', to: 'H_SALUTARY_NEGLECT_EXPECTATION', label: 'supports', title: `{
+  "probative_value": 0.8,
+  "source_text_quote": "According to historian Robert Middlekauff, 'Americans had become almost completely self-governing' before the American Revolution, a practice that was consistent with the British monarchy's practice of salutary neglect.",
+  "certainty": 0.9
+}`},
+        {from: 'E_GRENVILLE_BELIEF', to: 'H_POST_WAR_POLICY_TRIGGER', label: 'supports', title: `{
+  "probative_value": 0.6,
+  "source_text_quote": "Grenville believed that the colonies should help pay the troop costs.",
+  "certainty": 0.8
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

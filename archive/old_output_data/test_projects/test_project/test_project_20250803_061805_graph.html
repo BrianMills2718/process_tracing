@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (test_project)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'event1', label: 'Event', title: `{
+  "description": "The British Parliament passed the Stamp Act of 1765, imposing taxes on various printed materials in the American colonies. Colonial leaders viewed this as a direct violation of their rights as Englishmen, igniting widespread protests and resistance.",
+  "type": "triggering",
+  "date": "1765"
+}`},
+        {id: 'event2', label: 'Event', title: `{
+  "description": "Colonial leaders, including figures like George Washington, John Adams, and Thomas Jefferson, organized resistance to the Stamp Act and subsequent British taxation policies.  This involved the creation of committees of correspondence to coordinate actions across different colonies, and the implementation of economic boycotts of British goods.",
+  "type": "intermediate"
+}`},
+        {id: 'event3', label: 'Event', title: `{
+  "description": "The American Revolutionary War commenced, marked by significant military engagements between the Continental Army and British forces.  The war lasted for eight years and involved crucial strategic decisions such as Washington's avoidance of major battles in favor of building military capacity, and the securing of crucial military and financial support from France.",
+  "type": "intermediate"
+}`},
+        {id: 'event4', label: 'Event', title: `{
+  "description": "The American colonies achieved independence from Great Britain, culminating in the establishment of the United States of America. This outcome was achieved through a sustained military campaign, effective leadership, and diplomatic alliances.",
+  "type": "outcome"
+}`},
+        {id: 'hypothesis1', label: 'Hypothesis', title: `{
+  "description": "Effective revolutionary leadership, exemplified by figures like Washington, Adams, and Jefferson, was a necessary condition for the success of the American Revolution.  Their strategic vision and organizational capacity transformed scattered colonial grievances into a unified and sustained independence movement, which was crucial for overcoming the superior military strength of Great Britain.  Without this leadership coordination, the diverse colonial population would not have achieved sufficient unity to sustain the eight-year conflict.",
+  "status": "supported"
+}`},
+        {id: 'evidence1', label: 'Evidence', title: `{
+  "description": "The text explicitly states that without effective leadership coordination, the diverse colonial population would not have achieved unity sufficient for successful revolution.",
+  "type": "hoop",
+  "source": "Revolutionary Leadership and Colonial Independence",
+  "source_text_quote": "The evidence suggests that without effective leadership coordination, the diverse colonial population would not have achieved unity sufficient for successful revolution.",
+  "probative_value": 0.8
+}`},
+        {id: 'evidence2', label: 'Evidence', title: `{
+  "description": "The text highlights the key role of leaders in transforming colonial grievances into a unified movement and sustaining the war effort.",
+  "type": "straw_in_the_wind",
+  "source": "Revolutionary Leadership and Colonial Independence",
+  "source_text_quote": "Key leaders like George Washington, John Adams, and Thomas Jefferson provided the strategic vision and organizational capacity necessary to transform scattered colonial grievances into a unified independence movement.",
+  "probative_value": 0.5
+}`},
+        {id: 'alternative_explanation1', label: 'Alternative_Explanation', title: `{
+  "description": "Explanations that solely focus on economic grievances or external pressures fail to account for the organizational capacity required to sustain the eight-year conflict.",
+  "status": "refuted"
+}`},
+        {id: 'evidence3', label: 'Evidence', title: `{
+  "description": "The text explicitly refutes alternative explanations focusing solely on economic grievances or external pressures.",
+  "type": "refutes_alternative",
+  "source": "Revolutionary Leadership and Colonial Independence",
+  "source_text_quote": "Alternative explanations focusing solely on economic grievances or external pressures fail to account for the organizational capacity required to sustain the eight-year conflict.",
+  "probative_value": 0.7
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'event1', to: 'event2', label: 'causes', title: `{
+  "description": "The Stamp Act triggered colonial resistance and the organization of opposition by key leaders."
+}`},
+        {from: 'event2', to: 'event3', label: 'causes', title: `{
+  "description": "Organized colonial resistance escalated into the American Revolutionary War."
+}`},
+        {from: 'event3', to: 'event4', label: 'causes', title: `{
+  "description": "The successful conduct of the war led to American independence."
+}`},
+        {from: 'evidence1', to: 'hypothesis1', label: 'supports', title: `{}`},
+        {from: 'evidence2', to: 'hypothesis1', label: 'supports', title: `{}`},
+        {from: 'evidence3', to: 'alternative_explanation1', label: 'refutes_alternative', title: `{}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+{
+  "nodes": [
+    {
+      "id": "E1_TeaAct_1773",
+      "type": "Event",
+      "properties": {
+        "name": "Tea Act of 1773",
+        "timestamp": "1773"
+      }
+    },
+    {
+      "id": "E2_BostonTeaParty",
+      "type": "Event",
+      "properties": {
+        "name": "Boston Tea Party"
+      }
+    },
+    {
+      "id": "E3_ColonialResistanceOrg",
+      "type": "Event",
+      "properties": {
+        "name": "Colonial resistance organized"
+      }
+    },
+    {
+      "id": "E4_DumpingTea",
+      "type": "Event",
+      "properties": {
+        "name": "Dumping tea into Boston Harbor"
+      }
+    },
+    {
+      "id": "E5_IntolerableActsPassed",
+      "type": "Event",
+      "properties": {
+        "name": "Intolerable Acts passed"
+      }
+    },
+    {
+      "id": "E6_EscalatingConflict",
+      "type": "Event",
+      "properties": {
+        "name": "Escalating conflict"
+      }
+    },
+    {
+      "id": "E7_AmericanRevolution",
+      "type": "Event",
+      "properties": {
+        "name": "American Revolution"
+      }
+    },
+    {
+      "id": "H1_TeaAct_BTP_Cause",
+      "type": "Hypothesis",
+      "properties": {
+        "claim": "Tea Act of 1773 led to the Boston Tea Party"
+      }
+    },
+    {
+      "id": "H2_BTP_IntolerableActs_Cause",
+      "type": "Hypothesis",
+      "properties": {
+        "claim": "Boston Tea Party caused King George III to pass the Intolerable Acts"
+      }
+    },
+    {
+      "id": "H3_EscalatingConflict_Revolution_Cause",
+      "type": "Hypothesis",
+      "properties": {
+        "claim": "Escalating conflict led to the American Revolution"
+      }
+    },
+    {
+      "id": "H4_TeaAct_AssertAuthority",
+      "type": "Hypothesis",
+      "properties": {
+        "claim": "Tea Act was designed to assert British authority"
+      }
+    },
+    {
+      "id": "H5_ConstitutionalPrinciples_Motiv",
+      "type": "Hypothesis",
+      "properties": {
+        "claim": "Constitutional principles motivated colonial resistance"
+      }
+    },
+    {
+      "id": "EV1_TeaAct_Design",
+      "type": "Evidence",
+      "properties": {
+        "description": "Tea Act designed to assert British authority",
+        "van_evera_type": "smoking_gun"
+      }
+    },
+    {
+      "id": "EV2_ColonialWillingness",
+      "type": "Evidence",
+      "properties": {
+        "description": "Colonial willingness to resist British policies through direct action",
+        "van_evera_type": "smoking_gun"
+      }
+    },
+    {
+      "id": "EV3_WorkingClassPart",
+      "type": "Evidence",
+      "properties": {
+        "description": "Working-class participation",
+        "van_evera_type": "doubly_decisive"
+      }
+    },
+    {
+      "id": "CM1_RoadToRevolution",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "British assertion of authority -> Colonial resistance -> British retaliation -> Escalation to Revolution"
+      }
+    },
+    {
+      "id": "AE1_EconomicSelfInterest",
+      "type": "Alternative_Explanation",
+      "properties": {
+        "claim": "Economic self-interest rather than constitutional principles motivated colonial resistance"
+      }
+    },
+    {
+      "id": "A1_Colonists",
+      "type": "Actor",
+      "properties": {
+        "name": "Colonists"
+      }
+    },
+    {
+      "id": "A2_SamuelAdams",
+      "type": "Actor",
+      "properties": {
+        "name": "Samuel Adams"
+      }
+    },
+    {
+      "id": "A3_SonsOfLiberty",
+      "type": "Actor",
+      "properties": {
+        "name": "Sons of Liberty"
+      }
+    },
+    {
+      "id": "A4_KingGeorgeIII",
+      "type": "Actor",
+      "properties": {
+        "name": "King George III"
+      }
+    },
+    {
+      "id": "C1_TaxationWithoutRep",
+      "type": "Condition",
+      "properties": {
+        "name": "Taxation without representation"
+      }
+    },
+    {
+      "id": "C2_BostonHarborClosed",
+      "type": "Condition",
+      "properties": {
+        "name": "Boston Harbor closed"
+      }
+    },
+    {
+      "id": "C3_ConstitutionalPrinciples",
+      "type": "Condition",
+      "properties": {
+        "name": "Constitutional principles"
+      }
+    },
+    {
+      "id": "DS1_ParliamentaryRecords",
+      "type": "Data_Source",
+      "properties": {
+        "name": "Parliamentary records"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source_id": "E1_TeaAct_1773",
+      "target_id": "E2_BostonTeaParty",
+      "type": "causes",
+      "properties": {}
+    },
+    {
+      "source_id": "A1_Colonists",
+      "target_id": "E3_ColonialResistanceOrg",
+      "type": "initiates",
+      "properties": {}
+    },
+    {
+      "source_id": "C1_TaxationWithoutRep",
+      "target_id": "E3_ColonialResistanceOrg",
+      "type": "enables",
+      "properties": {}
+    },
+    {
+      "source_id": "A2_SamuelAdams",
+      "target_id": "E4_DumpingTea",
+      "type": "initiates",
+      "properties": {}
+    },
+    {
+      "source_id": "A3_SonsOfLiberty",
+      "target_id": "E4_DumpingTea",
+      "type": "initiates",
+      "properties": {}
+    },
+    {
+      "source_id": "E4_DumpingTea",
+      "target_id": "E2_BostonTeaParty",
+      "type": "part_of_mechanism",
+      "properties": {}
+    },
+    {
+      "source_id": "E2_BostonTeaParty",
+      "target_id": "E5_IntolerableActsPassed",
+      "type": "causes",
+      "properties": {}
+    },
+    {
+      "source_id": "A4_KingGeorgeIII",
+      "target_id": "E5_IntolerableActsPassed",
+      "type": "initiates",
+      "properties": {}
+    },
+    {
+      "source_id": "E5_IntolerableActsPassed",
+      "target_id": "C2_BostonHarborClosed",
+      "type": "causes",
+      "properties": {}
+    },
+    {
+      "source_id": "E6_EscalatingConflict",
+      "target_id": "E7_AmericanRevolution",
+      "type": "causes",
+      "properties": {}
+    },
+    {
+      "source_id": "DS1_ParliamentaryRecords",
+      "target_id": "EV1_TeaAct_Design",
+      "type": "provides_evidence_for",
+      "properties": {}
+    },
+    {
+      "source_id": "EV1_TeaAct_Design",
+      "target_id": "H4_TeaAct_AssertAuthority",
+      "type": "supports",
+      "properties": {}
+    },
+    {
+      "source_id": "E2_BostonTeaParty",
+      "target_id": "EV2_ColonialWillingness",
+      "type": "provides_evidence_for",
+      "properties": {}
+    },
+    {
+      "source_id": "EV2_ColonialWillingness",
+      "target_id": "H1_TeaAct_BTP_Cause",
+      "type": "supports",
+      "properties": {}
+    },
+    {
+      "source_id": "EV2_ColonialWillingness",
+      "target_id": "H5_ConstitutionalPrinciples_Motiv",
+      "type": "supports",
+      "properties": {}
+    },
+    {
+      "source_id": "EV3_WorkingClassPart",
+      "target_id": "AE1_EconomicSelfInterest",
+      "type": "refutes_alternative",
+      "properties": {}
+    },
+    {
+      "source_id": "EV3_WorkingClassPart",
+      "target_id": "H5_ConstitutionalPrinciples_Motiv",
+      "type": "supports",
+      "properties": {}
+    },
+    {
+      "source_id": "CM1_RoadToRevolution",
+      "target_id": "H3_EscalatingConflict_Revolution_Cause",
+      "type": "explains_mechanism",
+      "properties": {}
+    },
+    {
+      "source_id": "E1_TeaAct_1773",
+      "target_id": "E6_EscalatingConflict",
+      "type": "part_of_mechanism",
+      "properties": {}
+    },
+    {
+      "source_id": "E2_BostonTeaParty",
+      "target_id": "E6_EscalatingConflict",
+      "type": "part_of_mechanism",
+      "properties": {}
+    },
+    {
+      "source_id": "E5_IntolerableActsPassed",
+      "target_id": "E6_EscalatingConflict",
+      "type": "part_of_mechanism",
+      "properties": {}
+    }
+  ],
+  "metadata": {
+    "extraction_method": "structured_output",
+    "model_used": "smart",
+    "timestamp": "2025-08-05 01:08:50.058597",
+    "prompt_length": 2041,
+    "text_length": 800
+  }
+}

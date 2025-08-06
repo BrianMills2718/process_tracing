@@ -1,0 +1,2266 @@
+{
+  "nodes": [
+    {
+      "id": "ar_movement",
+      "type": "Event",
+      "properties": {
+        "description": "The American Revolution (1765\u20131783) as an ideological and political movement",
+        "start_date": "1765",
+        "end_date": "1783",
+        "type": "unspecified",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "ar_war_launched",
+      "type": "Event",
+      "properties": {
+        "description": "American Revolutionary War launched in Battles of Lexington and Concord",
+        "date": "April 19, 1775",
+        "location": "Lexington and Concord",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "sc_congress_formed_army",
+      "type": "Event",
+      "properties": {
+        "description": "Second Continental Congress formed the Continental Army and appointed George Washington commander-in-chief",
+        "date": "June 1775",
+        "location": "Philadelphia",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "decl_independence_adopted",
+      "type": "Event",
+      "properties": {
+        "description": "Declaration of Independence unanimously adopted by Second Continental Congress",
+        "date": "July 4, 1776",
+        "location": "Philadelphia",
+        "type": "outcome",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "yorktown_victory",
+      "type": "Event",
+      "properties": {
+        "description": "Decisive victory by Washington and the Continental Army in the Siege of Yorktown",
+        "date": "September 28, 1781",
+        "location": "Yorktown",
+        "type": "outcome",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "treaty_of_paris",
+      "type": "Event",
+      "properties": {
+        "description": "Treaty of Paris signed, codifying US independence and granting territory",
+        "date": "September 3, 1783",
+        "type": "outcome",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "usa_established",
+      "type": "Event",
+      "properties": {
+        "description": "Establishment of the sovereign United States of America",
+        "date": "1783",
+        "type": "outcome",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "discontent_post_fiw",
+      "type": "Event",
+      "properties": {
+        "description": "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War",
+        "date": "1763",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "parliament_imposed_new_taxes",
+      "type": "Event",
+      "properties": {
+        "description": "British Parliament imposed new taxes to compensate for wartime costs and turned control of western lands to British officials",
+        "date": "1763",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "stamp_act_congress_convened",
+      "type": "Event",
+      "properties": {
+        "description": "Representatives from several colonies convened the Stamp Act Congress",
+        "date": "1765",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "declaration_rights_grievances_issued",
+      "type": "Event",
+      "properties": {
+        "description": "Declaration of Rights and Grievances argued 'taxation without representation violated their rights'",
+        "date": "1765",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "townshend_acts_passed",
+      "type": "Event",
+      "properties": {
+        "description": "British Parliament's passage of the Townshend Acts",
+        "date": "1767",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "troops_deployed_boston",
+      "type": "Event",
+      "properties": {
+        "description": "King George III deployed British troops to Boston",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "boston_massacre",
+      "type": "Event",
+      "properties": {
+        "description": "British troops killed protesters in the Boston Massacre",
+        "date": "March 5, 1770",
+        "location": "Boston",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "gaspee_destroyed",
+      "type": "Event",
+      "properties": {
+        "description": "Anti-tax demonstrators destroyed the Royal Navy customs schooner Gaspee",
+        "date": "1772",
+        "location": "off Warwick, Rhode Island",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "boston_tea_party",
+      "type": "Event",
+      "properties": {
+        "description": "Sons of Liberty activists instigated the Boston Tea Party",
+        "date": "December 16, 1773",
+        "location": "Boston Harbor",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "london_punitive_laws",
+      "type": "Event",
+      "properties": {
+        "description": "London responded by closing Boston Harbor and enacting a series of punitive laws (Intolerable Acts)",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "first_continental_congress",
+      "type": "Event",
+      "properties": {
+        "description": "First Continental Congress convened, coordinating Patriot resistance",
+        "date": "late 1774",
+        "location": "Philadelphia",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "patriots_control_colonies",
+      "type": "Event",
+      "properties": {
+        "description": "Patriots in control in every colony after British withdrawal from Boston",
+        "date": "March 1776",
+        "type": "outcome",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "king_george_proclaims_rebellion",
+      "type": "Event",
+      "properties": {
+        "description": "King George III proclaimed Massachusetts to be in a state of open defiance and rebellion",
+        "date": "August 1775",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "lee_resolution_passed",
+      "type": "Event",
+      "properties": {
+        "description": "Second Continental Congress passed the Lee Resolution, affirming support for national independence",
+        "date": "July 2, 1776",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "france_entered_war",
+      "type": "Event",
+      "properties": {
+        "description": "France entered the Revolutionary War, supporting the colonial cause",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "colonial_self_governance_accustomed",
+      "type": "Event",
+      "properties": {
+        "description": "Colonists became accustomed to running their own affairs under salutary neglect",
+        "type": "background",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "english_civil_war",
+      "type": "Event",
+      "properties": {
+        "description": "English Civil War (1642\u20131651) and its aftermath",
+        "start_date": "1642",
+        "end_date": "1651",
+        "type": "background",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "king_philips_war",
+      "type": "Event",
+      "properties": {
+        "description": "King Philip's War (1675\u20131678) fought without English military assistance",
+        "start_date": "1675",
+        "end_date": "1678",
+        "type": "background",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "attempt_direct_english_control_ne",
+      "type": "Event",
+      "properties": {
+        "description": "Charles II and James II attempted to bring New England under direct English control",
+        "date": "1680s",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "dominion_of_new_england_formed",
+      "type": "Event",
+      "properties": {
+        "description": "Consolidation of New England colonies, New York, and New Jersey into Dominion of New England",
+        "date": "1686",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "glorious_revolution",
+      "type": "Event",
+      "properties": {
+        "description": "English aristocracy removed James II from power in the Glorious Revolution",
+        "date": "1688",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "boston_revolt_1689",
+      "type": "Event",
+      "properties": {
+        "description": "Boston revolt which overthrew Dominion rule",
+        "date": "1689",
+        "type": "outcome",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "new_charters_granted",
+      "type": "Event",
+      "properties": {
+        "description": "William and Mary granted new charters to individual New England colonies, restoring local democratic self-government",
+        "type": "outcome",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "navigation_acts_passed",
+      "type": "Event",
+      "properties": {
+        "description": "Parliament passed the first in a series of Navigation Acts, restricting colonial trade",
+        "date": "1651",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "molasses_act_1733",
+      "type": "Event",
+      "properties": {
+        "description": "Molasses Act 1733 placed a duty on foreign molasses imported into the colonies",
+        "date": "1733",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "british_ceased_molasses_enforcement",
+      "type": "Event",
+      "properties": {
+        "description": "British government ceased Molasses Act enforcement efforts",
+        "date": "after 1740s",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "french_indian_war",
+      "type": "Event",
+      "properties": {
+        "description": "French and Indian War",
+        "start_date": "1754",
+        "end_date": "1763",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "bute_ministry_garrison_decision",
+      "type": "Event",
+      "properties": {
+        "description": "Bute ministry decided to permanently garrison 10,000 soldiers in North America",
+        "date": "early 1763",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "pontiacs_war_launched",
+      "type": "Event",
+      "properties": {
+        "description": "Native Americans launched Pontiac's War",
+        "start_date": "1763",
+        "end_date": "1766",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "royal_proclamation_1763",
+      "type": "Event",
+      "properties": {
+        "description": "Grenville ministry issued the Royal Proclamation of 1763, designating Indian Reserve",
+        "date": "1763",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "sugar_act_1764",
+      "type": "Event",
+      "properties": {
+        "description": "Parliament passed the Sugar Act, decreasing duties but stricter enforcement",
+        "date": "1764",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "grenville_proposed_direct_taxes",
+      "type": "Event",
+      "properties": {
+        "description": "Grenville proposed direct taxes on the colonies to raise revenue",
+        "date": "1764",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "stamp_act_1765",
+      "type": "Event",
+      "properties": {
+        "description": "Parliament passed the Stamp Act, imposing direct taxes for the first time",
+        "date": "March 1765",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "sol_formed_actions",
+      "type": "Event",
+      "properties": {
+        "description": "Sons of Liberty formed and used public demonstrations, boycotts, and threats of violence",
+        "date": "1765",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "colonial_boycott_stamp_act",
+      "type": "Event",
+      "properties": {
+        "description": "Boycott on imports of all British merchandise organized by Stamp Act Congress",
+        "date": "October 1765",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "stamp_act_repealed",
+      "type": "Event",
+      "properties": {
+        "description": "Stamp Act repealed by Parliament",
+        "date": "February 21, 1766",
+        "type": "outcome",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "declaratory_act_1766",
+      "type": "Event",
+      "properties": {
+        "description": "Declaratory Act of March 1766, asserting Parliament's full power",
+        "date": "March 1766",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "mass_assembly_circular_letter",
+      "type": "Event",
+      "properties": {
+        "description": "Assembly of Massachusetts Bay Colony issued a circular letter urging coordinated resistance",
+        "date": "February 1768",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "gov_dissolved_assembly",
+      "type": "Event",
+      "properties": {
+        "description": "Governor dissolved the Massachusetts assembly for refusing to rescind the letter",
+        "date": "1768",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "riot_sloop_liberty",
+      "type": "Event",
+      "properties": {
+        "description": "Riot broke out in Boston over the seizure of the sloop Liberty",
+        "date": "June 1768",
+        "location": "Boston",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "british_troops_to_boston",
+      "type": "Event",
+      "properties": {
+        "description": "British deployed troops to Boston due to unrest",
+        "date": "1768",
+        "location": "Boston",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "treason_act_reactivated",
+      "type": "Event",
+      "properties": {
+        "description": "Parliament reactivated the Treason Act 1543, threatening trials in England",
+        "date": "January 1769",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "townshend_duties_repealed_except_tea",
+      "type": "Event",
+      "properties": {
+        "description": "Most Townshend duties repealed, except the tax on tea",
+        "date": "1770",
+        "type": "outcome",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "hutchinson_oliver_letters_published",
+      "type": "Event",
+      "properties": {
+        "description": "Private letters of Massachusetts Governor Hutchinson and Lt. Governor Oliver published",
+        "date": "1773",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "committees_of_correspondence_formed",
+      "type": "Event",
+      "properties": {
+        "description": "Samuel Adams created new Committees of Correspondence, linking Patriots",
+        "date": "1773",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "tea_act_passed",
+      "type": "Event",
+      "properties": {
+        "description": "Parliament passed the Tea Act, lowering price of taxed tea but bypassing merchants",
+        "date": "1773",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "intolerable_acts_passed",
+      "type": "Event",
+      "properties": {
+        "description": "British government passed the Intolerable Acts",
+        "date": "1774",
+        "type": "triggering",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "suffolk_resolves_prov_congress",
+      "type": "Event",
+      "properties": {
+        "description": "Massachusetts patriots issued Suffolk Resolves and formed Provincial Congress",
+        "date": "1774",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "congress_boycott_1774",
+      "type": "Event",
+      "properties": {
+        "description": "First Continental Congress called for a boycott of all British goods",
+        "date": "December 1, 1774",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "continental_army_surrounded_boston",
+      "type": "Event",
+      "properties": {
+        "description": "Washington and the Continental Army responded to Lexington and Concord by surrounding Boston",
+        "type": "intermediate",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "british_withdraw_boston",
+      "type": "Event",
+      "properties": {
+        "description": "British forced to withdraw from Boston by sea",
+        "date": "March 1776",
+        "location": "Boston",
+        "type": "outcome",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "colonial_separatist_leaders",
+      "type": "Actor",
+      "properties": {
+        "name": "Colonial Separatist Leaders",
+        "role": "Leaders of the American Revolution",
+        "intentions": "Initially sought incremental autonomy, then full independence",
+        "beliefs": "Necessity of prevailing in Revolutionary War for independence"
+      }
+    },
+    {
+      "id": "second_continental_congress",
+      "type": "Actor",
+      "properties": {
+        "name": "Second Continental Congress",
+        "role": "Representative body of the colonies",
+        "intentions": "Forming army, declaring independence, establishing self-governing rule of law"
+      }
+    },
+    {
+      "id": "george_washington",
+      "type": "Actor",
+      "properties": {
+        "name": "George Washington",
+        "role": "Commander-in-Chief of Continental Army",
+        "capabilities": "Military leadership"
+      }
+    },
+    {
+      "id": "king_george_iii",
+      "type": "Actor",
+      "properties": {
+        "name": "King George III",
+        "role": "Monarch of Great Britain",
+        "intentions": "Quell rebellion, maintain colonial rule"
+      }
+    },
+    {
+      "id": "british_parliament",
+      "type": "Actor",
+      "properties": {
+        "name": "British Parliament",
+        "role": "Lawmaking authority throughout the Empire",
+        "beliefs": "Supreme lawmaking authority, entitled to levy taxes without colonial approval",
+        "constraints": "Political unacceptability of standing army in peacetime Britain"
+      }
+    },
+    {
+      "id": "george_grenville",
+      "type": "Actor",
+      "properties": {
+        "name": "George Grenville",
+        "role": "Prime Minister (1763)",
+        "intentions": "Address national debt, make colonies pay troop costs"
+      }
+    },
+    {
+      "id": "sons_of_liberty",
+      "type": "Actor",
+      "properties": {
+        "name": "Sons of Liberty",
+        "role": "Anti-tax demonstrators, Patriot activists",
+        "intentions": "Ensure British tax laws became unenforceable, instigate resistance"
+      }
+    },
+    {
+      "id": "john_dickinson",
+      "type": "Actor",
+      "properties": {
+        "name": "John Dickinson",
+        "role": "Moderate leader, pamphlet author",
+        "beliefs": "Taxation without representation violated rights, Townshend Acts unconstitutional"
+      }
+    },
+    {
+      "id": "samuel_adams",
+      "type": "Actor",
+      "properties": {
+        "name": "Samuel Adams",
+        "role": "Radical Patriot, leader of Committees of Correspondence",
+        "intentions": "Agitate for resistance, create rebel government framework"
+      }
+    },
+    {
+      "id": "john_brown",
+      "type": "Actor",
+      "properties": {
+        "name": "John Brown",
+        "role": "American Patriot",
+        "intentions": "Resist unpopular trade regulations"
+      }
+    },
+    {
+      "id": "thomas_hutchinson",
+      "type": "Actor",
+      "properties": {
+        "name": "Thomas Hutchinson",
+        "role": "Massachusetts Governor",
+        "beliefs": "Colonists could not enjoy all English liberties",
+        "constraints": "Refused to yield to pressure from demonstrators"
+      }
+    },
+    {
+      "id": "andrew_oliver",
+      "type": "Actor",
+      "properties": {
+        "name": "Andrew Oliver",
+        "role": "Lieutenant Governor",
+        "intentions": "Direct payment of colonial officials to reduce colonial influence"
+      }
+    },
+    {
+      "id": "thomas_jefferson",
+      "type": "Actor",
+      "properties": {
+        "name": "Thomas Jefferson",
+        "role": "Primary author of Declaration of Independence, Committee of Correspondence member",
+        "beliefs": "Liberalism and republicanism"
+      }
+    },
+    {
+      "id": "first_continental_congress_actor",
+      "type": "Actor",
+      "properties": {
+        "name": "First Continental Congress",
+        "role": "Representative body coordinating Patriot resistance",
+        "intentions": "Deliberation and collective action against British policies"
+      }
+    },
+    {
+      "id": "france_actor",
+      "type": "Actor",
+      "properties": {
+        "name": "France",
+        "role": "Foreign power supporting American independence",
+        "intentions": "Support colonial cause of independence"
+      }
+    },
+    {
+      "id": "marquis_de_lafayette",
+      "type": "Actor",
+      "properties": {
+        "name": "Marquis de Lafayette",
+        "role": "French military leader",
+        "capabilities": "Military support to Continental Army"
+      }
+    },
+    {
+      "id": "charles_cornwallis",
+      "type": "Actor",
+      "properties": {
+        "name": "Charles Cornwallis",
+        "role": "British general",
+        "constraints": "Commanded troops captured at Yorktown"
+      }
+    },
+    {
+      "id": "hyp_tax_wo_rep_violated_rights",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Taxation without representation violated rights as Englishmen",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "hyp_parliament_supreme_authority",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Parliament at Westminster saw itself as the supreme lawmaking authority throughout the Empire and entitled to levy any tax without colonial approval",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "hyp_virtual_representation",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Colonists effectively enjoyed 'virtual representation' in Parliament (British argument)",
+        "status": "refuted"
+      }
+    },
+    {
+      "id": "hyp_merchants_economic_impact_minimal",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The economic impact of British mercantilist policies was minimal on colonists",
+        "status": "partially_supported"
+      }
+    },
+    {
+      "id": "hyp_political_friction_more_serious",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The political friction triggered by British acts was more serious than their economic impact, especially among politically active merchants",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "hyp_townshend_purpose_revenue",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The purpose of the Townshend Acts was to raise revenue, not merely regulate trade",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "hyp_plot_against_american_rights",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Hutchinson/Oliver letters were evidence of a systematic plot against American rights",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "hyp_republicanism_suited_america",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Republicanism as political philosophy best suited to American conditions, rejecting monarchy and aristocracy",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "mech_escalation_to_independence",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Initial colonial discontent and demands for autonomy escalated to a full-blown independence movement and war due to British punitive measures and colonial coordinated resistance.",
+        "confidence": 0.9,
+        "completeness": 0.8,
+        "status": "supported"
+      }
+    },
+    {
+      "id": "mech_british_fiscal_policy_to_colonial_resentment",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "British post-war fiscal needs led to imposition of new taxes, which, when perceived as violating 'no taxation without representation' principle, generated colonial resentment and organized opposition.",
+        "confidence": 0.9,
+        "completeness": 0.8,
+        "status": "supported"
+      }
+    },
+    {
+      "id": "mech_direct_rule_resistance_self_governance",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "British attempts to exert direct control over colonial governance (e.g., Dominion of New England) met with fierce colonial resistance, reinforcing their desire for self-governance.",
+        "confidence": 0.8,
+        "completeness": 0.7,
+        "status": "supported"
+      }
+    },
+    {
+      "id": "mech_communication_coordination_of_resistance",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "The establishment of inter-colonial communication networks (e.g., Committees of Correspondence) facilitated the coordination and mobilization of Patriot resistance, providing a framework for rebel government.",
+        "confidence": 0.9,
+        "completeness": 0.8,
+        "status": "supported"
+      }
+    },
+    {
+      "id": "mech_military_defeat_forces_negotiation",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Decisive military victories by the Continental Army, particularly with French support, inflicted enough cost and political pressure on Britain to compel them to negotiate an end to colonial rule and acknowledge independence.",
+        "confidence": 0.9,
+        "completeness": 0.8,
+        "status": "supported"
+      }
+    },
+    {
+      "id": "alt_economic_interests_primary_driver",
+      "type": "Alternative_Explanation",
+      "properties": {
+        "description": "Economic interests of merchants were the primary driver of colonial opposition, rather than ideological grievances.",
+        "probability": 0.3,
+        "status": "eliminated",
+        "key_predictions": [
+          "Colonial objections would primarily focus on the burden of taxes, not representation",
+          "Merchant resistance would be stronger and more consistent than general colonial unrest"
+        ]
+      }
+    },
+    {
+      "id": "cond_salutary_neglect",
+      "type": "Condition",
+      "properties": {
+        "description": "British policy of salutary neglect, allowing colonies self-governance",
+        "type": "enabling",
+        "temporal_scope": "first 150 years of colonies\u2019 existence",
+        "necessity": 0.8
+      }
+    },
+    {
+      "id": "cond_mercantilism_policy",
+      "type": "Condition",
+      "properties": {
+        "description": "British government's policy of mercantilism, colonies existing for mother country's economic benefit",
+        "type": "background",
+        "necessity": 0.7
+      }
+    },
+    {
+      "id": "cond_british_national_debt",
+      "type": "Condition",
+      "properties": {
+        "description": "Significant growth of British national debt after French and Indian War",
+        "type": "enabling",
+        "temporal_scope": "post-1763",
+        "necessity": 0.9
+      }
+    },
+    {
+      "id": "cond_standing_army_unacceptable_uk",
+      "type": "Condition",
+      "properties": {
+        "description": "Stationing a standing army in Great Britain during peacetime was politically unacceptable",
+        "type": "constraining",
+        "necessity": 0.7
+      }
+    },
+    {
+      "id": "cond_unwritten_british_constitution",
+      "type": "Condition",
+      "properties": {
+        "description": "Unwritten British constitution with guarantees of rights of Englishmen, serving as model for colonial governments",
+        "type": "background",
+        "necessity": 0.8
+      }
+    },
+    {
+      "id": "cond_radical_whig_ideology_influence",
+      "type": "Condition",
+      "properties": {
+        "description": "Radical Whig ideology profoundly influenced American political philosophy with its love of liberty and opposition to tyrannical government",
+        "type": "enabling",
+        "necessity": 0.7
+      }
+    },
+    {
+      "id": "cond_british_govt_lacked_resources_info",
+      "type": "Condition",
+      "properties": {
+        "description": "British government lacked the resources and information needed to control the colonies effectively",
+        "type": "constraining",
+        "necessity": 0.6
+      }
+    },
+    {
+      "id": "ds_wikipedia_article",
+      "type": "Data_Source",
+      "properties": {
+        "type": "document",
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "id": "ds_colonial_newspaper",
+      "type": "Data_Source",
+      "properties": {
+        "type": "document",
+        "credibility": 0.7,
+        "bias_risk": 0.3
+      }
+    },
+    {
+      "id": "ds_john_dickinson_pamphlet",
+      "type": "Data_Source",
+      "properties": {
+        "type": "document",
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "id": "ds_robert_middlekauff",
+      "type": "Data_Source",
+      "properties": {
+        "type": "document",
+        "credibility": 0.9,
+        "bias_risk": 0.1
+      }
+    },
+    {
+      "id": "ds_captain_levi_preston",
+      "type": "Data_Source",
+      "properties": {
+        "type": "interview",
+        "credibility": 0.7,
+        "bias_risk": 0.3
+      }
+    },
+    {
+      "id": "evd_discontent_post_fiw",
+      "type": "Evidence",
+      "properties": {
+        "description": "Discontent with colonial rule began shortly after the defeat of France in the French and Indian War in 1763.",
+        "type": "straw_in_the_wind",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_parliament_imposed_taxes_fiw_costs",
+      "type": "Evidence",
+      "properties": {
+        "description": "British Parliament imposed new taxes to compensate for wartime costs and turned control of western lands over to British officials in Montreal.",
+        "type": "general",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_declaration_rights_grievances_argued",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Stamp Act Congress's 'Declaration of Rights and Grievances' argued that taxation without representation violated their rights as Englishmen.",
+        "type": "hoop",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_sons_of_liberty_unenforceable",
+      "type": "Evidence",
+      "properties": {
+        "description": "Sons of Liberty formed and began using public demonstrations, boycotts, and threats of violence to ensure that the British tax laws became unenforceable.",
+        "type": "general",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_boston_massacre_turn_sentiment",
+      "type": "Evidence",
+      "properties": {
+        "description": "Widespread descriptions of the Boston Massacre quickly began to turn colonial sentiment against the British, accelerating the downward spiral in relationship.",
+        "type": "straw_in_the_wind",
+        "certainty": 0.8
+      }
+    },
+    {
+      "id": "evd_boston_tea_party_seminal",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Boston Tea Party was a seminal event in the American Revolution's escalation.",
+        "type": "general",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_london_response_escalated",
+      "type": "Evidence",
+      "properties": {
+        "description": "London's response (closing Boston Harbor, punitive laws) effectively ended self-government in Massachusetts but also served to expand and intensify the revolutionary cause.",
+        "type": "general",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_first_congress_coordinated_resistance",
+      "type": "Evidence",
+      "properties": {
+        "description": "The First Continental Congress began coordinating Patriot resistance through underground networks of committees.",
+        "type": "general",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_battles_lexington_concord_launch",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Battles of Lexington and Concord launched the American Revolutionary War.",
+        "type": "smoking_gun",
+        "certainty": 1.0
+      }
+    },
+    {
+      "id": "evd_yorktown_decisive_victory_outcome",
+      "type": "Evidence",
+      "properties": {
+        "description": "A decisive victory by Washington and the Continental Army in the Siege of Yorktown inspired King George III and the British to negotiate an end to colonial rule.",
+        "type": "smoking_gun",
+        "certainty": 0.95
+      }
+    },
+    {
+      "id": "evd_colonists_accustomed_self_governance",
+      "type": "Evidence",
+      "properties": {
+        "description": "Colonists became accustomed to running their own affairs under salutary neglect.",
+        "type": "general",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_captain_levi_preston_quote",
+      "type": "Evidence",
+      "properties": {
+        "description": "Capt. Levi Preston's quote: '\u2026we always had governed ourselves, and we always meant to. They didn\u2019t mean we should.'",
+        "type": "straw_in_the_wind",
+        "source": "ds_captain_levi_preston",
+        "certainty": 0.7,
+        "credibility": 0.7
+      }
+    },
+    {
+      "id": "evd_king_philips_war_identity",
+      "type": "Evidence",
+      "properties": {
+        "description": "In King Philip's War (1675\u20131678), New England colonies fought Native American tribes without military assistance from England, contributing to a unique American identity.",
+        "type": "straw_in_the_wind",
+        "certainty": 0.8
+      }
+    },
+    {
+      "id": "evd_dominion_rule_resentment",
+      "type": "Evidence",
+      "properties": {
+        "description": "Dominion rule triggered bitter resentment throughout New England due to restricted assemblies, new taxes, and abridged rights.",
+        "type": "general",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_boston_revolt_overthrew_dominion",
+      "type": "Evidence",
+      "properties": {
+        "description": "The 1689 Boston revolt overthrew Dominion rule, and colonial governments reasserted control.",
+        "type": "general",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_parliament_navigation_acts",
+      "type": "Evidence",
+      "properties": {
+        "description": "Parliament passed the first in a series of Navigation Acts (1651), which restricted colonial trade with foreign countries.",
+        "type": "general",
+        "certainty": 0.95
+      }
+    },
+    {
+      "id": "evd_molasses_act_protested_tax_wo_rep",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Molasses Act 1733 was protested by New England colonists as 'taxation without representation'.",
+        "type": "hoop",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_economic_impact_minimal_claim",
+      "type": "Evidence",
+      "properties": {
+        "description": "Some argue that the economic impact of mercantilist policies was minimal on the colonists.",
+        "type": "general",
+        "certainty": 0.6
+      }
+    },
+    {
+      "id": "evd_political_friction_more_serious",
+      "type": "Evidence",
+      "properties": {
+        "description": "The political friction that the acts triggered was more serious, as the merchants most directly affected were also the most politically active.",
+        "type": "general",
+        "certainty": 0.8
+      }
+    },
+    {
+      "id": "evd_grenville_need_money",
+      "type": "Evidence",
+      "properties": {
+        "description": "'The need for money played a part in every important decision made by Grenville regarding the colonies\u2014and for that matter by the ministries that followed up to 1776.'",
+        "type": "general",
+        "certainty": 0.9,
+        "source": "ds_wikipedia_article"
+      }
+    },
+    {
+      "id": "evd_colonists_objected_lack_representation",
+      "type": "Evidence",
+      "properties": {
+        "description": "Colonists objected to their lack of representation in Parliament, which gave them no voice concerning legislation that affected them, such as the tax, violating the unwritten English constitution.",
+        "type": "hoop",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_declaratory_act_parliament_power",
+      "type": "Evidence",
+      "properties": {
+        "description": "Declaratory Act insisted that Parliament retained full power to make laws for the colonies 'in all cases whatsoever'.",
+        "type": "general",
+        "certainty": 0.95
+      }
+    },
+    {
+      "id": "evd_dickinson_argued_townshend",
+      "type": "Evidence",
+      "properties": {
+        "description": "John Dickinson argued against the constitutionality of the Townshend Acts because their purpose was to raise revenue and not to regulate trade.",
+        "type": "general",
+        "certainty": 0.9,
+        "source": "ds_john_dickinson_pamphlet"
+      }
+    },
+    {
+      "id": "evd_hutchinson_oliver_letters_plot",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Hutchinson/Oliver letters' contents were used as evidence of a systematic plot against American rights, discrediting Hutchinson.",
+        "type": "straw_in_the_wind",
+        "certainty": 0.8
+      }
+    },
+    {
+      "id": "evd_committees_coordination_framework",
+      "type": "Evidence",
+      "properties": {
+        "description": "Committees of Correspondence linked Patriots in all 13 colonies and eventually provided the framework for a rebel government.",
+        "type": "general",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_tea_act_opposition_reasons",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Tea Act was opposed by those who resisted the taxes and also by smugglers who stood to lose business.",
+        "type": "general",
+        "certainty": 0.8
+      }
+    },
+    {
+      "id": "evd_intolerable_acts_darkened_opinion",
+      "type": "Evidence",
+      "properties": {
+        "description": "The British government responded by passing four laws that came to be known as the Intolerable Acts, further darkening colonial opinion towards England.",
+        "type": "general",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_patriots_armed_unified",
+      "type": "Evidence",
+      "properties": {
+        "description": "For the first time, the Patriots were armed and unified against Parliament due to coordinated resistance and militias.",
+        "type": "smoking_gun",
+        "certainty": 0.9
+      }
+    },
+    {
+      "id": "evd_DOI_political_philosophies",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Declaration of Independence embodied the political philosophies of liberalism and republicanism, rejected monarchy and aristocracy, and proclaimed 'all men are created equal'.",
+        "type": "general",
+        "certainty": 0.95
+      }
+    },
+    {
+      "id": "evd_yorktown_collapse_king_george_control",
+      "type": "Evidence",
+      "properties": {
+        "description": "Siege of Yorktown led to the collapse of King George's control of Parliament and consensus that the war should be ended on American terms.",
+        "type": "smoking_gun",
+        "certainty": 0.95
+      }
+    },
+    {
+      "id": "evd_loyalist_migration",
+      "type": "Evidence",
+      "properties": {
+        "description": "About 60,000 Loyalists migrated to other British territories in Canada and elsewhere, but the great majority remained in the United States.",
+        "type": "general",
+        "certainty": 0.9
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source_id": "ar_war_launched",
+      "target_id": "ar_movement",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "culmination",
+        "sequence_position": 2,
+        "necessity": 0.9
+      }
+    },
+    {
+      "source_id": "discontent_post_fiw",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "trigger",
+        "sequence_position": 1
+      }
+    },
+    {
+      "source_id": "parliament_imposed_new_taxes",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 2
+      }
+    },
+    {
+      "source_id": "parliament_imposed_new_taxes",
+      "target_id": "mech_british_fiscal_policy_to_colonial_resentment",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "trigger",
+        "sequence_position": 1
+      }
+    },
+    {
+      "source_id": "stamp_act_congress_convened",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 3
+      }
+    },
+    {
+      "source_id": "declaration_rights_grievances_issued",
+      "target_id": "mech_british_fiscal_policy_to_colonial_resentment",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 2
+      }
+    },
+    {
+      "source_id": "townshend_acts_passed",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 4
+      }
+    },
+    {
+      "source_id": "boston_massacre",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 5
+      }
+    },
+    {
+      "source_id": "boston_tea_party",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 6
+      }
+    },
+    {
+      "source_id": "london_punitive_laws",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 7
+      }
+    },
+    {
+      "source_id": "first_continental_congress",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 8
+      }
+    },
+    {
+      "source_id": "ar_war_launched",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 9
+      }
+    },
+    {
+      "source_id": "decl_independence_adopted",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 10
+      }
+    },
+    {
+      "source_id": "yorktown_victory",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 11
+      }
+    },
+    {
+      "source_id": "treaty_of_paris",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 12
+      }
+    },
+    {
+      "source_id": "usa_established",
+      "target_id": "mech_escalation_to_independence",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 13
+      }
+    },
+    {
+      "source_id": "colonial_separatist_leaders",
+      "target_id": "ar_movement",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.8
+      }
+    },
+    {
+      "source_id": "second_continental_congress",
+      "target_id": "sc_congress_formed_army",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9
+      }
+    },
+    {
+      "source_id": "second_continental_congress",
+      "target_id": "decl_independence_adopted",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9
+      }
+    },
+    {
+      "source_id": "george_washington",
+      "target_id": "yorktown_victory",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.95
+      }
+    },
+    {
+      "source_id": "british_parliament",
+      "target_id": "parliament_imposed_new_taxes",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9
+      }
+    },
+    {
+      "source_id": "british_parliament",
+      "target_id": "townshend_acts_passed",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9
+      }
+    },
+    {
+      "source_id": "king_george_iii",
+      "target_id": "troops_deployed_boston",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.8
+      }
+    },
+    {
+      "source_id": "sons_of_liberty",
+      "target_id": "boston_tea_party",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9
+      }
+    },
+    {
+      "source_id": "first_continental_congress_actor",
+      "target_id": "first_continental_congress",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9
+      }
+    },
+    {
+      "source_id": "hyp_tax_wo_rep_violated_rights",
+      "target_id": "mech_british_fiscal_policy_to_colonial_resentment",
+      "type": "explains_mechanism",
+      "properties": {
+        "certainty": 0.9,
+        "type_of_claim": "operation"
+      }
+    },
+    {
+      "source_id": "hyp_political_friction_more_serious",
+      "target_id": "mech_british_fiscal_policy_to_colonial_resentment",
+      "type": "explains_mechanism",
+      "properties": {
+        "certainty": 0.8,
+        "type_of_claim": "significance"
+      }
+    },
+    {
+      "source_id": "hyp_townshend_purpose_revenue",
+      "target_id": "mech_british_fiscal_policy_to_colonial_resentment",
+      "type": "explains_mechanism",
+      "properties": {
+        "certainty": 0.8,
+        "type_of_claim": "operation"
+      }
+    },
+    {
+      "source_id": "cond_salutary_neglect",
+      "target_id": "colonial_self_governance_accustomed",
+      "type": "enables",
+      "properties": {
+        "necessity": 0.8,
+        "enabling_type": "background"
+      }
+    },
+    {
+      "source_id": "cond_salutary_neglect",
+      "target_id": "mech_escalation_to_independence",
+      "type": "enables",
+      "properties": {
+        "necessity": 0.7,
+        "enabling_type": "background",
+        "temporal_scope": "pre-1763"
+      }
+    },
+    {
+      "source_id": "cond_mercantilism_policy",
+      "target_id": "navigation_acts_passed",
+      "type": "enables",
+      "properties": {
+        "necessity": 0.7,
+        "enabling_type": "background"
+      }
+    },
+    {
+      "source_id": "cond_british_national_debt",
+      "target_id": "parliament_imposed_new_taxes",
+      "type": "enables",
+      "properties": {
+        "necessity": 0.9,
+        "enabling_type": "contingent"
+      }
+    },
+    {
+      "source_id": "cond_standing_army_unacceptable_uk",
+      "target_id": "bute_ministry_garrison_decision",
+      "type": "constrains",
+      "properties": {
+        "constraint_strength": 0.8,
+        "constraint_type": "channels"
+      }
+    },
+    {
+      "source_id": "cond_unwritten_british_constitution",
+      "target_id": "hyp_tax_wo_rep_violated_rights",
+      "type": "enables",
+      "properties": {
+        "necessity": 0.8,
+        "enabling_type": "background"
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_discontent_post_fiw",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_parliament_imposed_taxes_fiw_costs",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_declaration_rights_grievances_argued",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_sons_of_liberty_unenforceable",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_boston_massacre_turn_sentiment",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_boston_tea_party_seminal",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_london_response_escalated",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_first_congress_coordinated_resistance",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_battles_lexington_concord_launch",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_yorktown_decisive_victory_outcome",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_colonists_accustomed_self_governance",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_king_philips_war_identity",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_dominion_rule_resentment",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_boston_revolt_overthrew_dominion",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_parliament_navigation_acts",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_molasses_act_protested_tax_wo_rep",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_economic_impact_minimal_claim",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_political_friction_more_serious",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_colonists_objected_lack_representation",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_declaratory_act_parliament_power",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_dickinson_argued_townshend",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_hutchinson_oliver_letters_plot",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_committees_coordination_framework",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_tea_act_opposition_reasons",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_intolerable_acts_darkened_opinion",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_patriots_armed_unified",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_DOI_political_philosophies",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_yorktown_collapse_king_george_control",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "ds_wikipedia_article",
+      "target_id": "evd_loyalist_migration",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2
+      }
+    },
+    {
+      "source_id": "evd_declaration_rights_grievances_argued",
+      "target_id": "hyp_tax_wo_rep_violated_rights",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "hoop",
+        "target_type": "causal_relationship"
+      }
+    },
+    {
+      "source_id": "evd_colonists_objected_lack_representation",
+      "target_id": "hyp_tax_wo_rep_violated_rights",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "hoop",
+        "target_type": "causal_relationship"
+      }
+    },
+    {
+      "source_id": "evd_declaratory_act_parliament_power",
+      "target_id": "hyp_parliament_supreme_authority",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.95,
+        "diagnostic_type": "smoking_gun",
+        "target_type": "general"
+      }
+    },
+    {
+      "source_id": "evd_economic_impact_minimal_claim",
+      "target_id": "hyp_merchants_economic_impact_minimal",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.6,
+        "diagnostic_type": "straw_in_the_wind"
+      }
+    },
+    {
+      "source_id": "evd_political_friction_more_serious",
+      "target_id": "hyp_political_friction_more_serious",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "general"
+      }
+    },
+    {
+      "source_id": "evd_dickinson_argued_townshend",
+      "target_id": "hyp_townshend_purpose_revenue",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "smoking_gun"
+      }
+    },
+    {
+      "source_id": "evd_hutchinson_oliver_letters_plot",
+      "target_id": "hyp_plot_against_american_rights",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "straw_in_the_wind"
+      }
+    },
+    {
+      "source_id": "evd_DOI_political_philosophies",
+      "target_id": "hyp_republicanism_suited_america",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.95,
+        "diagnostic_type": "smoking_gun"
+      }
+    },
+    {
+      "source_id": "evd_economic_impact_minimal_claim",
+      "target_id": "alt_economic_interests_primary_driver",
+      "type": "supports_alternative",
+      "properties": {
+        "probative_value": 0.6,
+        "diagnostic_type": "straw_in_the_wind"
+      }
+    },
+    {
+      "source_id": "evd_political_friction_more_serious",
+      "target_id": "alt_economic_interests_primary_driver",
+      "type": "refutes_alternative",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "general",
+        "refutation_strength": "moderate"
+      }
+    },
+    {
+      "source_id": "evd_molasses_act_protested_tax_wo_rep",
+      "target_id": "alt_economic_interests_primary_driver",
+      "type": "refutes_alternative",
+      "properties": {
+        "probative_value": 0.7,
+        "diagnostic_type": "hoop",
+        "refutation_strength": "moderate",
+        "reasoning": "Highlights ideological objection over purely economic."
+      }
+    },
+    {
+      "source_id": "evd_colonists_objected_lack_representation",
+      "target_id": "alt_economic_interests_primary_driver",
+      "type": "refutes_alternative",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "hoop",
+        "refutation_strength": "strong",
+        "reasoning": "Directly states primary objection was lack of representation, not just tax amount."
+      }
+    },
+    {
+      "source_id": "evd_economic_impact_minimal_claim",
+      "target_id": "evd_political_friction_more_serious",
+      "type": "weighs_evidence",
+      "properties": {
+        "comparison_strength": 0.7,
+        "comparison_type": "contradicts",
+        "reasoning": "The text explicitly states 'some argue that the economic impact was minimal... but the political friction that the acts triggered was more serious.'"
+      }
+    },
+    {
+      "source_id": "french_indian_war",
+      "target_id": "parliament_imposed_new_taxes",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "mechanism_id": "mech_british_fiscal_policy_to_colonial_resentment",
+        "type": "direct"
+      }
+    },
+    {
+      "source_id": "parliament_imposed_new_taxes",
+      "target_id": "discontent_post_fiw",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "type": "direct"
+      }
+    },
+    {
+      "source_id": "molasses_act_1733",
+      "target_id": "evd_molasses_act_protested_tax_wo_rep",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "general",
+        "reasoning": "The act itself triggered the protest."
+      }
+    },
+    {
+      "source_id": "stamp_act_1765",
+      "target_id": "evd_colonists_objected_lack_representation",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "general",
+        "reasoning": "The passage of the act was the context for the objection."
+      }
+    },
+    {
+      "source_id": "declaratory_act_1766",
+      "target_id": "evd_declaratory_act_parliament_power",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.95,
+        "diagnostic_type": "general",
+        "reasoning": "The act itself states this power."
+      }
+    },
+    {
+      "source_id": "townshend_acts_passed",
+      "target_id": "evd_dickinson_argued_townshend",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "general",
+        "reasoning": "The acts were the subject of Dickinson's argument."
+      }
+    },
+    {
+      "source_id": "hutchinson_oliver_letters_published",
+      "target_id": "evd_hutchinson_oliver_letters_plot",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "general",
+        "reasoning": "The publication was the event that made the letters evidence."
+      }
+    },
+    {
+      "source_id": "tea_act_passed",
+      "target_id": "evd_tea_act_opposition_reasons",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "general",
+        "reasoning": "The act was the cause of the opposition."
+      }
+    },
+    {
+      "source_id": "intolerable_acts_passed",
+      "target_id": "evd_intolerable_acts_darkened_opinion",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "general",
+        "reasoning": "The passage of these acts directly led to the darkening of opinion."
+      }
+    },
+    {
+      "source_id": "decl_independence_adopted",
+      "target_id": "evd_DOI_political_philosophies",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.95,
+        "diagnostic_type": "smoking_gun",
+        "reasoning": "The Declaration itself is the primary source for its content."
+      }
+    },
+    {
+      "source_id": "yorktown_victory",
+      "target_id": "evd_yorktown_collapse_king_george_control",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.95,
+        "diagnostic_type": "smoking_gun",
+        "reasoning": "The outcome of the battle directly caused the political shift."
+      }
+    },
+    {
+      "source_id": "colonial_self_governance_accustomed",
+      "target_id": "mech_direct_rule_resistance_self_governance",
+      "type": "enables",
+      "properties": {
+        "necessity": 0.7,
+        "enabling_type": "background"
+      }
+    },
+    {
+      "source_id": "english_civil_war",
+      "target_id": "evd_king_philips_war_identity",
+      "type": "enables",
+      "properties": {
+        "necessity": 0.6,
+        "enabling_type": "background"
+      }
+    },
+    {
+      "source_id": "attempt_direct_english_control_ne",
+      "target_id": "dominion_of_new_england_formed",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "mechanism_id": "mech_direct_rule_resistance_self_governance"
+      }
+    },
+    {
+      "source_id": "dominion_of_new_england_formed",
+      "target_id": "evd_dominion_rule_resentment",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "general"
+      }
+    },
+    {
+      "source_id": "glorious_revolution",
+      "target_id": "boston_revolt_1689",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.8,
+        "type": "direct"
+      }
+    },
+    {
+      "source_id": "boston_revolt_1689",
+      "target_id": "mech_direct_rule_resistance_self_governance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 4
+      }
+    },
+    {
+      "source_id": "evd_dominion_rule_resentment",
+      "target_id": "mech_direct_rule_resistance_self_governance",
+      "type": "tests_mechanism",
+      "properties": {
+        "probative_value": 0.8,
+        "test_result": "passed",
+        "diagnostic_type": "general",
+        "mechanism_aspect": "operation"
+      }
+    },
+    {
+      "source_id": "evd_boston_revolt_overthrew_dominion",
+      "target_id": "mech_direct_rule_resistance_self_governance",
+      "type": "tests_mechanism",
+      "properties": {
+        "probative_value": 0.9,
+        "test_result": "passed",
+        "diagnostic_type": "smoking_gun",
+        "mechanism_aspect": "operation"
+      }
+    },
+    {
+      "source_id": "samuel_adams",
+      "target_id": "committees_of_correspondence_formed",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9
+      }
+    },
+    {
+      "source_id": "committees_of_correspondence_formed",
+      "target_id": "mech_communication_coordination_of_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "trigger",
+        "sequence_position": 1
+      }
+    },
+    {
+      "source_id": "first_continental_congress",
+      "target_id": "mech_communication_coordination_of_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 2
+      }
+    },
+    {
+      "source_id": "congress_boycott_1774",
+      "target_id": "mech_communication_coordination_of_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 3
+      }
+    },
+    {
+      "source_id": "evd_committees_coordination_framework",
+      "target_id": "mech_communication_coordination_of_resistance",
+      "type": "tests_mechanism",
+      "properties": {
+        "probative_value": 0.9,
+        "test_result": "passed",
+        "diagnostic_type": "general",
+        "mechanism_aspect": "operation"
+      }
+    },
+    {
+      "source_id": "ar_war_launched",
+      "target_id": "mech_military_defeat_forces_negotiation",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "trigger",
+        "sequence_position": 1
+      }
+    },
+    {
+      "source_id": "france_entered_war",
+      "target_id": "mech_military_defeat_forces_negotiation",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "facilitating",
+        "sequence_position": 2
+      }
+    },
+    {
+      "source_id": "yorktown_victory",
+      "target_id": "mech_military_defeat_forces_negotiation",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 3
+      }
+    },
+    {
+      "source_id": "treaty_of_paris",
+      "target_id": "mech_military_defeat_forces_negotiation",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 4
+      }
+    },
+    {
+      "source_id": "usa_established",
+      "target_id": "mech_military_defeat_forces_negotiation",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 5
+      }
+    },
+    {
+      "source_id": "evd_yorktown_decisive_victory_outcome",
+      "target_id": "mech_military_defeat_forces_negotiation",
+      "type": "tests_mechanism",
+      "properties": {
+        "probative_value": 0.95,
+        "test_result": "passed",
+        "diagnostic_type": "smoking_gun",
+        "mechanism_aspect": "operation"
+      }
+    },
+    {
+      "source_id": "evd_yorktown_collapse_king_george_control",
+      "target_id": "mech_military_defeat_forces_negotiation",
+      "type": "tests_mechanism",
+      "properties": {
+        "probative_value": 0.95,
+        "test_result": "passed",
+        "diagnostic_type": "smoking_gun",
+        "mechanism_aspect": "operation"
+      }
+    }
+  ]
+}

@@ -1,0 +1,1616 @@
+{
+  "nodes": [
+    {
+      "id": "evt_boston_tea_party",
+      "type": "Event",
+      "properties": {
+        "description": "Boston Tea Party occurred, with American colonists led by Samuel Adams and the Sons of Liberty boarding British ships and dumping 342 chests of tea into Boston Harbor.",
+        "timestamp": "1773-12-16",
+        "location": "Boston Harbor",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "evt_tea_act_passed",
+      "type": "Event",
+      "properties": {
+        "description": "The Tea Act of 1773 was passed.",
+        "timestamp": "1773-05-10",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "evt_tea_act_monopoly",
+      "type": "Event",
+      "properties": {
+        "description": "The Tea Act granted the British East India Company a monopoly on tea sales in the American colonies.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "mech_imperial_resistance",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "The mechanism through which the Tea Act led to rebellion: (1) Tea Act imposed taxation without colonial representation; (2) This created economic pressure and ideological mobilization; (3) Sons of Liberty channeled discontent into organized resistance; (4) Resistance culminated in direct action against British property.",
+        "confidence": 0.8,
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evt_taxation_no_representation",
+      "type": "Event",
+      "properties": {
+        "description": "The Tea Act imposed taxation without colonial representation in Parliament, violating fundamental principles of self-governance.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "evt_econ_pressure_ideo_mobilization",
+      "type": "Event",
+      "properties": {
+        "description": "Economic pressure on local merchants (undercut by monopoly) and ideological mobilization around constitutional principles was created.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "evt_discontent_channeled",
+      "type": "Event",
+      "properties": {
+        "description": "Groups like the Sons of Liberty channeled this discontent into organized resistance.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "evt_resistance_direct_action",
+      "type": "Event",
+      "properties": {
+        "description": "The resistance culminated in direct action against British property.",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "evt_constitutional_grievances_transformed",
+      "type": "Event",
+      "properties": {
+        "description": "Abstract constitutional grievances transformed into concrete revolutionary action.",
+        "type": "outcome"
+      }
+    },
+    {
+      "id": "alt_economic_self_interest",
+      "type": "Alternative_Explanation",
+      "properties": {
+        "description": "The revolution was primarily driven by colonial merchants' economic interests rather than constitutional principles.",
+        "status": "active",
+        "key_predictions": [
+          "disproportionate merchant leadership in revolutionary activities",
+          "focus on trade policy over representation issues"
+        ]
+      }
+    },
+    {
+      "id": "alt_elite_manipulation",
+      "type": "Alternative_Explanation",
+      "properties": {
+        "description": "Colonial elites deliberately manufactured popular outrage to advance their own political ambitions.",
+        "status": "active",
+        "key_predictions": [
+          "revolutionary rhetoric would be concentrated among the educated elite rather than emerging organically from popular sentiment"
+        ]
+      }
+    },
+    {
+      "id": "alt_external_influence",
+      "type": "Alternative_Explanation",
+      "properties": {
+        "description": "French agents and financial support were the primary drivers of colonial rebellion, seeking to weaken their British rivals.",
+        "status": "active",
+        "key_predictions": [
+          "early French involvement and financial backing before 1775"
+        ]
+      }
+    },
+    {
+      "id": "act_samuel_adams",
+      "type": "Actor",
+      "properties": {
+        "name": "Samuel Adams",
+        "role": "Principal organizer, colonial leader",
+        "intentions": "Mobilize mass resistance against British authority",
+        "beliefs": "British rule fundamentally violated colonial rights",
+        "constraints": "Need to maintain legitimacy and avoid alienating moderate colonists",
+        "capabilities": "Extensive political networks and persuasive rhetoric"
+      }
+    },
+    {
+      "id": "act_sons_of_liberty",
+      "type": "Actor",
+      "properties": {
+        "name": "Sons of Liberty",
+        "role": "Organized resistance group"
+      }
+    },
+    {
+      "id": "act_governor_hutchinson",
+      "type": "Actor",
+      "properties": {
+        "name": "Governor Thomas Hutchinson",
+        "role": "British authority in Massachusetts",
+        "intentions": "Enforce Parliamentary supremacy",
+        "beliefs": "Colonists were ungrateful subjects who needed firm governance",
+        "constraints": "Limited military resources and the need to maintain order",
+        "capabilities": "Formal governmental authority but limited practical enforcement power"
+      }
+    },
+    {
+      "id": "act_king_george_iii",
+      "type": "Actor",
+      "properties": {
+        "name": "King George III",
+        "role": "British monarch",
+        "intentions": "Maintain imperial control and extract revenue",
+        "beliefs": "The colonies were subordinate territories that existed to benefit Britain",
+        "constraints": "Distance, communication delays, and competing European threats",
+        "capabilities": "British military and navy but limited by the costs and logistics of transatlantic warfare"
+      }
+    },
+    {
+      "id": "act_general_gage",
+      "type": "Actor",
+      "properties": {
+        "name": "General Gage",
+        "role": "British military commander"
+      }
+    },
+    {
+      "id": "cond_british_naval_supremacy",
+      "type": "Condition",
+      "properties": {
+        "description": "The Royal Navy's dominance of the Atlantic.",
+        "type": "constraining",
+        "necessity": 0.8
+      }
+    },
+    {
+      "id": "cond_enlightenment_ideas",
+      "type": "Condition",
+      "properties": {
+        "description": "The spread of Enlightenment philosophy about natural rights and self-governance.",
+        "type": "enabling"
+      }
+    },
+    {
+      "id": "cond_geographic_distance",
+      "type": "Condition",
+      "properties": {
+        "description": "The 3,000-mile separation between Britain and America created communication delays of 6-12 weeks.",
+        "type": "background"
+      }
+    },
+    {
+      "id": "cond_colonial_economic_development",
+      "type": "Condition",
+      "properties": {
+        "description": "The colonies' growing economic self-sufficiency by the 1770s.",
+        "type": "enabling"
+      }
+    },
+    {
+      "id": "hyp_constitutional_principle",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The revolution was primarily driven by constitutional principles (primary hypothesis).",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evd_colonial_pamphlets_taxation",
+      "type": "Evidence",
+      "properties": {
+        "description": "Colonial pamphlets explicitly arguing against taxation without representation.",
+        "type": "hoop"
+      }
+    },
+    {
+      "id": "evd_widespread_colonial_support_classes",
+      "type": "Evidence",
+      "properties": {
+        "description": "Widespread colonial support across different economic classes.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "evd_continental_congress_formal_decs",
+      "type": "Evidence",
+      "properties": {
+        "description": "The Continental Congress's formal declarations citing constitutional violations.",
+        "type": "doubly_decisive"
+      }
+    },
+    {
+      "id": "evd_working_class_protests",
+      "type": "Evidence",
+      "properties": {
+        "description": "Working-class participation in protests.",
+        "type": "hoop"
+      }
+    },
+    {
+      "id": "evd_absence_french_support_pre1776",
+      "type": "Evidence",
+      "properties": {
+        "description": "Absence of French support before 1776.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "evd_non_merchant_leadership_committees",
+      "type": "Evidence",
+      "properties": {
+        "description": "Non-merchant leadership in many revolutionary committees.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "evd_samuel_adams_correspondence",
+      "type": "Evidence",
+      "properties": {
+        "description": "Samuel Adams' documented correspondence shows deliberate organization of the Tea Party.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "evd_hutchinson_letters_london",
+      "type": "Evidence",
+      "properties": {
+        "description": "Hutchinson's letters to London reveal his failed attempts to prevent escalation.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "evd_george_iii_olive_branch_rejection",
+      "type": "Evidence",
+      "properties": {
+        "description": "George III's rejection of the Olive Branch Petition.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "evd_colonists_cited_rep_rights_contexts",
+      "type": "Evidence",
+      "properties": {
+        "description": "Colonists consistently cited representation rights across different contexts.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "hyp_principled_opposition_drove_resistance",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Principled opposition, rather than mere economic grievance, drove colonial resistance.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evd_doc_mech_operation_verification",
+      "type": "Evidence",
+      "properties": {
+        "description": "Documentary evidence verifying whether each proposed step of the imperial resistance mechanism actually occurred and produced predicted outcomes.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "evd_merchant_records_1774_timing",
+      "type": "Evidence",
+      "properties": {
+        "description": "Merchant records from 1774 regarding timing of French involvement.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "evd_british_intel_early_french_support",
+      "type": "Evidence",
+      "properties": {
+        "description": "British intelligence reports about early French financial support.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "hyp_enlightenment_ideas_influence",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "Enlightenment ideas influenced colonial thinking.",
+        "prior_probability": 0.6,
+        "posterior_probability": 0.85,
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evd_unknown_corr_leaders_intellectuals",
+      "type": "Evidence",
+      "properties": {
+        "description": "Previously unknown correspondence between colonial leaders and European intellectuals.",
+        "type": "bayesian"
+      }
+    },
+    {
+      "id": "evt_tea_act_conditions_for_rebellion",
+      "type": "Event",
+      "properties": {
+        "description": "The Tea Act created the conditions for rebellion.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "evt_coordinated_comm_network_inferred",
+      "type": "Event",
+      "properties": {
+        "description": "A coordinated communication network existed among colonial leaders (inferred).",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "evt_secret_meeting_sa_french_1773",
+      "type": "Event",
+      "properties": {
+        "description": "A secret meeting between Samuel Adams and French agents in early 1773.",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "evd_ship_manifests_customs_early1773",
+      "type": "Evidence",
+      "properties": {
+        "description": "Detailed ship manifests and customs records showing no French diplomatic presence in Boston during early 1773.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "evd_merchant_records_smuggling_ops",
+      "type": "Evidence",
+      "properties": {
+        "description": "Documentary evidence from merchant records revealing extensive smuggling operations.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "evd_town_meeting_records_grassroots",
+      "type": "Evidence",
+      "properties": {
+        "description": "Town meeting records showing genuine grassroots participation in anti-British activities across different social classes and geographic regions.",
+        "type": "hoop"
+      }
+    },
+    {
+      "id": "ds_mass_historical_society",
+      "type": "Data_Source",
+      "properties": {
+        "type": "document",
+        "credibility": 0.9
+      }
+    },
+    {
+      "id": "ds_british_parliamentary_records",
+      "type": "Data_Source",
+      "properties": {
+        "type": "document",
+        "credibility": 0.8
+      }
+    },
+    {
+      "id": "evt_planning_meetings_btp",
+      "type": "Event",
+      "properties": {
+        "description": "Planning meetings for the Boston Tea Party.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "evt_strategy_disguise_mohawks",
+      "type": "Event",
+      "properties": {
+        "description": "The specific strategy of disguising participants as Mohawk Indians.",
+        "type": "intermediate"
+      }
+    },
+    {
+      "id": "evt_military_response_gage_order",
+      "type": "Event",
+      "properties": {
+        "description": "King George III issuing explicit orders to General Gage to use force against Massachusetts.",
+        "type": "triggering"
+      }
+    },
+    {
+      "id": "evt_principled_args_econ_disadvantage",
+      "type": "Event",
+      "properties": {
+        "description": "Colonists consistently cited principled arguments even when economically disadvantageous.",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "evt_const_lang_private_corr",
+      "type": "Event",
+      "properties": {
+        "description": "The presence of constitutional language in private correspondence.",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "mech_british_trade_enforcement",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Mechanism of British trade enforcement.",
+        "confidence": 0.7,
+        "status": "unspecified"
+      }
+    },
+    {
+      "id": "evd_trade_enforcement_records_mech_test",
+      "type": "Evidence",
+      "properties": {
+        "description": "Ship manifests and customs records revealing whether predicted increases in enforcement activity materialized.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "ds_french_diplomatic_archives",
+      "type": "Data_Source",
+      "properties": {
+        "type": "document",
+        "credibility": 0.7
+      }
+    },
+    {
+      "id": "alt_european_balance_of_power",
+      "type": "Alternative_Explanation",
+      "properties": {
+        "description": "European balance-of-power considerations influenced colonial resistance more than previously recognized.",
+        "status": "supported"
+      }
+    },
+    {
+      "id": "evd_french_diplomatic_archives_contents",
+      "type": "Evidence",
+      "properties": {
+        "description": "New evidence from previously sealed French diplomatic archives showing French agents provided strategic advice.",
+        "type": "straw_in_the_wind"
+      }
+    },
+    {
+      "id": "evd_economic_analysis_colonial_trade",
+      "type": "Evidence",
+      "properties": {
+        "description": "Economic analysis of colonial trade patterns.",
+        "type": "hoop"
+      }
+    },
+    {
+      "id": "evt_merchants_opposed_btp_actual",
+      "type": "Event",
+      "properties": {
+        "description": "Many merchants actually opposed the Tea Party due to its negative impact on their legitimate trade relationships.",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "evt_colonial_resistance_general",
+      "type": "Event",
+      "properties": {
+        "description": "General colonial resistance.",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "evd_samuel_adams_personal_corr",
+      "type": "Evidence",
+      "properties": {
+        "description": "Samuel Adams' personal correspondence confirming his central role in organizing the resistance.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "evd_parliamentary_records_policy",
+      "type": "Evidence",
+      "properties": {
+        "description": "British Parliamentary records about imperial policy decisions and official reactions to colonial resistance.",
+        "type": "general"
+      }
+    },
+    {
+      "id": "evd_archaeological_harbor_fragments",
+      "type": "Evidence",
+      "properties": {
+        "description": "Archaeological evidence from Boston Harbor, recovering extensive tea chest fragments.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "evt_small_amount_tea_destroyed_claim",
+      "type": "Event",
+      "properties": {
+        "description": "Claims that only a small amount of tea was destroyed.",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "evd_historical_records_meeting_actual_loc",
+      "type": "Evidence",
+      "properties": {
+        "description": "Historical records definitively showing organizational meetings did NOT occur at Faneuil Hall but at the Old South Meeting House.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "evt_meetings_faneuil_hall_claim",
+      "type": "Event",
+      "properties": {
+        "description": "Claims that organizational meetings occurred at Faneuil Hall.",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "evt_second_tea_destruction_jan1774",
+      "type": "Event",
+      "properties": {
+        "description": "A supposed second tea destruction event in January 1774.",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "evd_ship_manifests_jan1774",
+      "type": "Evidence",
+      "properties": {
+        "description": "Ship manifest evidence and customs house records showing no British ships carrying East India Company tea entered Boston Harbor during January 1774.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "evt_samuel_adams_french_meeting_pre1775",
+      "type": "Event",
+      "properties": {
+        "description": "Samuel Adams meeting with French agents before 1775.",
+        "type": "unspecified"
+      }
+    },
+    {
+      "id": "evd_postal_diplomatic_corr_no_contact",
+      "type": "Evidence",
+      "properties": {
+        "description": "Detailed postal records and diplomatic correspondence showing no such contact existed between Samuel Adams and French agents during the critical period before 1775.",
+        "type": "smoking_gun"
+      }
+    },
+    {
+      "id": "hyp_economic_grievance",
+      "type": "Hypothesis",
+      "properties": {
+        "description": "The economic grievance hypothesis, proposing that the mechanism operates through material interests rather than ideological commitment.",
+        "status": "active"
+      }
+    },
+    {
+      "id": "mech_imperial_control",
+      "type": "Causal_Mechanism",
+      "properties": {
+        "description": "Imperial control mechanism, designed to test colonial loyalty and extract revenue.",
+        "confidence": 0.8,
+        "status": "unspecified"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source_id": "act_samuel_adams",
+      "target_id": "evt_boston_tea_party",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9,
+        "certainty": 0.9,
+        "probative_value": 0.9
+      }
+    },
+    {
+      "source_id": "act_sons_of_liberty",
+      "target_id": "evt_boston_tea_party",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.8,
+        "certainty": 0.9,
+        "probative_value": 0.9
+      }
+    },
+    {
+      "source_id": "evt_tea_act_passed",
+      "target_id": "evt_boston_tea_party",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "mechanism_id": "mech_imperial_resistance",
+        "type": "direct",
+        "probative_value": 0.9
+      }
+    },
+    {
+      "source_id": "evt_tea_act_passed",
+      "target_id": "evt_tea_act_monopoly",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "type": "direct",
+        "probative_value": 0.9
+      }
+    },
+    {
+      "source_id": "evt_tea_act_passed",
+      "target_id": "mech_imperial_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "trigger",
+        "sequence_position": 1,
+        "necessity": 0.9,
+        "certainty": 0.9,
+        "probative_value": 0.9
+      }
+    },
+    {
+      "source_id": "evt_taxation_no_representation",
+      "target_id": "mech_imperial_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 1,
+        "necessity": 0.8,
+        "certainty": 0.9,
+        "probative_value": 0.8
+      }
+    },
+    {
+      "source_id": "evt_econ_pressure_ideo_mobilization",
+      "target_id": "mech_imperial_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 2,
+        "necessity": 0.8,
+        "certainty": 0.9,
+        "probative_value": 0.8
+      }
+    },
+    {
+      "source_id": "act_sons_of_liberty",
+      "target_id": "mech_imperial_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "facilitating",
+        "sequence_position": 3,
+        "necessity": 0.7,
+        "certainty": 0.8,
+        "probative_value": 0.7
+      }
+    },
+    {
+      "source_id": "evt_discontent_channeled",
+      "target_id": "mech_imperial_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "intermediate",
+        "sequence_position": 3,
+        "necessity": 0.8,
+        "certainty": 0.9,
+        "probative_value": 0.8
+      }
+    },
+    {
+      "source_id": "evt_resistance_direct_action",
+      "target_id": "mech_imperial_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "outcome",
+        "sequence_position": 4,
+        "necessity": 0.9,
+        "certainty": 0.9,
+        "probative_value": 0.9
+      }
+    },
+    {
+      "source_id": "evt_boston_tea_party",
+      "target_id": "mech_imperial_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "trigger",
+        "necessity": 0.9,
+        "certainty": 0.9,
+        "probative_value": 0.9,
+        "source_text_quote": "The Boston Tea Party was a critical component part of the larger imperial resistance mechanism, serving as the decisive trigger event that transformed abstract constitutional grievances into concrete revolutionary action."
+      }
+    },
+    {
+      "source_id": "evt_boston_tea_party",
+      "target_id": "evt_constitutional_grievances_transformed",
+      "type": "causes",
+      "properties": {
+        "certainty": 0.9,
+        "type": "direct",
+        "probative_value": 0.9
+      }
+    },
+    {
+      "source_id": "cond_british_naval_supremacy",
+      "target_id": "mech_imperial_resistance",
+      "type": "constrains",
+      "properties": {
+        "constraint_strength": 0.7,
+        "constraint_type": "limits",
+        "temporal_scope": "initially",
+        "certainty": 0.8,
+        "probative_value": 0.7
+      }
+    },
+    {
+      "source_id": "cond_enlightenment_ideas",
+      "target_id": "mech_imperial_resistance",
+      "type": "enables",
+      "properties": {
+        "necessity": 0.8,
+        "enabling_type": "structural",
+        "certainty": 0.9,
+        "probative_value": 0.8
+      }
+    },
+    {
+      "source_id": "cond_colonial_economic_development",
+      "target_id": "mech_imperial_resistance",
+      "type": "enables",
+      "properties": {
+        "necessity": 0.7,
+        "enabling_type": "structural",
+        "certainty": 0.8,
+        "probative_value": 0.7
+      }
+    },
+    {
+      "source_id": "evd_colonial_pamphlets_taxation",
+      "target_id": "hyp_constitutional_principle",
+      "type": "tests_hypothesis",
+      "properties": {
+        "probative_value": 0.8,
+        "test_result": "passed",
+        "diagnostic_type": "hoop",
+        "certainty": 0.9,
+        "source_text_quote": "Colonial pamphlets explicitly arguing against taxation without representation (Hoop Test - necessary for principle-based explanation)"
+      }
+    },
+    {
+      "source_id": "evd_widespread_colonial_support_classes",
+      "target_id": "hyp_constitutional_principle",
+      "type": "tests_hypothesis",
+      "properties": {
+        "probative_value": 0.8,
+        "test_result": "passed",
+        "diagnostic_type": "smoking_gun",
+        "certainty": 0.9,
+        "source_text_quote": "Widespread colonial support across different economic classes (Smoking Gun - sufficient to show broad principled agreement)"
+      }
+    },
+    {
+      "source_id": "evd_continental_congress_formal_decs",
+      "target_id": "hyp_constitutional_principle",
+      "type": "tests_hypothesis",
+      "properties": {
+        "probative_value": 0.9,
+        "test_result": "passed",
+        "diagnostic_type": "doubly_decisive",
+        "certainty": 0.9,
+        "source_text_quote": "The Continental Congress's formal declarations citing constitutional violations (Doubly Decisive - both necessary and sufficient)"
+      }
+    },
+    {
+      "source_id": "evd_working_class_protests",
+      "target_id": "alt_elite_manipulation",
+      "type": "refutes_alternative",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "hoop",
+        "refutation_strength": "strong",
+        "certainty": 0.9,
+        "source_text_quote": "Working-class participation in protests refutes the elite manipulation theory (Failed Hoop Test for elite theory)"
+      }
+    },
+    {
+      "source_id": "evd_absence_french_support_pre1776",
+      "target_id": "alt_external_influence",
+      "type": "refutes_alternative",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "smoking_gun",
+        "refutation_strength": "strong",
+        "certainty": 0.9,
+        "source_text_quote": "Absence of French support before 1776 refutes the external influence theory (Failed Smoking Gun for French involvement)"
+      }
+    },
+    {
+      "source_id": "evd_non_merchant_leadership_committees",
+      "target_id": "alt_economic_self_interest",
+      "type": "refutes_alternative",
+      "properties": {
+        "probative_value": 0.6,
+        "diagnostic_type": "straw_in_the_wind",
+        "refutation_strength": "weak",
+        "certainty": 0.7,
+        "source_text_quote": "Non-merchant leadership in many revolutionary committees challenges the economic self-interest theory (Straw-in-the-Wind against merchant theory)"
+      }
+    },
+    {
+      "source_id": "evd_samuel_adams_correspondence",
+      "target_id": "evt_planning_meetings_btp",
+      "type": "confirms_occurrence",
+      "properties": {
+        "certainty": 0.9,
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Samuel Adams' documented correspondence shows deliberate organization of the Tea Party (Confirms actor initiation)"
+      }
+    },
+    {
+      "source_id": "evd_samuel_adams_correspondence",
+      "target_id": "act_samuel_adams",
+      "type": "supports",
+      "properties": {
+        "certainty": 0.9,
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "target_type": "mechanism_operation",
+        "source_text_quote": "Samuel Adams' documented correspondence shows deliberate organization of the Tea Party"
+      }
+    },
+    {
+      "source_id": "evd_hutchinson_letters_london",
+      "target_id": "act_governor_hutchinson",
+      "type": "supports",
+      "properties": {
+        "certainty": 0.8,
+        "diagnostic_type": "general",
+        "probative_value": 0.8,
+        "target_type": "causal_relationship",
+        "source_text_quote": "Hutchinson's letters to London reveal his failed attempts to prevent escalation (Shows constraint on actor capabilities)"
+      }
+    },
+    {
+      "source_id": "evd_george_iii_olive_branch_rejection",
+      "target_id": "act_king_george_iii",
+      "type": "supports",
+      "properties": {
+        "certainty": 0.8,
+        "diagnostic_type": "general",
+        "probative_value": 0.8,
+        "target_type": "causal_relationship",
+        "source_text_quote": "George III's rejection of the Olive Branch Petition demonstrates his intentional choice for military suppression (Reveals actor intentions and beliefs)"
+      }
+    },
+    {
+      "source_id": "evd_colonists_cited_rep_rights_contexts",
+      "target_id": "hyp_constitutional_principle",
+      "type": "tests_hypothesis",
+      "properties": {
+        "probative_value": 0.7,
+        "test_result": "passed",
+        "diagnostic_type": "general",
+        "certainty": 0.8,
+        "source_text_quote": "The constitutional principle hypothesis is systematically tested by examining whether colonists consistently cited representation rights across different contexts."
+      }
+    },
+    {
+      "source_id": "evd_colonists_cited_rep_rights_contexts",
+      "target_id": "hyp_principled_opposition_drove_resistance",
+      "type": "tests_hypothesis",
+      "properties": {
+        "probative_value": 0.7,
+        "test_result": "passed",
+        "diagnostic_type": "general",
+        "certainty": 0.8,
+        "source_text_quote": "This evidence tests the hypothesis that principled opposition, rather than mere economic grievance, drove colonial resistance."
+      }
+    },
+    {
+      "source_id": "evd_doc_mech_operation_verification",
+      "target_id": "mech_imperial_resistance",
+      "type": "tests_mechanism",
+      "properties": {
+        "probative_value": 0.7,
+        "test_result": "passed",
+        "diagnostic_type": "general",
+        "mechanism_aspect": "operation",
+        "certainty": 0.8,
+        "source_text_quote": "Documentary evidence tests the mechanism's operation by showing how taxation policies actually translated into organized resistance through the predicted causal pathway."
+      }
+    },
+    {
+      "source_id": "evd_merchant_records_1774_timing",
+      "target_id": "evd_british_intel_early_french_support",
+      "type": "contradicts",
+      "properties": {
+        "certainty": 0.9,
+        "probative_value": 0.9,
+        "comparison_strength": 0.9,
+        "comparison_type": "contradicts",
+        "reasoning": "regarding the timing of French involvement."
+      }
+    },
+    {
+      "source_id": "ds_mass_historical_society",
+      "target_id": "evd_unknown_corr_leaders_intellectuals",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.9,
+        "bias_risk": 0.1,
+        "certainty": 0.8,
+        "probative_value": 0.8
+      }
+    },
+    {
+      "source_id": "evd_unknown_corr_leaders_intellectuals",
+      "target_id": "hyp_enlightenment_ideas_influence",
+      "type": "supports",
+      "properties": {
+        "probative_value": 0.85,
+        "diagnostic_type": "bayesian",
+        "certainty": 0.9,
+        "source_text_quote": "Based on the discovery of previously unknown correspondence between colonial leaders and European intellectuals, we must update the probability that Enlightenment ideas influenced colonial thinking from our prior estimate of 0.6 to a posterior probability of 0.85, representing a significant Bayesian update."
+      }
+    },
+    {
+      "source_id": "evt_tea_act_conditions_for_rebellion",
+      "target_id": "evt_boston_tea_party",
+      "type": "enables",
+      "properties": {
+        "necessity": 0.8,
+        "certainty": 0.9,
+        "probative_value": 0.9
+      }
+    },
+    {
+      "source_id": "evt_colonial_resistance_general",
+      "target_id": "evt_coordinated_comm_network_inferred",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.7,
+        "diagnostic_type": "general",
+        "reasoning": "the best explanation for the pattern of colonial responses across different regions infers that a coordinated communication network existed",
+        "certainty": 0.8
+      }
+    },
+    {
+      "source_id": "evd_ship_manifests_customs_early1773",
+      "target_id": "evt_secret_meeting_sa_french_1773",
+      "type": "disproves_occurrence",
+      "properties": {
+        "certainty": 0.9,
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Evidence disproves the occurrence of a secret meeting between Samuel Adams and French agents in early 1773, as detailed ship manifests and customs records show no French diplomatic presence in Boston during this period, directly contradicting claims in some historical accounts."
+      }
+    },
+    {
+      "source_id": "evd_merchant_records_smuggling_ops",
+      "target_id": "alt_economic_self_interest",
+      "type": "supports_alternative",
+      "properties": {
+        "probative_value": 0.7,
+        "diagnostic_type": "smoking_gun",
+        "certainty": 0.8,
+        "source_text_quote": "Documentary evidence from merchant records supports the alternative explanation that economic self-interest motivated many colonial leaders, as these records reveal extensive smuggling operations that would have been threatened by British enforcement."
+      }
+    },
+    {
+      "source_id": "evd_town_meeting_records_grassroots",
+      "target_id": "alt_elite_manipulation",
+      "type": "refutes_alternative",
+      "properties": {
+        "probative_value": 0.7,
+        "diagnostic_type": "hoop",
+        "refutation_strength": "moderate",
+        "certainty": 0.8,
+        "source_text_quote": "However, other evidence refutes the alternative explanation of pure elite manipulation, as town meeting records show genuine grassroots participation in anti-British activities across different social classes and geographic regions."
+      }
+    },
+    {
+      "source_id": "ds_mass_historical_society",
+      "target_id": "evd_samuel_adams_personal_corr",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.9,
+        "bias_risk": 0.1,
+        "certainty": 0.9,
+        "probative_value": 0.9
+      }
+    },
+    {
+      "source_id": "ds_british_parliamentary_records",
+      "target_id": "evd_parliamentary_records_policy",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.8,
+        "bias_risk": 0.2,
+        "certainty": 0.8,
+        "probative_value": 0.8
+      }
+    },
+    {
+      "source_id": "act_samuel_adams",
+      "target_id": "evt_planning_meetings_btp",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9,
+        "certainty": 0.9,
+        "probative_value": 0.9,
+        "source_text_quote": "Samuel Adams personally initiated the planning meetings for the Boston Tea Party through his direct organizational efforts"
+      }
+    },
+    {
+      "source_id": "act_samuel_adams",
+      "target_id": "evt_strategy_disguise_mohawks",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.8,
+        "certainty": 0.8,
+        "probative_value": 0.8,
+        "source_text_quote": "His documented letters show he initiated the specific strategy of disguising participants as Mohawk Indians"
+      }
+    },
+    {
+      "source_id": "act_king_george_iii",
+      "target_id": "evt_military_response_gage_order",
+      "type": "initiates",
+      "properties": {
+        "intentionality": "deliberate",
+        "capability_assessment": 0.9,
+        "certainty": 0.9,
+        "probative_value": 0.9,
+        "source_text_quote": "King George III directly initiated the military response to colonial resistance by issuing explicit orders to General Gage"
+      }
+    },
+    {
+      "source_id": "evt_principled_args_econ_disadvantage",
+      "target_id": "hyp_constitutional_principle",
+      "type": "tests_hypothesis",
+      "properties": {
+        "probative_value": 0.8,
+        "test_result": "passed",
+        "diagnostic_type": "general",
+        "certainty": 0.8,
+        "source_text_quote": "If colonists were truly motivated by constitutional principles, we should find evidence of principled arguments even when economically disadvantageous - this hypothesis tests whether constitutional concerns override economic interests"
+      }
+    },
+    {
+      "source_id": "evt_const_lang_private_corr",
+      "target_id": "hyp_constitutional_principle",
+      "type": "tests_hypothesis",
+      "properties": {
+        "probative_value": 0.8,
+        "test_result": "passed",
+        "diagnostic_type": "general",
+        "certainty": 0.8,
+        "source_text_quote": "The presence of constitutional language in private correspondence (not just public declarations) specifically tests the hypothesis that these were genuine beliefs rather than political rhetoric."
+      }
+    },
+    {
+      "source_id": "evd_doc_mech_operation_verification",
+      "target_id": "mech_imperial_resistance",
+      "type": "tests_mechanism",
+      "properties": {
+        "probative_value": 0.7,
+        "test_result": "passed",
+        "diagnostic_type": "general",
+        "mechanism_aspect": "operation",
+        "certainty": 0.8,
+        "source_text_quote": "Documentary evidence tests the mechanism by showing whether each proposed causal step actually occurred as predicted."
+      }
+    },
+    {
+      "source_id": "evd_trade_enforcement_records_mech_test",
+      "target_id": "mech_british_trade_enforcement",
+      "type": "tests_mechanism",
+      "properties": {
+        "probative_value": 0.7,
+        "test_result": "inconclusive",
+        "diagnostic_type": "general",
+        "mechanism_aspect": "operation",
+        "certainty": 0.7,
+        "source_text_quote": "Ship manifests and customs records test the mechanism of British trade enforcement by revealing whether predicted increases in enforcement activity actually materialized during the crisis period."
+      }
+    },
+    {
+      "source_id": "ds_french_diplomatic_archives",
+      "target_id": "evd_french_diplomatic_archives_contents",
+      "type": "provides_evidence",
+      "properties": {
+        "credibility": 0.7,
+        "bias_risk": 0.1,
+        "certainty": 0.7,
+        "probative_value": 0.7
+      }
+    },
+    {
+      "source_id": "evd_french_diplomatic_archives_contents",
+      "target_id": "alt_european_balance_of_power",
+      "type": "supports_alternative",
+      "properties": {
+        "probative_value": 0.7,
+        "diagnostic_type": "straw_in_the_wind",
+        "certainty": 0.7,
+        "source_text_quote": "New evidence from previously sealed French diplomatic archives supports the alternative explanation that European balance-of-power considerations influenced colonial resistance more than previously recognized, showing French agents provided strategic advice (though not financial support) earlier than commonly believed."
+      }
+    },
+    {
+      "source_id": "evd_economic_analysis_colonial_trade",
+      "target_id": "alt_economic_self_interest",
+      "type": "refutes_alternative",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "hoop",
+        "refutation_strength": "strong",
+        "certainty": 0.8,
+        "source_text_quote": "Conversely, economic analysis of colonial trade patterns refutes the alternative explanation that merchant self-interest was the primary driver, as many merchants actually opposed the Tea Party due to its negative impact on their legitimate trade relationships."
+      }
+    },
+    {
+      "source_id": "evt_boston_tea_party",
+      "target_id": "hyp_constitutional_principle",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "smoking_gun",
+        "reasoning": "the event demonstrates colonists were willing to take costly action based on principle rather than just economic benefit",
+        "certainty": 0.9,
+        "source_text_quote": "The Boston Tea Party itself provides evidence for the constitutional principle hypothesis, as the event demonstrates colonists were willing to take costly action based on principle rather than just economic benefit."
+      }
+    },
+    {
+      "source_id": "evt_boston_tea_party",
+      "target_id": "act_samuel_adams",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "general",
+        "reasoning": "showing his effectiveness as a revolutionary leader",
+        "certainty": 0.9,
+        "target_type": "mechanism_operation",
+        "source_text_quote": "This specific act of rebellion provides evidence for Samuel Adams' strategic thinking and organizational capabilities, showing his effectiveness as a revolutionary leader."
+      }
+    },
+    {
+      "source_id": "evt_boston_tea_party",
+      "target_id": "mech_imperial_resistance",
+      "type": "provides_evidence_for",
+      "properties": {
+        "probative_value": 0.8,
+        "diagnostic_type": "smoking_gun",
+        "reasoning": "demonstrating that the theoretical causal steps actually operated in practice to produce organized colonial resistance",
+        "certainty": 0.9,
+        "target_type": "mechanism_operation",
+        "source_text_quote": "The successful organization and execution of the Tea Party provides evidence for the imperial resistance mechanism's effectiveness, demonstrating that the theoretical causal steps actually operated in practice to produce organized colonial resistance."
+      }
+    },
+    {
+      "source_id": "evd_archaeological_harbor_fragments",
+      "target_id": "evt_small_amount_tea_destroyed_claim",
+      "type": "refutes",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "smoking_gun",
+        "certainty": 0.9,
+        "source_text_quote": "Archaeological evidence from Boston Harbor directly refutes claims that only a small amount of tea was destroyed, as underwater excavations have recovered extensive tea chest fragments inconsistent with minimal damage accounts."
+      }
+    },
+    {
+      "source_id": "evd_historical_records_meeting_actual_loc",
+      "target_id": "evt_meetings_faneuil_hall_claim",
+      "type": "refutes",
+      "properties": {
+        "probative_value": 0.9,
+        "diagnostic_type": "smoking_gun",
+        "certainty": 0.9,
+        "source_text_quote": "Historical records definitively refute alternative claims about the meeting location, showing the organizational meetings did NOT occur at Faneuil Hall as some accounts suggest, but rather at the Old South Meeting House as documented in multiple contemporary sources."
+      }
+    },
+    {
+      "source_id": "evd_ship_manifests_jan1774",
+      "target_id": "evt_second_tea_destruction_jan1774",
+      "type": "disproves_occurrence",
+      "properties": {
+        "certainty": 0.9,
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Ship manifest evidence disproves the occurrence of a supposed second tea destruction event in January 1774, as no British ships carrying East India Company tea entered Boston Harbor during that period according to customs house records."
+      }
+    },
+    {
+      "source_id": "evd_postal_diplomatic_corr_no_contact",
+      "target_id": "evt_samuel_adams_french_meeting_pre1775",
+      "type": "disproves_occurrence",
+      "properties": {
+        "certainty": 0.9,
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Correspondence evidence disproves the occurrence of Samuel Adams meeting with French agents before 1775, as detailed postal records and diplomatic correspondence show no such contact existed during the critical period."
+      }
+    },
+    {
+      "source_id": "hyp_constitutional_principle",
+      "target_id": "mech_imperial_resistance",
+      "type": "explains_mechanism",
+      "properties": {
+        "certainty": 0.8,
+        "type_of_claim": "operation",
+        "scope": "shows principled opposition created necessary conditions for organized resistance",
+        "probative_value": 0.8,
+        "source_text_quote": "The constitutional principle hypothesis explains how the imperial resistance mechanism operates by showing that principled opposition to taxation without representation created the necessary conditions for organized resistance. This hypothesis explains that the mechanism functions through ideological mobilization that transforms abstract principles into concrete collective action."
+      }
+    },
+    {
+      "source_id": "hyp_economic_grievance",
+      "target_id": "mech_imperial_resistance",
+      "type": "explains_mechanism",
+      "properties": {
+        "certainty": 0.6,
+        "type_of_claim": "operation",
+        "scope": "proposes mechanism operates through material interests rather than ideological commitment",
+        "probative_value": 0.6,
+        "source_text_quote": "The economic grievance hypothesis explains the mechanism differently, proposing that the mechanism operates through material interests rather than ideological commitment, with merchants using constitutional rhetoric to disguise self-interested opposition to British trade policies."
+      }
+    },
+    {
+      "source_id": "evt_tea_act_passed",
+      "target_id": "mech_imperial_control",
+      "type": "part_of_mechanism",
+      "properties": {
+        "role": "legislative component",
+        "certainty": 0.9,
+        "probative_value": 0.9,
+        "source_text_quote": "The Tea Act itself was part of the imperial control mechanism, serving as the legislative component that created the economic and political pressures necessary to test colonial loyalty and extract revenue from the American territories."
+      }
+    },
+    {
+      "source_id": "evt_merchants_opposed_btp_actual",
+      "target_id": "evt_boston_tea_party",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.5,
+        "source_text_quote": "many merchants actually opposed the Tea Party due to its negative impact on their legitimate trade relationships.",
+        "reasoning": "This event, showing merchant opposition, provides evidence for the complex nature of support for the Boston Tea Party, indicating it wasn't universally supported by all commercial interests. It is a 'straw in the wind' against explanations solely focused on merchant economic self-interest driving the BTP.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "alt_economic_self_interest",
+      "target_id": "evt_constitutional_grievances_transformed",
+      "type": "explains",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "Some historians argue that the revolution was primarily driven by colonial merchants' economic interests rather than constitutional principles.",
+        "reasoning": "This alternative explanation proposes an economic motivation as the primary driver for revolutionary actions, providing a competing explanation for phenomena like the transformation of grievances into action.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "alt_elite_manipulation",
+      "target_id": "evt_discontent_channeled",
+      "type": "explains",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "Another alternative suggests that colonial elites deliberately manufactured popular outrage to advance their own political ambitions.",
+        "reasoning": "This alternative explanation offers a different origin for the widespread discontent, proposing it was manufactured by elites rather than emerging organically, thereby explaining how discontent was channeled.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "alt_external_influence",
+      "target_id": "mech_imperial_resistance",
+      "type": "explains",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "A third alternative proposes that French agents and financial support were the primary drivers of colonial rebellion, seeking to weaken their British rivals.",
+        "reasoning": "This alternative explanation proposes an external factor (French influence) as the primary driver for the mechanism of colonial rebellion, offering a competing explanation to the internal factors (like constitutional grievances).",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evd_hutchinson_letters_london",
+      "target_id": "mech_imperial_resistance",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.4,
+        "source_text_quote": "Hutchinson's letters to London reveal his failed attempts to prevent escalation (Shows constraint on actor capabilities)",
+        "reasoning": "This evidence provides insights into the British authority's efforts to manage the escalating crisis, which is part of the larger imperial resistance mechanism, by showing the constraints on attempts to prevent the rebellion.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "act_governor_hutchinson",
+      "target_id": "mech_imperial_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "Governor Thomas Hutchinson, representing British authority in Massachusetts, believed the colonists were ungrateful subjects who needed firm governance. He intended to enforce Parliamentary supremacy...",
+        "reasoning": "Governor Hutchinson, as a key representative of British authority whose actions and constraints are detailed, is an integral part of the unfolding imperial crisis and the broader imperial resistance mechanism.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evd_george_iii_olive_branch_rejection",
+      "target_id": "mech_imperial_resistance",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.6,
+        "source_text_quote": "George III's rejection of the Olive Branch Petition demonstrates his intentional choice for military suppression (Reveals actor intentions and beliefs)",
+        "reasoning": "This evidence reveals King George III's intent for military suppression, which directly impacted the trajectory of the imperial crisis and contributed to the escalating imperial resistance mechanism.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "act_king_george_iii",
+      "target_id": "mech_imperial_resistance",
+      "type": "initiates",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "King George III directly initiated the military response to colonial resistance by issuing explicit orders to General Gage to use force against Massachusetts, personally signing the directive that initiated what would become the path to armed conflict.",
+        "reasoning": "King George III's direct orders to use force are a clear initiation of actions that form part of the broader imperial resistance mechanism and the escalating conflict.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evt_military_response_gage_order",
+      "target_id": "mech_imperial_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "King George III directly initiated the military response to colonial resistance by issuing explicit orders to General Gage to use force against Massachusetts, personally signing the directive that initiated what would become the path to armed conflict.",
+        "reasoning": "This event describes a key action by the British crown that directly escalated the conflict and forms a component of the imperial resistance mechanism leading to armed conflict.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evd_unknown_corr_leaders_intellectuals",
+      "target_id": "evt_constitutional_grievances_transformed",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.85,
+        "source_text_quote": "Based on the discovery of previously unknown correspondence between colonial leaders and European intellectuals, we must update the probability that Enlightenment ideas influenced colonial thinking from our prior estimate of 0.6 to a posterior probability of 0.85, representing a significant Bayesian update.",
+        "reasoning": "This evidence significantly strengthens the hypothesis that Enlightenment ideas influenced colonial thinking, which in turn provided the ideological framework for transforming abstract constitutional grievances into revolutionary action.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "hyp_enlightenment_ideas_influence",
+      "target_id": "evt_constitutional_grievances_transformed",
+      "type": "explains",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "Enlightenment Ideas (Enabling Condition): The spread of Enlightenment philosophy about natural rights and self-governance provided the ideological framework that enabled colonists to justify resistance as legitimate.",
+        "reasoning": "The hypothesis about Enlightenment ideas influencing colonial thinking explains the origin and nature of the ideological framework that enabled the transformation of constitutional grievances into revolutionary action.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evd_samuel_adams_personal_corr",
+      "target_id": "act_samuel_adams",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Samuel Adams' personal correspondence confirming his central role in organizing the resistance.",
+        "reasoning": "This evidence directly confirms Samuel Adams' central role in organizing resistance, acting as a strong 'smoking gun' for his involvement and capabilities as an actor.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "ds_mass_historical_society",
+      "target_id": "evt_discontent_channeled",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.7,
+        "source_text_quote": "Primary documents from the Massachusetts Historical Society archives provide evidence about colonial organization and planning. These archives contain Samuel Adams' personal correspondence that confirms his central role in organizing the resistance.",
+        "reasoning": "The Massachusetts Historical Society is identified as a data source for evidence related to colonial organization and planning, which directly supports the understanding of how discontent was channeled into organized resistance.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evt_coordinated_comm_network_inferred",
+      "target_id": "evt_discontent_channeled",
+      "type": "enables",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "a coordinated communication network existed among colonial leaders, suggesting a more systematic organization than previously recognized.",
+        "reasoning": "The inferred existence of a coordinated communication network among colonial leaders would enable the channeling of discontent into organized resistance, making it an enabling factor for this event in the mechanism.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evt_secret_meeting_sa_french_1773",
+      "target_id": "mech_imperial_resistance",
+      "type": "refutes",
+      "properties": {
+        "diagnostic_type": "hoop",
+        "probative_value": 0.8,
+        "source_text_quote": "Evidence disproves the occurrence of a secret meeting between Samuel Adams and French agents in early 1773, as detailed ship manifests and customs records show no French diplomatic presence in Boston during this period, directly contradicting claims in some historical accounts.",
+        "reasoning": "The disproven occurrence of this secret meeting directly refutes a specific claim that would support the 'external influence' alternative explanation for the imperial resistance mechanism, serving as a 'hoop test' against it.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evd_parliamentary_records_policy",
+      "target_id": "evt_tea_act_passed",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.8,
+        "source_text_quote": "British Parliamentary records provide evidence about imperial policy decisions and official reactions to colonial resistance. These government documents confirm the Tea Act's intent and subsequent enforcement measures.",
+        "reasoning": "These records directly confirm the intent behind the Tea Act, providing strong evidence for its passing and its nature.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "ds_british_parliamentary_records",
+      "target_id": "mech_imperial_resistance",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.7,
+        "source_text_quote": "British Parliamentary records provide evidence about imperial policy decisions and official reactions to colonial resistance.",
+        "reasoning": "This data source directly contributes to understanding the British side of the imperial resistance mechanism, by providing records of policy decisions and reactions.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evd_trade_enforcement_records_mech_test",
+      "target_id": "mech_imperial_resistance",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.7,
+        "source_text_quote": "Ship manifests and customs records test the mechanism of British trade enforcement by revealing whether predicted increases in enforcement activity actually materialized during the crisis period.",
+        "reasoning": "This evidence directly tests a component mechanism (British trade enforcement) that is integral to the broader imperial resistance mechanism, thus providing evidence for its operation.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "mech_british_trade_enforcement",
+      "target_id": "mech_imperial_resistance",
+      "type": "part_of_mechanism",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "Ship manifests and customs records test the mechanism of British trade enforcement by revealing whether predicted increases in enforcement activity actually materialized during the crisis period.",
+        "reasoning": "This describes a specific mechanism (British trade enforcement) that is explicitly tested in relation to the crisis period, making it a component of the larger imperial resistance mechanism.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evd_french_diplomatic_archives_contents",
+      "target_id": "mech_imperial_resistance",
+      "type": "supports",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.7,
+        "source_text_quote": "New evidence from previously sealed French diplomatic archives supports the alternative explanation that European balance-of-power considerations influenced colonial resistance more than previously recognized, showing French agents provided strategic advice (though not financial support) earlier than commonly believed.",
+        "reasoning": "This new evidence directly supports an alternative explanation for the drivers of colonial resistance, indicating that French strategic advice influenced the imperial resistance mechanism, making it a 'smoking gun' for that alternative view.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "ds_french_diplomatic_archives",
+      "target_id": "mech_imperial_resistance",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "straw_in_the_wind",
+        "probative_value": 0.7,
+        "source_text_quote": "New evidence from previously sealed French diplomatic archives supports the alternative explanation that European balance-of-power considerations influenced colonial resistance more than previously recognized...",
+        "reasoning": "This data source is identified as providing new evidence that supports an alternative explanation for colonial resistance, thereby providing general evidence relevant to the imperial resistance mechanism.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "alt_european_balance_of_power",
+      "target_id": "mech_imperial_resistance",
+      "type": "explains",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "New evidence from previously sealed French diplomatic archives supports the alternative explanation that European balance-of-power considerations influenced colonial resistance more than previously recognized...",
+        "reasoning": "This alternative explanation proposes that European geopolitical factors influenced colonial resistance, offering a competing explanation for the underlying dynamics of the imperial resistance mechanism.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evt_small_amount_tea_destroyed_claim",
+      "target_id": "evt_boston_tea_party",
+      "type": "is_about",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "Claims that only a small amount of tea was destroyed.",
+        "reasoning": "This entity represents a historical claim that directly pertains to the events and outcome of the Boston Tea Party, indicating its subject matter.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evd_archaeological_harbor_fragments",
+      "target_id": "evt_boston_tea_party",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Archaeological evidence from Boston Harbor directly refutes claims that only a small amount of tea was destroyed, as underwater excavations have recovered extensive tea chest fragments inconsistent with minimal damage accounts.",
+        "reasoning": "This archaeological evidence directly confirms the large scale of destruction during the Boston Tea Party, making it strong 'smoking gun' evidence for the event's actual impact.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evd_historical_records_meeting_actual_loc",
+      "target_id": "evt_discontent_channeled",
+      "type": "provides_evidence_for",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Historical records definitively refute alternative claims about the meeting location, showing the organizational meetings did NOT occur at Faneuil Hall as some accounts suggest, but rather at the Old South Meeting House as documented in multiple contemporary sources.",
+        "reasoning": "This evidence clarifies the actual location of organizational meetings, providing strong 'smoking gun' evidence for the accurate details of how discontent was channeled, by refuting false claims.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evt_meetings_faneuil_hall_claim",
+      "target_id": "evt_discontent_channeled",
+      "type": "is_about",
+      "properties": {
+        "diagnostic_type": null,
+        "probative_value": null,
+        "source_text_quote": "Claims that organizational meetings occurred at Faneuil Hall.",
+        "reasoning": "This entity represents a claim about the organizational meetings, which are a part of how discontent was channeled into resistance, indicating the subject of the claim.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evt_second_tea_destruction_jan1774",
+      "target_id": "evt_resistance_direct_action",
+      "type": "refutes",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Ship manifest evidence disproves the occurrence of a supposed second tea destruction event in January 1774, as no British ships carrying East India Company tea entered Boston Harbor during that period according to customs house records.",
+        "reasoning": "The disproven occurrence of this event directly refutes a claim of further direct action, thus clarifying the extent and timing of 'direct action against British property'. This evidence acts as a 'smoking gun' to disprove a claimed instance of resistance.",
+        "source": "connectivity_repair"
+      }
+    },
+    {
+      "source_id": "evt_samuel_adams_french_meeting_pre1775",
+      "target_id": "mech_imperial_resistance",
+      "type": "refutes",
+      "properties": {
+        "diagnostic_type": "smoking_gun",
+        "probative_value": 0.9,
+        "source_text_quote": "Correspondence evidence disproves the occurrence of Samuel Adams meeting with French agents before 1775, as detailed postal records and diplomatic correspondence show no such contact existed during the critical period.",
+        "reasoning": "The disproven occurrence of this meeting directly refutes a claim that would support the 'external influence' alternative explanation for the imperial resistance mechanism, serving as a 'smoking gun' against it.",
+        "source": "connectivity_repair"
+      }
+    }
+  ]
+}

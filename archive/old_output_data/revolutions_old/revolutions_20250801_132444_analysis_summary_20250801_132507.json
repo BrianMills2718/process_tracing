@@ -1,0 +1,147 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250801_132444_graph.json",
+  "case_identifier": "revolutions_20250801_132444_graph",
+  "generated_at": "2025-08-01T13:25:07.650253",
+  "causal_chains": [
+    {
+      "path": [
+        "event1",
+        "event2",
+        "event3",
+        "event4",
+        "event5",
+        "event6",
+        "event7",
+        "event8"
+      ],
+      "path_descriptions": [
+        "The French and Indian War concluded in 1763 with a British victory, leading to significant territorial gains for Britain in North America. However, this victory came at a substantial financial cost, contributing to a growing national debt that the British government sought to address through new revenue-raising measures.",
+        "In 1765, the British Parliament enacted the Stamp Act, a direct tax on the Thirteen Colonies that mandated stamps on all official documents, newspapers, and playing cards. This act was intended to raise revenue from the colonies to offset the costs incurred during the French and Indian War and to maintain a British military presence in North America.",
+        "The Townshend Acts, passed by the British Parliament in 1767, imposed duties on various imported goods such as paper, glass, and tea. These acts aimed to assert British authority over the colonies and generate revenue, but they were met with strong resistance and boycotts from colonists who viewed them as unconstitutional taxation without representation.",
+        "On December 16, 1773, a group of colonists known as the Sons of Liberty, disguised as Native Americans, boarded British East India Company ships in Boston Harbor and dumped chests of tea into the water. This act of defiance, known as the Boston Tea Party, was a protest against the Tea Act, which the colonists saw as an attempt to force them to accept taxation without representation.",
+        "In response to the Boston Tea Party, the British Parliament passed the Intolerable Acts in 1774. These acts included measures such as the closing of Boston Harbor, the alteration of the Massachusetts charter, and the quartering of British troops in colonial homes. The Intolerable Acts were intended to punish Massachusetts and assert British control, but they instead fueled colonial anger and resistance.",
+        "The American Revolution formally began on April 19, 1775, with the Battles of Lexington and Concord. These battles marked the outbreak of armed conflict between the British and the American colonists, signaling the start of a prolonged struggle for independence and self-governance.",
+        "On July 4, 1776, the Second Continental Congress adopted the Declaration of Independence, formally declaring the Thirteen Colonies independent from Great Britain. This document, primarily authored by Thomas Jefferson, articulated the principles of self-government, individual rights, and equality, and it served as a powerful statement of the colonists' resolve to break free from British rule.",
+        "The American Revolutionary War concluded with the signing of the Treaty of Paris in 1783. This treaty formally recognized the independence of the United States of America, granting the new nation control over vast territories east of the Mississippi River and solidifying its status as a sovereign and independent nation."
+      ],
+      "edge_types": [
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes"
+      ],
+      "trigger": "event1",
+      "outcome": "event8",
+      "length": 8
+    },
+    {
+      "path": [
+        "event6",
+        "event7",
+        "event8"
+      ],
+      "path_descriptions": [
+        "The American Revolution formally began on April 19, 1775, with the Battles of Lexington and Concord. These battles marked the outbreak of armed conflict between the British and the American colonists, signaling the start of a prolonged struggle for independence and self-governance.",
+        "On July 4, 1776, the Second Continental Congress adopted the Declaration of Independence, formally declaring the Thirteen Colonies independent from Great Britain. This document, primarily authored by Thomas Jefferson, articulated the principles of self-government, individual rights, and equality, and it served as a powerful statement of the colonists' resolve to break free from British rule.",
+        "The American Revolutionary War concluded with the signing of the Treaty of Paris in 1783. This treaty formally recognized the independence of the United States of America, granting the new nation control over vast territories east of the Mississippi River and solidifying its status as a sovereign and independent nation."
+      ],
+      "edge_types": [
+        "causes",
+        "causes"
+      ],
+      "trigger": "event6",
+      "outcome": "event8",
+      "length": 3
+    }
+  ],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 8,
+      "Hypothesis": 3,
+      "Evidence": 3
+    },
+    "edge_type_distribution": {
+      "causes": 7,
+      "provides_evidence": 3
+    },
+    "density": 0.054945054945054944,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "event2": 0.154,
+      "event3": 0.154,
+      "event4": 0.154,
+      "event5": 0.154,
+      "event6": 0.154,
+      "event7": 0.154,
+      "event1": 0.077,
+      "event8": 0.077,
+      "hypothesis1": 0.077,
+      "hypothesis2": 0.077
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hypothesis1",
+      "description": "British taxation policies enacted after the French and Indian War, particularly the Stamp Act and the Townshend Acts, significantly increased colonial discontent because these policies were perceived as violations of the colonists' rights as British subjects, specifically the right to representation in matters of taxation, thereby creating a sense of injustice and fueling the movement towards independence.",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis2",
+      "description": "The British government's attempts to assert greater control over the colonies through measures such as the Intolerable Acts following the Boston Tea Party escalated colonial resistance because these actions were viewed as oppressive and an infringement upon colonial self-governance, pushing colonists closer to declaring independence and engaging in armed conflict to protect their freedoms.",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis3",
+      "description": "The ideology of republicanism, emphasizing civic virtue, public service, and the common good, deeply influenced the American colonists and fostered a sense of unity and purpose because it provided a framework for articulating their grievances against British rule and justifying their pursuit of independence based on principles of self-governance and popular sovereignty.",
+      "assessment": "Undetermined / Lacks Evidence",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

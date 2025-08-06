@@ -1,0 +1,202 @@
+{
+  "filename": "output_data\\revolutions\\revolutions_20250804_221203_graph.json",
+  "case_identifier": "revolutions_20250804_221203_graph",
+  "generated_at": "2025-08-04T22:14:01.522341",
+  "causal_chains": [
+    {
+      "path": [
+        "event_1",
+        "event_2",
+        "event_3",
+        "event_4",
+        "event_5",
+        "event_6",
+        "event_7"
+      ],
+      "path_descriptions": [
+        "The French and Indian War concluded in 1763 with France's defeat, leaving Great Britain with significant war debts and newly acquired North American territories, prompting a major shift in British colonial policy aimed at raising revenue and asserting control.",
+        "Following the war, British Parliament began imposing new taxes like the Stamp Act (1765) and Townshend Acts (1767), alongside regulations like the Royal Proclamation of 1763, to compensate for wartime costs and assert greater control over the colonies' western lands and trade.",
+        "Colonists, aggrieved by new British policies, responded with significant protests, including the Stamp Act Congress (1765), Sons of Liberty actions like the Boston Tea Party (1773), and the formation of Committees of Correspondence, leading to increasing tensions and confrontations like the Boston Massacre (1770).",
+        "London's punitive response to the Boston Tea Party involved enacting the Intolerable Acts, which closed Boston Harbor, effectively ended self-government in Massachusetts, and ordered British soldiers to be tried in Britain, further escalating the revolutionary cause across the colonies.",
+        "In response to the Intolerable Acts, the First Continental Congress convened in late 1774, followed by the Second in 1775, to coordinate Patriot resistance, form the Continental Army, and ultimately adopt the Declaration of Independence in July 1776, formalizing the push for full independence.",
+        "The American Revolutionary War was officially launched on April 19, 1775, with the Battles of Lexington and Concord, signifying the outbreak of open military conflict between the British forces and the colonial militias.",
+        "The Continental Army achieved a decisive victory at the Siege of Yorktown in 1781, capturing approximately 7,500 British troops, which ultimately inspired King George III and the British to negotiate an end to colonial rule and acknowledge American independence, formalized by the Treaty of Paris in 1783."
+      ],
+      "edge_types": [
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes"
+      ],
+      "trigger": "event_1",
+      "outcome": "event_7",
+      "length": 7
+    },
+    {
+      "path": [
+        "event_2",
+        "event_3",
+        "event_4",
+        "event_5",
+        "event_6",
+        "event_7"
+      ],
+      "path_descriptions": [
+        "Following the war, British Parliament began imposing new taxes like the Stamp Act (1765) and Townshend Acts (1767), alongside regulations like the Royal Proclamation of 1763, to compensate for wartime costs and assert greater control over the colonies' western lands and trade.",
+        "Colonists, aggrieved by new British policies, responded with significant protests, including the Stamp Act Congress (1765), Sons of Liberty actions like the Boston Tea Party (1773), and the formation of Committees of Correspondence, leading to increasing tensions and confrontations like the Boston Massacre (1770).",
+        "London's punitive response to the Boston Tea Party involved enacting the Intolerable Acts, which closed Boston Harbor, effectively ended self-government in Massachusetts, and ordered British soldiers to be tried in Britain, further escalating the revolutionary cause across the colonies.",
+        "In response to the Intolerable Acts, the First Continental Congress convened in late 1774, followed by the Second in 1775, to coordinate Patriot resistance, form the Continental Army, and ultimately adopt the Declaration of Independence in July 1776, formalizing the push for full independence.",
+        "The American Revolutionary War was officially launched on April 19, 1775, with the Battles of Lexington and Concord, signifying the outbreak of open military conflict between the British forces and the colonial militias.",
+        "The Continental Army achieved a decisive victory at the Siege of Yorktown in 1781, capturing approximately 7,500 British troops, which ultimately inspired King George III and the British to negotiate an end to colonial rule and acknowledge American independence, formalized by the Treaty of Paris in 1783."
+      ],
+      "edge_types": [
+        "causes",
+        "causes",
+        "causes",
+        "causes",
+        "causes"
+      ],
+      "trigger": "event_2",
+      "outcome": "event_7",
+      "length": 6
+    },
+    {
+      "path": [
+        "event_6",
+        "event_7"
+      ],
+      "path_descriptions": [
+        "The American Revolutionary War was officially launched on April 19, 1775, with the Battles of Lexington and Concord, signifying the outbreak of open military conflict between the British forces and the colonial militias.",
+        "The Continental Army achieved a decisive victory at the Siege of Yorktown in 1781, capturing approximately 7,500 British troops, which ultimately inspired King George III and the British to negotiate an end to colonial rule and acknowledge American independence, formalized by the Treaty of Paris in 1783."
+      ],
+      "edge_types": [
+        "causes"
+      ],
+      "trigger": "event_6",
+      "outcome": "event_7",
+      "length": 2
+    }
+  ],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 7,
+      "Hypothesis": 4,
+      "Evidence": 18
+    },
+    "edge_type_distribution": {
+      "causes": 6,
+      "provides_evidence_for": 6,
+      "supports": 9,
+      "confirms_occurrence": 9
+    },
+    "density": 0.03694581280788178,
+    "avg_path_length": "3.85 (undirected)",
+    "connectivity_type": "weakly connected",
+    "degree_centrality": {
+      "event_2": 0.107,
+      "event_3": 0.107,
+      "hypothesis_1": 0.086,
+      "hypothesis_3": 0.086,
+      "hypothesis_4": 0.086,
+      "event_4": 0.071,
+      "hypothesis_2": 0.064,
+      "event_5": 0.057,
+      "event_6": 0.057,
+      "event_1": 0.05
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hypothesis_1",
+      "description": "British taxation policies caused colonial rebellion because they violated the colonial understanding of their rights as Englishmen, who believed that taxation without direct representation was unconstitutional and tyrannical.",
+      "assessment": "Strongly Supported (Multiple Strong Evidence)",
+      "balance_score": 1.65,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_1_1",
+        "evidence_1_2"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis_2",
+      "description": "The prior British policy of salutary neglect fostered a deep-seated expectation of self-governance among colonists, leading them to fiercely resist subsequent British attempts to impose direct control and taxation, as these efforts contradicted their established autonomy.",
+      "assessment": "Supported (Strong Evidence)",
+      "balance_score": 1.5,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_2_1",
+        "evidence_2_2"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis_3",
+      "description": "British attempts to assert Parliament's supreme lawmaking authority over the colonies, extending beyond mere revenue collection, specifically fueled colonial resistance because it directly challenged their deeply ingrained practice of self-governance and the 'rights of Englishmen' they believed they possessed.",
+      "assessment": "Strongly Supported (Multiple Strong Evidence)",
+      "balance_score": 2.55,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 3,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_3_1",
+        "evidence_3_2",
+        "evidence_3_3"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "hypothesis_4",
+      "description": "Specific punitive actions by Britain, such as deploying troops to Boston, the Boston Massacre, and the Intolerable Acts, directly escalated colonial sentiment against British rule and strengthened the revolutionary cause by creating martyrs and demonstrating a clear pattern of British oppression.",
+      "assessment": "Strongly Supported (Multiple Strong Evidence)",
+      "balance_score": 1.95,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "evidence_4_1",
+        "evidence_4_2"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

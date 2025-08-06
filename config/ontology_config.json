@@ -197,7 +197,7 @@
       "label": "initiates"
     },
     "infers": {
-      "domain": ["Inference_Rule"],
+      "domain": ["Evidence", "Event", "Inference_Rule"],
       "range": ["Hypothesis", "Causal_Mechanism"],
       "properties": {
         "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
@@ -303,7 +303,7 @@
     },
     "weighs_evidence": {
       "domain": ["Evidence"],
-      "range": ["Evidence"],
+      "range": ["Evidence", "Hypothesis", "Causal_Mechanism"],
       "properties": {
         "comparison_strength": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "Relative strength of source evidence compared to target evidence."},
         "comparison_type": {"type": "string", "description": "Type of evidence comparison.", "allowed_values": ["stronger_than", "weaker_than", "equivalent_to", "complements", "contradicts"], "required": false},

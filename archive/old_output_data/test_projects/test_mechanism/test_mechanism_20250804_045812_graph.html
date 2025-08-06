@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (test_mechanism)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'event_tea_act_1773', label: 'Event', title: `{
+  "description": "The Tea Act of 1773 was a significant legislative act passed by the British Parliament that specifically granted the British East India Company a complete monopoly on tea sales in the American colonies, which directly undercut local merchants.",
+  "type": "triggering",
+  "date": "1773",
+  "is_point_in_time": true
+}`},
+        {id: 'event_boston_tea_party', label: 'Event', title: `{
+  "description": "The Boston Tea Party occurred on December 16, 1773, when Samuel Adams and the Sons of Liberty led American colonists in boarding British ships and dramatically dumping 342 chests of tea into Boston Harbor as a profound act of protest against British policies.",
+  "type": "outcome",
+  "date": "1773-12-16",
+  "is_point_in_time": true
+}`},
+        {id: 'mechanism_tea_act_rebellion', label: 'Causal_Mechanism', title: `{
+  "description": "The mechanism through which the Tea Act led to rebellion involved several steps: (1) taxation without colonial representation, violating self-governance; (2) creation of economic pressure on local merchants and ideological mobilization; (3) channeling of discontent into organized resistance by groups like the Sons of Liberty; (4) culmination in direct action against British property."
+}`},
+        {id: 'hypothesis_primary_constitutional', label: 'Hypothesis', title: `{
+  "description": "The primary cause of colonial rebellion, specifically manifested in actions like the Boston Tea Party, was the British government's imposition of taxation without colonial representation in Parliament, which fundamentally violated deeply held principles of self-governance and individual rights, leading to organized resistance.",
+  "status": "supported"
+}`},
+        {id: 'alt_explanation_economic_self_interest', label: 'Alternative_Explanation', title: `{
+  "description": "The revolution was primarily driven by colonial merchants' economic interests, who manipulated popular sentiment to protect their smuggling operations and avoid British taxes, rather than being fueled by constitutional principles.",
+  "key_predictions": [
+    "disproportionate merchant leadership in revolutionary activities",
+    "a focus on trade policy over representation issues"
+  ]
+}`},
+        {id: 'alt_explanation_elite_manipulation', label: 'Alternative_Explanation', title: `{
+  "description": "Colonial elites deliberately manufactured popular outrage to advance their own political ambitions, suggesting that revolutionary rhetoric originated among the educated elite rather than emerging organically from broad popular sentiment.",
+  "key_predictions": [
+    "revolutionary rhetoric concentrated among the educated elite"
+  ]
+}`},
+        {id: 'alt_explanation_external_influence', label: 'Alternative_Explanation', title: `{
+  "description": "French agents and financial support were the primary drivers of colonial rebellion, actively seeking to weaken their British rivals through covert operations and financial backing for the colonial cause.",
+  "key_predictions": [
+    "early French involvement and financial backing before 1775"
+  ]
+}`},
+        {id: 'evidence_pamphlets_constitutional', label: 'Evidence', title: `{
+  "description": "Colonial pamphlets explicitly arguing against taxation without representation are critical evidence.",
+  "source": "Colonial pamphlets explicitly arguing against taxation without representation"
+}`},
+        {id: 'evidence_widespread_support', label: 'Evidence', title: `{
+  "description": "Widespread colonial support for the resistance across different economic classes indicates broad agreement on principled opposition.",
+  "source": "Widespread colonial support across different economic classes"
+}`},
+        {id: 'evidence_congress_declarations', label: 'Evidence', title: `{
+  "description": "The Continental Congress's formal declarations consistently citing constitutional violations provide definitive proof of the ideological foundation of the resistance.",
+  "source": "The Continental Congress's formal declarations citing constitutional violations"
+}`},
+        {id: 'evidence_working_class_participation', label: 'Evidence', title: `{
+  "description": "Working-class participation in protests directly contradicts the notion that outrage was solely manufactured by elites.",
+  "source": "Working-class participation in protests"
+}`},
+        {id: 'evidence_absence_french_support_pre_1776', label: 'Evidence', title: `{
+  "description": "The verifiable absence of significant French support before 1776 undermines claims of early external influence on the rebellion.",
+  "source": "Absence of French support before 1776"
+}`},
+        {id: 'evidence_non_merchant_leadership', label: 'Evidence', title: `{
+  "description": "The presence of non-merchant leadership in many revolutionary committees weakens the argument that economic self-interest was the sole or primary driver.",
+  "source": "Non-merchant leadership in many revolutionary committees"
+}`},
+        {id: 'evidence_adams_correspondence', label: 'Evidence', title: `{
+  "description": "Samuel Adams' documented correspondence clearly shows his deliberate and strategic organization of the Boston Tea Party and other resistance efforts.",
+  "source": "Samuel Adams' documented correspondence shows deliberate organization of the Tea Party"
+}`},
+        {id: 'evidence_hutchinson_letters', label: 'Evidence', title: `{
+  "description": "Governor Thomas Hutchinson's letters to London reveal his acknowledged struggles and failed attempts to prevent the escalation of colonial unrest, highlighting his constrained capabilities.",
+  "source": "Hutchinson's letters to London reveal his failed attempts to prevent escalation"
+}`},
+        {id: 'evidence_george_iii_rejection', label: 'Evidence', title: `{
+  "description": "King George III's unequivocal rejection of the Olive Branch Petition serves as clear evidence of his firm intention to pursue military suppression rather than reconciliation.",
+  "source": "George III's rejection of the Olive Branch Petition demonstrates his intentional choice for military suppression"
+}`},
+        {id: 'actor_samuel_adams', label: 'Actor', title: `{
+  "name": "Samuel Adams",
+  "role": "Principal Organizer",
+  "intentions": "To mobilize mass resistance against British authority because he believed British rule fundamentally violated colonial rights.",
+  "beliefs": "British rule fundamentally violated colonial rights.",
+  "constraints": "Needed to maintain legitimacy and avoid alienating moderate colonists.",
+  "capabilities": "Extensive political networks and persuasive rhetoric."
+}`},
+        {id: 'actor_thomas_hutchinson', label: 'Actor', title: `{
+  "name": "Governor Thomas Hutchinson",
+  "role": "British Authority in Massachusetts",
+  "intentions": "To enforce Parliamentary supremacy and maintain order.",
+  "beliefs": "Colonists were ungrateful subjects who needed firm governance.",
+  "constraints": "Limited military resources and the need to maintain order.",
+  "capabilities": "Formal governmental authority but limited practical enforcement power."
+}`},
+        {id: 'actor_king_george_iii', label: 'Actor', title: `{
+  "name": "King George III",
+  "role": "Monarch of Britain",
+  "intentions": "To maintain imperial control and extract revenue from the colonies.",
+  "beliefs": "The colonies were subordinate territories that existed to benefit Britain.",
+  "constraints": "Distance, communication delays, and competing European threats.",
+  "capabilities": "The British military and navy, but limited by costs and logistics of transatlantic warfare."
+}`},
+        {id: 'condition_british_naval_supremacy', label: 'Condition', title: `{
+  "name": "British Naval Supremacy",
+  "description": "The Royal Navy's absolute dominance of the Atlantic Ocean initially prevented any foreign assistance from reaching the colonies and enabled British force projection, severely constraining colonial options for effective resistance.",
+  "type": "constraining"
+}`},
+        {id: 'condition_enlightenment_ideas', label: 'Condition', title: `{
+  "name": "Enlightenment Ideas",
+  "description": "The widespread dissemination and acceptance of Enlightenment philosophy, particularly concepts concerning natural rights and self-governance, provided the essential ideological framework that enabled colonists to intellectually justify their acts of resistance as legitimate and principled.",
+  "type": "enabling"
+}`},
+        {id: 'condition_geographic_distance', label: 'Condition', title: `{
+  "name": "Geographic Distance",
+  "description": "The immense 3,000-mile separation between Great Britain and America inherently created significant communication delays, typically ranging from 6 to 12 weeks, which fundamentally shaped the dynamics of imperial governance and fostered a sense of colonial autonomy.",
+  "type": "background"
+}`},
+        {id: 'condition_colonial_economic_development', label: 'Condition', title: `{
+  "name": "Colonial Economic Development",
+  "description": "The American colonies' substantial and growing economic self-sufficiency by the 1770s, characterized by diverse industries and trade networks, played a crucial role in enabling them to seriously contemplate and pursue independence as a truly viable economic prospect.",
+  "type": "enabling"
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'event_tea_act_1773', to: 'event_boston_tea_party', label: 'causes', title: `{
+  "certainty": 0.9,
+  "type": "direct",
+  "reason": "The dramatic act of rebellion, the Boston Tea Party, was the direct result of the Tea Act of 1773.",
+  "description": "The Tea Act directly provoked the Boston Tea Party by granting a monopoly that angered colonists.",
+  "source_text_quote": "This dramatic act of rebellion was the direct result of the Tea Act of 1773"
+}`},
+        {from: 'mechanism_tea_act_rebellion', to: 'hypothesis_primary_constitutional', label: 'explains_mechanism', title: `{
+  "certainty": 0.9,
+  "description": "The detailed mechanism explains how the Tea Act's violation of rights and economic pressure led to rebellion, supporting the primary hypothesis.",
+  "source_text_quote": "The mechanism through which the Tea Act led to rebellion operated as follows: (1) The Tea Act imposed taxation without colonial representation in Parliament, violating fundamental principles of self-governance; (2) This created both economic pressure on local merchants who were undercut by the monopoly and ideological mobilization around constitutional principles; (3) Groups like the Sons of Liberty channeled this discontent into organized resistance; (4) The resistance culminated in direct action against British property."
+}`},
+        {from: 'event_tea_act_1773', to: 'hypothesis_primary_constitutional', label: 'provides_evidence_for', title: `{
+  "diagnostic_type": "general",
+  "probative_value": 0.8,
+  "reasoning": "The Tea Act's specific nature (monopoly, taxation implications) is the direct trigger for the subsequent rebellion, supporting the constitutional and economic pressure aspects of the hypothesis.",
+  "source_text_quote": "The Boston Tea Party occurred on December 16, 1773, when Samuel Adams and the Sons of Liberty led American colonists in boarding British ships and dumping 342 chests of tea into Boston Harbor. This dramatic act of rebellion was the direct result of the Tea Act of 1773, which granted the British East India Company a monopoly on tea sales in the American colonies."
+}`},
+        {from: 'evidence_pamphlets_constitutional', to: 'hypothesis_primary_constitutional', label: 'supports', title: `{
+  "diagnostic_type": "hoop",
+  "probative_value": 0.7,
+  "target_type": "causal_relationship",
+  "source_text_quote": "Colonial pamphlets explicitly arguing against taxation without representation (Hoop Test - necessary for principle-based explanation)"
+}`},
+        {from: 'evidence_widespread_support', to: 'hypothesis_primary_constitutional', label: 'supports', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "target_type": "causal_relationship",
+  "source_text_quote": "Widespread colonial support across different economic classes (Smoking Gun - sufficient to show broad principled agreement)"
+}`},
+        {from: 'evidence_congress_declarations', to: 'hypothesis_primary_constitutional', label: 'supports', title: `{
+  "diagnostic_type": "doubly_decisive",
+  "probative_value": 0.95,
+  "target_type": "causal_relationship",
+  "source_text_quote": "The Continental Congress's formal declarations citing constitutional violations (Doubly Decisive - both necessary and sufficient)"
+}`},
+        {from: 'evidence_working_class_participation', to: 'alt_explanation_elite_manipulation', label: 'refutes', title: `{
+  "diagnostic_type": "hoop",
+  "probative_value": 0.8,
+  "target_type": "causal_relationship",
+  "source_text_quote": "Working-class participation in protests refutes the elite manipulation theory (Failed Hoop Test for elite theory)",
+  "test_result": "failed"
+}`},
+        {from: 'evidence_absence_french_support_pre_1776', to: 'alt_explanation_external_influence', label: 'refutes', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.85,
+  "target_type": "causal_relationship",
+  "source_text_quote": "Absence of French support before 1776 refutes the external influence theory (Failed Smoking Gun for French involvement)",
+  "test_result": "failed"
+}`},
+        {from: 'evidence_non_merchant_leadership', to: 'alt_explanation_economic_self_interest', label: 'refutes', title: `{
+  "diagnostic_type": "straw_in_the_wind",
+  "probative_value": 0.6,
+  "target_type": "causal_relationship",
+  "source_text_quote": "Non-merchant leadership in many revolutionary committees challenges the economic self-interest theory (Straw-in-the-Wind against merchant theory)"
+}`},
+        {from: 'evidence_adams_correspondence', to: 'event_boston_tea_party', label: 'confirms_occurrence', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "target_type": "event_occurrence",
+  "source_text_quote": "Samuel Adams' documented correspondence shows deliberate organization of the Tea Party (Confirms actor initiation)"
+}`},
+        {from: 'evidence_hutchinson_letters', to: 'actor_thomas_hutchinson', label: 'provides_evidence_for', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.85,
+  "target_type": "general",
+  "reasoning": "Hutchinson's letters provide direct evidence of his capabilities being constrained, as described for the actor.",
+  "source_text_quote": "Hutchinson's letters to London reveal his failed attempts to prevent escalation (Shows constraint on actor capabilities)"
+}`},
+        {from: 'evidence_george_iii_rejection', to: 'actor_king_george_iii', label: 'provides_evidence_for', title: `{
+  "diagnostic_type": "smoking_gun",
+  "probative_value": 0.9,
+  "target_type": "general",
+  "reasoning": "The King's rejection of the Olive Branch Petition clearly demonstrates his intention to pursue military suppression.",
+  "source_text_quote": "George III's rejection of the Olive Branch Petition demonstrates his intentional choice for military suppression (Reveals actor intentions and beliefs)"
+}`},
+        {from: 'actor_samuel_adams', to: 'event_boston_tea_party', label: 'initiates', title: `{
+  "certainty": 0.9,
+  "agency": "high",
+  "intention": "mobilize mass resistance",
+  "description": "Samuel Adams, as a principal organizer, directly led the colonists in the Boston Tea Party."
+}`},
+        {from: 'condition_british_naval_supremacy', to: 'event_boston_tea_party', label: 'constrains', title: `{
+  "certainty": 0.8,
+  "description": "British Naval Supremacy constrained colonial options for resistance by preventing foreign aid and enabling British force projection.",
+  "source_text_quote": "The Royal Navy's dominance of the Atlantic initially prevented foreign assistance to the colonies and enabled British force projection, constraining colonial options for resistance."
+}`},
+        {from: 'condition_enlightenment_ideas', to: 'hypothesis_primary_constitutional', label: 'enables', title: `{
+  "certainty": 0.9,
+  "description": "Enlightenment ideas provided the ideological framework for colonists to justify their resistance based on constitutional principles.",
+  "source_text_quote": "The spread of Enlightenment philosophy about natural rights and self-governance provided the ideological framework that enabled colonists to justify resistance as legitimate."
+}`},
+        {from: 'condition_colonial_economic_development', to: 'hypothesis_primary_constitutional', label: 'enables', title: `{
+  "certainty": 0.8,
+  "description": "Colonial economic development enabled the colonists to consider independence as economically viable, supporting the viability of rebellion.",
+  "source_text_quote": "The colonies' growing economic self-sufficiency by the 1770s enabled them to contemplate independence as economically viable."
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

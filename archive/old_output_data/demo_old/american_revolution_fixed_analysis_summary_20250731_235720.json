@@ -1,0 +1,242 @@
+{
+  "filename": "output_data/demo/american_revolution_fixed_graph.json",
+  "case_identifier": "american_revolution_fixed_graph",
+  "generated_at": "2025-07-31T23:57:20.769055",
+  "causal_chains": [],
+  "causal_mechanisms": [
+    {
+      "id": "CM1",
+      "name": "CM1",
+      "causes": [
+        "E3",
+        "E4",
+        "E5"
+      ],
+      "effects": [],
+      "completeness": 60,
+      "confidence": "unknown",
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "completeness_score": 0.3,
+        "plausibility_score": 0.1,
+        "evidence_support_level": "none",
+        "missing_elements": [
+          "Detailed event descriptions",
+          "Event timestamps",
+          "Explicit causal links between events",
+          "Mechanism description",
+          "Supporting evidence from the original text"
+        ],
+        "improvement_suggestions": [
+          "Provide detailed descriptions for events E3, E4, and E5.",
+          "Add timestamps for each event to establish the temporal order.",
+          "Clearly articulate the causal links between events (e.g., how E3 leads to E4, and E4 leads to E5).",
+          "Describe the causal mechanism in detail, explaining the underlying processes and relationships.",
+          "Provide evidence from the original text to support the proposed causal links and events."
+        ],
+        "detailed_reasoning": "The mechanism is highly incomplete.  Only three events (E3, E4, E5) are listed without descriptions or timestamps, making it impossible to assess the causal links or the plausibility of the mechanism.  A description of the mechanism itself is also absent."
+      }
+    },
+    {
+      "id": "CM2",
+      "name": "CM2",
+      "causes": [],
+      "effects": [],
+      "completeness": 0,
+      "confidence": "unknown",
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "completeness_score": 0.2,
+        "plausibility_score": 0.1,
+        "evidence_support_level": "none",
+        "missing_elements": [
+          "Description of the causal mechanism",
+          "Constituent events",
+          "Evidence supporting the mechanism",
+          "Confidence level",
+          "Level of detail"
+        ],
+        "improvement_suggestions": [
+          "Provide a detailed description of the causal mechanism.",
+          "Specify the constituent events and their temporal order.",
+          "Assign a confidence level to the mechanism based on available evidence.",
+          "Specify the level of detail (e.g., micro-level, meso-level, macro-level).",
+          "Provide evidence to support the links between events and the overall mechanism."
+        ],
+        "detailed_reasoning": "The provided causal mechanism is extremely incomplete.  It only provides an ID and lacks a description, confidence level, level of detail, and any constituent events.  Without these elements, it's impossible to assess its plausibility or the strength of evidence supporting it."
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 8,
+      "Causal_Mechanism": 2,
+      "Hypothesis": 2,
+      "Evidence": 3,
+      "Condition": 1,
+      "Actor": 2
+    },
+    "edge_type_distribution": {
+      "direct": 3,
+      "part_of_mechanism": 3,
+      "indirect": 1,
+      "supports": 3,
+      "enables": 1,
+      "initiates": 1
+    },
+    "density": 0.0392156862745098,
+    "avg_path_length": "N/A (disconnected or empty graph)",
+    "degree_centrality": {
+      "E3": 0.176,
+      "CM1": 0.176,
+      "E2": 0.118,
+      "E5": 0.118,
+      "E7": 0.118,
+      "H1": 0.118,
+      "E1": 0.059,
+      "E4": 0.059,
+      "E6": 0.059,
+      "E8": 0.059
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "H1",
+      "description": "Description_Not_Found_For_H1",
+      "assessment": "Weakly Supported (Straw-in-Wind)",
+      "balance_score": 0.0,
+      "van_evera_applied": true,
+      "supporting_evidence_count": 2,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV1",
+        "EV3"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [
+          {
+            "id": "EV1",
+            "description": "N/A",
+            "type": "straw_in_the_wind",
+            "probative_value": 0.0,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "EV1",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "The 'Not available' evidence provides no information relevant to the hypothesis.  It doesn't confirm or refute H1 and is therefore classified as 'general' (in this case, its lack of information doesn't fit the other Van Evera categories well).",
+              "likelihood_P_E_given_H": "Medium (0.5)",
+              "likelihood_P_E_given_NotH": "Medium (0.5)",
+              "justification_for_likelihoods": "The evidence is 'Not available', providing no information to support or refute the hypothesis.  Therefore, observing this 'lack of evidence' is equally likely whether the hypothesis is true or false.",
+              "suggested_numerical_probative_value": 0.0
+            }
+          },
+          {
+            "id": "EV3",
+            "description": "N/A",
+            "type": "straw_in_the_wind",
+            "probative_value": 0.0,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "EV3",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "Since the evidence provides no information, it cannot be classified as a 'hoop', 'smoking gun', or 'doubly decisive'.  It's not even a weak indicator ('straw in the wind'), as it is entirely uninformative.",
+              "likelihood_P_E_given_H": "Medium (0.5)",
+              "likelihood_P_E_given_NotH": "Medium (0.5)",
+              "justification_for_likelihoods": "The evidence is 'Not available,' which provides no information to support or refute the hypothesis.  Therefore, its likelihood of being observed is the same whether the hypothesis is true or false. This results in a probative value near zero.",
+              "suggested_numerical_probative_value": 0.0
+            }
+          }
+        ],
+        "doubly_decisive": []
+      }
+    },
+    {
+      "hypothesis_id": "H2",
+      "description": "Description_Not_Found_For_H2",
+      "assessment": "Weakly Supported (Straw-in-Wind)",
+      "balance_score": 0.0,
+      "van_evera_applied": true,
+      "supporting_evidence_count": 1,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [
+        "EV2"
+      ],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [
+          {
+            "id": "EV2",
+            "description": "N/A",
+            "type": "straw_in_the_wind",
+            "probative_value": 0.0,
+            "source_text_quote": "",
+            "edge_type": "supports",
+            "llm_reasoning": {
+              "evidence_id": "EV2",
+              "refined_evidence_type": "straw_in_the_wind",
+              "reasoning_for_type": "Since the evidence is 'Not available,' it cannot be classified as any of Van Evera's types.  There is no probative value.",
+              "likelihood_P_E_given_H": "Unknown",
+              "likelihood_P_E_given_NotH": "Unknown",
+              "justification_for_likelihoods": "The evidence is 'Not available,' making it impossible to assess its likelihood given the hypothesis' truth or falsity.  It provides no information.",
+              "suggested_numerical_probative_value": 0.0
+            }
+          }
+        ],
+        "doubly_decisive": []
+      }
+    }
+  ],
+  "conditions": {
+    "enabling": [
+      {
+        "condition_id": "C1",
+        "condition": "C1",
+        "target": {
+          "id": "E3",
+          "description": "E3",
+          "type": "Event"
+        },
+        "necessity": 0.8,
+        "certainty": 0.9
+      }
+    ],
+    "constraining": []
+  },
+  "actors": [
+    {
+      "id": "A1",
+      "name": "A1",
+      "role": "unknown",
+      "initiated_events": [
+        {
+          "id": "E7",
+          "description": "E7",
+          "certainty": 1.0,
+          "intention": "Defeat British forces"
+        }
+      ],
+      "influence_score": 11,
+      "beliefs": "unknown",
+      "intentions": "unknown"
+    },
+    {
+      "id": "A2",
+      "name": "A2",
+      "role": "unknown",
+      "initiated_events": [],
+      "influence_score": 0,
+      "beliefs": "unknown",
+      "intentions": "unknown"
+    }
+  ],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

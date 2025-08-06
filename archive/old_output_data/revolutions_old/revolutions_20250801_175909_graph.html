@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Process Tracing Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style> #mynetwork { width: 100vw; height: 90vh; border: 1px solid lightgray; } </style>
+</head>
+<body>
+<h2>Process Tracing Network (revolutions)</h2>
+<div id="mynetwork"></div>
+<script type="text/javascript">
+  var nodes = new vis.DataSet([
+    {id: 'event1', label: 'Event', title: `{
+  "description": "The French and Indian War concludes in 1763 with a British victory, resulting in substantial war debts and prompting the British Parliament to impose new taxes on the American colonies to offset these costs.  Additionally, the British government takes control of the colonies' western lands, transferring authority to officials in Montreal.",
+  "type": "triggering",
+  "date": "1763",
+  "source": "American Revolution"
+}`},
+        {id: 'event2', label: 'Event', title: `{
+  "description": "The Stamp Act of 1765, imposing direct taxes on various colonial documents and materials, is enacted by the British Parliament. This action sparks widespread colonial protest due to the perceived violation of the principle of \"no taxation without representation.\"",
+  "type": "intermediate",
+  "date": "1765",
+  "source": "American Revolution"
+}`},
+        {id: 'event3', label: 'Event', title: `{
+  "description": "The Boston Massacre occurs on March 5, 1770, when British troops fire upon and kill several unarmed civilians, escalating tensions and fueling anti-British sentiment among the colonists.",
+  "type": "intermediate",
+  "date": "March 5, 1770",
+  "source": "American Revolution"
+}`},
+        {id: 'event4', label: 'Event', title: `{
+  "description": "The Boston Tea Party, a demonstrative act of rebellion against British taxation, takes place on December 16, 1773.  Sons of Liberty activists, disguised as Native Americans, dumped tea into Boston Harbor to protest the Tea Act.",
+  "type": "intermediate",
+  "date": "December 16, 1773",
+  "source": "American Revolution"
+}`},
+        {id: 'event5', label: 'Event', title: `{
+  "description": "The Battles of Lexington and Concord, marking the beginning of the American Revolutionary War, erupt on April 19, 1775. These battles represent the initial armed conflict between British troops and American colonists.",
+  "type": "intermediate",
+  "date": "April 19, 1775",
+  "source": "American Revolution"
+}`},
+        {id: 'event6', label: 'Event', title: `{
+  "description": "The Second Continental Congress adopts the Declaration of Independence on July 4, 1776, formally declaring the thirteen colonies' independence from Great Britain and escalating the war to a fight for full sovereignty.",
+  "type": "intermediate",
+  "date": "July 4, 1776",
+  "source": "American Revolution"
+}`},
+        {id: 'event7', label: 'Event', title: `{
+  "description": "The Siege of Yorktown concludes in October 1781 with a decisive victory for the Continental Army, aided by French forces. This victory significantly weakens British resolve and paves the way for negotiations leading to the end of the war.",
+  "type": "intermediate",
+  "date": "October 1781",
+  "source": "American Revolution"
+}`},
+        {id: 'event8', label: 'Event', title: `{
+  "description": "The Treaty of Paris is signed on September 3, 1783, officially recognizing the independence of the United States of America from Great Britain, ending the Revolutionary War and establishing the sovereign nation.",
+  "type": "outcome",
+  "date": "September 3, 1783",
+  "source": "American Revolution"
+}`},
+        {id: 'hypothesis1', label: 'Hypothesis', title: `{
+  "description": "British taxation policies, particularly those implemented after the French and Indian War, were a significant cause of the American Revolution because they violated the colonists' understanding of their rights as Englishmen, leading to widespread resentment and ultimately armed rebellion.  The lack of colonial representation in Parliament fueled this resentment.",
+  "certainty": 0.8,
+  "source": "American Revolution"
+}`},
+        {id: 'evidence1', label: 'Evidence', title: `{
+  "description": "The Stamp Act Congress's \"Declaration of Rights and Grievances\" explicitly states that taxation without representation violated the colonists' rights as Englishmen, highlighting a key grievance that fueled colonial resistance.",
+  "type": "hoop",
+  "source": "American Revolution",
+  "source_text_quote": "\"Declaration of Rights and Grievances\" argued that taxation without representation violated their rights as Englishmen.",
+  "certainty": 0.9,
+  "probative_value": 0.9
+}`},
+        {id: 'evidence2', label: 'Evidence', title: `{
+  "description": "The widespread colonial boycotts of British goods, such as those following the Stamp Act and the Townshend Acts, demonstrate the colonists' collective resistance to perceived unjust taxation and their willingness to engage in economic warfare to oppose British policies.",
+  "type": "straw_in_the_wind",
+  "source": "American Revolution",
+  "source_text_quote": "Colonists responded to the taxes by organizing new boycotts of British goods.",
+  "certainty": 0.7,
+  "probative_value": 0.7
+}`},
+        {id: 'hypothesis2', label: 'Hypothesis', title: `{
+  "description": "The British deployment of troops to Boston and the subsequent Boston Massacre served as a catalyst for the American Revolution by intensifying colonial distrust of and animosity towards the British government and military, pushing colonial sentiment toward more radical measures and ultimately armed resistance.",
+  "certainty": 0.75,
+  "source": "American Revolution"
+}`},
+        {id: 'evidence3', label: 'Evidence', title: `{
+  "description": "The text describes the Boston Massacre as an event that quickly turned colonial sentiment against the British, accelerating the downward spiral in the relationship between Britain and the colonies, indicating its role in escalating tensions.",
+  "type": "straw_in_the_wind",
+  "source": "American Revolution",
+  "source_text_quote": "The event quickly came to be called the Boston Massacre. ... This accelerated the downward spiral in the relationship between Britain and the province of Massachusetts.",
+  "certainty": 0.8,
+  "probative_value": 0.8
+}`}
+  ]);
+  var edges = new vis.DataSet([
+    {from: 'event1', to: 'event2', label: 'causes', title: `{
+  "certainty": 0.9,
+  "description": "The British war debt from the French and Indian War directly led to the imposition of new taxes, including the Stamp Act."
+}`},
+        {from: 'event2', to: 'event3', label: 'causes', title: `{
+  "certainty": 0.8,
+  "description": "Colonial resistance to the Stamp Act and other measures created a climate of tension and unrest, contributing to the Boston Massacre."
+}`},
+        {from: 'event3', to: 'event4', label: 'causes', title: `{
+  "certainty": 0.7,
+  "description": "The increased tension and anti-British sentiment following the Boston Massacre contributed to the escalation of events leading to the Boston Tea Party."
+}`},
+        {from: 'event4', to: 'event5', label: 'causes', title: `{
+  "certainty": 0.85,
+  "description": "The British response to the Boston Tea Party, including the Intolerable Acts, further inflamed tensions and directly led to the outbreak of armed conflict at Lexington and Concord."
+}`},
+        {from: 'event5', to: 'event6', label: 'causes', title: `{
+  "certainty": 0.95,
+  "description": "The initiation of armed conflict at Lexington and Concord prompted the Second Continental Congress to formally declare independence."
+}`},
+        {from: 'event6', to: 'event7', label: 'causes', title: `{
+  "certainty": 0.9,
+  "description": "The Declaration of Independence escalated the conflict, leading to major military engagements like the Siege of Yorktown."
+}`},
+        {from: 'event7', to: 'event8', label: 'causes', title: `{
+  "certainty": 0.98,
+  "description": "The decisive British defeat at Yorktown forced negotiations and ultimately resulted in the signing of the Treaty of Paris."
+}`},
+        {from: 'evidence1', to: 'hypothesis1', label: 'provides_evidence', title: `{
+  "certainty": 0.9,
+  "probative_value": 0.9
+}`},
+        {from: 'evidence2', to: 'hypothesis1', label: 'provides_evidence', title: `{
+  "certainty": 0.7,
+  "probative_value": 0.7
+}`},
+        {from: 'evidence3', to: 'hypothesis2', label: 'provides_evidence', title: `{
+  "certainty": 0.8,
+  "probative_value": 0.8
+}`}
+  ]);
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: nodes, edges: edges };
+  var options = {
+    nodes: { shape: 'dot', size: 20, font: { size: 16 } },
+    edges: { arrows: 'to', font: { align: 'middle' } },
+    physics: { stabilization: true }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>
