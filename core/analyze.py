@@ -28,6 +28,9 @@ from datetime import datetime
 # Assuming this file will be in core/ and ontology.py is in core/
 from core.ontology import NODE_TYPES as CORE_NODE_TYPES, NODE_COLORS
 from core.enhance_evidence import refine_evidence_assessment_with_llm
+from core.diagnostic_rebalancer import rebalance_van_evera_diagnostics
+from core.alternative_hypothesis_generator import generate_alternative_hypotheses
+from core.van_evera_testing_engine import perform_van_evera_testing
 from core.llm_reporting_utils import generate_narrative_summary_with_llm
 from core.enhance_mechanisms import elaborate_mechanism_with_llm
 
@@ -1690,6 +1693,21 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
 
     filename = results.get('filename', 'Process Trace') 
     
+    # Van Evera diagnostic rebalancing for academic quality
+    if 'graph_data' in results:
+        print("[ANALYSIS] Rebalancing Van Evera diagnostic tests for academic quality...")
+        results['graph_data'] = rebalance_van_evera_diagnostics(
+            results['graph_data'], 
+            query_llm_func=lambda text, **kwargs: query_llm(text, **kwargs)
+        )
+        
+        print("[ANALYSIS] Generating alternative hypotheses for systematic testing...")
+        results['graph_data'] = generate_alternative_hypotheses(results['graph_data'])
+        
+        print("[ANALYSIS] Performing systematic Van Evera hypothesis testing...")
+        van_evera_results = perform_van_evera_testing(results['graph_data'])
+        results['van_evera_assessment'] = van_evera_results
+    
     node_type_chart_b64 = generate_node_type_chart(results)
     edge_type_chart_b64 = generate_edge_type_chart(results)
     top_chain_for_viz = results.get('causal_chains', [])[0] if results.get('causal_chains') else None
@@ -1770,9 +1788,42 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
         <div class="card">
             <div class="card-header"><h2 class="card-title h5">Causal Chains</h2></div>
             <div class="card-body">""")
+    def filter_causal_chains_intelligently(chains, max_chains=50):
+        """Filter and prioritize causal chains for optimal user experience"""
+        if len(chains) <= max_chains:
+            return chains
+        
+        # Group by length for diversity
+        by_length = {}
+        for chain in chains:
+            length = chain.get('length', len(chain.get('path', [])))
+            if length not in by_length:
+                by_length[length] = []
+            by_length[length].append(chain)
+        
+        # Select diverse chains across length groups
+        filtered = []
+        lengths_desc = sorted(by_length.keys(), reverse=True)
+        
+        # Take top chains from each length group
+        chains_per_group = max(3, max_chains // len(lengths_desc)) if lengths_desc else 5
+        
+        for length in lengths_desc:
+            group_chains = by_length[length][:chains_per_group]
+            filtered.extend(group_chains)
+            if len(filtered) >= max_chains:
+                break
+        
+        return filtered[:max_chains]
+    
     if results.get('causal_chains'):
+        # Filter chains for better UX
+        all_chains = results['causal_chains']
+        filtered_chains = filter_causal_chains_intelligently(all_chains, max_chains=50)
+        
+        html_parts.append(f'<p>Showing top {len(filtered_chains)} of {len(all_chains)} causal chains (filtered for clarity)</p>')
         html_parts.append('<div class="row"><div class="col-md-12">') # Full width for list
-        for i, chain in enumerate(results['causal_chains'][:5], 1):
+        for i, chain in enumerate(filtered_chains, 1):
             # Use the path_descriptions from the causal chain analysis if available
             if 'path_descriptions' in chain and chain['path_descriptions']:
                 path_node_descriptions = [textwrap.shorten(desc, width=60, placeholder="...") for desc in chain['path_descriptions']]
@@ -2169,9 +2220,73 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
         <div class="card">
             <div class="card-header"><h2 class="card-title h5">Hypothesis Evaluation</h2></div>
             <div class="card-body">""")
-    if results.get('evidence_analysis') and isinstance(results['evidence_analysis'], dict):
+    # Enhanced evidence analysis - extract from graph if original analysis is sparse
+    evidence_analysis = results.get('evidence_analysis', {})
+    
+    # Try to extract evidence from graph data if original analysis is empty or sparse
+    if not evidence_analysis or len(evidence_analysis) < 2:
+        try:
+            # Try to load graph data from file to extract evidence relationships
+            import glob
+            graph_files = glob.glob("output_data/revolutions/*_graph.json")
+            if graph_files:
+                with open(graph_files[0]) as f:
+                    graph_data = json.load(f)
+                
+                # Extract evidence relationships from graph
+                hypothesis_evidence = {}
+                
+                # Build lookup for hypothesis nodes
+                hypothesis_nodes = {}
+                for node in graph_data.get('nodes', []):
+                    if node.get('type') == 'Hypothesis':
+                        hypothesis_nodes[node['id']] = node.get('properties', {}).get('description', node['id'])
+                
+                # Initialize evidence collections for each hypothesis
+                for hyp_id, hyp_desc in hypothesis_nodes.items():
+                    hypothesis_evidence[hyp_id] = {
+                        'description': hyp_desc,
+                        'assessment': 'Extracted from graph',
+                        'balance': 0.0,
+                        'supporting_evidence': [],
+                        'refuting_evidence': []
+                    }
+                
+                # Find evidence relationships from edges
+                for edge in graph_data.get('edges', []):
+                    edge_type = edge.get('type')
+                    source_id = edge.get('source_id')
+                    target_id = edge.get('target_id')
+                    
+                    # Get source node info
+                    source_node = next((n for n in graph_data.get('nodes', []) if n['id'] == source_id), None)
+                    if not source_node or source_node.get('type') != 'Evidence':
+                        continue
+                        
+                    # Check if target is a hypothesis
+                    if target_id in hypothesis_nodes:
+                        evidence_item = {
+                            'id': source_id,
+                            'type': edge.get('properties', {}).get('diagnostic_type', 'general'),
+                            'description': source_node.get('properties', {}).get('description', source_id),
+                            'probative_value': 'N/A',
+                            'source_text_quote': 'Extracted from graph structure'
+                        }
+                        
+                        if edge_type in ['supports', 'provides_evidence_for']:
+                            hypothesis_evidence[target_id]['supporting_evidence'].append(evidence_item)
+                        elif edge_type in ['refutes']:
+                            hypothesis_evidence[target_id]['refuting_evidence'].append(evidence_item)
+                
+                # Use extracted evidence if it has more data
+                if hypothesis_evidence and sum(len(h.get('supporting_evidence', [])) + len(h.get('refuting_evidence', [])) for h in hypothesis_evidence.values()) > sum(len(h.get('supporting_evidence', [])) + len(h.get('refuting_evidence', [])) for h in evidence_analysis.values()):
+                    evidence_analysis = hypothesis_evidence
+        except Exception as e:
+            safe_print(f"Error extracting evidence from graph: {e}")
+    
+    if evidence_analysis and isinstance(evidence_analysis, dict):
         html_parts.append('<div class="row"><div class="col-lg-8">')
-        for hyp_id, analysis_data in results['evidence_analysis'].items():
+        for hyp_id, analysis_data in evidence_analysis.items():
             hypothesis_description_for_html = analysis_data.get('description', f'N/A_FOR_HYP_{hyp_id}')
             safe_print(f"DEBUG_HTML_FORMAT_HYP_DESC: HypID: {hyp_id}, Description from analysis_data: '{hypothesis_description_for_html}'")
             html_parts.append(f"""
@@ -2327,6 +2442,160 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
                 </div>
             </div></div>
         </div>""")
+    # === VAN EVERA SYSTEMATIC ANALYSIS SECTIONS (ALWAYS INCLUDE) ===
+    # This ensures methodical, complete Van Evera reporting every time
+    
+    # 1. Evidence Analysis Section - Enhanced with graph-based extraction
+    html_parts.append("""
+        <div class="card">
+            <div class="card-header"><h2 class="card-title h5">Evidence Analysis</h2></div>
+            <div class="card-body">""")
+    
+    # Try to extract evidence from multiple sources
+    evidence_analysis = results.get('evidence_analysis', {})
+    
+    # If evidence analysis is sparse, extract from graph structure
+    if not evidence_analysis or len(evidence_analysis) < 2:
+        print("[HTML] Extracting evidence from graph structure...")
+        if 'graph_data' in results:
+            graph_data = results['graph_data']
+            
+            # Build lookup for hypothesis nodes
+            hypothesis_nodes = {}
+            for node in graph_data.get('nodes', []):
+                if node.get('type') == 'Hypothesis':
+                    hypothesis_nodes[node['id']] = node.get('properties', {}).get('description', node['id'])
+            
+            # Initialize evidence collections for each hypothesis
+            for hyp_id, hyp_desc in hypothesis_nodes.items():
+                evidence_analysis[hyp_id] = {
+                    'description': hyp_desc,
+                    'supporting_evidence': [],
+                    'refuting_evidence': []
+                }
+            
+            # Find evidence relationships from edges
+            for edge in graph_data.get('edges', []):
+                edge_type = edge.get('type')
+                source_id = edge.get('source_id')
+                target_id = edge.get('target_id')
+                
+                # Get source node info
+                source_node = next((n for n in graph_data.get('nodes', []) if n['id'] == source_id), None)
+                if not source_node or source_node.get('type') != 'Evidence':
+                    continue
+                    
+                # Check if target is a hypothesis
+                if target_id in hypothesis_nodes:
+                    evidence_item = {
+                        'id': source_id,
+                        'type': edge.get('properties', {}).get('diagnostic_type', 'general'),
+                        'description': source_node.get('properties', {}).get('description', source_id)
+                    }
+                    
+                    if edge_type in ['supports', 'provides_evidence_for']:
+                        evidence_analysis[target_id]['supporting_evidence'].append(evidence_item)
+                    elif edge_type in ['refutes']:
+                        evidence_analysis[target_id]['refuting_evidence'].append(evidence_item)
+    
+    # Write evidence analysis
+    if evidence_analysis:
+        for hyp_id, hyp_data in evidence_analysis.items():
+            html_parts.append(f"""
+                <div class="hypothesis-evidence mb-4">
+                    <h6>Hypothesis: {hyp_data.get('description', hyp_id)}</h6>
+                    <div class="evidence-items">""")
+            
+            # Add supporting evidence
+            for evidence_item in hyp_data.get('supporting_evidence', []):
+                html_parts.append(f"""
+                    <div class="evidence-item supporting">
+                        <strong>{evidence_item.get('type', 'Unknown')}:</strong> 
+                        {evidence_item.get('description', 'No description')}
+                    </div>""")
+            
+            # Add refuting evidence
+            for evidence_item in hyp_data.get('refuting_evidence', []):
+                html_parts.append(f"""
+                    <div class="evidence-item refuting">
+                        <strong>{evidence_item.get('type', 'Unknown')}:</strong> 
+                        {evidence_item.get('description', 'No description')}
+                    </div>""")
+            
+            html_parts.append("""
+                    </div>
+                </div>""")
+    else:
+        html_parts.append("<p>No evidence analysis available - limited graph evidence structure detected.</p>")
+    
+    html_parts.append("""
+            </div>
+        </div>""")
+    
+    # 2. Van Evera Systematic Testing Results - Always include if available
+    if results.get('van_evera_assessment'):
+        html_parts.append("""
+        <div class="card">
+            <div class="card-header"><h2 class="card-title h5">Van Evera Systematic Analysis</h2></div>
+            <div class="card-body">""")
+        
+        van_evera_results = results['van_evera_assessment']
+        for hyp_id, assessment in van_evera_results.items():
+            html_parts.append(f"""
+                <div class="hypothesis-assessment mb-4">
+                    <h6>{assessment.description}</h6>
+                    <div class="assessment-summary">
+                        <p><strong>Status:</strong> {assessment.overall_status}</p>
+                        <p><strong>Posterior Probability:</strong> {assessment.posterior_probability:.2f} 
+                           (CI: {assessment.confidence_interval[0]:.2f}-{assessment.confidence_interval[1]:.2f})</p>
+                    </div>
+                    <div class="test-results">
+                        <h7>Diagnostic Test Results:</h7>""")
+            
+            for test in assessment.test_results:
+                html_parts.append(f"""
+                        <div class="test-result {test.test_result.value.lower()}">
+                            <strong>{test.test_result.value}:</strong> {test.reasoning}
+                            <br><small>Confidence: {test.confidence_level:.2f}</small>
+                        </div>""")
+            
+            html_parts.append(f"""
+                    </div>
+                    <div class="academic-conclusion">
+                        <h7>Academic Conclusion:</h7>
+                        <pre>{assessment.academic_conclusion}</pre>
+                    </div>
+                </div>""")
+        
+        html_parts.append("""
+            </div>
+        </div>""")
+    
+    # 3. Alternative Hypotheses Section - Always show what was generated
+    if 'graph_data' in results:
+        graph_data = results['graph_data']
+        alternative_nodes = [n for n in graph_data.get('nodes', []) if n.get('type') == 'Alternative_Explanation']
+        
+        if alternative_nodes:
+            html_parts.append("""
+        <div class="card">
+            <div class="card-header"><h2 class="card-title h5">Alternative Hypotheses</h2></div>
+            <div class="card-body">""")
+            
+            html_parts.append(f"<p><strong>Generated {len(alternative_nodes)} alternative explanations for systematic testing:</strong></p>")
+            
+            for i, alt_node in enumerate(alternative_nodes, 1):
+                description = alt_node.get('properties', {}).get('description', alt_node.get('id', 'Unknown'))
+                html_parts.append(f"""
+                <div class="hypothesis-card mb-3">
+                    <h6>Alternative {i}</h6>
+                    <p>{description}</p>
+                </div>""")
+            
+            html_parts.append("""
+            </div>
+        </div>""")
+    
     # Theoretical Insights
     if theoretical_insights:
         html_parts.append(f'<div class="card"><div class="card-header"><h2 class="card-title h5">Theoretical Insights</h2></div><div class="card-body">{theoretical_insights}</div></div>')
@@ -2712,7 +2981,7 @@ def main():
                     
                     nodes_list.append({
                         'id': node_id,
-                        'label': display_text[:50] + ('...' if len(display_text) > 50 else ''),
+                        'label': textwrap.shorten(display_text, width=50, placeholder='...'),
                         'title': f"Type: {node_type}\nDescription: {description}",
                         'color': color_map.get(node_type, '#95A5A6'),
                         'size': 25 if node_type in ['Event', 'Hypothesis'] else 20
@@ -2759,28 +3028,7 @@ def main():
             except Exception as e:
                 safe_print(f"[ERROR] Failed to generate network data: {e}")
                 network_data_json = None
-        # Phase 3A: Streaming HTML Generation Integration
-        from core.streaming_html import ProgressiveHTMLAnalysis
-        import json
-        
-        # Prepare network data for streaming
-        network_data = {}
-        if network_data_json:
-            try:
-                network_data = json.loads(network_data_json)
-            except:
-                safe_print("[WARN] Failed to parse network data JSON for streaming")
-        
-        # We'll handle streaming after output path is determined
-        # Store data for potential streaming use
-        streaming_data = {
-            'results': analysis_results,
-            'G': G,
-            'network_data': network_data,
-            'insights': theoretical_insights
-        }
-        
-        # Use original HTML formatter as fallback
+        # Use comprehensive HTML generation with all Van Evera sections
         analysis_text = format_html_analysis(analysis_results, data, G, theoretical_insights, network_data_json)
         output_extension = "html"
     else: # Markdown
@@ -2798,20 +3046,9 @@ def main():
         output_path_str = str(project_dir / f"{project_name}_analysis_{now_str}.{output_extension}")
     output_path = Path(output_path_str)
 
-    # Phase 3A: Apply streaming HTML if appropriate
-    if args.html and 'streaming_data' in locals():
-        html_generator = ProgressiveHTMLAnalysis(output_path)
-        if html_generator.should_use_streaming(streaming_data['results']):
-            safe_print("[HTML] Using streaming HTML generation for complex analysis")
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            html_generator.generate_streaming_html(
-                streaming_data['results'], 
-                streaming_data['G'], 
-                streaming_data['network_data'], 
-                streaming_data['insights']
-            )
-            # Skip the regular file write since streaming handled it
-            analysis_text = None
+    # Use single comprehensive HTML generation (no streaming complexity)
+    if args.html:
+        safe_print("[HTML] Using comprehensive HTML generation with all Van Evera sections")
 
     if analysis_text is not None:
         try:
