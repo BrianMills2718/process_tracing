@@ -283,7 +283,7 @@ class VanEveraLLMInterface:
                 evidence_assessment="Unable to assess due to LLM error",
                 theoretical_mechanism_evaluation="Unable to evaluate due to LLM error",
                 elimination_implications=["Unable to determine due to LLM error"],
-                evidence_quality="LOW",
+                evidence_quality="low",
                 evidence_coverage=0.5,
                 indicator_matches=0,
                 publication_quality_assessment="Unable to assess due to LLM error",
