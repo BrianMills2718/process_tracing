@@ -81,7 +81,7 @@ class VanEveraTestingPlugin(ProcessTracingPlugin):
         
         # Verify presence of hypotheses and evidence
         nodes = graph_data['nodes']
-        hypotheses = [n for n in nodes if n.get('type') in ['Hypothesis', 'Alternative_Explanation']]
+        hypotheses = [n for n in nodes if n.get('type') == 'Hypothesis']
         evidence = [n for n in nodes if n.get('type') == 'Evidence']
         
         if len(hypotheses) == 0:
@@ -93,37 +93,37 @@ class VanEveraTestingPlugin(ProcessTracingPlugin):
         self.logger.info(f"VALIDATION: Found {len(hypotheses)} hypotheses and {len(evidence)} evidence items")
     
     def execute(self, data: Any) -> Dict[str, Any]:
-        """Execute Van Evera systematic hypothesis testing"""
-        self.logger.info("START: Van Evera systematic hypothesis testing")
+        """Execute Van Evera testing with advanced prediction engine"""
+        self.logger.info("START: Van Evera testing with advanced prediction engine")
         
         graph_data = data['graph_data']
+        llm_query_func = self.context.get_data('llm_query_func')
         
-        # Initialize Van Evera testing engine
-        testing_engine = VanEveraTestingEngine(graph_data)
+        # Use advanced prediction engine
+        from .advanced_van_evera_prediction_engine import enhance_van_evera_testing_with_sophistication
         
-        # Perform systematic evaluation
-        assessments = testing_engine.systematic_hypothesis_evaluation()
+        advanced_results = enhance_van_evera_testing_with_sophistication(graph_data, llm_query_func)
         
-        # Calculate overall academic quality metrics
-        quality_metrics = self._calculate_academic_quality_metrics(assessments)
+        # Extract metrics for backward compatibility
+        testing_compliance = advanced_results['testing_compliance_score']
+        academic_quality_metrics = advanced_results['academic_quality_metrics']
         
-        # Generate academic summary
-        academic_summary = self._generate_academic_summary(assessments, quality_metrics)
+        self.logger.info(f"COMPLETE: Testing compliance achieved: {testing_compliance:.1f}%")
         
-        result = {
-            'hypothesis_assessments': {k: asdict(v) for k, v in assessments.items()},
-            'academic_quality_metrics': quality_metrics,
-            'academic_summary': academic_summary,
-            'methodology_compliance': {
-                'van_evera_standards_met': quality_metrics['academic_compliance_score'] > 80,
-                'systematic_testing_complete': True,
-                'bayesian_updating_applied': True,
-                'elimination_logic_used': quality_metrics['hypotheses_eliminated'] > 0
-            }
+        # Calculate hypothesis rankings based on Van Evera test results
+        hypothesis_rankings = self._calculate_hypothesis_rankings(graph_data, advanced_results)
+        
+        # Update hypothesis nodes with ranking scores
+        updated_graph_data = self._update_hypothesis_rankings(graph_data, hypothesis_rankings)
+        
+        return {
+            'updated_graph_data': updated_graph_data,
+            'hypothesis_rankings': hypothesis_rankings,
+            'advanced_testing_results': advanced_results,
+            'testing_compliance_score': testing_compliance,
+            'academic_quality_metrics': academic_quality_metrics,
+            'publication_ready': testing_compliance >= 80
         }
-        
-        self.logger.info(f"END: Van Evera testing completed. Academic quality: {quality_metrics['academic_compliance_score']:.1f}%")
-        return result
     
     def get_checkpoint_data(self) -> Dict[str, Any]:
         """Return checkpoint data for Van Evera testing"""
@@ -212,6 +212,137 @@ class VanEveraTestingPlugin(ProcessTracingPlugin):
             summary += f"(posterior: {assessment.posterior_probability:.2f})\n"
         
         return summary
+    
+    def _calculate_hypothesis_rankings(self, graph_data: Dict, advanced_results: Dict) -> Dict[str, Dict[str, Any]]:
+        """Calculate hypothesis rankings based on Van Evera test results for Q/H1/H2/H3 structure"""
+        rankings = {}
+        
+        # Get all hypotheses
+        hypotheses = [n for n in graph_data['nodes'] if n.get('type') == 'Hypothesis']
+        
+        if not hypotheses:
+            return rankings
+        
+        # Extract evaluation results from advanced results
+        if 'evaluation_results' in advanced_results and 'evaluations' in advanced_results['evaluation_results']:
+            evaluations = advanced_results['evaluation_results']['evaluations']
+            
+            # Group evaluations by hypothesis
+            hypothesis_evaluations = {}
+            for evaluation in evaluations:
+                hypothesis_id = evaluation.get('hypothesis_id')
+                if hypothesis_id not in hypothesis_evaluations:
+                    hypothesis_evaluations[hypothesis_id] = []
+                hypothesis_evaluations[hypothesis_id].append(evaluation)
+            
+            # Calculate ranking score for each hypothesis
+            for hypothesis in hypotheses:
+                hypothesis_id = hypothesis['id']
+                hypothesis_evaluations_list = hypothesis_evaluations.get(hypothesis_id, [])
+                
+                ranking_score = self._calculate_individual_ranking_score(hypothesis_evaluations_list)
+                
+                # Determine if this is primary (H1) or alternative (H2, H3, etc.)
+                hypothesis_type = 'primary' if hypothesis_id.endswith('_H1') or hypothesis_id == 'Q_H1' else 'alternative'
+                
+                rankings[hypothesis_id] = {
+                    'ranking_score': ranking_score,
+                    'hypothesis_type': hypothesis_type,
+                    'test_count': len(hypothesis_evaluations_list),
+                    'academic_rank': None  # Will be set after sorting
+                }
+        
+        # Sort hypotheses by ranking score and assign academic ranks
+        sorted_hypotheses = sorted(rankings.items(), key=lambda x: x[1]['ranking_score'], reverse=True)
+        
+        for rank, (hypothesis_id, ranking_data) in enumerate(sorted_hypotheses, 1):
+            ranking_data['academic_rank'] = rank
+            
+            # Update hypothesis_type based on ranking (top hypothesis becomes primary)
+            if rank == 1:
+                ranking_data['hypothesis_type'] = 'primary'
+            else:
+                ranking_data['hypothesis_type'] = 'alternative'
+        
+        return rankings
+    
+    def _calculate_individual_ranking_score(self, evaluations: List[Dict]) -> float:
+        """Calculate ranking score for individual hypothesis based on Van Evera test results"""
+        if not evaluations:
+            return 0.0
+        
+        total_score = 0.0
+        weighted_tests = 0.0
+        
+        # Van Evera diagnostic test weights
+        diagnostic_weights = {
+            'hoop': 0.8,           # High weight - necessary condition test
+            'smoking_gun': 0.9,    # Highest weight - sufficient condition test
+            'doubly_decisive': 1.0, # Maximum weight - both necessary and sufficient
+            'straw_in_the_wind': 0.3  # Low weight - weak diagnostic test
+        }
+        
+        for evaluation in evaluations:
+            test_result = evaluation.get('test_result', 'INCONCLUSIVE')
+            diagnostic_type = evaluation.get('diagnostic_type', 'straw_in_the_wind')
+            confidence_score = evaluation.get('confidence_score', 0.6)
+            
+            # Get weight for this diagnostic type
+            weight = diagnostic_weights.get(diagnostic_type, 0.5)
+            
+            # Calculate test contribution to ranking
+            if test_result == 'PASS':
+                test_contribution = weight * confidence_score
+            elif test_result == 'FAIL':
+                # Failed tests contribute negatively, especially hoop tests
+                if diagnostic_type in ['hoop', 'doubly_decisive']:
+                    test_contribution = -weight * confidence_score  # Strong negative for failed necessary conditions
+                else:
+                    test_contribution = -weight * confidence_score * 0.5  # Moderate negative for failed sufficient conditions
+            else:  # INCONCLUSIVE
+                test_contribution = weight * 0.1  # Minimal positive for inconclusive
+            
+            total_score += test_contribution
+            weighted_tests += weight
+        
+        # Normalize score to 0-1 range
+        if weighted_tests > 0:
+            raw_score = total_score / weighted_tests
+            # Transform to 0-1 scale with 0.5 as neutral point
+            normalized_score = max(0.0, min(1.0, (raw_score + 1.0) / 2.0))
+        else:
+            normalized_score = 0.5  # Default neutral score
+        
+        return round(normalized_score, 3)
+    
+    def _update_hypothesis_rankings(self, graph_data: Dict, rankings: Dict[str, Dict]) -> Dict:
+        """Update hypothesis nodes with ranking scores and types"""
+        updated_graph = graph_data.copy()
+        
+        # Update nodes with ranking information
+        for node in updated_graph['nodes']:
+            if node.get('type') == 'Hypothesis' and node['id'] in rankings:
+                ranking_info = rankings[node['id']]
+                
+                # Update or add ranking properties
+                if 'properties' not in node:
+                    node['properties'] = {}
+                
+                node['properties']['ranking_score'] = ranking_info['ranking_score']
+                node['properties']['hypothesis_type'] = ranking_info['hypothesis_type']
+                node['properties']['academic_rank'] = ranking_info['academic_rank']
+                
+                # Update status based on ranking score
+                if ranking_info['ranking_score'] >= 0.8:
+                    node['properties']['status'] = 'strongly_supported'
+                elif ranking_info['ranking_score'] >= 0.6:
+                    node['properties']['status'] = 'supported'
+                elif ranking_info['ranking_score'] >= 0.4:
+                    node['properties']['status'] = 'inconclusive'
+                else:
+                    node['properties']['status'] = 'weakened'
+        
+        return updated_graph
 
 
 class VanEveraTestingEngine:
@@ -220,7 +351,7 @@ class VanEveraTestingEngine:
     def __init__(self, graph_data: Dict):
         self.graph_data = graph_data
         self.hypotheses = [n for n in graph_data['nodes'] 
-                          if n.get('type') in ['Hypothesis', 'Alternative_Explanation']]
+                          if n.get('type') == 'Hypothesis']
         self.evidence = [n for n in graph_data['nodes'] if n.get('type') == 'Evidence']
         self.evidence_edges = [e for e in graph_data['edges'] if self._is_evidence_relationship(e)]
     
@@ -229,7 +360,7 @@ class VanEveraTestingEngine:
         source_node = next((n for n in self.graph_data['nodes'] if n['id'] == edge['source_id']), None)
         target_node = next((n for n in self.graph_data['nodes'] if n['id'] == edge['target_id']), None)
         return (source_node and source_node.get('type') == 'Evidence' and 
-                target_node and target_node.get('type') in ['Hypothesis', 'Alternative_Explanation'])
+                target_node and target_node.get('type') == 'Hypothesis')
     
     def systematic_hypothesis_evaluation(self) -> Dict[str, HypothesisAssessment]:
         """Perform systematic Van Evera evaluation of all hypotheses"""
@@ -525,3 +656,4 @@ class VanEveraTestingEngine:
         
         margin = 0.4 / math.sqrt(n_tests)
         return (max(0, posterior - margin), min(1, posterior + margin))
+    

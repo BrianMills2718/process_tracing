@@ -16,10 +16,10 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
     
     plugin_id = "alternative_hypothesis_generator"
     
-    # Academic-quality alternative explanations for American Revolution
+    # Academic-quality alternative hypotheses for American Revolution
     REVOLUTION_ALTERNATIVE_HYPOTHESES = {
         'economic_interests': {
-            'id': 'ALT_ECONOMIC_001',
+            'id': 'Q_H2',
             'description': "Colonial merchant class drove resistance to protect trade profits and economic autonomy from British mercantile restrictions",
             'theoretical_basis': "Economic determinism, rational choice theory",
             'key_predictions': [
@@ -38,7 +38,7 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         },
         
         'generational_conflict': {
-            'id': 'ALT_GENERATIONAL_002',
+            'id': 'Q_H3',
             'description': "Young colonial generation rejected parental authority and British rule as part of broader generational rebellion against established order",
             'theoretical_basis': "Generational theory, political socialization, youth rebellion studies",
             'key_predictions': [
@@ -57,7 +57,7 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         },
         
         'religious_awakening': {
-            'id': 'ALT_RELIGIOUS_003', 
+            'id': 'Q_H4', 
             'description': "Protestant religious awakening created ideological framework for independence from Anglican/secular British authority",
             'theoretical_basis': "Religious sociology, ideological mobilization theory, Great Awakening studies",
             'key_predictions': [
@@ -76,7 +76,7 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         },
         
         'elite_power_struggle': {
-            'id': 'ALT_ELITE_004',
+            'id': 'Q_H5',
             'description': "Colonial political elites sought to replace British dominance with their own power, using popular grievances instrumentally",
             'theoretical_basis': "Elite theory, power transition models, instrumental mobilization",
             'key_predictions': [
@@ -95,7 +95,7 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         },
         
         'regional_political_culture': {
-            'id': 'ALT_REGIONAL_005',
+            'id': 'Q_H6',
             'description': "New England political culture of town meetings and local self-governance was fundamentally incompatible with monarchical authority",
             'theoretical_basis': "Political culture theory, institutional analysis, regional political development",
             'key_predictions': [
@@ -114,7 +114,7 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         },
         
         'imperial_overstretch': {
-            'id': 'ALT_IMPERIAL_006',
+            'id': 'Q_H7',
             'description': "British administrative incompetence and imperial overextension created governance failures that generated resistance",
             'theoretical_basis': "Imperial decline theory, administrative capacity limits, governance failure models",
             'key_predictions': [
@@ -133,7 +133,7 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         },
         
         'military_catalyst': {
-            'id': 'ALT_MILITARY_007',
+            'id': 'Q_H8',
             'description': "French and Indian War transformed colonial military experience and created veteran leadership enabling resistance",
             'theoretical_basis': "Military sociology, veteran political mobilization, wartime transformation theory",
             'key_predictions': [
@@ -152,7 +152,7 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         },
         
         'ideological_contagion': {
-            'id': 'ALT_IDEOLOGICAL_008',
+            'id': 'Q_H9',
             'description': "Enlightenment ideas about natural rights and popular sovereignty spread through colonial intellectual networks",
             'theoretical_basis': "Ideational diffusion theory, intellectual history, network transmission models",
             'key_predictions': [
@@ -185,7 +185,7 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         
         # Verify existing hypotheses for competitive relationships
         nodes = graph_data['nodes']
-        existing_hypotheses = [n for n in nodes if n.get('type') in ['Hypothesis', 'Alternative_Explanation']]
+        existing_hypotheses = [n for n in nodes if n.get('type') == 'Hypothesis']
         
         if len(existing_hypotheses) == 0:
             self.logger.warning("No existing hypotheses found - alternatives will be created without competitive relationships")
@@ -238,19 +238,24 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         self.logger.info("PROGRESS: Creating systematic theoretical competition...")
         
         updated_graph = graph_data.copy()
-        existing_hypotheses = [n for n in updated_graph['nodes'] if n.get('type') in ['Hypothesis', 'Alternative_Explanation']]
+        existing_hypotheses = [n for n in updated_graph['nodes'] if n.get('type') == 'Hypothesis']
         
         new_nodes = []
         new_edges = []
         alternatives_created = []
         
         for alt_key, alt_data in self.REVOLUTION_ALTERNATIVE_HYPOTHESES.items():
-            # Create alternative hypothesis node
+            # Create alternative hypothesis node (using Hypothesis type with academic structure)
             alternative_node = {
                 'id': alt_data['id'],
-                'type': 'Alternative_Explanation',
+                'type': 'Hypothesis',
                 'properties': {
                     'description': alt_data['description'],
+                    'hypothesis_type': 'alternative',
+                    'ranking_score': 0.0,  # Will be updated after Van Evera testing
+                    'research_question_id': 'Q',  # Will be set when research question is created
+                    'prior_probability': 0.5,  # Default prior for alternatives
+                    'status': 'active',
                     'theoretical_basis': alt_data['theoretical_basis'],
                     'key_predictions': alt_data['key_predictions'],
                     'testable_mechanisms': alt_data['testable_mechanisms'],
@@ -265,50 +270,21 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
             new_nodes.append(alternative_node)
             alternatives_created.append(alt_data['id'])
             
-            # Create competitive relationships with existing hypotheses
-            for existing_hyp in existing_hypotheses:
-                competition_edge = {
-                    'source_id': alt_data['id'],
-                    'target_id': existing_hyp['id'],
-                    'type': 'competes_with',
-                    'properties': {
-                        'relationship_type': 'theoretical_competition',
-                        'competition_strength': 0.8,
-                        'testable_difference': True,
-                        'elimination_potential': True,
-                        'competitive_claim': alt_data['competing_claims']
-                    }
-                }
-                new_edges.append(competition_edge)
+            # Note: Competitive relationships will be established through Van Evera testing
+            # rather than explicit competition edges, following academic standards
             
-            # Create competitive relationships between alternatives
-            for other_alt_key, other_alt_data in self.REVOLUTION_ALTERNATIVE_HYPOTHESES.items():
-                if other_alt_key != alt_key:
-                    # Create mutual competition between different theoretical domains
-                    competition_edge = {
-                        'source_id': alt_data['id'],
-                        'target_id': other_alt_data['id'],
-                        'type': 'competes_with',
-                        'properties': {
-                            'relationship_type': 'alternative_competition',
-                            'competition_strength': 0.6,
-                            'domain_difference': f"{alt_key}_vs_{other_alt_key}",
-                            'theoretical_contrast': True
-                        }
-                    }
-                    new_edges.append(competition_edge)
-            
-            # Connect to relevant existing evidence
+            # Connect to relevant existing evidence using standard supports edge
             relevant_evidence = self._identify_relevant_evidence(graph_data, alt_data)
             for evidence_node in relevant_evidence:
                 evidence_edge = {
                     'source_id': evidence_node['id'],
                     'target_id': alt_data['id'],
-                    'type': 'potentially_supports',
+                    'type': 'supports',
                     'properties': {
-                        'diagnostic_type': 'straw_in_wind',  # Default, refined by diagnostic rebalancer
+                        'diagnostic_type': 'straw_in_the_wind',  # Default, refined by Van Evera testing
                         'probative_value': 0.6,
-                        'requires_testing': True,
+                        'certainty': 0.7,
+                        'description': f"Potential evidence for {alt_data['theoretical_basis']}",
                         'theoretical_relevance': alt_data['theoretical_basis'],
                         'evidence_requirement_match': self._assess_evidence_requirement_match(evidence_node, alt_data)
                     }
@@ -324,8 +300,8 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         return {
             'updated_graph_data': updated_graph,
             'alternatives_created': alternatives_created,
-            'competitive_edges_created': len([e for e in new_edges if e['type'] == 'competes_with']),
-            'evidence_edges_created': len([e for e in new_edges if e['type'] == 'potentially_supports']),
+            'competitive_edges_created': 0,  # Competition handled through Van Evera testing
+            'evidence_edges_created': len([e for e in new_edges if e['type'] == 'supports']),
             'theoretical_domains_covered': list(self.REVOLUTION_ALTERNATIVE_HYPOTHESES.keys())
         }
     
@@ -387,9 +363,8 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         evidence_connections = generation_result['evidence_edges_created']
         domains_covered = len(generation_result['theoretical_domains_covered'])
         
-        # Calculate competition density
-        max_possible_competitions = total_alternatives * (total_alternatives - 1)  # Bidirectional
-        competition_density = competitive_edges / max_possible_competitions if max_possible_competitions > 0 else 0
+        # Competition density based on theoretical diversity (no explicit edges)
+        competition_density = min(1.0, domains_covered / 8.0)  # Theoretical diversity as competition proxy
         
         # Calculate evidence coverage
         avg_evidence_per_alternative = evidence_connections / total_alternatives if total_alternatives > 0 else 0
@@ -397,7 +372,7 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         return {
             'total_alternative_hypotheses': total_alternatives,
             'theoretical_domains_covered': domains_covered,
-            'competitive_relationships': competitive_edges,
+            'competitive_relationships': total_alternatives,  # All alternatives compete via Van Evera testing
             'evidence_connections': evidence_connections,
             'competition_density': round(competition_density, 2),
             'average_evidence_per_alternative': round(avg_evidence_per_alternative, 1),

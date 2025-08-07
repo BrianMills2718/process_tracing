@@ -13,6 +13,13 @@ from .van_evera_testing import VanEveraTestingPlugin
 from .diagnostic_rebalancer import DiagnosticRebalancerPlugin
 from .alternative_hypothesis_generator import AlternativeHypothesisGeneratorPlugin
 from .evidence_connector_enhancer import EvidenceConnectorEnhancerPlugin
+from .content_based_diagnostic_classifier import ContentBasedDiagnosticClassifierPlugin
+from .research_question_generator import ResearchQuestionGeneratorPlugin
+from .primary_hypothesis_identifier import PrimaryHypothesisIdentifierPlugin
+from .legacy_compatibility_manager import LegacyCompatibilityManagerPlugin
+from .advanced_van_evera_prediction_engine import AdvancedVanEveraPredictionEngine
+from .bayesian_van_evera_engine import BayesianVanEveraEngine
+from .dowhy_causal_analysis_engine import DoWhyCausalAnalysisEngine
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +36,14 @@ def register_all_plugins():
         VanEveraTestingPlugin,
         DiagnosticRebalancerPlugin,
         AlternativeHypothesisGeneratorPlugin,
-        EvidenceConnectorEnhancerPlugin
+        EvidenceConnectorEnhancerPlugin,
+        ContentBasedDiagnosticClassifierPlugin,
+        ResearchQuestionGeneratorPlugin,
+        PrimaryHypothesisIdentifierPlugin,
+        LegacyCompatibilityManagerPlugin,
+        AdvancedVanEveraPredictionEngine,
+        BayesianVanEveraEngine,
+        DoWhyCausalAnalysisEngine
     ]
     
     logger.info("START: Registering all plugins")

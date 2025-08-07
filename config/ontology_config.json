@@ -28,7 +28,10 @@
         "description": {"type": "string", "description": "A detailed description of the hypothesis, which should be a specific, testable statement or conjecture about a causal relationship or the operation of a Causal Mechanism.", "required": true},
         "prior_probability": {"type": "float", "description": "The estimated probability of this hypothesis being true BEFORE considering the evidence from this text (value between 0.0 and 1.0). Optional.", "min": 0.0, "max": 1.0, "required": false},
         "posterior_probability": {"type": "float", "description": "The estimated probability of this hypothesis being true AFTER considering the evidence. (This would typically be calculated by an analysis step). Optional.", "min": 0.0, "max": 1.0, "required": false},
-        "status": {"type": "string", "description": "The current assessment status of the hypothesis (e.g., 'active', 'supported', 'partially_supported', 'refuted', 'undetermined'). Optional.", "allowed_values": ["active", "supported", "partially_supported", "refuted", "undetermined"], "required": false}
+        "status": {"type": "string", "description": "The current assessment status of the hypothesis (e.g., 'active', 'supported', 'partially_supported', 'refuted', 'undetermined'). Optional.", "allowed_values": ["active", "supported", "partially_supported", "refuted", "undetermined"], "required": false},
+        "hypothesis_type": {"type": "string", "description": "Academic classification: primary hypothesis (H1) or alternative hypothesis (H2, H3, etc.)", "allowed_values": ["primary", "alternative"], "required": false},
+        "ranking_score": {"type": "float", "description": "Evidence-based ranking score calculated from Van Evera diagnostic test results (0.0-1.0)", "min": 0.0, "max": 1.0, "required": false},
+        "research_question_id": {"type": "string", "description": "ID of the associated research question this hypothesis addresses", "required": false}
       },
       "plural_name": "Hypotheses"
     },
@@ -80,14 +83,14 @@
       },
       "plural_name": "Inferential Tests"
     },
-    "Alternative_Explanation": {
+    "Research_Question": {
       "properties": {
-        "description": {"type": "string", "required": true},
-        "probability": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
-        "status": {"type": "string", "allowed_values": ["active", "eliminated", "supported", "undetermined"], "required": false},
-        "key_predictions": {"type": "list", "required": false}
+        "description": {"type": "string", "description": "The primary research question guiding the process tracing analysis", "required": true},
+        "domain": {"type": "string", "description": "Research domain (e.g., political, historical, social)", "required": false},
+        "scope": {"type": "string", "description": "Temporal or geographical scope of the question", "required": false},
+        "importance": {"type": "string", "description": "Academic or policy importance of the question", "required": false}
       },
-      "plural_name": "Alternative Explanations"
+      "plural_name": "Research Questions"
     },
     "Data_Source": {
       "properties": {
@@ -138,24 +141,6 @@
         "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
       },
       "label": "tests mechanism"
-    },
-    "supports_alternative": {
-      "domain": ["Evidence"],
-      "range": ["Alternative_Explanation"],
-      "properties": {
-        "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
-        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false}
-      },
-      "label": "supports alternative"
-    },
-    "refutes_alternative": {
-      "domain": ["Evidence"],
-      "range": ["Alternative_Explanation"],
-      "properties": {
-        "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
-        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false}
-      },
-      "label": "refutes alternative"
     },
     "enables": {
       "domain": ["Condition"],
@@ -283,23 +268,13 @@
     },
     "provides_evidence_for": {
       "domain": ["Event", "Evidence"],
-      "range": ["Hypothesis", "Causal_Mechanism", "Actor", "Alternative_Explanation"],
+      "range": ["Hypothesis", "Causal_Mechanism", "Actor"],
       "properties": {
         "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "How strongly the event serves as evidence."},
         "reasoning": {"type": "string", "description": "Explanation of how the event provides evidence.", "required": false},
         "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type when event serves as evidence.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
       },
       "label": "provides evidence for"
-    },
-    "tests_alternative": {
-      "domain": ["Evidence", "Event"],
-      "range": ["Alternative_Explanation"],
-      "properties": {
-        "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "How strongly the evidence tests the alternative explanation."},
-        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type for alternative testing.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false},
-        "test_result": {"type": "string", "description": "Result of testing the alternative.", "allowed_values": ["supports", "refutes", "inconclusive"], "required": false}
-      },
-      "label": "tests alternative"
     },
     "weighs_evidence": {
       "domain": ["Evidence"],
@@ -310,6 +285,15 @@
         "reasoning": {"type": "string", "description": "Explanation of why one evidence weighs more than another.", "required": false}
       },
       "label": "weighs evidence"
+    },
+    "addresses_research_question": {
+      "domain": ["Hypothesis"],
+      "range": ["Research_Question"],
+      "properties": {
+        "relevance": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "How directly the hypothesis addresses the research question."},
+        "approach": {"type": "string", "description": "How the hypothesis approaches answering the research question.", "required": false}
+      },
+      "label": "addresses research question"
     }
   },
   "node_colors": {
@@ -321,7 +305,7 @@
     "Actor": "#ff99cc",
     "Inference_Rule": "#cc99ff",
     "Inferential_Test": "#ffb366",
-    "Alternative_Explanation": "#ff9966",
+    "Research_Question": "#8b5a3c",
     "Data_Source": "#c2c2f0"
   }
 } 

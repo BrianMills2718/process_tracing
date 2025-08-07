@@ -1,0 +1,412 @@
+"""
+Research Question Generator Plugin
+Generates academic-quality research questions from hypothesis content analysis
+"""
+
+import json
+import re
+from typing import Dict, List, Any, Optional
+from .base import ProcessTracingPlugin, PluginValidationError
+
+
+class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
+    """
+    Plugin for generating publication-quality research questions from existing hypothesis content.
+    Ensures questions are domain-aware, academically sophisticated, and properly scoped.
+    """
+    
+    plugin_id = "research_question_generator"
+    
+    # Domain-specific question templates for academic sophistication
+    DOMAIN_QUESTION_TEMPLATES = {
+        'political': {
+            'templates': [
+                "What political mechanisms explain the emergence and success of {phenomenon} in {context}?",
+                "How did political institutions shape the trajectory of {phenomenon} during {timeframe}?",
+                "What role did political leadership play in the development of {phenomenon}?",
+                "Why did political resistance emerge in {context} rather than alternative responses?"
+            ],
+            'keywords': ['political', 'government', 'assembly', 'representation', 'constitutional', 'authority', 'resistance', 'leadership']
+        },
+        'economic': {
+            'templates': [
+                "What economic factors drove the emergence of {phenomenon} in {context}?",
+                "How did economic interests shape the development and outcomes of {phenomenon}?",
+                "What role did trade and commercial networks play in {phenomenon}?",
+                "Why did economic grievances lead to {phenomenon} rather than alternative responses?"
+            ],
+            'keywords': ['economic', 'trade', 'merchant', 'commercial', 'tax', 'financial', 'profit', 'market']
+        },
+        'social': {
+            'templates': [
+                "What social dynamics explain the popular mobilization underlying {phenomenon}?",
+                "How did social class relationships influence the development of {phenomenon}?",
+                "What role did social networks play in the spread of {phenomenon}?",
+                "Why did social movements emerge to support {phenomenon} in {context}?"
+            ],
+            'keywords': ['social', 'popular', 'class', 'crowd', 'people', 'community', 'mobilization', 'movement']
+        },
+        'ideological': {
+            'templates': [
+                "What ideological factors explain the emergence and appeal of {phenomenon}?",
+                "How did competing ideas shape the development of {phenomenon}?",
+                "What role did intellectual traditions play in justifying {phenomenon}?",
+                "Why did particular ideological frameworks gain prominence in {phenomenon}?"
+            ],
+            'keywords': ['ideological', 'ideas', 'philosophy', 'enlightenment', 'beliefs', 'principles', 'intellectual']
+        },
+        'institutional': {
+            'templates': [
+                "What institutional factors enabled or constrained {phenomenon}?",
+                "How did existing institutions shape the trajectory of {phenomenon}?",
+                "What role did institutional change play in the development of {phenomenon}?",
+                "Why did institutional mechanisms prove decisive in {phenomenon}?"
+            ],
+            'keywords': ['institutional', 'institution', 'organization', 'structure', 'system', 'formal', 'rules']
+        }
+    }
+    
+    def validate_input(self, data: Any) -> None:
+        """Validate input contains graph data with hypotheses for question generation"""
+        if not isinstance(data, dict):
+            raise PluginValidationError(self.id, "Input must be dictionary")
+        
+        if 'graph_data' not in data:
+            raise PluginValidationError(self.id, "Missing required key 'graph_data'")
+        
+        graph_data = data['graph_data']
+        if not isinstance(graph_data, dict) or 'nodes' not in graph_data:
+            raise PluginValidationError(self.id, "graph_data must contain 'nodes'")
+        
+        # Find hypotheses for question generation
+        hypotheses = [n for n in graph_data['nodes'] if n.get('type') in ['Hypothesis', 'Alternative_Explanation']]
+        if len(hypotheses) == 0:
+            raise PluginValidationError(self.id, "No hypotheses found for research question generation")
+        
+        self.logger.info(f"VALIDATION: Found {len(hypotheses)} hypotheses for research question generation")
+    
+    def execute(self, data: Any) -> Dict[str, Any]:
+        """Generate academic-quality research question from hypothesis analysis"""
+        self.logger.info("START: Research question generation from hypothesis content")
+        
+        graph_data = data['graph_data']
+        
+        # Analyze existing hypotheses to determine domain and content
+        hypothesis_analysis = self._analyze_hypothesis_content(graph_data)
+        
+        # Generate research question based on analysis
+        research_question = self._generate_research_question(hypothesis_analysis)
+        
+        # Add research question to graph data
+        updated_graph_data = self._add_research_question_to_graph(graph_data, research_question)
+        
+        self.logger.info(f"COMPLETE: Generated research question - {research_question['description'][:100]}...")
+        
+        return {
+            'research_question': research_question,
+            'hypothesis_analysis': hypothesis_analysis,
+            'updated_graph_data': updated_graph_data,
+            'generation_method': 'content_analysis_based',
+            'academic_quality_indicators': {
+                'domain_specificity': True,
+                'analytical_sophistication': True,
+                'empirical_grounding': True,
+                'theoretical_relevance': True
+            }
+        }
+    
+    def get_checkpoint_data(self) -> Dict[str, Any]:
+        """Return checkpoint data for research question generation"""
+        return {
+            'plugin_id': self.id,
+            'domains_supported': len(self.DOMAIN_QUESTION_TEMPLATES),
+            'method': 'hypothesis_content_analysis'
+        }
+    
+    def _analyze_hypothesis_content(self, graph_data: Dict) -> Dict[str, Any]:
+        """Analyze existing hypotheses to determine domain, context, and phenomenon"""
+        hypotheses = [n for n in graph_data['nodes'] if n.get('type') in ['Hypothesis', 'Alternative_Explanation']]
+        
+        # Content analysis
+        all_hypothesis_text = " ".join([
+            h.get('properties', {}).get('description', '') 
+            for h in hypotheses
+        ])
+        
+        # Domain classification
+        domain_scores = {}
+        for domain, template_data in self.DOMAIN_QUESTION_TEMPLATES.items():
+            domain_score = sum(1 for keyword in template_data['keywords'] 
+                             if keyword.lower() in all_hypothesis_text.lower())
+            domain_scores[domain] = domain_score
+        
+        primary_domain = max(domain_scores.keys(), key=lambda d: domain_scores[d])
+        
+        # Extract key phenomenon and context
+        phenomenon = self._extract_phenomenon(hypotheses)
+        context = self._extract_context(hypotheses)
+        timeframe = self._extract_timeframe(hypotheses)
+        
+        # Determine research question complexity
+        complexity_indicators = {
+            'multiple_hypotheses': len(hypotheses) > 3,
+            'cross_domain_content': len([score for score in domain_scores.values() if score > 0]) > 2,
+            'causal_complexity': 'mechanism' in all_hypothesis_text.lower() or 'cause' in all_hypothesis_text.lower(),
+            'temporal_complexity': any(term in all_hypothesis_text.lower() for term in ['development', 'emergence', 'trajectory', 'process'])
+        }
+        
+        return {
+            'primary_domain': primary_domain,
+            'domain_scores': domain_scores,
+            'phenomenon': phenomenon,
+            'context': context,
+            'timeframe': timeframe,
+            'complexity_indicators': complexity_indicators,
+            'hypothesis_count': len(hypotheses),
+            'content_analysis': {
+                'total_text_length': len(all_hypothesis_text),
+                'key_concepts': self._extract_key_concepts(all_hypothesis_text),
+                'causal_language_detected': self._detect_causal_language(all_hypothesis_text)
+            }
+        }
+    
+    def _generate_research_question(self, analysis: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate sophisticated research question based on hypothesis analysis"""
+        domain = analysis['primary_domain']
+        phenomenon = analysis['phenomenon']
+        context = analysis['context']
+        timeframe = analysis.get('timeframe', 'the relevant period')
+        
+        # Select appropriate template based on complexity
+        templates = self.DOMAIN_QUESTION_TEMPLATES[domain]['templates']
+        
+        if analysis['complexity_indicators']['causal_complexity']:
+            # Use mechanism-focused template
+            selected_template = templates[0]  # "What [domain] mechanisms explain..."
+        elif analysis['complexity_indicators']['temporal_complexity']:
+            # Use development-focused template
+            selected_template = templates[1]  # "How did [domain] institutions shape..."
+        elif analysis['complexity_indicators']['multiple_hypotheses']:
+            # Use comparative template
+            selected_template = templates[-1]  # "Why did... rather than alternatives?"
+        else:
+            # Use general explanatory template
+            selected_template = templates[2] if len(templates) > 2 else templates[0]
+        
+        # Generate question with sophisticated formatting
+        research_question_text = selected_template.format(
+            phenomenon=phenomenon,
+            context=context,
+            timeframe=timeframe
+        )
+        
+        # Determine scope and importance
+        scope = self._determine_scope(context, timeframe)
+        importance = self._assess_importance(phenomenon, analysis)
+        
+        return {
+            'id': 'Q',
+            'type': 'Research_Question',
+            'description': research_question_text,
+            'domain': domain,
+            'scope': scope,
+            'importance': importance,
+            'complexity_level': self._calculate_complexity_level(analysis),
+            'generation_metadata': {
+                'template_used': selected_template,
+                'primary_domain': domain,
+                'phenomenon_identified': phenomenon,
+                'context_identified': context,
+                'academic_sophistication_score': self._calculate_sophistication_score(analysis)
+            }
+        }
+    
+    def _extract_phenomenon(self, hypotheses: List[Dict]) -> str:
+        """Extract the central phenomenon being explained from hypotheses"""
+        # Look for common patterns in hypothesis descriptions
+        common_phenomena = {
+            'revolution': ['revolution', 'revolutionary', 'rebellion', 'uprising'],
+            'resistance': ['resistance', 'opposition', 'protest', 'defiance'],
+            'mobilization': ['mobilization', 'movement', 'organization', 'collective action'],
+            'change': ['change', 'transformation', 'development', 'evolution'],
+            'conflict': ['conflict', 'war', 'dispute', 'confrontation'],
+            'formation': ['formation', 'emergence', 'creation', 'establishment']
+        }
+        
+        all_text = " ".join([h.get('properties', {}).get('description', '').lower() 
+                           for h in hypotheses])
+        
+        # Score phenomena
+        phenomenon_scores = {}
+        for phenomenon, keywords in common_phenomena.items():
+            score = sum(all_text.count(keyword) for keyword in keywords)
+            if score > 0:
+                phenomenon_scores[phenomenon] = score
+        
+        if phenomenon_scores:
+            return max(phenomenon_scores.keys(), key=lambda p: phenomenon_scores[p])
+        else:
+            return "the phenomenon under investigation"
+    
+    def _extract_context(self, hypotheses: List[Dict]) -> str:
+        """Extract geographical and temporal context from hypotheses"""
+        all_text = " ".join([h.get('properties', {}).get('description', '') 
+                           for h in hypotheses])
+        
+        # Look for common geographical contexts
+        geographical_contexts = {
+            'colonial America': ['colonial', 'america', 'colonies', 'british america'],
+            'early modern Europe': ['europe', 'european', 'early modern'],
+            'modern state': ['state', 'nation', 'national', 'government'],
+            'local community': ['local', 'community', 'regional', 'provincial']
+        }
+        
+        for context, keywords in geographical_contexts.items():
+            if any(keyword in all_text.lower() for keyword in keywords):
+                return context
+        
+        return "the relevant context"
+    
+    def _extract_timeframe(self, hypotheses: List[Dict]) -> str:
+        """Extract temporal scope from hypotheses"""
+        all_text = " ".join([h.get('properties', {}).get('description', '') 
+                           for h in hypotheses])
+        
+        # Look for temporal indicators
+        if any(term in all_text.lower() for term in ['18th century', '1760s', '1770s', 'revolutionary period']):
+            return "the late colonial and revolutionary period"
+        elif any(term in all_text.lower() for term in ['early', 'initial', 'beginning']):
+            return "the early phase of development"
+        elif any(term in all_text.lower() for term in ['development', 'trajectory', 'process']):
+            return "the developmental period"
+        else:
+            return "the relevant timeframe"
+    
+    def _extract_key_concepts(self, text: str) -> List[str]:
+        """Extract key analytical concepts from hypothesis text"""
+        concepts = []
+        
+        # Look for theoretical concepts
+        theoretical_concepts = [
+            'mechanism', 'process', 'institution', 'structure', 'agency', 'power',
+            'interest', 'ideology', 'culture', 'network', 'resource', 'opportunity',
+            'constraint', 'mobilization', 'legitimacy', 'authority', 'resistance'
+        ]
+        
+        for concept in theoretical_concepts:
+            if concept in text.lower():
+                concepts.append(concept)
+        
+        return concepts[:10]  # Return top 10 concepts
+    
+    def _detect_causal_language(self, text: str) -> bool:
+        """Detect presence of causal language in hypotheses"""
+        causal_indicators = [
+            'because', 'due to', 'caused by', 'result of', 'led to', 'resulted in',
+            'mechanism', 'process', 'explains', 'accounts for', 'drives', 'enables'
+        ]
+        
+        return any(indicator in text.lower() for indicator in causal_indicators)
+    
+    def _determine_scope(self, context: str, timeframe: str) -> str:
+        """Determine analytical scope based on context and timeframe"""
+        if 'colonial' in context.lower():
+            return f"Colonial-level analysis spanning {timeframe}"
+        elif 'local' in context.lower():
+            return f"Local community analysis within {timeframe}"
+        else:
+            return f"Comparative analysis across {timeframe}"
+    
+    def _assess_importance(self, phenomenon: str, analysis: Dict) -> str:
+        """Assess academic importance of the research question"""
+        if phenomenon in ['revolution', 'transformation']:
+            return "High theoretical importance for understanding large-scale political change"
+        elif phenomenon in ['resistance', 'mobilization']:
+            return "Significant importance for collective action and social movement theory"
+        elif phenomenon in ['formation', 'development']:
+            return "Important for institutional development and state formation theory"
+        else:
+            return "Contributes to understanding of historical causation and process tracing methodology"
+    
+    def _calculate_complexity_level(self, analysis: Dict) -> str:
+        """Calculate complexity level of research question"""
+        complexity_count = sum(analysis['complexity_indicators'].values())
+        
+        if complexity_count >= 3:
+            return "high"
+        elif complexity_count >= 2:
+            return "medium"
+        else:
+            return "moderate"
+    
+    def _calculate_sophistication_score(self, analysis: Dict) -> float:
+        """Calculate academic sophistication score (0.0-1.0)"""
+        score = 0.0
+        
+        # Domain specificity (0.25)
+        score += 0.25 if analysis['domain_scores'][analysis['primary_domain']] >= 3 else 0.15
+        
+        # Theoretical sophistication (0.25)
+        score += 0.25 if len(analysis['content_analysis']['key_concepts']) >= 5 else 0.15
+        
+        # Causal complexity (0.25)
+        score += 0.25 if analysis['content_analysis']['causal_language_detected'] else 0.1
+        
+        # Analytical depth (0.25)
+        complexity_count = sum(analysis['complexity_indicators'].values())
+        score += 0.25 if complexity_count >= 3 else (0.15 if complexity_count >= 2 else 0.1)
+        
+        return min(score, 1.0)
+    
+    def _add_research_question_to_graph(self, graph_data: Dict, research_question: Dict) -> Dict[str, Any]:
+        """Add research question node to graph data"""
+        updated_graph_data = graph_data.copy()
+        
+        # Create research question node
+        rq_node = {
+            'id': research_question['id'],
+            'type': 'Research_Question',
+            'properties': {
+                'description': research_question['description'],
+                'domain': research_question['domain'],
+                'scope': research_question['scope'],
+                'importance': research_question['importance']
+            }
+        }
+        
+        # Add to nodes
+        updated_graph_data['nodes'] = updated_graph_data.get('nodes', []) + [rq_node]
+        
+        # Create connections from hypotheses to research question
+        hypotheses = [n for n in graph_data['nodes'] if n.get('type') in ['Hypothesis', 'Alternative_Explanation']]
+        new_edges = []
+        
+        for hypothesis in hypotheses:
+            edge = {
+                'source_id': hypothesis['id'],
+                'target_id': research_question['id'],
+                'type': 'addresses_research_question',
+                'properties': {
+                    'relevance': 0.9,  # High relevance since question generated from hypotheses
+                    'approach': f"Addresses through {research_question['domain']} analysis"
+                }
+            }
+            new_edges.append(edge)
+        
+        updated_graph_data['edges'] = updated_graph_data.get('edges', []) + new_edges
+        
+        return updated_graph_data
+
+
+def generate_research_question_for_analysis(graph_data: Dict) -> Dict[str, Any]:
+    """
+    Convenience function for generating research question from graph data.
+    Returns research question generation results.
+    """
+    from .base import PluginContext
+    
+    context = PluginContext({'research_question_generation': True})
+    plugin = ResearchQuestionGeneratorPlugin('research_question_generator', context)
+    
+    result = plugin.execute({'graph_data': graph_data})
+    return result

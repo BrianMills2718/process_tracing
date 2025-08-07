@@ -1,7 +1,7 @@
 # CLAUDE.md Update Command - Evidence-Based Development Workflow
 
 ## Overview
-Update CLAUDE.md to clear out resolved tasks and populate it with instructions for resolving the next tasks using evidence-based development practices. The instructions should be detailed enough for a new LLM to implement with no context beyond CLAUDE.md and referenced files.
+Ucommit then date CLAUDE.md to clear out resolved tasks and populate it with instructions for resolving the next tasks using evidence-based development practices. The instructions should be detailed enough for a new LLM to implement with no context beyond CLAUDE.md and referenced files.
 
 ## Core CLAUDE.md Requirements
 
