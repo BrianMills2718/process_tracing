@@ -6,10 +6,10 @@
 
 ## ✅ Current Status: Production Ready
 
-- **Core Functionality**: Fully operational and verified
-- **Performance**: Sub-3s analysis for documents <50KB, <10s for larger documents
+- **Core Functionality**: Fully operational Van Evera process tracing pipeline
+- **Plugin Architecture**: 16 registered plugins with proper abstractions
 - **Van Evera Integration**: Complete diagnostic test methodology implementation
-- **Bayesian Analysis**: Optional advanced uncertainty quantification
+- **LLM Integration**: Structured output with Gemini 2.5 Flash and Pydantic validation
 - **Interactive Reports**: Rich HTML dashboards with network visualizations
 
 ## 🚀 Key Features
