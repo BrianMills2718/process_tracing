@@ -37,6 +37,9 @@ from pathlib import Path
 import textwrap # Used in format_html_analysis
 from datetime import datetime
 
+# Module-level logger
+logger = logging.getLogger(__name__)
+
 # Assuming this file will be in core/ and ontology.py is in core/
 from core.ontology import NODE_TYPES as CORE_NODE_TYPES, NODE_COLORS
 from core.enhance_evidence import refine_evidence_assessment_with_llm
@@ -211,7 +214,6 @@ def analyze_graph(G, options=None):
         Analysis results dictionary
     """
     import time
-    logger = logging.getLogger(__name__)
     
     # Initialize performance profiling
     from core.performance_profiler import get_profiler
@@ -2781,7 +2783,6 @@ def generate_evidence_strength_chart(results):
 # (Keep your existing main() function structure. Ensure it calls the refactored functions
 # and passes G and results['filename'] to formatting functions correctly.)
 def main():
-    logger = logging.getLogger(__name__)
     args = parse_args()
     if not os.path.isfile(args.json_file):
         logger.error(f"File not found: {args.json_file}"); sys.exit(1)
