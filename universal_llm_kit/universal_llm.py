@@ -62,7 +62,7 @@ class UniversalLLM:
         
         return Router(
             model_list=model_list,
-            routing_strategy="cost-based"  # Use cheapest available model
+            routing_strategy="cost-based-routing"  # Use cheapest available model
         )
     
     def chat(self, prompt: str, model_type: str = "smart", **kwargs) -> str:
@@ -117,20 +117,24 @@ class UniversalLLM:
         }
         
         # Add schema to prompt if provided
-        if schema and hasattr(schema, 'model_json_schema'):
-            schema_str = schema.model_json_schema()
-            kwargs["messages"][0]["content"] = f"{prompt}\n\nRespond with valid JSON matching this schema: {schema_str}"
-        elif schema:
-            import json
-            kwargs["messages"][0]["content"] = f"{prompt}\n\nRespond with valid JSON matching this schema: {json.dumps(schema, indent=2)}"
-        else:
-            kwargs["messages"][0]["content"] = f"{prompt}\n\nRespond with valid JSON."
+        messages = kwargs.get("messages", [])
+        if messages and len(messages) > 0 and isinstance(messages, list):
+            message_list = list(messages)  # Ensure we have a list
+            if schema and hasattr(schema, 'model_json_schema'):
+                schema_str = schema.model_json_schema()
+                message_list[0]["content"] = f"{prompt}\n\nRespond with valid JSON matching this schema: {schema_str}"
+            elif schema:
+                import json
+                message_list[0]["content"] = f"{prompt}\n\nRespond with valid JSON matching this schema: {json.dumps(schema, indent=2)}"
+            else:
+                message_list[0]["content"] = f"{prompt}\n\nRespond with valid JSON."
+            kwargs["messages"] = message_list
         
         # Make direct LiteLLM call
         response = litellm.completion(**kwargs)
         return response.choices[0].message.content
     
-    def compare_models(self, prompt: str, models: List[str] = None) -> Dict[str, str]:
+    def compare_models(self, prompt: str, models: Optional[List[str]] = None) -> Dict[str, str]:
         """Compare responses across different models"""
         if models is None:
             models = ["smart", "fast", "code"]
@@ -171,7 +175,7 @@ def structured(prompt: str, schema: Optional[BaseModel] = None) -> str:
     """Quick structured output"""
     return get_llm().structured_output(prompt, schema)
 
-def compare(prompt: str, models: List[str] = None) -> Dict[str, str]:
+def compare(prompt: str, models: Optional[List[str]] = None) -> Dict[str, str]:
     """Quick model comparison"""
     return get_llm().compare_models(prompt, models)
 

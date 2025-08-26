@@ -110,7 +110,7 @@ class PluginWorkflow:
         """
         self.logger.info(f"START: Executing workflow {self.workflow_id}")
         
-        workflow_results = {}
+        workflow_results: Dict[str, Any] = {}
         
         try:
             for i, step in enumerate(workflow_steps):
@@ -199,18 +199,22 @@ class PluginWorkflow:
         workflow_steps.append(PHASE_1_CRITICAL_WORKFLOW[0])
         
         # Step 2: Graph validation with provided graph
-        graph_step = PHASE_1_CRITICAL_WORKFLOW[1].copy()
-        graph_step['input_data'] = {'graph': graph}
-        workflow_steps.append(graph_step)
+        graph_step_template = PHASE_1_CRITICAL_WORKFLOW[1]
+        if isinstance(graph_step_template, dict):
+            graph_step = graph_step_template.copy()
+            graph_step['input_data'] = {'graph': graph}
+            workflow_steps.append(graph_step)
         
         # Step 3: Evidence balance (optional)
         if hypothesis and evidence_list:
-            balance_step = PHASE_1_CRITICAL_WORKFLOW[2].copy()
-            balance_step['input_data'] = {
-                'hypothesis': hypothesis,
-                'evidence_list': evidence_list
-            }
-            workflow_steps.append(balance_step)
+            balance_step_template = PHASE_1_CRITICAL_WORKFLOW[2]
+            if isinstance(balance_step_template, dict):
+                balance_step = balance_step_template.copy()
+                balance_step['input_data'] = {
+                    'hypothesis': hypothesis,
+                    'evidence_list': evidence_list
+                }
+                workflow_steps.append(balance_step)
         
         # Step 4: Path finding (optional, requires graph with appropriate nodes)
         if graph:
@@ -221,15 +225,17 @@ class PluginWorkflow:
                              if d.get('type') == 'evidence']
             
             if hypothesis_nodes and evidence_nodes:
-                path_step = PHASE_1_CRITICAL_WORKFLOW[3].copy()
-                path_step['input_data'] = {
-                    'graph': graph,
-                    'source': evidence_nodes[0],
-                    'target': hypothesis_nodes[0]
-                }
-                workflow_steps.append(path_step)
+                path_step_template = PHASE_1_CRITICAL_WORKFLOW[3]
+                if isinstance(path_step_template, dict):
+                    path_step = path_step_template.copy()
+                    path_step['input_data'] = {
+                        'graph': graph,
+                        'source': evidence_nodes[0],
+                        'target': hypothesis_nodes[0]
+                    }
+                    workflow_steps.append(path_step)
         
-        return self.execute_workflow(workflow_steps)
+        return self.execute_workflow([step for step in workflow_steps if isinstance(step, dict)])
     
     def execute_from_stage(self, stage: str) -> Dict[str, Any]:
         """
@@ -246,16 +252,19 @@ class PluginWorkflow:
         # Find the starting point in the workflow
         start_index = 0
         for i, step in enumerate(PHASE_1_CRITICAL_WORKFLOW):
-            if step.get('id') == stage or step.get('plugin') == stage:
-                start_index = i
-                break
+            if isinstance(step, dict):
+                if step.get('id') == stage or step.get('plugin') == stage:
+                    start_index = i
+                    break
         
-        if start_index == 0 and stage != PHASE_1_CRITICAL_WORKFLOW[0].get('id'):
+        first_step = PHASE_1_CRITICAL_WORKFLOW[0] if PHASE_1_CRITICAL_WORKFLOW else {}
+        first_step_id = first_step.get('id') if isinstance(first_step, dict) else None
+        if start_index == 0 and stage != first_step_id:
             self.logger.warning(f"Stage '{stage}' not found, executing full workflow")
         
         # Execute workflow from the specified stage
         workflow_subset = PHASE_1_CRITICAL_WORKFLOW[start_index:]
-        return self.execute_workflow(workflow_subset)
+        return self.execute_workflow([step for step in workflow_subset if isinstance(step, dict)])
 
 
 # Predefined workflow for Phase 1 critical fixes validation

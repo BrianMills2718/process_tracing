@@ -105,7 +105,7 @@ class LegacyCompatibilityManagerPlugin(ProcessTracingPlugin):
         edges = graph_data.get('edges', [])
         
         # Categorize node IDs
-        legacy_ids = {
+        legacy_ids: Dict[str, List[Dict[str, Any]]] = {
             'hypothesis': [],
             'alternative': [],
             'event': [],
@@ -113,7 +113,7 @@ class LegacyCompatibilityManagerPlugin(ProcessTracingPlugin):
             'other_legacy': []
         }
         
-        academic_ids = {
+        academic_ids: Dict[str, List[Dict[str, Any]]] = {
             'research_question': [],
             'primary_hypothesis': [],
             'alternative_hypothesis': [],
@@ -236,8 +236,8 @@ class LegacyCompatibilityManagerPlugin(ProcessTracingPlugin):
         """Migrate legacy ID structure to academic Q/H1/H2/H3 format"""
         
         # Create ID mapping
-        id_mapping = {}
-        migration_log = []
+        id_mapping: Dict[str, str] = {}
+        migration_log: List[str] = []
         
         # First, identify hypotheses for ranking-based migration
         legacy_hypotheses = id_analysis['legacy_ids']['hypothesis'] + id_analysis['legacy_ids']['alternative']
@@ -365,7 +365,7 @@ class LegacyCompatibilityManagerPlugin(ProcessTracingPlugin):
     def _validate_academic_structure(self, graph_data: Dict, id_analysis: Dict) -> Dict[str, Any]:
         """Validate academic Q/H1/H2/H3 structure compliance"""
         
-        validation_results = {
+        validation_results: Dict[str, Any] = {
             'structure_valid': True,
             'issues_found': [],
             'compliance_score': 0.0,
@@ -409,7 +409,9 @@ class LegacyCompatibilityManagerPlugin(ProcessTracingPlugin):
         
         # Calculate compliance score
         total_checks = 4  # research question, primary hypothesis, alternatives, sequence
-        passed_checks = total_checks - len(validation_results['issues_found'])
+        issues_found = validation_results['issues_found']
+        assert isinstance(issues_found, list), "issues_found should be a list"
+        passed_checks = total_checks - len(issues_found)
         validation_results['compliance_score'] = passed_checks / total_checks
         
         return validation_results

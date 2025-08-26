@@ -164,11 +164,11 @@ class GraphExtraction(BaseModel):
     )
     nodes: List[NodeExtraction] = Field(
         description="List of extracted nodes",
-        min_items=1
+        min_length=1
     )
     edges: List[EdgeExtraction] = Field(
         description="List of extracted relationships",
-        min_items=0
+        min_length=0
     )
     extraction_confidence: float = Field(
         description="Overall confidence in extraction quality (0.0-1.0)",
@@ -176,14 +176,14 @@ class GraphExtraction(BaseModel):
         le=1.0
     )
     key_hypotheses: List[str] = Field(
+        default_factory=list,
         description="Main hypotheses identified in the text",
-        max_items=5,
-        default_factory=list
+        max_length=5
     )
     missing_information: List[str] = Field(
+        default_factory=list,
         description="Information that would improve the analysis",
-        max_items=5,
-        default_factory=list
+        max_length=5
     )
 
 
@@ -204,15 +204,15 @@ class CausalChainSummary(BaseModel):
     )
     intermediate_steps: List[str] = Field(
         description="Key intermediate steps in the causal chain",
-        max_items=10
+        max_length=10
     )
     chain_strength: Literal["strong", "moderate", "weak"] = Field(
         description="Overall strength of the causal chain"
     )
     alternative_explanations: List[str] = Field(
+        default_factory=list,
         description="Potential alternative explanations",
-        max_items=3,
-        default_factory=list
+        max_length=3
     )
 
 

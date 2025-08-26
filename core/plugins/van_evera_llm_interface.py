@@ -10,6 +10,16 @@ from pydantic import BaseModel
 import sys
 import os
 
+# Import structured logging utilities
+try:
+    from ..logging_utils import log_structured_error, create_llm_context
+except ImportError:
+    # Fallback if logging_utils not available
+    def log_structured_error(logger, message, error_category, operation_context=None, exc_info=True, **extra_context):
+        logger.error(message, exc_info=exc_info)
+    def create_llm_context(model_type, operation, **kwargs):
+        return {"model_type": model_type, "llm_operation": operation}
+
 # Add the project root to sys.path to import universal_llm
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(project_root)
@@ -20,7 +30,8 @@ from .van_evera_llm_schemas import (
     BayesianParameterEstimation,
     CausalRelationshipAnalysis,
     ProcessTracingConclusion,
-    ContentBasedClassification
+    ContentBasedClassification,
+    TestResult
 )
 
 logger = logging.getLogger(__name__)
@@ -263,12 +274,39 @@ class VanEveraLLMInterface:
             return structured_response
             
         except json.JSONDecodeError as e:
-            logger.error(f"JSON parsing failed for {response_model.__name__}: {e}")
+            log_structured_error(
+                logger,
+                f"JSON parsing failed for {response_model.__name__}",
+                error_category="llm_error",
+                operation_context="structured_output_generation",
+                exc_info=True,
+                **create_llm_context(
+                    self.model_type,
+                    "structured_output",
+                    response_model=response_model.__name__,
+                    parsing_stage="json_decode"
+                )
+            )
             # Return a fallback response
             return self._create_fallback_response(response_model, f"JSON parsing error: {e}")
             
         except Exception as e:
-            logger.error(f"LLM call failed for {response_model.__name__}: {e}")
+            # Check if it's a timeout error
+            error_category = "llm_timeout" if "timeout" in str(e).lower() else "llm_error"
+            
+            log_structured_error(
+                logger,
+                f"LLM call failed for {response_model.__name__}",
+                error_category=error_category,
+                operation_context="structured_output_generation",
+                exc_info=True,
+                **create_llm_context(
+                    self.model_type,
+                    "structured_output",
+                    response_model=response_model.__name__,
+                    failure_stage="llm_api_call"
+                )
+            )
             # Return a fallback response
             return self._create_fallback_response(response_model, f"LLM error: {e}")
     
@@ -276,22 +314,27 @@ class VanEveraLLMInterface:
         """Create a fallback response when LLM calls fail"""
         
         if response_model == VanEveraPredictionEvaluation:
-            return VanEveraPredictionEvaluation(
-                test_result="INCONCLUSIVE",
+            # Import EvidenceQuality enum
+            from .van_evera_llm_schemas import EvidenceQuality
+            result = VanEveraPredictionEvaluation(
+                test_result=TestResult.INCONCLUSIVE,
+                necessity_analysis=None,
+                sufficiency_analysis=None,
                 confidence_score=0.5,
                 diagnostic_reasoning=f"Fallback evaluation due to: {error_message}",
                 evidence_assessment="Unable to assess due to LLM error",
                 theoretical_mechanism_evaluation="Unable to evaluate due to LLM error",
                 elimination_implications=["Unable to determine due to LLM error"],
-                evidence_quality="low",
+                evidence_quality=EvidenceQuality.LOW,
                 evidence_coverage=0.5,
                 indicator_matches=0,
                 publication_quality_assessment="Unable to assess due to LLM error",
                 methodological_soundness=0.5
             )
+            return result  # type: ignore
         
         elif response_model == BayesianParameterEstimation:
-            return BayesianParameterEstimation(
+            bayes_result = BayesianParameterEstimation(
                 prior_probability=0.5,
                 likelihood_given_hypothesis=0.5,
                 likelihood_given_not_hypothesis=0.5,
@@ -300,9 +343,10 @@ class VanEveraLLMInterface:
                 confidence_in_estimates=0.3,
                 uncertainty_sources=[f"LLM error: {error_message}"]
             )
+            return bayes_result  # type: ignore
         
         elif response_model == CausalRelationshipAnalysis:
-            return CausalRelationshipAnalysis(
+            causal_result = CausalRelationshipAnalysis(
                 causal_strength=0.5,
                 causal_mechanism=f"Unable to analyze due to: {error_message}",
                 temporal_precedence=False,
@@ -313,9 +357,10 @@ class VanEveraLLMInterface:
                 causal_reasoning=f"Fallback analysis due to: {error_message}",
                 uncertainty_assessment=f"High uncertainty due to: {error_message}"
             )
+            return causal_result  # type: ignore
         
         elif response_model == ProcessTracingConclusion:
-            return ProcessTracingConclusion(
+            process_result = ProcessTracingConclusion(
                 hypothesis_status="INCONCLUSIVE",
                 confidence_level=0.3,
                 academic_summary=f"Unable to generate conclusion due to: {error_message}",
@@ -325,10 +370,15 @@ class VanEveraLLMInterface:
                 publication_quality_score=0.3,
                 recommendations_for_improvement=[f"Resolve LLM error: {error_message}"]
             )
+            return process_result  # type: ignore
         
         elif response_model == ContentBasedClassification:
-            return ContentBasedClassification(
-                recommended_diagnostic_type="straw_in_wind",
+            # Import DiagnosticTestType enum
+            from .van_evera_llm_schemas import DiagnosticTestType
+            content_result = ContentBasedClassification(
+                recommended_diagnostic_type=DiagnosticTestType.STRAW_IN_WIND,
+                necessity_assessment=None,
+                sufficiency_assessment=None,
                 classification_confidence=0.3,
                 content_analysis=f"Unable to analyze due to: {error_message}",
                 theoretical_fit="Unable to assess due to LLM error",
@@ -336,6 +386,7 @@ class VanEveraLLMInterface:
                 theoretical_sophistication=0.3,
                 methodological_rigor=0.3
             )
+            return content_result  # type: ignore
         
         else:
             raise ValueError(f"Unknown response model: {response_model}")
@@ -370,7 +421,22 @@ def create_llm_query_function():
             )
             return response
         except Exception as e:
-            logger.error(f"LLM query failed: {e}")
+            # Check if it's a timeout error
+            error_category = "llm_timeout" if "timeout" in str(e).lower() else "llm_error"
+            
+            log_structured_error(
+                logger,
+                "LLM query failed",
+                error_category=error_category,
+                operation_context="llm_query_function",
+                exc_info=True,
+                **create_llm_context(
+                    llm_interface.model_type,
+                    "chat_completion",
+                    max_tokens=max_tokens,
+                    temperature=temperature
+                )
+            )
             return f"LLM query failed: {e}"
     
     return llm_query_func

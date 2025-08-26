@@ -5,7 +5,7 @@ BLOCKER #1 Resolution: Implements Van Evera diagnostic distribution through cont
 
 import json
 import re
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Optional, Tuple
 from .base import ProcessTracingPlugin, PluginValidationError
 
 
@@ -346,7 +346,7 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
         content_scores = self._calculate_content_scores(evidence_text, hypothesis_text)
         
         # Get best classification from content analysis
-        best_type = max(content_scores, key=content_scores.get)
+        best_type = max(content_scores, key=lambda x: content_scores[x])
         best_score = content_scores[best_type]
         
         # Use LLM enhancement for borderline cases or improved accuracy
@@ -384,7 +384,7 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
                     term_matches = sum(1 for term in terms if term in combined_text)
                     type_score += term_matches * 0.3
                     
-                elif category == 'contextual_patterns':
+                elif category == 'contextual_patterns' and isinstance(terms, list):
                     # Regex pattern matching
                     pattern_matches = sum(1 for pattern in terms if re.search(pattern, combined_text))
                     type_score += pattern_matches * 0.5
@@ -394,11 +394,12 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
             type_score += context_bonus * 0.2
             
             # Apply weight and normalize - be conservative with doubly_decisive
+            weight_val = float(weight) if isinstance(weight, (int, float)) else 1.0
             if test_type == 'doubly_decisive':
                 # Doubly decisive requires very strong evidence
-                scores[test_type] = min(0.8, type_score * weight * 0.5)  # More conservative
+                scores[test_type] = min(0.8, type_score * weight_val * 0.5)  # More conservative
             else:
-                scores[test_type] = min(1.0, type_score * weight)
+                scores[test_type] = min(1.0, type_score * weight_val)
         
         return scores
     
@@ -470,7 +471,12 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
                 
         except Exception as e:
             self.logger.warning(f"LLM enhancement failed: {e}")
-            return None
+            return {
+                'diagnostic_type': 'straw_in_wind',
+                'confidence': 0.5,
+                'reasoning': 'LLM enhancement failed',
+                'llm_enhanced': False
+            }
     
     def _parse_llm_response_fallback(self, response: str) -> Dict[str, Any]:
         """Fallback parsing for non-JSON LLM responses"""
@@ -502,11 +508,11 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
         }
     
     def _combine_classification_results(self, content_scores: Dict[str, float], 
-                                      llm_result: Dict[str, Any]) -> Dict[str, Any]:
+                                      llm_result: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         """Combine content analysis and LLM results for final classification"""
         if not llm_result:
             # Use content analysis only
-            best_type = max(content_scores, key=content_scores.get)
+            best_type = max(content_scores, key=lambda x: content_scores[x])
             return {
                 'diagnostic_type': best_type,
                 'confidence': content_scores[best_type],
@@ -550,7 +556,7 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
         balanced_classifications = self._strategic_rebalancing(sorted_classifications, target_counts, graph_data)
         
         # Count final distribution
-        final_counts = {}
+        final_counts: Dict[str, int] = {}
         for classification in balanced_classifications:
             final_type = classification.get('final_type', classification['content_classified_type'])
             final_counts[final_type] = final_counts.get(final_type, 0) + 1
@@ -602,7 +608,7 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
             balanced_classifications.append(balanced_classification)
         
         # Calculate current distribution after preservation
-        current_counts = {}
+        current_counts: Dict[str, int] = {}
         for classification in balanced_classifications:
             final_type = classification['final_type']
             current_counts[final_type] = current_counts.get(final_type, 0) + 1

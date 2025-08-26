@@ -100,13 +100,13 @@ class GraphValidationPlugin(ProcessTracingPlugin):
         edge_count = len(original_graph.edges)
         
         # Count node types
-        node_types = {}
+        node_types: Dict[str, int] = {}
         for node_id, node_data in original_graph.nodes(data=True):
             node_type = node_data.get('type', 'unknown')
             node_types[node_type] = node_types.get(node_type, 0) + 1
         
         # Count edge types  
-        edge_types = {}
+        edge_types: Dict[str, int] = {}
         for source, target, edge_data in original_graph.edges(data=True):
             edge_type = edge_data.get('relationship', edge_data.get('type', 'unknown'))
             edge_types[edge_type] = edge_types.get(edge_type, 0) + 1

@@ -215,7 +215,7 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
             'academic_assessment': academic_assessment,
             'generation_statistics': {
                 'total_alternatives_generated': len(self.REVOLUTION_ALTERNATIVE_HYPOTHESES),
-                'theoretical_domains_covered': len(set(alt['theoretical_basis'].split(',')[0] for alt in self.REVOLUTION_ALTERNATIVE_HYPOTHESES.values())),
+                'theoretical_domains_covered': len(set(str(alt['theoretical_basis']).split(',')[0] for alt in self.REVOLUTION_ALTERNATIVE_HYPOTHESES.values())),
                 'evidence_requirements_specified': sum(len(alt['evidence_requirements']) for alt in self.REVOLUTION_ALTERNATIVE_HYPOTHESES.values()),
                 'competitive_claims_defined': len([alt for alt in self.REVOLUTION_ALTERNATIVE_HYPOTHESES.values() if alt.get('competing_claims')])
             }

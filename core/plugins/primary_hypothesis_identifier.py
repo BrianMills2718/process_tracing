@@ -134,12 +134,23 @@ class PrimaryHypothesisIdentifierPlugin(ProcessTracingPlugin):
             # Calculate elimination power score
             elimination_score = self._calculate_elimination_power(hypothesis_id, van_evera_results)
             
-            # Weighted composite score
+            # Weighted composite score - cast weights to float safely
+            ve_weight = self.PRIMARY_HYPOTHESIS_CRITERIA['van_evera_score']['weight']
+            ev_weight = self.PRIMARY_HYPOTHESIS_CRITERIA['evidence_support']['weight']
+            th_weight = self.PRIMARY_HYPOTHESIS_CRITERIA['theoretical_sophistication']['weight']
+            el_weight = self.PRIMARY_HYPOTHESIS_CRITERIA['elimination_power']['weight']
+            
+            # Ensure weights are numeric before casting
+            ve_weight_float = float(ve_weight) if isinstance(ve_weight, (int, float)) else 0.4
+            ev_weight_float = float(ev_weight) if isinstance(ev_weight, (int, float)) else 0.3
+            th_weight_float = float(th_weight) if isinstance(th_weight, (int, float)) else 0.2
+            el_weight_float = float(el_weight) if isinstance(el_weight, (int, float)) else 0.1
+            
             composite_score = (
-                van_evera_score * self.PRIMARY_HYPOTHESIS_CRITERIA['van_evera_score']['weight'] +
-                evidence_score * self.PRIMARY_HYPOTHESIS_CRITERIA['evidence_support']['weight'] +
-                theoretical_score * self.PRIMARY_HYPOTHESIS_CRITERIA['theoretical_sophistication']['weight'] +
-                elimination_score * self.PRIMARY_HYPOTHESIS_CRITERIA['elimination_power']['weight']
+                van_evera_score * ve_weight_float +
+                evidence_score * ev_weight_float +
+                theoretical_score * th_weight_float +
+                elimination_score * el_weight_float
             )
             
             hypothesis_scores[hypothesis_id] = {
@@ -316,21 +327,33 @@ class PrimaryHypothesisIdentifierPlugin(ProcessTracingPlugin):
         """Assess eligibility for primary hypothesis ranking"""
         criteria = self.PRIMARY_HYPOTHESIS_CRITERIA
         
+        # Extract thresholds safely
+        ve_threshold = criteria['van_evera_score']['minimum_threshold']
+        ev_threshold = criteria['evidence_support']['minimum_threshold']
+        th_threshold = criteria['theoretical_sophistication']['minimum_threshold']
+        el_threshold = criteria['elimination_power']['minimum_threshold']
+        
+        # Ensure thresholds are numeric before casting
+        ve_threshold_float = float(ve_threshold) if isinstance(ve_threshold, (int, float)) else 0.6
+        ev_threshold_float = float(ev_threshold) if isinstance(ev_threshold, (int, float)) else 0.5
+        th_threshold_float = float(th_threshold) if isinstance(th_threshold, (int, float)) else 0.4
+        el_threshold_float = float(el_threshold) if isinstance(el_threshold, (int, float)) else 0.3
+        
         eligible_for_primary = (
-            van_evera >= criteria['van_evera_score']['minimum_threshold'] and
-            evidence >= criteria['evidence_support']['minimum_threshold'] and
-            theoretical >= criteria['theoretical_sophistication']['minimum_threshold'] and
-            elimination >= criteria['elimination_power']['minimum_threshold']
+            van_evera >= ve_threshold_float and
+            evidence >= ev_threshold_float and
+            theoretical >= th_threshold_float and
+            elimination >= el_threshold_float
         )
         
         failed_criteria = []
-        if van_evera < criteria['van_evera_score']['minimum_threshold']:
+        if van_evera < ve_threshold_float:
             failed_criteria.append('van_evera_score')
-        if evidence < criteria['evidence_support']['minimum_threshold']:
+        if evidence < ev_threshold_float:
             failed_criteria.append('evidence_support')
-        if theoretical < criteria['theoretical_sophistication']['minimum_threshold']:
+        if theoretical < th_threshold_float:
             failed_criteria.append('theoretical_sophistication')
-        if elimination < criteria['elimination_power']['minimum_threshold']:
+        if elimination < el_threshold_float:
             failed_criteria.append('elimination_power')
         
         return {
@@ -407,6 +430,9 @@ class PrimaryHypothesisIdentifierPlugin(ProcessTracingPlugin):
                     'hypothesis_data': hypothesis_data
                 })
                 alt_rank += 1
+        
+        # Ensure primary_data is not None
+        assert primary_data is not None, "primary_data should be set by this point"
         
         return {
             'primary_hypothesis': {

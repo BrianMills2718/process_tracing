@@ -324,7 +324,7 @@ class DiagnosticRebalancerPlugin(ProcessTracingPlugin):
     
     def _identify_rebalancing_candidates(self, evidence_edges: List[Dict], plan: Dict) -> List[Tuple[Dict, str]]:
         """Identify which evidence edges should be reclassified and to what type"""
-        candidates = []
+        candidates: List[Tuple[Dict[str, Any], str]] = []
         
         # Find types that need decrease (over-represented)
         over_represented = [t for t, p in plan.items() if p['needs_decrease']]

@@ -165,7 +165,7 @@ class VanEveraTestingPlugin(ProcessTracingPlugin):
         target_distribution = {'hoop': 0.25, 'smoking_gun': 0.25, 'doubly_decisive': 0.15, 'straw_in_wind': 0.35}
         
         # Calculate academic compliance score
-        compliance_score = 0
+        compliance_score = 0.0
         for test_type, target in target_distribution.items():
             actual = diagnostic_distribution.get(test_type, 0)
             deviation = abs(target - actual)
@@ -215,7 +215,7 @@ class VanEveraTestingPlugin(ProcessTracingPlugin):
     
     def _calculate_hypothesis_rankings(self, graph_data: Dict, advanced_results: Dict) -> Dict[str, Dict[str, Any]]:
         """Calculate hypothesis rankings based on Van Evera test results for Q/H1/H2/H3 structure"""
-        rankings = {}
+        rankings: Dict[str, Dict[str, Any]] = {}
         
         # Get all hypotheses
         hypotheses = [n for n in graph_data['nodes'] if n.get('type') == 'Hypothesis']
@@ -228,7 +228,7 @@ class VanEveraTestingPlugin(ProcessTracingPlugin):
             evaluations = advanced_results['evaluation_results']['evaluations']
             
             # Group evaluations by hypothesis
-            hypothesis_evaluations = {}
+            hypothesis_evaluations: Dict[str, List[Dict[str, Any]]] = {}
             for evaluation in evaluations:
                 hypothesis_id = evaluation.get('hypothesis_id')
                 if hypothesis_id not in hypothesis_evaluations:
@@ -359,8 +359,8 @@ class VanEveraTestingEngine:
         """Check if edge represents evidence-hypothesis relationship"""
         source_node = next((n for n in self.graph_data['nodes'] if n['id'] == edge['source_id']), None)
         target_node = next((n for n in self.graph_data['nodes'] if n['id'] == edge['target_id']), None)
-        return (source_node and source_node.get('type') == 'Evidence' and 
-                target_node and target_node.get('type') == 'Hypothesis')
+        return bool(source_node and source_node.get('type') == 'Evidence' and 
+                    target_node and target_node.get('type') == 'Hypothesis')
     
     def systematic_hypothesis_evaluation(self) -> Dict[str, HypothesisAssessment]:
         """Perform systematic Van Evera evaluation of all hypotheses"""

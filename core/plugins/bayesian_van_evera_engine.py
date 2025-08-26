@@ -53,7 +53,7 @@ class EvidenceNode:
     description: str
     observed: bool = False
     reliability: float = 1.0  # P(evidence is accurate)
-    diagnostic_power: Dict[str, float] = None  # hypothesis_id -> diagnostic strength
+    diagnostic_power: Optional[Dict[str, float]] = None  # hypothesis_id -> diagnostic strength
 
 
 class BayesianVanEveraEngine(ProcessTracingPlugin):
@@ -401,6 +401,9 @@ class BayesianVanEveraEngine(ProcessTracingPlugin):
                 
                 try:
                     # Query posterior probability
+                    if not self.inference_engine:
+                        self.logger.warning("No inference engine available")
+                        continue
                     posterior_dist = self.inference_engine.query(variables=[hyp_id])
                     posterior_prob = posterior_dist.values[1]  # Probability of hypothesis being true
                     

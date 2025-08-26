@@ -30,7 +30,7 @@ def rebalance_graph_diagnostics(
     """
     
     # Create minimal plugin context
-    config = {
+    config: Dict[str, Any] = {
         'diagnostic_rebalancing.enabled': True,
         'van_evera.academic_standards': True
     }

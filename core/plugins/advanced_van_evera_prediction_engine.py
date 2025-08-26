@@ -450,7 +450,7 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
         hypotheses = [n for n in graph_data['nodes'] if n.get('type') in ['Hypothesis', 'Alternative_Explanation']]
         
         all_predictions = []
-        generation_stats = {
+        generation_stats: Dict[str, Any] = {
             'total_hypotheses': len(hypotheses),
             'predictions_per_hypothesis': {},
             'domain_distribution': {},
@@ -510,22 +510,27 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
         domain_strategies = self.DOMAIN_PREDICTION_STRATEGIES.get(domain, {})
         
         # Generate hoop tests (necessary conditions)
-        for hoop_template in domain_strategies.get('hoop_tests', []):
-            prediction = self._create_sophisticated_prediction(
-                hypothesis_id, domain, 'hoop', hoop_template
-            )
-            predictions.append(prediction)
+        hoop_tests = domain_strategies.get('hoop_tests', [])
+        if isinstance(hoop_tests, list):
+            for hoop_template in hoop_tests:
+                prediction = self._create_sophisticated_prediction(
+                    hypothesis_id, domain, 'hoop', hoop_template
+                )
+                predictions.append(prediction)
         
         # Generate smoking gun tests (sufficient conditions)
-        for smoking_gun_template in domain_strategies.get('smoking_gun_tests', []):
-            prediction = self._create_sophisticated_prediction(
-                hypothesis_id, domain, 'smoking_gun', smoking_gun_template
-            )
-            predictions.append(prediction)
+        smoking_gun_tests = domain_strategies.get('smoking_gun_tests', [])
+        if isinstance(smoking_gun_tests, list):
+            for smoking_gun_template in smoking_gun_tests:
+                prediction = self._create_sophisticated_prediction(
+                    hypothesis_id, domain, 'smoking_gun', smoking_gun_template
+                )
+                predictions.append(prediction)
         
         # Generate doubly decisive tests (if domain supports them)
-        if domain_strategies.get('doubly_decisive_tests'):
-            for decisive_template in domain_strategies['doubly_decisive_tests']:
+        decisive_tests = domain_strategies.get('doubly_decisive_tests')
+        if decisive_tests and isinstance(decisive_tests, list):
+            for decisive_template in decisive_tests:
                 prediction = self._create_sophisticated_prediction(
                     hypothesis_id, domain, 'doubly_decisive', decisive_template
                 )
@@ -618,7 +623,19 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
                 })
         
         # Sort by relevance and return top evidence
-        relevant_evidence.sort(key=lambda x: x['relevance_score'], reverse=True)
+        def safe_float_sort_key(x: Dict[str, Any]) -> float:
+            score = x.get('relevance_score', 0)
+            if isinstance(score, (int, float)):
+                return float(score)
+            elif isinstance(score, str):
+                try:
+                    return float(score)
+                except ValueError:
+                    return 0.0
+            else:
+                return 0.0
+        
+        relevant_evidence.sort(key=safe_float_sort_key, reverse=True)
         return relevant_evidence[:10]  # Top 10 most relevant pieces
     
     def _calculate_domain_relevance(self, domain: PredictionDomain, evidence_text: str) -> int:
@@ -748,8 +765,10 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
             self.logger.warning(f"Real LLM evaluation failed: {e}")
             # Fallback to old method if available
             if llm_query_func:
-                return self._legacy_llm_evaluation_fallback(prediction, relevant_evidence, llm_query_func)
-            return None
+                fallback_result = self._legacy_llm_evaluation_fallback(prediction, relevant_evidence, llm_query_func)
+                if fallback_result:
+                    return fallback_result
+            return self._create_default_evaluation_result()
     
     def _create_fallback_sophisticated_evaluation(self, prediction: SophisticatedPrediction,
                                                 relevant_evidence: List[Dict],
@@ -833,7 +852,7 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
             
         except Exception as e:
             self.logger.warning(f"Legacy LLM evaluation failed: {e}")
-            return None
+            return self._create_default_evaluation_result()
 
     def _parse_llm_evaluation_fallback(self, response: str) -> Dict[str, Any]:
         """Fallback parsing for non-JSON LLM responses"""
@@ -922,7 +941,7 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
         total_evaluations = len(evaluation_results)
         
         # Test result distribution
-        result_distribution = {}
+        result_distribution: Dict[str, int] = {}
         confidence_scores = []
         domain_performance = {}
         
@@ -1018,7 +1037,7 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
         evaluations = evaluation_results['evaluations']
         
         # Analyze results by hypothesis
-        hypothesis_conclusions = {}
+        hypothesis_conclusions: Dict[str, Dict[str, Any]] = {}
         for evaluation in evaluations:
             hypothesis_id = evaluation['hypothesis_id']
             if hypothesis_id not in hypothesis_conclusions:
@@ -1031,14 +1050,18 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
                 }
             
             conclusion = hypothesis_conclusions[hypothesis_id]
-            conclusion['tests_conducted'] += 1
+            conclusion['tests_conducted'] = int(conclusion.get('tests_conducted', 0)) + 1
             
             if evaluation['test_result'] == 'PASS':
-                conclusion['tests_passed'] += 1
+                conclusion['tests_passed'] = int(conclusion.get('tests_passed', 0)) + 1
             elif evaluation['test_result'] == 'FAIL':
-                conclusion['tests_failed'] += 1
+                conclusion['tests_failed'] = int(conclusion.get('tests_failed', 0)) + 1
             
-            conclusion['elimination_implications'].extend(evaluation['elimination_implications'])
+            elimination_implications = evaluation.get('elimination_implications', [])
+            if isinstance(elimination_implications, list):
+                if 'elimination_implications' not in conclusion:
+                    conclusion['elimination_implications'] = []
+                conclusion['elimination_implications'].extend(elimination_implications)
         
         # Generate overall academic assessment
         total_tests = len(evaluations)
@@ -1076,6 +1099,24 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
                 'methodology_sophistication': sophistication_metrics['prediction_sophistication_score'],
                 'evidence_rigor': sophistication_metrics['evidence_rigor_score']
             }
+        }
+    
+    def _create_default_evaluation_result(self) -> Dict[str, Any]:
+        """Create a default evaluation result when LLM evaluation fails"""
+        return {
+            'test_result': 'INCONCLUSIVE',
+            'confidence_score': 0.5,
+            'evidence_assessment': 'Unable to assess due to LLM error',
+            'necessity_analysis': None,
+            'sufficiency_analysis': None,
+            'diagnostic_reasoning': 'Default evaluation due to LLM failure',
+            'theoretical_mechanism_evaluation': 'Unable to evaluate',
+            'elimination_implications': ['Unable to determine'],
+            'evidence_quality': 'low',
+            'evidence_coverage': 0.5,
+            'indicator_matches': 0,
+            'publication_quality_assessment': 'Unable to assess',
+            'methodological_soundness': 0.3
         }
 
 

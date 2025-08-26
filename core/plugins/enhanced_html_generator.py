@@ -4,7 +4,7 @@ Creates clean, readable HTML with dropdown menus and better organization
 """
 
 import json
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 class EnhancedVanEveraHTMLGenerator:
@@ -174,7 +174,7 @@ class EnhancedVanEveraHTMLGenerator:
 </html>
         """
     
-    def generate_html(self, analysis_results: Dict[str, Any], output_path: str = None) -> str:
+    def generate_html(self, analysis_results: Dict[str, Any], output_path: Optional[str] = None) -> str:
         """Generate enhanced HTML from Van Evera analysis results"""
         
         # Extract key components

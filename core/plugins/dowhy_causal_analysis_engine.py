@@ -400,7 +400,7 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
         self.logger.info("Performing manual causal analysis")
         
         # Simple causal strength calculations
-        treatment_effects = {}
+        treatment_effects: Dict[str, List[Dict[str, Any]]] = {}
         for relationship in relationships:
             treatment = relationship.source_variable
             if treatment not in treatment_effects:
@@ -445,6 +445,10 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
     
     def _formal_dowhy_identification(self, dowhy_results: Dict) -> Dict[str, Any]:
         """Formal identification using DoWhy"""
+        if not self.causal_model:
+            self.logger.warning("No causal model available for formal identification")
+            return {"error": "No causal model available"}
+            
         try:
             # Identify estimand
             self.identified_estimand = self.causal_model.identify_effect(
@@ -462,10 +466,11 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
             refutation_results = []
             try:
                 # Random common cause refutation
-                refute_random = self.causal_model.refute_estimate(
-                    self.identified_estimand, causal_estimate,
-                    method_name="random_common_cause"
-                )
+                if self.causal_model and self.identified_estimand:
+                    refute_random = self.causal_model.refute_estimate(
+                        self.identified_estimand, causal_estimate,
+                        method_name="random_common_cause"
+                    )
                 refutation_results.append({
                     'method': 'random_common_cause',
                     'p_value': refute_random.p_value,
@@ -473,10 +478,11 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
                 })
                 
                 # Placebo treatment refutation
-                refute_placebo = self.causal_model.refute_estimate(
-                    self.identified_estimand, causal_estimate,
-                    method_name="placebo_treatment_refuter"
-                )
+                if self.causal_model and self.identified_estimand:
+                    refute_placebo = self.causal_model.refute_estimate(
+                        self.identified_estimand, causal_estimate,
+                        method_name="placebo_treatment_refuter"
+                    )
                 refutation_results.append({
                     'method': 'placebo_treatment',
                     'p_value': refute_placebo.p_value,
@@ -786,7 +792,7 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
             else:
                 # Continuous variables based on LLM estimates
                 base_mean = var.estimated_effect_size * 10  # Scale up
-                data[clean_name] = np.random.normal(base_mean, 2.0, n_samples)
+                data[clean_name] = np.random.normal(base_mean, 2.0, n_samples).astype(np.float64)
         
         # Adjust based on causal relationships
         for relationship in relationships:

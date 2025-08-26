@@ -17,6 +17,18 @@ from collections import defaultdict, Counter
 import copy
 import logging
 import matplotlib
+
+# Import structured logging utilities
+try:
+    from .logging_utils import log_structured_error, log_structured_info, create_analysis_context
+except ImportError:
+    # Fallback if logging_utils not available
+    def log_structured_error(logger, message, error_category, operation_context=None, exc_info=True, **extra_context):
+        logger.error(message, exc_info=exc_info)
+    def log_structured_info(logger, message, operation_context=None, **extra_context):
+        logger.info(message) 
+    def create_analysis_context(analysis_stage, **kwargs):
+        return {"analysis_stage": analysis_stage}
 matplotlib.use('Agg') # Use non-interactive backend for servers or scripts
 import matplotlib.pyplot as plt
 import io
@@ -165,19 +177,22 @@ def find_causal_paths_bounded(G, source, target, cutoff=10, max_paths=100, timeo
         for path in itertools.islice(path_generator, max_paths):
             # Check timeout every few iterations
             if paths_found % 10 == 0 and time.time() - start_time > timeout_seconds:
-                safe_print(f"DEBUG_CHAINS: Timeout reached ({timeout_seconds}s), returning {paths_found} paths")
                 break
                 
             paths.append(path)
             paths_found += 1
             
-        if paths_found >= max_paths:
-            safe_print(f"DEBUG_CHAINS: Reached max_paths limit of {max_paths}")
-            
     except nx.NetworkXNoPath:
-        safe_print(f"DEBUG_CHAINS: No path exists between {source} and {target}")
+        pass
     except Exception as e:
-        safe_print(f"DEBUG_CHAINS: Error finding paths: {e}")
+        log_structured_error(
+            logger,
+            "Error in causal path finding",
+            error_category="graph_corruption", 
+            operation_context="causal_path_analysis",
+            exc_info=True,
+            **create_analysis_context("path_finding", max_paths=max_paths)
+        )
             
     return paths
 
@@ -333,39 +348,6 @@ def analyze_graph(G, options=None):
     return analysis_results
 
 
-def safe_print(*args, **kwargs):
-    """
-    Windows-compatible safe print function that handles Unicode encoding errors.
-    Implements fail-fast principle - logs errors instead of hiding them.
-    """
-    import re
-    logger = logging.getLogger(__name__)
-    
-    try:
-        print(*args, **kwargs)
-    except UnicodeEncodeError as e:
-        # Log the error as required by fail-fast principle
-        logger.error(f"Encoding error in safe_print: {e}", exc_info=True)
-        
-        # Replace Unicode characters that cause issues on Windows
-        cleaned_args = []
-        for arg in args:
-            text = str(arg)
-            # Replace common Unicode characters with ASCII equivalents
-            text = re.sub(r'[→⇒←⇄]', '->', text)  # Arrows
-            text = re.sub(r'[✅]', '[OK]', text)   # Checkmarks
-            text = re.sub(r'[❌]', '[ERROR]', text) # X marks
-            text = re.sub(r'[⚠️]', '[WARN]', text)  # Warning
-            text = re.sub(r'[🔄]', '[PROCESSING]', text) # Processing
-            text = re.sub(r'[📊]', '[DATA]', text)  # Data
-            text = re.sub(r'[🎯]', '[TARGET]', text) # Target
-            # Remove any remaining non-ASCII characters
-            text = text.encode('ascii', errors='replace').decode('ascii')
-            cleaned_args.append(text)
-        try:
-            print(*cleaned_args, **kwargs)
-        except Exception as fallback_error:
-            logger.error(f"Failed fallback print: {fallback_error}")
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Process Tracing Network Analyzer (Core Engine)")
@@ -442,10 +424,10 @@ def load_graph(json_file):
         main_type_from_json = node_data.get('type')
 
         if not node_id: 
-            safe_print(f"[WARN] Skipping node due to missing 'id'. Data: {node_data}")
+            logger.warning("Skipping node due to missing 'id'", extra={'node_data_keys': list(node_data.keys()) if isinstance(node_data, dict) else 'not_dict'})
             continue
         if not main_type_from_json:
-            safe_print(f"[WARN] Skipping node {node_id} due to missing main 'type'.")
+            logger.warning("Skipping node due to missing main 'type'", extra={'node_id': node_id})
             continue
             
         # Fixed: Use flat structure instead of nested attr_props
@@ -464,7 +446,7 @@ def load_graph(json_file):
             
             G.add_node(node_id, **node_attributes)
         except Exception as e:
-            safe_print(f"[WARN] Skipping node {node_id} due to attribute error: {e}. MainType: {main_type_from_json}, Properties: {properties_from_json}")
+            logger.warning("Skipping node due to attribute error", exc_info=True, extra={'node_id': node_id, 'main_type': main_type_from_json, 'error_category': 'graph_corruption'})
 
     for edge_data in data.get('edges', []):
         source = edge_data.get('source') or edge_data.get('source_id')
@@ -472,18 +454,18 @@ def load_graph(json_file):
         edge_id = edge_data.get('id', f"{source}_to_{target}_{edge_data.get('type', 'edge')}")
 
         if not source or not target :
-            safe_print(f"[WARN] Skipping edge due to missing 'source' or 'target'. Data: {edge_data}")
+            logger.warning("Skipping edge due to missing 'source' or 'target'", extra={'edge_data_keys': list(edge_data.keys()) if isinstance(edge_data, dict) else 'not_dict'})
             continue
         if not G.has_node(source):
-            safe_print(f"[WARN] Skipping edge {edge_id} because source node '{source}' not in graph (available nodes: {list(G.nodes())[:5]}...).") # Show only a few nodes if list is long
+            logger.warning("Skipping edge because source node not in graph", extra={'edge_id': edge_id, 'source': source, 'graph_node_count': G.number_of_nodes()}) # Show only a few nodes if list is long
             continue
         if not G.has_node(target):
-            safe_print(f"[WARN] Skipping edge {edge_id} because target node '{target}' not in graph (available nodes: {list(G.nodes())[:5]}...).")
+            logger.warning("Skipping edge because target node not in graph", extra={'edge_id': edge_id, 'target': target, 'graph_node_count': G.number_of_nodes()})
             continue
             
         main_edge_type_from_json = edge_data.get('type')
         if not main_edge_type_from_json:
-            safe_print(f"[WARN] Skipping edge {edge_id} due to missing main 'type'.")
+            logger.warning("Skipping edge due to missing main 'type'", extra={'edge_id': edge_id})
             continue
             
         # Fixed: Use flat structure instead of nested attr_props
@@ -500,10 +482,10 @@ def load_graph(json_file):
             
             G.add_edge(source, target, key=edge_id, **edge_attributes)
         except Exception as e:
-            safe_print(f"[WARN] Skipping edge {edge_id} from {source} to {target} due to attribute error: {e}. MainType: {main_edge_type_from_json}, Properties: {properties_from_json}")
+            logger.warning("Skipping edge due to attribute error", exc_info=True, extra={'edge_id': edge_id, 'source': source, 'target': target, 'main_type': main_edge_type_from_json, 'error_category': 'graph_corruption'})
     
     # Apply connectivity repair to fix disconnected graph
-    safe_print("[INFO] Checking graph connectivity...")
+    logger.info("Checking graph connectivity", extra={'operation': 'connectivity_repair'})
     from .disconnection_repair import repair_graph_connectivity
     
     # Convert graph data to format expected by repair system
@@ -534,7 +516,7 @@ def load_graph(json_file):
     # Add any new edges back to the NetworkX graph
     if len(repaired_graph_data['edges']) > len(graph_data_for_repair['edges']):
         new_edges_count = len(repaired_graph_data['edges']) - len(graph_data_for_repair['edges'])
-        safe_print(f"[INFO] Added {new_edges_count} edges to improve connectivity")
+        logger.info("Added edges to improve connectivity", extra={'new_edges_count': new_edges_count, 'operation': 'connectivity_repair'})
         
         # Add new edges to G
         for edge in repaired_graph_data['edges'][len(graph_data_for_repair['edges']):]:
@@ -599,31 +581,24 @@ def identify_causal_chains(G):
                 node_data.get('description') or 
                 node_id)
     
-    safe_print(f"DEBUG_CHAINS: Triggering Event IDs: {triggering_events} (Descriptions: {[get_node_description(n) for n in triggering_events]})")
-    safe_print(f"DEBUG_CHAINS: Outcome Event IDs: {outcome_events} (Descriptions: {[get_node_description(n) for n in outcome_events]})")
 
     # Include all meaningful causal relationship types from our ontology
     valid_chain_link_types = ['causes', 'leads_to', 'precedes', 'triggers', 'contributes_to', 'enables', 'influences', 'facilitates', 'initiates', 'part_of_mechanism']
     
     # Enhanced: If no traditional triggering/outcome events found, look for any causal chains
     if not triggering_events or not outcome_events:
-        safe_print("DEBUG_CHAINS: No triggering or outcome events found based on subtype")
         # Look for any events connected by causal edges as fallback
         all_event_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'Event']
         if len(all_event_nodes) >= 2:
-            safe_print(f"DEBUG_CHAINS: Fallback - using all {len(all_event_nodes)} events to find causal chains")
             # Use events with outgoing causal relationship edges as triggers, incoming as outcomes
             fallback_triggers = [n for n in all_event_nodes if any(G.get_edge_data(n, v, {}).get('type') in valid_chain_link_types for v in G.successors(n))]
             fallback_outcomes = [n for n in all_event_nodes if any(G.get_edge_data(u, n, {}).get('type') in valid_chain_link_types for u in G.predecessors(n))]
             if fallback_triggers and fallback_outcomes:
                 triggering_events = fallback_triggers
                 outcome_events = fallback_outcomes
-                safe_print(f"DEBUG_CHAINS: Fallback found {len(triggering_events)} triggers and {len(outcome_events)} outcomes")
             else:
-                safe_print("DEBUG_CHAINS: No causal relationships found, cannot form chains")
                 return []
         else:
-            safe_print("DEBUG_CHAINS: Insufficient events for chain formation")
             return []
 
     for trigger_node_id in triggering_events:
@@ -632,11 +607,9 @@ def identify_causal_chains(G):
                 continue
             try:
                 paths = find_causal_paths_bounded(G, source=trigger_node_id, target=outcome_node_id, cutoff=25, max_paths=100)
-                safe_print(f"DEBUG_CHAINS: Searching paths from {trigger_node_id} to {outcome_node_id}, found {len(paths)} paths")
                 for path in paths:
                     # Fixed: Use flat structure for descriptions
                     path_node_descriptions = [get_node_description(n) for n in path]
-                    safe_print(f"DEBUG_CHAINS: Path found by find_causal_paths_bounded: {path} (Nodes: {path_node_descriptions})")
                     # Issue #52 Fix: Support single-node graphs as valid minimal chains
                     if len(path) < 1:
                         continue
@@ -670,13 +643,11 @@ def identify_causal_chains(G):
                                     edge_main_type in valid_chain_link_types):
                                 is_valid_chain = False
                                 # Fixed: Use flat structure for descriptions
-                                safe_print(f"DEBUG_CHAINS: Path {path_node_descriptions} invalidated at step {get_node_description(u)}->{get_node_description(v)}. NodeU main_type: {u_type}, NodeV main_type: {v_type}, Edge main_type: {edge_main_type}")
                                 break
                     
                     # Issue #52 Fix: Accept valid chains of any length >= 1 (including single nodes)
                     if is_valid_chain and len(path) >= 1: 
                         # Fixed: Use flat structure for descriptions
-                        safe_print(f"DEBUG_CHAINS: Validated chain: {[get_node_description(n) for n in path]} -> Edges: {current_chain_edges_types}")
                         causal_chains.append({
                             'path': path,
                             'path_descriptions': [get_node_description(n) for n in path],
@@ -686,9 +657,8 @@ def identify_causal_chains(G):
                             'length': len(path)
                         })
                     elif not is_valid_chain:
-                        safe_print(f"DEBUG_CHAINS: Chain invalidated")
+                        pass  # Chain validation failed
                     elif len(path) <= 2:
-                        safe_print(f"DEBUG_CHAINS: Chain too short (length {len(path)})")
                         chain_details = {
                             'path': path,
                             # Fixed: Use flat structure for descriptions
@@ -701,11 +671,9 @@ def identify_causal_chains(G):
             except nx.NetworkXNoPath:
                 continue
             except nx.NodeNotFound as e:
-                safe_print(f"DEBUG_CHAINS: Node not found during path search: {e}")
                 continue
     
     causal_chains.sort(key=lambda x: x['length'], reverse=True)
-    safe_print(f"DEBUG_CHAINS: Total causal_chains collected: {len(causal_chains)}")
     return causal_chains if causal_chains else []
 
 def calculate_mechanism_completeness_van_evera(G, mechanism_id, causes, effects):
@@ -799,13 +767,11 @@ def evaluate_mechanisms(G):
             edge_main_type = edge_data.get('type', '')
             pred_description = pred_node_data.get('description', pred_id)
 
-            safe_print(f"DEBUG_CM_EVAL: CM='{mech_description}' ({mech_id}), Predecessor='{pred_description}' ({pred_id}) (SourceMainType: {source_node_main_type}, SourceSubType: {source_node_subtype}), EdgeType='{edge_main_type}'")
 
             if source_node_main_type == 'Event' and \
                (edge_main_type == 'part_of_mechanism' or edge_main_type == 'causes' or edge_main_type == 'triggers'):
                 causes.append(pred_id)
         
-        safe_print(f"DEBUG_CM_EVAL: CM='{mech_description}' ({mech_id}), Final 'causes' list for completeness (IDs): {causes}, Count: {len(causes)}")
         
         effects = [] 
         for succ_id in G.successors(mech_id):
@@ -839,11 +805,6 @@ def analyze_evidence(G):
     evidence_nodes_data = {n: d for n, d in G.nodes(data=True) if d.get('type') == 'Evidence'}
     hypothesis_nodes_data = {n: d for n, d in G.nodes(data=True) if d.get('type') == 'Hypothesis'}
 
-    debug_initial_hyp_descs = {
-        n_id: get_node_property(node_data, 'description', f'N/A_IN_DEBUG_FOR_{n_id}') 
-        for n_id, node_data in hypothesis_nodes_data.items()
-    }
-    safe_print(f"DEBUG_EVIDENCE_ANALYSIS (LATEST): Initial Hypothesis descriptions loaded from G: {debug_initial_hyp_descs}")
 
     for hyp_id, hyp_node_data in hypothesis_nodes_data.items():
         # Use unified access pattern that works with both old and new data structures
@@ -912,17 +873,17 @@ def analyze_evidence(G):
                     try:
                         probative_value_num = float(probative_value_from_edge)
                     except ValueError:
-                        safe_print(f"Warning: Could not convert probative_value '{probative_value_from_edge}' to float for edge {u_ev_id}->{v_hyp_id}")
+                        logger.warning("Could not convert probative_value to float", extra={'probative_value': probative_value_from_edge, 'edge': f'{u_ev_id}->{v_hyp_id}', 'error_category': 'data_conversion'})
                         probative_value_num = 0.0 
                 if probative_value_num is None: 
                     probative_value_num = 0.0
                 
                 # Issue #14 Fix: Standardize probative value to 0.0-1.0 range
                 if probative_value_num < 0.0:
-                    safe_print(f"Warning: Clamping negative probative_value {probative_value_num} to 0.0 for edge {u_ev_id}->{v_hyp_id}")
+                    logger.warning("Clamping negative probative_value to 0.0", extra={'original_value': probative_value_num, 'edge': f'{u_ev_id}->{v_hyp_id}', 'error_category': 'data_validation'})
                     probative_value_num = 0.0
                 elif probative_value_num > 1.0:
-                    safe_print(f"Warning: Clamping probative_value {probative_value_num} to 1.0 for edge {u_ev_id}->{v_hyp_id}")
+                    logger.warning("Clamping probative_value to 1.0", extra={'original_value': probative_value_num, 'edge': f'{u_ev_id}->{v_hyp_id}', 'error_category': 'data_validation'})
                     probative_value_num = 1.0 
                 # Generate basic reasoning for Van Evera type classification
                 van_evera_reasoning = generate_van_evera_type_reasoning(evidence_classification_type, evidence_description)
@@ -969,7 +930,7 @@ def analyze_evidence(G):
                         }
                         
                 except Exception as e:
-                    safe_print(f"[WARN] LLM evidence enhancement failed for {evidence_id}->{v_hyp_id}: {e}")
+                    logger.warning("LLM evidence enhancement failed", exc_info=True, extra={'evidence_id': evidence_id, 'hypothesis_id': v_hyp_id, 'error_category': 'llm_error'})
                 # --- End LLM Evidence Refinement Integration ---
                 balance_effect = 0.0
                 if edge_main_type in ['supports', 'provides_evidence']:
@@ -980,8 +941,6 @@ def analyze_evidence(G):
                     balance_effect = -ev_detail['probative_value']  # Fixed: Refuting evidence decreases balance
                 if not isinstance(hypothesis_results[v_hyp_id].get('balance'), float):
                     hypothesis_results[v_hyp_id]['balance'] = 0.0 
-                hyp_desc_for_debug = hypothesis_results[v_hyp_id].get('description', v_hyp_id) # Use already fetched desc
-                safe_print(f"DEBUG_EVIDENCE_ANALYSIS: Hyp: '{hyp_desc_for_debug}' ({v_hyp_id}), Edge: {evidence_id}->{v_hyp_id} ({edge_main_type}), PV_num: {ev_detail['probative_value']}, Effect: {balance_effect}, OldBal: {hypothesis_results[v_hyp_id]['balance']:.2f}, NewBal: {hypothesis_results[v_hyp_id]['balance'] + balance_effect:.2f}")
                 hypothesis_results[v_hyp_id]['balance'] += balance_effect
     
     # Apply Van Evera diagnostic test logic instead of simple balance thresholds
@@ -1176,7 +1135,6 @@ def identify_conditions(G):
             target_main_type = target_node_data.get('type', 'unknown')
             target_description = target_node_data.get('description', v_target_id)
 
-            safe_print(f"DEBUG_CONDITIONS: Condition='{cond_description}' ({cond_id}), Target='{target_description}' ({v_target_id}) (TargetMainType: {target_main_type}), EdgeType='{edge_main_type}'")
             
             target_info = {
                 'id': v_target_id,
@@ -1222,7 +1180,6 @@ def analyze_actors(G):
             target_main_type = target_node_data.get('type', 'unknown')
             target_description = target_node_data.get('description', v_target_id)
 
-            safe_print(f"DEBUG_ACTORS: Actor='{actor_name}' ({actor_id}), Target='{target_description}' ({v_target_id}) (TargetMainType: {target_main_type}), EdgeType='{edge_main_type}'")
             
             if target_main_type == 'Event' and edge_main_type == 'initiates':
                 initiated_events.append({
@@ -1455,14 +1412,11 @@ def generate_theoretical_insights(results, G):
     evidence_types_linked_to_hypotheses = set()
     if 'evidence_analysis' in results and isinstance(results.get('evidence_analysis'), dict) :
         for hyp_id, hyp_data in results['evidence_analysis'].items():
-            hyp_desc_for_debug = hyp_data.get('description', hyp_id) 
+ 
             for ev_detail in hyp_data.get('supporting_evidence', []):
-                safe_print(f"DEBUG_THEORY_INSIGHTS: For H '{hyp_desc_for_debug}', collecting from supporting_evidence: Ev_ID='{ev_detail.get('id')}', Ev_Class='{ev_detail.get('type')}'")
                 evidence_types_linked_to_hypotheses.add(ev_detail.get('type'))
             for ev_detail in hyp_data.get('refuting_evidence', []):
-                safe_print(f"DEBUG_THEORY_INSIGHTS: For H '{hyp_desc_for_debug}', collecting from refuting_evidence: Ev_ID='{ev_detail.get('id')}', Ev_Class='{ev_detail.get('type')}'")
                 evidence_types_linked_to_hypotheses.add(ev_detail.get('type'))
-    safe_print(f"DEBUG_THEORY_INSIGHTS: Final evidence_types_found_in_hyp_links set for insight generation: {evidence_types_linked_to_hypotheses}")
     classified_types_for_van_evera = {
         et for et in evidence_types_linked_to_hypotheses 
         if et and et in EVIDENCE_TYPES_VAN_EVERA 
@@ -1611,9 +1565,7 @@ def generate_embedded_network_visualization(network_data_json):
                         }};
                         var network = new vis.Network(container, data, options);
                         
-                        // Debug: Log network data
-                        console.log("Network initialized with", nodes.length, "nodes and", edges.length, "edges");
-                        console.log("First few edges:", edges.get().slice(0, 5));
+                        // Network initialization complete
                         
                         // Add tooltip behavior
                         network.on("hoverNode", function (params) {{
@@ -1635,7 +1587,7 @@ def generate_embedded_network_visualization(network_data_json):
         """
         return html
     except Exception as e:
-        safe_print(f"[ERROR] Failed to generate embedded network visualization: {e}")
+        logger.error("Failed to generate embedded network visualization", exc_info=True, extra={'error_category': 'visualization_error', 'operation': 'network_visualization'})
         return f"<div class='alert alert-danger'>Error generating network visualization: {e}</div>"
 
 def format_analysis(results, data_unused, G, theoretical_insights=None):
@@ -1693,7 +1645,12 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
     
     # Van Evera plugin workflow execution for academic quality
     if 'graph_data' in results:
-        print("[ANALYSIS] Executing Van Evera academic workflow with plugin system...")
+        log_structured_info(
+            logger,
+            "Executing Van Evera academic workflow with plugin system",
+            operation_context="van_evera_workflow_execution",
+            **create_analysis_context("van_evera_execution", case_id=results.get('case_id', 'unknown_case'))
+        )
         
         try:
             # Execute complete Van Evera analysis via plugin workflow
@@ -1723,13 +1680,23 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
                     if isinstance(working_graph, nx.Graph):
                         results['graph_data'] = nx.node_link_data(working_graph)
             
-            print(f"[ANALYSIS] Van Evera workflow completed successfully!")
             academic_quality = van_evera_academic_results.get('academic_quality_assessment', {}).get('overall_score', 0)
-            print(f"[ANALYSIS] Academic quality score: {academic_quality:.1f}%")
+            log_structured_info(
+                logger,
+                "Van Evera workflow completed successfully",
+                operation_context="van_evera_workflow_completion",
+                **create_analysis_context("van_evera_completion", academic_quality_score=academic_quality)
+            )
             
         except Exception as e:
-            print(f"[ANALYSIS] Warning: Van Evera workflow failed: {e}")
-            print("[ANALYSIS] Continuing with standard analysis...")
+            log_structured_error(
+                logger,
+                "Van Evera workflow failed, continuing with standard analysis",
+                error_category="academic_validation",
+                operation_context="van_evera_workflow_fallback",
+                exc_info=True,
+                **create_analysis_context("van_evera_fallback", fallback_reason="workflow_exception")
+            )
             # Fallback to no Van Evera assessment
             results['van_evera_assessment'] = {}
             results['van_evera_academic_results'] = {}
@@ -2308,13 +2275,12 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
                 if hypothesis_evidence and sum(len(h.get('supporting_evidence', [])) + len(h.get('refuting_evidence', [])) for h in hypothesis_evidence.values()) > sum(len(h.get('supporting_evidence', [])) + len(h.get('refuting_evidence', [])) for h in evidence_analysis.values()):
                     evidence_analysis = hypothesis_evidence
         except Exception as e:
-            safe_print(f"Error extracting evidence from graph: {e}")
+            logger.warning("Error extracting evidence from graph", exc_info=True, extra={'error_category': 'evidence_extraction', 'operation': 'html_formatting'})
     
     if evidence_analysis and isinstance(evidence_analysis, dict):
         html_parts.append('<div class="row"><div class="col-lg-8">')
         for hyp_id, analysis_data in evidence_analysis.items():
             hypothesis_description_for_html = analysis_data.get('description', f'N/A_FOR_HYP_{hyp_id}')
-            safe_print(f"DEBUG_HTML_FORMAT_HYP_DESC: HypID: {hyp_id}, Description from analysis_data: '{hypothesis_description_for_html}'")
             html_parts.append(f"""
                 <div class="card mb-3">
                     <div class="card-header"><h3 class="h6 mb-0">Hypothesis: {textwrap.shorten(hypothesis_description_for_html, width=100, placeholder='...')}</h3></div>
@@ -2482,7 +2448,12 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
     
     # If evidence analysis is sparse, extract from graph structure
     if not evidence_analysis or len(evidence_analysis) < 2:
-        print("[HTML] Extracting evidence from graph structure...")
+        log_structured_info(
+            logger,
+            "Extracting evidence from graph structure for HTML report",
+            operation_context="html_evidence_extraction",
+            **create_analysis_context("html_generation", extraction_reason="sparse_evidence_analysis")
+        )
         if 'graph_data' in results:
             graph_data = results['graph_data']
             
@@ -2661,7 +2632,7 @@ def generate_node_type_chart(results):
         buffer.seek(0)
         return base64.b64encode(buffer.getvalue()).decode('utf-8')
     except Exception as e:
-        safe_print(f"Error generating node type chart: {e}")
+        logger.warning("Error generating node type chart", exc_info=True, extra={'error_category': 'chart_generation', 'chart_type': 'node_type'})
         plt.close()
         return None
 
@@ -2682,7 +2653,7 @@ def generate_edge_type_chart(results):
         buffer.seek(0)
         return base64.b64encode(buffer.getvalue()).decode('utf-8')
     except Exception as e:
-        safe_print(f"Error generating edge type chart: {e}")
+        logger.warning("Error generating edge type chart", exc_info=True, extra={'error_category': 'chart_generation', 'chart_type': 'edge_type'})
         plt.close()
         return None
 
@@ -2729,7 +2700,7 @@ def generate_causal_chain_network(G, chain_to_visualize): # Takes one chain
         buffer.seek(0)
         return base64.b64encode(buffer.getvalue()).decode('utf-8')
     except Exception as e:
-        safe_print(f"Error generating causal chain network viz: {e}")
+        logger.warning("Error generating causal chain network visualization", exc_info=True, extra={'error_category': 'chart_generation', 'chart_type': 'causal_chain_network'})
         plt.close()
         return None
 
@@ -2762,7 +2733,7 @@ def generate_centrality_chart(results, G): # Pass G for labels
         buffer.seek(0)
         return base64.b64encode(buffer.getvalue()).decode('utf-8')
     except Exception as e:
-        safe_print(f"Error generating centrality chart: {e}")
+        logger.warning("Error generating centrality chart", exc_info=True, extra={'error_category': 'chart_generation', 'chart_type': 'centrality'})
         plt.close()
         return None
 
@@ -2802,7 +2773,7 @@ def generate_evidence_strength_chart(results):
         buffer.seek(0)
         return base64.b64encode(buffer.getvalue()).decode('utf-8')
     except Exception as e:
-        safe_print(f"Error generating evidence strength chart: {e}")
+        logger.warning("Error generating evidence strength chart", exc_info=True, extra={'error_category': 'chart_generation', 'chart_type': 'evidence_strength'})
         plt.close() # Ensure plt is closed if error occurs mid-plot
         return None
 
@@ -2810,17 +2781,29 @@ def generate_evidence_strength_chart(results):
 # (Keep your existing main() function structure. Ensure it calls the refactored functions
 # and passes G and results['filename'] to formatting functions correctly.)
 def main():
+    logger = logging.getLogger(__name__)
     args = parse_args()
     if not os.path.isfile(args.json_file):
-        safe_print(f"Error: File not found: {args.json_file}"); sys.exit(1)
+        logger.error(f"File not found: {args.json_file}"); sys.exit(1)
     
-    safe_print(f"[ANALYZE] Analyzing data from {os.path.basename(args.json_file)}...")
+    logger.info(f"Analyzing data from {os.path.basename(args.json_file)}", extra={'operation': 'main_analysis', 'file': os.path.basename(args.json_file)})
     try:
         G, data = load_graph(args.json_file)
     except Exception as e:
-        safe_print(f"Error loading graph: {e}"); sys.exit(1)
+        log_structured_error(
+            logger,
+            "Error loading graph",
+            error_category="io_operation",
+            operation_context="graph_loading",
+            exc_info=True,
+            **create_analysis_context(
+                "initial_load",
+                input_file=os.path.basename(args.json_file)
+            )
+        )
+        sys.exit(1)
     
-    safe_print(f"[SUCCESS] Loaded graph: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges")
+    logger.info("Successfully loaded graph", extra={'nodes': G.number_of_nodes(), 'edges': G.number_of_edges(), 'operation': 'graph_loading'})
     
     # Check if plugin integration is requested via environment variable
     use_plugins = os.environ.get('PROCESS_TRACING_USE_PLUGINS', 'false').lower() == 'true'
@@ -2831,10 +2814,10 @@ def main():
             
             # Validate plugin integration
             if not validate_plugin_integration():
-                safe_print("[WARN] Plugin validation failed, falling back to standard analysis")
+                logger.warning("Plugin validation failed, falling back to standard analysis", extra={'operation': 'plugin_validation', 'fallback': 'standard_analysis'})
                 use_plugins = False
             else:
-                safe_print("[INFO] Plugin integration validated, using plugin-enhanced analysis")
+                logger.info("Plugin integration validated, using plugin-enhanced analysis", extra={'operation': 'plugin_validation', 'mode': 'plugin_enhanced'})
                 
                 # Extract case ID from filename
                 case_id = Path(args.json_file).stem.replace('_graph', '')
@@ -2842,13 +2825,13 @@ def main():
                 
                 # Run plugin-enhanced analysis
                 analysis_results = run_analysis_with_plugins(G, case_id, str(output_dir))
-                safe_print("[SUCCESS] Plugin-enhanced analysis completed")
+                logger.info("Plugin-enhanced analysis completed", extra={'operation': 'plugin_analysis', 'mode': 'plugin_enhanced'})
                 
         except ImportError as e:
-            safe_print(f"[WARN] Plugin integration not available: {e}")
+            logger.warning("Plugin integration not available", exc_info=True, extra={'error_category': 'plugin_import', 'fallback': 'standard_analysis'})
             use_plugins = False
         except Exception as e:
-            safe_print(f"[WARN] Plugin analysis failed, falling back to standard analysis: {e}")
+            logger.warning("Plugin analysis failed, falling back to standard analysis", exc_info=True, extra={'error_category': 'plugin_execution', 'fallback': 'standard_analysis'})
             use_plugins = False
     
     # Run standard analysis if plugins not used
@@ -2955,13 +2938,13 @@ def main():
 
     theoretical_insights = None
     if args.theory or args.html:
-        safe_print("[INFO] Generating theoretical insights...")
+        logger.info("Generating theoretical insights", extra={'operation': 'theoretical_insights_generation'})
         theoretical_insights = generate_theoretical_insights(analysis_results, G)
     
     analysis_text = ""
     output_extension = "md"
     if args.html:
-        safe_print("[INFO] Formatting HTML report...")
+        logger.info("Formatting HTML report", extra={'operation': 'html_formatting'})
         # Check if network data is provided for embedded visualization
         network_data_json = None
         if args.network_data:
@@ -2973,7 +2956,7 @@ def main():
                 network_data_json = args.network_data
         else:
             # Generate network data from existing graph and results
-            safe_print("[INFO] Generating network visualization data from graph...")
+            logger.info("Generating network visualization data from graph", extra={'operation': 'network_data_generation'})
             try:
                 import json
                 # Convert NetworkX graph to vis.js format
@@ -3039,7 +3022,7 @@ def main():
                         })
                         edge_count += 1
                     else:
-                        safe_print(f"[DEBUG] Skipping edge {source}->{target}: source_exists={source_exists}, target_exists={target_exists}")
+                        pass  # No action needed for other edge types
                 
                 # Create network data JSON
                 network_data_dict = {
@@ -3049,27 +3032,27 @@ def main():
                 }
                 
                 network_data_json = json.dumps(network_data_dict)
-                safe_print(f"[INFO] Generated network with {len(nodes_list)} nodes and {len(edges_list)} edges")
+                logger.info("Generated network visualization data", extra={'nodes': len(nodes_list), 'edges': len(edges_list), 'operation': 'network_data_generation'})
                 
             except Exception as e:
-                safe_print(f"[ERROR] Failed to generate network data: {e}")
+                logger.error("Failed to generate network data", exc_info=True, extra={'error_category': 'visualization_error', 'operation': 'network_data_generation'})
                 network_data_json = None
         # Run Van Evera systematic testing if HTML output is requested
         try:
             from core.van_evera_testing_engine import perform_van_evera_testing
-            safe_print("[VAN_EVERA] Running systematic hypothesis testing...")
+            logger.info("Running systematic hypothesis testing", extra={'operation': 'van_evera_testing', 'methodology': 'Van Evera'})
             van_evera_results = perform_van_evera_testing(data)
             analysis_results['van_evera_assessment'] = van_evera_results
-            safe_print(f"[VAN_EVERA] Completed testing of {len(van_evera_results)} hypotheses")
+            logger.info("Completed Van Evera hypothesis testing", extra={'hypotheses_count': len(van_evera_results), 'operation': 'van_evera_testing'})
         except Exception as e:
-            safe_print(f"[WARN] Van Evera testing failed: {e}")
+            logger.warning("Van Evera testing failed", exc_info=True, extra={'error_category': 'van_evera_testing', 'fallback': 'empty_assessment'})
             analysis_results['van_evera_assessment'] = {}
         
         # Use comprehensive HTML generation with all Van Evera sections
         analysis_text = format_html_analysis(analysis_results, data, G, theoretical_insights, network_data_json)
         output_extension = "html"
     else: # Markdown
-        safe_print("[INFO] Formatting Markdown report...")
+        logger.info("Formatting Markdown report", extra={'operation': 'markdown_formatting'})
         # Similarly, pass G if format_analysis needs it
         analysis_text = format_analysis(analysis_results, data, G, theoretical_insights) 
     
@@ -3085,19 +3068,19 @@ def main():
 
     # Use single comprehensive HTML generation (no streaming complexity)
     if args.html:
-        safe_print("[HTML] Using comprehensive HTML generation with all Van Evera sections")
+        logger.info("Using comprehensive HTML generation with all Van Evera sections", extra={'operation': 'html_generation', 'mode': 'comprehensive'})
 
     if analysis_text is not None:
         try:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.write(analysis_text)
-            safe_print(f"[SUCCESS] Analysis report saved to {output_path}")
+            logger.info("Analysis report saved", extra={'output_path': str(output_path), 'operation': 'report_generation', 'format': output_extension})
         except Exception as e:
-            safe_print(f"Error writing report to {output_path}: {e}")
-            if not args.html: safe_print("\nANALYSIS CONTENT (MD):\n" + analysis_text)
+            logger.error("Error writing report", exc_info=True, extra={'output_path': str(output_path), 'error_category': 'io_operation'})
+            if not args.html: logger.info("Analysis content available in memory", extra={'content_length': len(analysis_text)})
     else:
-        safe_print(f"[SUCCESS] Streaming HTML report generated at {output_path}")
+        logger.info("Streaming HTML report generated", extra={'output_path': str(output_path), 'operation': 'streaming_html_generation'})
     
     # Open HTML in browser if requested
     if args.html:
@@ -3105,7 +3088,7 @@ def main():
         try:
             webbrowser.open('file://' + str(output_path.resolve()))
         except Exception as e_wb:
-            safe_print(f"[WARN] Could not open HTML report in browser: {e_wb}")
+            logger.warning("Could not open HTML report in browser", exc_info=True, extra={'error_category': 'browser_operation', 'output_path': str(output_path)})
     
     # Phase 3A: Print performance summary
     from core.performance_profiler import get_profiler
@@ -3119,26 +3102,26 @@ def main():
     if cache.stats.total_requests > 0:
         cache.print_stats()
     
-    safe_print("\n[SUCCESS] Analysis generation complete!")
+    logger.info("Analysis generation complete", extra={'operation': 'main_analysis', 'status': 'completed'})
     
     if not args.html and args.charts_dir:
         # ... (Your existing chart saving logic - ensure it uses refactored chart functions)
         charts_output_dir = Path(args.charts_dir)
         charts_output_dir.mkdir(parents=True, exist_ok=True)
         base_chart_name = Path(args.json_file).stem
-        safe_print(f"[INFO] Generating PNG charts in {charts_output_dir}/...")
+        logger.info("Generating PNG charts", extra={'charts_dir': str(charts_output_dir), 'operation': 'chart_generation'})
         # Example for one chart, others would follow similar pattern
         node_type_chart_img = generate_node_type_chart(analysis_results)
         if node_type_chart_img:
             try:
                 with open(charts_output_dir / f"{base_chart_name}_node_types.png", "wb") as f:
                     f.write(base64.b64decode(node_type_chart_img))
-                safe_print(f"[SUCCESS] Saved node_types.png")
+                logger.info("Saved chart", extra={'chart_name': 'node_types.png', 'operation': 'chart_generation'})
             except Exception as e_png:
-                safe_print(f"[ERROR] Could not save node_types.png: {e_png}")
+                logger.error("Could not save chart", exc_info=True, extra={'chart_name': 'node_types.png', 'error_category': 'io_operation'})
         # Repeat for other charts if needed
     elif not args.html:
-        safe_print("[INFO] PNG chart generation skipped: --charts-dir not specified or HTML output selected.")
+        logger.info("PNG chart generation skipped", extra={'reason': 'charts-dir not specified or HTML output selected', 'operation': 'chart_generation'})
     
     # ... after analysis_results is created ...
     # Write _analysis_summary.json for cross-case synthesis
@@ -3197,9 +3180,9 @@ def main():
         summary_path = project_dir / f"{project_name}_analysis_summary_{now_str}.json"
         with open(summary_path, 'w', encoding='utf-8') as f:
             json.dump(summary, f, indent=2)
-        safe_print(f"[SUCCESS] Analysis summary JSON saved to {summary_path}")
+        logger.info("Analysis summary JSON saved", extra={'summary_path': str(summary_path), 'operation': 'summary_generation'})
     except Exception as e:
-        safe_print(f"[ERROR] Could not write analysis summary JSON: {e}")
+        logger.error("Could not write analysis summary JSON", exc_info=True, extra={'error_category': 'io_operation', 'operation': 'summary_generation'})
     
     sys.exit(0)
 

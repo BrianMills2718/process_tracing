@@ -1,7 +1,7 @@
 # CLAUDE.md Update Command - Evidence-Based Development Workflow
 
 ## Overview
-Ucommit then date CLAUDE.md to clear out resolved tasks and populate it with instructions for resolving the next tasks using evidence-based development practices. The instructions should be detailed enough for a new LLM to implement with no context beyond CLAUDE.md and referenced files.
+commit then date CLAUDE.md to clear out resolved tasks and populate it with instructions for resolving the next tasks using evidence-based development practices. The instructions should be detailed enough for a new LLM to implement with no context beyond CLAUDE.md and referenced files.
 
 ## Core CLAUDE.md Requirements
 
@@ -15,6 +15,7 @@ Every CLAUDE.md must include:
 
 ### 2. Codebase Structure Section (Mandatory)  
 Concisely document:
+- All relevant planning and documentation files
 - Key entry points and main orchestration files
 - Module organization and responsibilities
 - Important integration points (ResourceOrchestrator, healing_integration.py, etc.)

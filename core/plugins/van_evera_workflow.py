@@ -3,7 +3,7 @@ Van Evera Academic Workflow Definition
 Orchestrates complete Van Evera process tracing methodology as plugin workflow
 """
 
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from .workflow import PluginWorkflow
 
 # Van Evera Academic Process Tracing Workflow with Q/H1/H2/H3 Structure
@@ -324,13 +324,14 @@ class VanEveraWorkflow(PluginWorkflow):
         workflow_steps = []
         
         for step in VAN_EVERA_ACADEMIC_WORKFLOW:
-            step_copy = step.copy()
-            
-            # Inject NetworkX graph data into graph validation step
-            if step['plugin_id'] == 'graph_validation':
-                step_copy['input_data'] = {'graph': nx_graph}
-            
-            workflow_steps.append(step_copy)
+            if isinstance(step, dict):
+                step_copy = step.copy()
+                
+                # Inject NetworkX graph data into graph validation step
+                if step.get('plugin_id') == 'graph_validation':
+                    step_copy['input_data'] = {'graph': nx_graph}
+                
+                workflow_steps.append(step_copy)
         
         return workflow_steps
     
@@ -416,7 +417,7 @@ class VanEveraWorkflow(PluginWorkflow):
         
         return academic_results
     
-    def _generate_improvement_recommendations(self, quality_metrics: Dict[str, Any], diagnostic_metrics: Dict[str, Any] = None) -> List[str]:
+    def _generate_improvement_recommendations(self, quality_metrics: Dict[str, Any], diagnostic_metrics: Optional[Dict[str, Any]] = None) -> List[str]:
         """Generate recommendations for improving academic quality"""
         recommendations = []
         
