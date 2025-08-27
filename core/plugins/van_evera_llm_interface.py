@@ -91,6 +91,9 @@ class VanEveraLLMInterface:
         4. Alternative explanations consideration
         5. Academic publication standards
 
+        IMPORTANT: For elimination_implications, provide a JSON array of strings, not a single string.
+        Example: ["hypothesis_A eliminated", "hypothesis_B supported"]
+
         Provide detailed analysis with confidence scoring and publication-quality reasoning.
         """
         
@@ -249,147 +252,114 @@ class VanEveraLLMInterface:
         
         return self._get_structured_response(prompt, ContentBasedClassification)
     
-    def _get_structured_response(self, prompt: str, response_model: Type[T]) -> T:
+    def _get_structured_response(self, prompt: str, response_model: Type[T], max_retries: int = 3) -> T:
         """
-        Get structured response from LLM using the specified Pydantic model
+        Get structured response from LLM using the specified Pydantic model with basic retry
         
         Args:
             prompt: The prompt to send to LLM
             response_model: Pydantic model class for structured output
+            max_retries: Maximum number of retries for transient failures only
             
         Returns:
             Instance of response_model with LLM data
+            
+        Raises:
+            ValidationError: If Pydantic validation fails (FAIL FAST - no retry)
+            json.JSONDecodeError: If JSON parsing fails after retries (FAIL FAST)
+            Exception: Any other error after retries (FAIL FAST)
         """
-        try:
-            # Get structured output using universal LLM
-            response_text = self.llm.structured_output(prompt, response_model)
-            
-            # Parse JSON response
-            response_data = json.loads(response_text)
-            
-            # Create and validate Pydantic model
-            structured_response = response_model.model_validate(response_data)
-            
-            logger.info(f"Successfully generated structured {response_model.__name__}")
-            return structured_response
-            
-        except json.JSONDecodeError as e:
-            log_structured_error(
-                logger,
-                f"JSON parsing failed for {response_model.__name__}",
-                error_category="llm_error",
-                operation_context="structured_output_generation",
-                exc_info=True,
-                **create_llm_context(
-                    self.model_type,
-                    "structured_output",
-                    response_model=response_model.__name__,
-                    parsing_stage="json_decode"
+        last_exception = None
+        
+        for attempt in range(max_retries):
+            try:
+                # Get structured output using universal LLM
+                response_text = self.llm.structured_output(prompt, response_model)
+                
+                # Parse JSON response - FAIL FAST if invalid JSON structure
+                response_data = json.loads(response_text)
+                
+                # Create and validate Pydantic model - FAIL FAST if schema mismatch
+                structured_response = response_model.model_validate(response_data)
+                
+                logger.info(f"Successfully generated structured {response_model.__name__}")
+                return structured_response
+                
+            except (ConnectionError, TimeoutError) as e:
+                # Only retry on transient/network errors
+                last_exception = e
+                if attempt < max_retries - 1:
+                    log_structured_error(
+                        logger,
+                        f"Attempt {attempt + 1} failed with transient error, retrying...",
+                        error_category="llm_retry",
+                        operation_context="structured_output_generation",
+                        exc_info=True,
+                        **create_llm_context(
+                            self.model_type,
+                            "structured_output_retry",
+                            response_model=response_model.__name__,
+                            attempt=attempt + 1
+                        )
+                    )
+                    continue
+                else:
+                    # Exhausted retries - FAIL FAST
+                    log_structured_error(
+                        logger,
+                        f"All {max_retries} attempts failed for {response_model.__name__}",
+                        error_category="llm_error",
+                        operation_context="structured_output_generation",
+                        exc_info=True
+                    )
+                    raise
+                    
+            except (json.JSONDecodeError, ValidationError) as e:
+                # NEVER retry on JSON/validation errors - these indicate schema/prompt issues
+                log_structured_error(
+                    logger,
+                    f"Schema/JSON error for {response_model.__name__} - FAILING FAST",
+                    error_category="llm_schema_error",
+                    operation_context="structured_output_generation",
+                    exc_info=True,
+                    **create_llm_context(
+                        self.model_type,
+                        "structured_output",
+                        response_model=response_model.__name__,
+                        error_type=type(e).__name__
+                    )
                 )
-            )
-            # Return a fallback response
-            return self._create_fallback_response(response_model, f"JSON parsing error: {e}")
-            
-        except Exception as e:
-            # Check if it's a timeout error
-            error_category = "llm_timeout" if "timeout" in str(e).lower() else "llm_error"
-            
-            log_structured_error(
-                logger,
-                f"LLM call failed for {response_model.__name__}",
-                error_category=error_category,
-                operation_context="structured_output_generation",
-                exc_info=True,
-                **create_llm_context(
-                    self.model_type,
-                    "structured_output",
-                    response_model=response_model.__name__,
-                    failure_stage="llm_api_call"
-                )
-            )
-            # Return a fallback response
-            return self._create_fallback_response(response_model, f"LLM error: {e}")
-    
-    def _create_fallback_response(self, response_model: Type[T], error_message: str) -> T:
-        """Create a fallback response when LLM calls fail"""
+                raise  # FAIL FAST immediately
+                
+            except Exception as e:
+                # Any other error - retry once then FAIL FAST
+                last_exception = e
+                if attempt < max_retries - 1:
+                    log_structured_error(
+                        logger,
+                        f"Unexpected error on attempt {attempt + 1}, retrying once...",
+                        error_category="llm_unexpected_error",
+                        operation_context="structured_output_generation",
+                        exc_info=True
+                    )
+                    continue
+                else:
+                    # FAIL FAST after final attempt
+                    log_structured_error(
+                        logger,
+                        f"Unexpected error after {max_retries} attempts - FAILING FAST",
+                        error_category="llm_error",
+                        operation_context="structured_output_generation",
+                        exc_info=True
+                    )
+                    raise
         
-        if response_model == VanEveraPredictionEvaluation:
-            # Import EvidenceQuality enum
-            from .van_evera_llm_schemas import EvidenceQuality
-            result = VanEveraPredictionEvaluation(
-                test_result=TestResult.INCONCLUSIVE,
-                necessity_analysis=None,
-                sufficiency_analysis=None,
-                confidence_score=0.5,
-                diagnostic_reasoning=f"Fallback evaluation due to: {error_message}",
-                evidence_assessment="Unable to assess due to LLM error",
-                theoretical_mechanism_evaluation="Unable to evaluate due to LLM error",
-                elimination_implications=["Unable to determine due to LLM error"],
-                evidence_quality=EvidenceQuality.LOW,
-                evidence_coverage=0.5,
-                indicator_matches=0,
-                publication_quality_assessment="Unable to assess due to LLM error",
-                methodological_soundness=0.5
-            )
-            return result  # type: ignore
-        
-        elif response_model == BayesianParameterEstimation:
-            bayes_result = BayesianParameterEstimation(
-                prior_probability=0.5,
-                likelihood_given_hypothesis=0.5,
-                likelihood_given_not_hypothesis=0.5,
-                prior_justification=f"Default prior due to: {error_message}",
-                likelihood_reasoning=f"Default likelihoods due to: {error_message}",
-                confidence_in_estimates=0.3,
-                uncertainty_sources=[f"LLM error: {error_message}"]
-            )
-            return bayes_result  # type: ignore
-        
-        elif response_model == CausalRelationshipAnalysis:
-            causal_result = CausalRelationshipAnalysis(
-                causal_strength=0.5,
-                causal_mechanism=f"Unable to analyze due to: {error_message}",
-                temporal_precedence=False,
-                covariation=0.5,
-                alternative_explanations_ruled_out=0.3,
-                potential_confounders=["Unable to identify due to LLM error"],
-                potential_mediators=["Unable to identify due to LLM error"],
-                causal_reasoning=f"Fallback analysis due to: {error_message}",
-                uncertainty_assessment=f"High uncertainty due to: {error_message}"
-            )
-            return causal_result  # type: ignore
-        
-        elif response_model == ProcessTracingConclusion:
-            process_result = ProcessTracingConclusion(
-                hypothesis_status="INCONCLUSIVE",
-                confidence_level=0.3,
-                academic_summary=f"Unable to generate conclusion due to: {error_message}",
-                methodology_assessment="Unable to assess due to LLM error",
-                supporting_evidence_strength=0.3,
-                contradicting_evidence_assessment="Unable to assess due to LLM error",
-                publication_quality_score=0.3,
-                recommendations_for_improvement=[f"Resolve LLM error: {error_message}"]
-            )
-            return process_result  # type: ignore
-        
-        elif response_model == ContentBasedClassification:
-            # Import DiagnosticTestType enum
-            from .van_evera_llm_schemas import DiagnosticTestType
-            content_result = ContentBasedClassification(
-                recommended_diagnostic_type=DiagnosticTestType.STRAW_IN_WIND,
-                necessity_assessment=None,
-                sufficiency_assessment=None,
-                classification_confidence=0.3,
-                content_analysis=f"Unable to analyze due to: {error_message}",
-                theoretical_fit="Unable to assess due to LLM error",
-                alternative_classifications=[{"type": "fallback", "reason": error_message}],
-                theoretical_sophistication=0.3,
-                methodological_rigor=0.3
-            )
-            return content_result  # type: ignore
-        
+        # Should never reach here, but just in case
+        if last_exception:
+            raise last_exception
         else:
-            raise ValueError(f"Unknown response model: {response_model}")
+            raise RuntimeError(f"Failed to get structured response after {max_retries} attempts")
+    
 
 
 # Global interface instance
