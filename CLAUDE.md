@@ -2,18 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🎯 CURRENT STATUS: ENHANCED ACADEMIC INTELLIGENCE (Updated 2025-01-27)
+## 🎯 CURRENT STATUS: PHASE 1 VALIDATION REQUIRED (Updated 2025-01-27)
 
-**System Status**: **Production-Ready with Advanced LLM Intelligence** - Core semantic understanding implemented  
-**Current Priority**: **Academic Quality Enhancement** - Systematic improvement of Van Evera compliance and evidence balance  
-**Academic Quality**: **Enhanced Foundation** - Sophisticated LLM mechanisms (0.35-0.7 completeness with detailed reasoning)
+**System Status**: **Phase 1 Implementation Complete** - Three academic enhancements implemented with fail-fast error handling  
+**Current Priority**: **Critical Validation Testing** - Verify actual functionality before declaring success  
+**Academic Quality**: **Implementation Unvalidated** - Claims require empirical testing with raw evidence
 
-**COMPLETED LLM INTELLIGENCE FOUNDATION (2025-01-27)**:
-- ✅ **Structured Output Integration**: All three critical plugins use VanEveraLLMInterface with proper Pydantic validation
-- ✅ **Mechanism Quality**: 4/4 mechanisms have sophisticated LLM analysis with completeness/plausibility scoring
-- ✅ **Semantic Understanding**: Evidence connections use CausalRelationshipAnalysis vs hardcoded keyword bridges
-- ✅ **Van Evera Testing**: Diagnostic tests operational with structured confidence calculation methods
-- ✅ **End-to-End Validation**: Full American Revolution analysis with 379 causal chains and comprehensive HTML output
+**COMPLETED PHASE 1 IMPLEMENTATION (2025-01-27)**:
+- ✅ **Van Evera Test Integration**: Integrated test results into hypothesis confidence scoring (`core/analyze.py`)
+- ✅ **Hypothesis LLM Enhancement**: Created `core/enhance_hypotheses.py` with VanEveraLLMInterface  
+- ✅ **Evidence Balance Correction**: Implemented systematic evidence classification targeting 0.6-0.8 ratios
+- ✅ **Fail-Fast Error Handling**: Removed all fallback mechanisms from LLM interface
+- ❌ **VALIDATION STATUS**: **ZERO EMPIRICAL TESTING** - No validation of actual functionality
 
 ## Evidence-Based Development Philosophy (Mandatory)
 
@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **VALIDATION + SELF-HEALING**: Every validator must have coupled self-healing capability
 
 ### Quality Standards
-- **Academic Functionality**: Target ≥80% Van Evera compliance (current foundation: enhanced mechanisms working)
+- **Academic Functionality**: Target ≥80% Van Evera compliance (current: implementation unvalidated)
 - **Technical Correctness**: All Pydantic validations must pass
 - **Process Adherence**: Run lint/typecheck before marking tasks complete
 - **Evidence Documentation**: Document all claims with concrete test results in structured evidence files
@@ -41,172 +41,190 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Type Safety**: Full mypy compliance across core modules
 - **Security**: Environment-based API key management
 
-## 🚀 NEXT PHASE: ACADEMIC QUALITY ENHANCEMENT
+## 🧪 PHASE 1 VALIDATION PROTOCOL (Critical Priority)
 
-### **Priority: Systematic Van Evera Compliance and Evidence Balance Improvement**
+### **MANDATORY VALIDATION**: Verify Phase 1 Implementation Before Expansion
 
-**Current Opportunity**: System has sophisticated LLM mechanisms (working perfectly) but needs systematic improvement in hypothesis evaluation, evidence balance, and Van Evera test integration for full academic rigor.
+**Critical Gap**: Phase 1 tasks were implemented but **never validated**. System behavior under new enhancements is unknown.
 
-**Evidence of Need**: End-to-end American Revolution analysis shows:
-- ✅ **Mechanism Quality**: 4/4 with detailed LLM analysis (0.35-0.7 completeness, 1500-word academic reasoning)
-- ❌ **Hypothesis Confidence**: 5/5 hypotheses missing LLM-generated confidence scores
-- ❌ **Evidence Balance**: 1.00 support ratio (academic ideal: 0.6-0.8)  
-- ❌ **Van Evera Integration**: Console shows tests running but results not populating final output
+**Validation Required**:
+1. **Integration Completeness**: Do all three enhancements execute during full analysis?
+2. **Evidence Balance Results**: Do we get support ratios other than 1.0 or 0S/0R?  
+3. **Van Evera Confidence Mapping**: Do hypothesis confidence scores vary with test outcomes?
+4. **LLM Enhancement Execution**: Does `enhance_hypotheses.py` actually run and generate results?
+5. **Fail-Fast Error Handling**: Does system fail immediately on validation errors without fallbacks?
 
-### **PHASE 1: SYSTEMATIC ACADEMIC ENHANCEMENT (High Priority)**
+### **TASK V1: Integration Validation Test**
+**Priority**: **CRITICAL** - Must complete before any other development
+**Objective**: Verify all three Phase 1 enhancements execute in full analysis pipeline
 
-#### **Task 1.1: Van Evera Test Integration**
-**File**: `core/analyze.py` hypothesis evaluation pipeline
-**Issue**: Van Evera tests execute (`[VAN_EVERA_TESTING] hoop test: PASS`) but results don't populate hypothesis confidence scores
-**Impact**: Missing critical academic methodology integration despite tests running
+**Test Protocol**:
+```bash
+# Full analysis with comprehensive logging
+python -m core.analyze output_data/revolutions/revolutions_20250805_122000_graph.json --html 2>&1 | tee validation_test_$(date +%Y%m%d_%H%M%S).log
+```
 
-**Investigation Required**:
-1. Trace Van Evera plugin result storage in `plugin_results['van_evera_testing']`
-2. Map plugin execution results to final `hypotheses_evaluation` data flow
-3. Identify where test outcomes get disconnected from confidence calculation
+**Evidence Required**:
+- Console logs showing `[HYPOTHESIS_ENHANCEMENT]`, `[VAN_EVERA_INTEGRATION]`, `[EVIDENCE_BALANCE]` execution
+- Final HTML output demonstrating all three enhancements visible
+- Hypothesis confidence scores populated (not empty/null)
+- Evidence balance ratios measured and documented
+- Performance impact measurements (execution time, LLM calls, token usage)
 
-**Implementation**:
+**Success Criteria**:
+- All three enhancements execute without errors
+- Results visible in final output
+- No regression in existing mechanism/alternative analysis quality
+- Fail-fast behavior confirmed (no silent fallbacks)
+
+**Failure Response**: If validation fails, debug individual components before integration expansion
+
+### **TASK V2: Evidence Balance Validation**
+**Priority**: **HIGH** - Core academic quality metric
+**Objective**: Confirm evidence balance correction produces academic-standard ratios
+
+**Current Baseline**: 1.00 support ratio (100% supporting evidence, 0% refuting)
+**Academic Target**: 0.6-0.8 support ratio (balanced evidence evaluation)
+
+**Test Protocol**:
 ```python
-def integrate_van_evera_results_to_hypotheses(analysis_results):
-    """Integrate Van Evera test results into hypothesis confidence scoring"""
-    van_evera_results = analysis_results.get('van_evera_assessment', {})
-    
-    for hyp_id, hyp_data in analysis_results['evidence_analysis'].items():
-        # Extract Van Evera test results for this hypothesis
-        test_outcomes = extract_van_evera_outcomes(van_evera_results, hyp_id)
+def validate_evidence_balance(analysis_results):
+    """Measure evidence balance improvements"""
+    for hyp_id, hyp_data in analysis_results.get('evidence_analysis', {}).items():
+        supporting_count = len(hyp_data.get('supporting_evidence', []))
+        refuting_count = len(hyp_data.get('refuting_evidence', []))
         
-        # Calculate confidence from test results
-        confidence_score = calculate_confidence_from_tests(test_outcomes)
-        
-        # Add to hypothesis data
-        hyp_data['van_evera_confidence'] = confidence_score
-        hyp_data['test_details'] = test_outcomes
+        if supporting_count + refuting_count > 0:
+            support_ratio = supporting_count / (supporting_count + refuting_count)
+            print(f"Hypothesis {hyp_id}: {support_ratio:.2f} support ratio")
+            print(f"  Supporting: {supporting_count}, Refuting: {refuting_count}")
+    return evidence_balance_metrics
 ```
 
-#### **Task 1.2: Hypothesis LLM Enhancement Pipeline** 
-**File**: Create `core/enhance_hypotheses.py` (following mechanism pattern)
-**Issue**: Hypotheses lack LLM-generated confidence scores and narrative synthesis despite sophisticated mechanism analysis
-**Impact**: Academic analysis incomplete - mechanisms enhanced but hypotheses remain rule-based
+**Evidence Required**:
+- Raw evidence counts (supporting vs refuting) for each hypothesis
+- Support ratio calculations with comparison to 1.0 baseline  
+- Van Evera FAIL results mapped to refuting evidence
+- Systematic disconfirming evidence identification working
 
-**Implementation**:
+### **TASK V3: Cross-Dataset Validation**
+**Priority**: **MEDIUM** - Generalizability assessment
+**Objective**: Confirm improvements work beyond American Revolution dataset
+
+**Simple Test Case Creation**:
+```
+input_text/validation_case/simple_conflict.txt:
+"Economic sanctions were imposed on Country X in January 2020. 
+Political protests erupted in March 2020, with widespread demonstrations.
+Government officials claimed the protests were due to internal political disputes.
+However, protest timing closely followed sanctions implementation.
+Some evidence suggests economic hardship from sanctions motivated protesters.
+Critics argue domestic political factors were more significant than economic pressure."
+```
+
+**Test Protocol**:
+```bash
+# Generate graph from simple case
+python -m core.extract input_text/validation_case/simple_conflict.txt
+
+# Run enhanced analysis  
+python -m core.analyze [generated_graph.json] --html
+```
+
+**Evidence Required**:
+- System processes different case successfully  
+- Hypotheses about sanctions→protests causation identified
+- Evidence balance shows mixed supporting/refuting evidence
+- Van Evera tests execute on different domain
+- LLM enhancements work across different subject matter
+
+### **TASK V4: Error Handling Validation**
+**Priority**: **MEDIUM** - Fail-fast compliance verification
+**Objective**: Confirm removal of fallback mechanisms and proper error propagation
+
+**Test Cases**:
+1. **LLM Validation Error**: Force invalid schema response from Gemini
+2. **Network Error**: Simulate API timeout/connection failure  
+3. **Missing Van Evera Results**: Test with incomplete plugin data
+4. **Pydantic Schema Error**: Test with malformed structured output
+
+**Test Protocol**:
 ```python
-# Create enhance_hypotheses.py following core/enhance_mechanisms.py pattern
-from .van_evera_llm_interface import VanEveraLLMInterface
-from .van_evera_llm_schemas import VanEveraPredictionEvaluation
-
-def enhance_hypothesis_with_llm(hypothesis_node, supporting_evidence, refuting_evidence, van_evera_tests):
-    """Use VanEveraLLMInterface for sophisticated hypothesis evaluation"""
-    llm_interface = VanEveraLLMInterface()
-    
-    structured_result = llm_interface.evaluate_prediction_structured(
-        prediction_description=hypothesis_node['description'],
-        diagnostic_type=determine_primary_diagnostic_type(van_evera_tests),
-        theoretical_mechanism=extract_theoretical_mechanism(hypothesis_node),
-        evidence_context=compile_evidence_context(supporting_evidence, refuting_evidence)
-    )
-    
-    return structured_result  # Returns VanEveraPredictionEvaluation with confidence_score, reasoning
+# Simulate validation error
+def test_fail_fast_validation():
+    invalid_llm_response = "This is not valid JSON schema"
+    # Should raise ValidationError immediately, no fallback behavior
+    with pytest.raises(ValidationError):
+        enhance_hypothesis_with_llm(test_hypothesis, [], [])
 ```
 
-**Integration into analyze.py**:
-Add hypothesis LLM enhancement loop following the mechanism enhancement pattern (lines 2850-2900).
-
-#### **Task 1.3: Evidence Balance Correction**
-**File**: Evidence classification pipeline in hypothesis evaluation
-**Issue**: 1.00 evidence support ratio violates academic standards (ideal: 0.6-0.8)
-**Impact**: System shows confirmation bias - not systematically seeking disconfirming evidence
-
-**Investigation Required**:
-1. Identify why no refuting evidence is found in current classification
-2. Map how Van Evera FAIL results should contribute to refuting evidence
-3. Examine evidence-hypothesis linking algorithms for bias
-
-**Implementation**:
-```python  
-def systematic_evidence_evaluation(hypothesis, all_evidence_nodes, van_evera_results):
-    """Systematically evaluate evidence as supporting/refuting with academic balance"""
-    
-    # Use Van Evera FAIL results as refuting evidence indicators
-    failed_tests = extract_failed_van_evera_tests(van_evera_results, hypothesis['id'])
-    
-    # Actively seek disconfirming evidence
-    refuting_evidence = identify_disconfirming_evidence(hypothesis, all_evidence_nodes, failed_tests)
-    
-    # Balance evidence discovery (target 0.6-0.8 support ratio)
-    balanced_evidence = balance_evidence_classification(supporting_evidence, refuting_evidence)
-    
-    return balanced_evidence
-```
-
-### **PHASE 2: ACADEMIC RIGOR EXPANSION (Medium Priority)**
-
-#### **Task 2.1: Alternative Explanation Enhancement**
-**Current**: 2 alternative explanations (1 eliminated, 1 active)
-**Target**: 3-5 systematically evaluated alternative explanations
-**Implementation**: Expand alternative hypothesis generation and use LLM evaluation
-
-#### **Task 2.2: Causal Chain LLM Assessment**  
-**Current**: 379 causal chains identified but no quality scoring
-**Target**: LLM-based plausibility and completeness assessment for multi-step chains
-**Implementation**: Apply MechanismAssessment approach to causal chain evaluation
+**Evidence Required**:
+- System fails immediately on schema validation errors
+- No silent fallback behavior observed
+- Proper error messages surface to user
+- Transient network errors retry appropriately
+- Non-recoverable errors fail fast without masking
 
 ## Implementation Guidelines
 
-### **Evidence Requirements**
-Create structured evidence files in `evidence/current/` for each task:
+### **Evidence Requirements** 
+Create structured evidence files in `evidence/current/` for each validation task:
 ```
 evidence/current/
-├── Evidence_VAN_EVERA_Integration.md
-├── Evidence_HYPOTHESIS_Enhancement.md
-└── Evidence_EVIDENCE_Balance.md
+├── Evidence_INTEGRATION_Validation.md
+├── Evidence_EVIDENCE_Balance_Validation.md  
+├── Evidence_CROSS_Dataset_Validation.md
+└── Evidence_ERROR_Handling_Validation.md
 ```
 
 **Required Evidence Per Task**:
-- Raw console logs showing before/after behavior
-- Van Evera compliance measurements with specific metrics
-- Academic quality improvements with quantified evidence balance ratios
-- End-to-end test results demonstrating integration success
+- Raw console logs with timestamps
+- Before/after comparison metrics
+- Quantified improvements with specific measurements
+- Error case documentation with actual error messages
+- Performance impact assessment
 
 ### **Validation Protocol**
-**Before Each Task**:
+**For Each Validation Task**:
 ```bash
-# Capture current baseline metrics
-python -m core.analyze output_data/revolutions/revolutions_20250805_122000_graph.json --html
-# Document: hypothesis confidence scores, evidence ratios, Van Evera test visibility
+# Document before state
+python -m core.analyze [test_case] --html > before_validation.log 2>&1
+
+# Run validation test
+[execute validation]
+
+# Document after state  
+python -m core.analyze [test_case] --html > after_validation.log 2>&1
+
+# Compare results
+diff before_validation.log after_validation.log
 ```
 
-**After Each Task**:
-```bash
-# Validate improvements
-python -m core.analyze output_data/revolutions/revolutions_20250805_122000_graph.json --html
-# Compare: academic quality metrics, ensure no mechanism regression
-python -m pytest tests/plugins/ -v  # Ensure no regression
-```
-
-**Success Criteria**:
-- Van Evera compliance >80% (measurable improvement)
-- Evidence balance 0.6-0.8 support ratio (from current 1.0)
-- All hypotheses have LLM-generated confidence scores and reasoning
-- Van Evera test results visible in final analysis output
-- No regression in existing mechanism LLM quality
+### **Success Criteria**
+- **Integration**: All three enhancements execute and produce visible results
+- **Evidence Balance**: Support ratios between 0.6-0.8 for at least 50% of hypotheses
+- **Cross-Dataset**: System works on different domains without modification
+- **Error Handling**: Immediate failure on validation errors, no silent fallbacks
+- **Performance**: No >3x execution time increase from baseline
 
 ### **Quality Gates**
-- **Academic**: Measurable Van Evera compliance improvement
-- **Technical**: All existing LLM integrations continue functioning
-- **Evidence**: Structured evidence files document all improvements with raw data
-- **Integration**: Full end-to-end analysis produces enhanced academic output
+- **Empirical**: All validation tests pass with documented evidence
+- **Academic**: Evidence balance improvements demonstrated with quantified metrics
+- **Technical**: No regression in existing LLM mechanism quality
+- **Reliability**: Fail-fast error handling confirmed across error types
 
 ## Codebase Structure
 
 ### Key Entry Points
-- `core/analyze.py`: Main analysis orchestration with Van Evera pipeline and LLM integration
-- `core/plugins/van_evera_workflow.py`: 8-step academic analysis workflow
-- `core/plugins/van_evera_llm_interface.py`: Professional LLM integration with structured output
+- `core/analyze.py`: Main analysis orchestration with Phase 1 enhancements (lines 2940-3271)
+- `core/enhance_hypotheses.py`: LLM hypothesis enhancement pipeline (new)
+- `core/plugins/van_evera_llm_interface.py`: Fail-fast LLM interface (updated)
 
 ### Critical Integration Points
-- **LLM Interface**: `van_evera_llm_interface.py` - VanEveraLLMInterface with all structured methods
-- **Plugin Architecture**: 16 plugins with proper abstractions and LLM enhancement
-- **Structured Output**: `van_evera_llm_schemas.py` - Academic Pydantic models for all Van Evera concepts
+- **Hypothesis Enhancement Loop**: Lines 2940-2988 in `core/analyze.py`
+- **Van Evera Result Integration**: Lines 3156-3197 in `core/analyze.py`
+- **Evidence Balance Correction**: Lines 3252-3271 in `core/analyze.py`
+- **Fail-Fast Error Handling**: Removed fallback methods in `van_evera_llm_interface.py`
 
 ### Module Organization
 - `core/plugins/`: 16 registered plugins with structured LLM integration
@@ -214,4 +232,21 @@ python -m pytest tests/plugins/ -v  # Ensure no regression
 - `universal_llm_kit/`: LiteLLM integration with Gemini 2.5 Flash
 - `evidence/`: Structured evidence documentation (current/ and completed/ phases)
 
-**System Architecture**: Enhanced foundation ready for systematic academic quality improvements to achieve professional Van Evera compliance and evidence balance.
+### Evidence Structure
+```
+evidence/
+├── current/          # Active validation work only
+├── completed/        # Archived completed phases  
+```
+
+**CRITICAL**: Evidence files must contain ONLY current validation work. Archive completed phases to avoid chronological confusion.
+
+## Next Steps After Validation
+
+**Only After Successful V1-V4 Validation**:
+- **Phase 2**: Academic rigor expansion (alternative explanations, causal chains)
+- **Multi-Document Architecture**: Corpus handling for large-scale analysis  
+- **Performance Optimization**: LLM cost reduction and caching strategies
+- **Academic Benchmarking**: Human expert comparison studies
+
+**System Architecture**: Phase 1 implementation complete, awaiting empirical validation to confirm functionality before expansion.
