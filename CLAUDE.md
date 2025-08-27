@@ -2,6 +2,33 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🚨 PERMANENT INFORMATION -- DO NOT CHANGE ON UPDATES
+
+### LLM-First Architecture Policy (MANDATORY)
+
+**CORE PRINCIPLE**: This system is **LLM-FIRST** with **ZERO TOLERANCE** for rule-based or keyword-based implementations.
+
+**PROHIBITED IMPLEMENTATIONS**:
+- ❌ Keyword matching for evidence classification (`if 'ideological' in text`)
+- ❌ Hardcoded probative value assignments (`probative_value = 0.7`)
+- ❌ Rule-based contradiction detection (`if 'before' in hypothesis and 'after' in evidence`)
+- ❌ Domain classification using keyword lists
+- ❌ Confidence thresholds based on hardcoded ranges
+- ❌ Any `if/elif` chains for semantic understanding
+
+**REQUIRED IMPLEMENTATIONS**:
+- ✅ LLM semantic analysis for ALL evidence-hypothesis relationships
+- ✅ LLM-generated probative values with reasoning
+- ✅ LLM-based domain and diagnostic type classification
+- ✅ Structured Pydantic outputs for ALL semantic decisions
+- ✅ Evidence-based confidence scoring through LLM evaluation
+
+**APPROVAL REQUIRED**: Any rule-based logic must be explicitly approved with academic justification. Default assumption: **USE LLM SEMANTIC UNDERSTANDING**.
+
+**VALIDATION REQUIREMENT**: All semantic decisions must be traceable to LLM reasoning outputs, not hardcoded logic.
+
+---
+
 ## 🎯 CURRENT STATUS: PHASE 1 VALIDATION REQUIRED (Updated 2025-01-27)
 
 **System Status**: **Phase 1 Implementation Complete** - Three academic enhancements implemented with fail-fast error handling  

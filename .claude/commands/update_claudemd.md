@@ -5,7 +5,31 @@ commit then date CLAUDE.md to clear out resolved tasks and populate it with inst
 
 ## Core CLAUDE.md Requirements
 
-### 1. Coding Philosophy Section (Mandatory)
+### 1. PERMANENT INFORMATION Section (MANDATORY - NEVER MODIFY)
+Every CLAUDE.md must include at the top after the header:
+```markdown
+## 🚨 PERMANENT INFORMATION -- DO NOT CHANGE ON UPDATES
+
+### LLM-First Architecture Policy (MANDATORY)
+
+**CORE PRINCIPLE**: This system is **LLM-FIRST** with **ZERO TOLERANCE** for rule-based or keyword-based implementations.
+
+**PROHIBITED IMPLEMENTATIONS**:
+- ❌ Keyword matching for evidence classification
+- ❌ Hardcoded probative value assignments  
+- ❌ Rule-based contradiction detection
+- ❌ Domain classification using keyword lists
+- ❌ Any if/elif chains for semantic understanding
+
+**REQUIRED IMPLEMENTATIONS**:
+- ✅ LLM semantic analysis for ALL evidence-hypothesis relationships
+- ✅ LLM-generated probative values with reasoning
+- ✅ Structured Pydantic outputs for ALL semantic decisions
+
+**APPROVAL REQUIRED**: Any rule-based logic must be explicitly approved with academic justification.
+```
+
+### 2. Coding Philosophy Section (Mandatory)
 Every CLAUDE.md must include:
 - **NO LAZY IMPLEMENTATIONS**: No mocking/stubs/fallbacks/pseudo-code/simplified implementations
 - **FAIL-FAST PRINCIPLES**: Surface errors immediately, don't hide them
