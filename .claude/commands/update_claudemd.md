@@ -29,8 +29,6 @@ evidence/
 │   └── Evidence_[PHASE]_[TASK].md     # Current development phase only
 ├── completed/  
 │   └── Evidence_[PHASE]_[TASK].md     # Completed phases (archived)
-└── validation/
-    └── gemini_validation_results/      # Independent validation outputs
 ```
 
 **CRITICAL**: 

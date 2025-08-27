@@ -137,13 +137,16 @@ class GraphValidationPlugin(ProcessTracingPlugin):
         self.logger.info(f"PROGRESS: Node types: {dict(sorted(node_types.items()))}")
         self.logger.info(f"PROGRESS: Edge types: {dict(sorted(edge_types.items()))}")
         
-        # Validate graph connectivity
-        if isinstance(original_graph, nx.DiGraph):
-            weakly_connected = nx.is_weakly_connected(original_graph)
-            self.logger.info(f"PROGRESS: Graph is {'weakly connected' if weakly_connected else 'not weakly connected'}")
+        # Validate graph connectivity (skip for empty graphs)
+        if node_count > 0:
+            if isinstance(original_graph, nx.DiGraph):
+                weakly_connected = nx.is_weakly_connected(original_graph)
+                self.logger.info(f"PROGRESS: Graph is {'weakly connected' if weakly_connected else 'not weakly connected'}")
+            else:
+                connected = nx.is_connected(original_graph)
+                self.logger.info(f"PROGRESS: Graph is {'connected' if connected else 'not connected'}")
         else:
-            connected = nx.is_connected(original_graph)
-            self.logger.info(f"PROGRESS: Graph is {'connected' if connected else 'not connected'}")
+            self.logger.info("PROGRESS: Empty graph - connectivity not applicable")
         
         self.logger.info("END: Graph validation completed successfully")
         

@@ -72,7 +72,8 @@ class TestGraphValidationPlugin:
             assert result is not None
             # Should return a dict with validated graph
             assert isinstance(result, dict)
-            assert "graph" in result
+            assert "working_graph" in result
+            assert "original_graph" in result
             
         def test_execute_dict_input(self, plugin, minimal_graph):
             """Plugin executes successfully with dict input"""
@@ -80,7 +81,8 @@ class TestGraphValidationPlugin:
             result = plugin.execute(graph_dict)
             assert result is not None
             assert isinstance(result, dict)
-            assert "graph" in result
+            assert "working_graph" in result
+            assert "original_graph" in result
             
         def test_execute_idempotent(self, plugin, minimal_graph):
             """Plugin execution is idempotent (same input = same output)"""
@@ -88,7 +90,8 @@ class TestGraphValidationPlugin:
             result2 = plugin.execute(minimal_graph.copy())
             # Compare relevant aspects of results
             assert type(result1) == type(result2)
-            assert "graph" in result1 and "graph" in result2
+            assert "working_graph" in result1 and "working_graph" in result2
+            assert "original_graph" in result1 and "original_graph" in result2
             
         def test_graph_immutability(self, plugin, minimal_graph):
             """Plugin creates immutable copy and doesn't modify original"""
@@ -102,7 +105,7 @@ class TestGraphValidationPlugin:
             assert set(minimal_graph.edges()) == original_edges
             
             # Result should contain a copy
-            result_graph = result["graph"]
+            result_graph = result["working_graph"]
             assert result_graph is not minimal_graph  # Different object
             assert set(result_graph.nodes()) == original_nodes  # Same content
             
