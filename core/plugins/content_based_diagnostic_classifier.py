@@ -351,11 +351,10 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
         
         # Use LLM enhancement for borderline cases or improved accuracy
         llm_result = None
-        # Temporarily disable LLM enhancement due to deployment issues
-        # if llm_query_func and (best_score < 0.6 or self._should_enhance_with_llm(content_scores)):
-        #     llm_result = self._enhance_classification_with_llm(
-        #         evidence_content, hypothesis_content, content_scores, llm_query_func
-        #     )
+        if llm_query_func and (best_score < 0.6 or self._should_enhance_with_llm(content_scores)):
+            llm_result = self._enhance_classification_with_structured_llm(
+                evidence_content, hypothesis_content, content_scores
+            )
         
         # Combine content analysis and LLM results
         final_classification = self._combine_classification_results(
@@ -421,61 +420,53 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
         # Enhance if scores are close (ambiguous) or if max score is low
         return max_score < 0.8 or score_spread < 0.3
     
-    def _enhance_classification_with_llm(self, evidence_content: Dict, hypothesis_content: Dict,
-                                       content_scores: Dict, llm_query_func) -> Dict[str, Any]:
-        """Enhance classification using LLM analysis"""
+    def _enhance_classification_with_structured_llm(self, evidence_content: Dict, hypothesis_content: Dict,
+                                                   content_scores: Dict) -> Dict[str, Any]:
+        """Enhance classification using structured LLM output with VanEveraLLMInterface"""
         try:
-            # Create Van Evera-focused prompt
-            prompt = f"""
-            Analyze this evidence-hypothesis relationship using Van Evera's diagnostic test framework:
-
-            HYPOTHESIS: {hypothesis_content['description']}
-
-            EVIDENCE: {evidence_content['description']}
-            SOURCE QUOTE: {evidence_content['source_quote']}
-
-            Van Evera Diagnostic Tests:
-            - HOOP TEST: Necessary but not sufficient (must pass to keep hypothesis viable)
-            - SMOKING GUN: Sufficient but not necessary (if found, strongly confirms hypothesis)  
-            - DOUBLY DECISIVE: Both necessary and sufficient (definitive test)
-            - STRAW IN WIND: Neither necessary nor sufficient (weak supportive evidence)
-
-            Based on the relationship between this evidence and hypothesis, classify as one of the four diagnostic types.
-
-            Consider:
-            1. Is this evidence NECESSARY for the hypothesis to be true?
-            2. Is this evidence SUFFICIENT to confirm the hypothesis?
-            3. What would it mean if this evidence were absent or contradicted?
-            4. How strong is the logical connection?
-
-            Respond with JSON:
-            {{
-                "diagnostic_type": "hoop|smoking_gun|doubly_decisive|straw_in_wind",
-                "confidence": 0.0-1.0,
-                "reasoning": "Brief explanation of classification",
-                "van_evera_logic": "How this fits Van Evera framework"
-            }}
-            """
+            # Import the structured LLM interface
+            from .van_evera_llm_interface import VanEveraLLMInterface
             
-            response = llm_query_func(prompt, max_tokens=300, temperature=0.3)
+            # Create LLM interface
+            llm_interface = VanEveraLLMInterface()
             
-            # Parse JSON response
-            import json
-            try:
-                llm_result = json.loads(response)
-                llm_result['llm_enhanced'] = True
-                return llm_result
-            except json.JSONDecodeError:
-                # Fallback parsing
-                return self._parse_llm_response_fallback(response)
-                
+            # Get structured classification result
+            structured_result = llm_interface.classify_diagnostic_type(
+                evidence_description=f"{evidence_content['description']} SOURCE: {evidence_content.get('source_quote', '')}",
+                hypothesis_description=hypothesis_content['description'],
+                current_classification=max(content_scores, key=lambda x: content_scores[x])
+            )
+            
+            # Convert structured result to legacy format for compatibility
+            diagnostic_type_map = {
+                'hoop': 'hoop',
+                'smoking_gun': 'smoking_gun', 
+                'doubly_decisive': 'doubly_decisive',
+                'straw_in_wind': 'straw_in_wind'
+            }
+            
+            return {
+                'diagnostic_type': diagnostic_type_map.get(structured_result.recommended_diagnostic_type.value, 'straw_in_wind'),
+                'confidence': structured_result.classification_confidence,
+                'reasoning': structured_result.content_analysis,
+                'van_evera_logic': structured_result.theoretical_fit,
+                'llm_enhanced': True,
+                'structured_output': True,
+                # Additional structured data
+                'necessity_assessment': structured_result.necessity_assessment,
+                'sufficiency_assessment': structured_result.sufficiency_assessment,
+                'alternative_classifications': structured_result.alternative_classifications
+            }
+            
         except Exception as e:
-            self.logger.warning(f"LLM enhancement failed: {e}")
+            self.logger.warning(f"Structured LLM enhancement failed: {e}")
+            # Fallback to indicate LLM was attempted but failed
             return {
                 'diagnostic_type': 'straw_in_wind',
                 'confidence': 0.5,
-                'reasoning': 'LLM enhancement failed',
-                'llm_enhanced': False
+                'reasoning': f'Structured LLM enhancement failed: {str(e)}',
+                'llm_enhanced': False,
+                'structured_output': False
             }
     
     def _parse_llm_response_fallback(self, response: str) -> Dict[str, Any]:

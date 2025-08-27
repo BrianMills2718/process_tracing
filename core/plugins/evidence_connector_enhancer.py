@@ -90,12 +90,15 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
         
         graph_data = data['graph_data']
         
+        # Get LLM query function for enhanced semantic analysis
+        llm_query_func = self.context.get_data('llm_query_func')
+        
         # Analyze current connection gaps
         connection_analysis = self._analyze_connection_gaps(graph_data)
         self.logger.info(f"Connection gaps identified: {connection_analysis['gaps_found']} hypotheses with insufficient evidence")
         
-        # Create enhanced connections
-        enhancement_results = self._create_enhanced_connections(graph_data, connection_analysis)
+        # Create enhanced connections with LLM-enhanced semantic analysis
+        enhancement_results = self._create_enhanced_connections(graph_data, connection_analysis, llm_query_func)
         
         # Update graph data
         updated_graph_data = self._update_graph_with_enhancements(graph_data, enhancement_results)
@@ -161,7 +164,7 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
             'connection_distribution': hypothesis_connections
         }
     
-    def _create_enhanced_connections(self, graph_data: Dict, connection_analysis: Dict) -> Dict[str, Any]:
+    def _create_enhanced_connections(self, graph_data: Dict, connection_analysis: Dict, llm_query_func=None) -> Dict[str, Any]:
         """Create new evidence-hypothesis connections using semantic bridging"""
         evidence_nodes = [n for n in graph_data['nodes'] if n.get('type') == 'Evidence']
         new_connections = []
@@ -170,8 +173,8 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
             hyp_id = gap['hypothesis_id']
             hyp_desc = gap['description'].lower()
             
-            # Find relevant evidence using semantic bridging
-            relevant_evidence = self._find_evidence_with_semantic_bridging(evidence_nodes, hyp_desc)
+            # Find relevant evidence using LLM-enhanced semantic bridging
+            relevant_evidence = self._find_evidence_with_semantic_bridging(evidence_nodes, hyp_desc, llm_query_func)
             
             # Create connections for top relevant evidence pieces
             connections_needed = 3 - gap['current_connections']  # Target 3 pieces of evidence per hypothesis
@@ -187,7 +190,7 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
             'semantic_bridging_used': True
         }
     
-    def _find_evidence_with_semantic_bridging(self, evidence_nodes: List[Dict], hypothesis_desc: str) -> List[Dict]:
+    def _find_evidence_with_semantic_bridging(self, evidence_nodes: List[Dict], hypothesis_desc: str, llm_query_func=None) -> List[Dict]:
         """Find evidence relevant to hypothesis using semantic bridging"""
         relevant_evidence = []
         
@@ -196,8 +199,8 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
             source_quote = evidence_node.get('properties', {}).get('source_text_quote', '').lower()
             evidence_text = f"{evidence_desc} {source_quote}"
             
-            # Calculate semantic relevance score
-            relevance_score = self._calculate_semantic_relevance(hypothesis_desc, evidence_text)
+            # Calculate semantic relevance score with LLM enhancement
+            relevance_score = self._calculate_semantic_relevance(hypothesis_desc, evidence_text, llm_query_func)
             
             if relevance_score > 0:
                 relevant_evidence.append((evidence_node, relevance_score))
@@ -206,7 +209,7 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
         relevant_evidence.sort(key=lambda x: x[1], reverse=True)
         return [evidence for evidence, score in relevant_evidence]
     
-    def _calculate_semantic_relevance(self, hypothesis_desc: str, evidence_text: str) -> int:
+    def _calculate_semantic_relevance(self, hypothesis_desc: str, evidence_text: str, llm_query_func=None) -> int:
         """Calculate semantic relevance score using bridging mappings"""
         relevance_score = 0
         
@@ -227,7 +230,117 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
         historical_matches = sum(1 for keyword in self.HISTORICAL_CONTEXT_KEYWORDS if keyword.replace('_', ' ') in evidence_text)
         relevance_score += historical_matches
         
+        # Try LLM enhancement first if available
+        if llm_query_func:
+            try:
+                llm_relevance = self._analyze_semantic_relationship_structured_llm(hypothesis_desc, evidence_text)
+                if llm_relevance > 0:
+                    self.logger.debug(f"Structured LLM semantic analysis successful: relevance={llm_relevance}")
+                    return llm_relevance
+            except Exception as e:
+                self.logger.warning(f"Structured LLM semantic analysis failed, falling back to keyword matching: {e}")
+        
         return relevance_score
+    
+    def _analyze_semantic_relationship_structured_llm(self, hypothesis_text: str, evidence_text: str) -> int:
+        """Use structured LLM output to evaluate semantic relationship strength between evidence and hypothesis"""
+        try:
+            # Import the structured LLM interface
+            from .van_evera_llm_interface import VanEveraLLMInterface
+            
+            # Create LLM interface
+            llm_interface = VanEveraLLMInterface()
+            
+            # Get structured causal relationship analysis
+            structured_result = llm_interface.analyze_causal_relationship(
+                cause=hypothesis_text,
+                effect=evidence_text,
+                context="semantic_relationship_assessment_for_process_tracing",
+                evidence=evidence_text
+            )
+            
+            # Convert structured result to relevance score (0-10 scale)
+            # CausalRelationshipAnalysis.causal_strength is 0.0-1.0, convert to 0-10
+            base_score = int(structured_result.causal_strength * 10)
+            
+            # Adjust based on covariation and alternative explanations ruled out
+            covariation_bonus = int(structured_result.covariation * 2)  # 0-2 bonus
+            alternatives_bonus = int(structured_result.alternative_explanations_ruled_out * 2)  # 0-2 bonus
+            
+            # Calculate final relevance score (0-10)
+            relevance_score = min(10, base_score + covariation_bonus + alternatives_bonus)
+            
+            # Log structured analysis details
+            self.logger.debug(f"Structured LLM semantic analysis: "
+                            f"causal_strength={structured_result.causal_strength}, "
+                            f"covariation={structured_result.covariation}, "
+                            f"alternatives_ruled_out={structured_result.alternative_explanations_ruled_out}, "
+                            f"final_relevance={relevance_score}")
+            
+            return relevance_score
+            
+        except Exception as e:
+            self.logger.warning(f"Structured LLM semantic analysis error: {e}")
+            return 0
+    
+    def _analyze_semantic_relationship_llm(self, hypothesis_text: str, evidence_text: str, llm_query_func) -> int:
+        """Use LLM to evaluate semantic relationship strength between evidence and hypothesis"""
+        try:
+            prompt = f"""
+            Analyze the semantic relationship between this hypothesis and evidence for process tracing:
+
+            HYPOTHESIS: {hypothesis_text}
+
+            EVIDENCE: {evidence_text}
+
+            Evaluate how strongly this evidence relates to the hypothesis in terms of:
+            1. Conceptual connection - Do they address the same historical themes?
+            2. Causal relevance - Does the evidence support or refute the hypothesis?
+            3. Historical context - Are they from the same time period and domain?
+            4. Logical relationship - Is there a clear logical connection?
+
+            Rate the semantic relationship strength on a scale where:
+            - 0 = No meaningful relationship
+            - 1-2 = Weak/tangential relationship  
+            - 3-5 = Moderate relationship
+            - 6-8 = Strong relationship
+            - 9-10 = Very strong direct relationship
+
+            Respond with JSON:
+            {{
+                "relevance_score": 0-10,
+                "relationship_type": "supporting|refuting|neutral|contextual",
+                "confidence": 0.0-1.0,
+                "reasoning": "Brief explanation of the relationship"
+            }}
+            """
+            
+            response = llm_query_func(prompt, max_tokens=200, temperature=0.3)
+            
+            # Parse JSON response
+            import json
+            try:
+                llm_result = json.loads(response)
+                relevance_score = int(llm_result.get('relevance_score', 0))
+                self.logger.debug(f"LLM semantic analysis: score={relevance_score}, type={llm_result.get('relationship_type')}")
+                return relevance_score
+            except (json.JSONDecodeError, ValueError, TypeError):
+                # Fallback parsing for non-JSON responses
+                response_lower = response.lower()
+                if 'very strong' in response_lower or 'score: 9' in response_lower or 'score: 10' in response_lower:
+                    return 9
+                elif 'strong' in response_lower or 'score: 6' in response_lower or 'score: 7' in response_lower or 'score: 8' in response_lower:
+                    return 7
+                elif 'moderate' in response_lower or 'score: 3' in response_lower or 'score: 4' in response_lower or 'score: 5' in response_lower:
+                    return 4
+                elif 'weak' in response_lower or 'score: 1' in response_lower or 'score: 2' in response_lower:
+                    return 2
+                else:
+                    return 0
+                    
+        except Exception as e:
+            self.logger.warning(f"LLM semantic relationship analysis failed: {e}")
+            return 0
     
     def _create_evidence_connection(self, evidence_node: Dict, hypothesis_id: str, hypothesis_desc: str) -> Dict:
         """Create new evidence-hypothesis edge with appropriate diagnostic type"""

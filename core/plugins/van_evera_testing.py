@@ -387,6 +387,9 @@ class VanEveraTestingEngine:
             prior_prob = 0.5  # Neutral prior
             posterior_prob = self._calculate_posterior_probability(prior_prob, test_results)
             
+            # Set hypothesis context for LLM methods
+            self._current_hypothesis_desc = hypothesis.get('properties', {}).get('description', f"Hypothesis {hypothesis_id}")
+            
             # Determine overall status
             overall_status = self._determine_overall_status(test_results, posterior_prob)
             
@@ -541,9 +544,75 @@ class VanEveraTestingEngine:
         
         return TestResult.INCONCLUSIVE, "Unable to determine test result"
     
-    def _calculate_confidence(self, supporting: List[str], contradicting: List[str], 
+    def _calculate_confidence_llm(self, supporting: List[str], contradicting: List[str], 
+                                  prediction: TestPrediction, llm_query_func) -> float:
+        """Use LLM to calculate contextual confidence level for Van Evera test result"""
+        try:
+            # Prepare evidence context for LLM analysis
+            evidence_context = {
+                'supporting_evidence': supporting,
+                'contradicting_evidence': contradicting,
+                'test_type': prediction.diagnostic_type.name if prediction.diagnostic_type else 'UNKNOWN',
+                'prediction_description': prediction.description,
+                'hypothesis_id': prediction.hypothesis_id
+            }
+            
+            prompt = f"""
+            Evaluate the confidence level for this Van Evera diagnostic test result using academic standards:
+            
+            TEST TYPE: {evidence_context['test_type']}
+            PREDICTION: {evidence_context['prediction_description']}
+            HYPOTHESIS: {evidence_context['hypothesis_id']}
+            
+            SUPPORTING EVIDENCE ({len(supporting)} items):
+            {chr(10).join(f'- {item}' for item in supporting[:5])}  # Limit for token efficiency
+            {'... (and more)' if len(supporting) > 5 else ''}
+            
+            CONTRADICTING EVIDENCE ({len(contradicting)} items):
+            {chr(10).join(f'- {item}' for item in contradicting[:5])}
+            {'... (and more)' if len(contradicting) > 5 else ''}
+            
+            Assess confidence based on:
+            1. Evidence quality and reliability
+            2. Evidence volume and consistency
+            3. Theoretical coherence of test prediction
+            4. Source credibility and methodology
+            5. Potential alternative explanations
+            
+            Return confidence as a decimal between 0.0 and 1.0 where:
+            - 0.0-0.3: Low confidence (weak evidence, high uncertainty)
+            - 0.3-0.6: Moderate confidence (mixed evidence, some uncertainty)
+            - 0.6-0.8: High confidence (strong evidence, limited uncertainty)
+            - 0.8-1.0: Very high confidence (overwhelming evidence, minimal uncertainty)
+            
+            Respond with only a decimal number (e.g., 0.75).
+            """
+            
+            response = llm_query_func(prompt)
+            
+            # Parse confidence score with robust error handling
+            try:
+                confidence_score = float(response.strip())
+                # Clamp to valid range
+                return max(0.0, min(1.0, confidence_score))
+            except (ValueError, AttributeError):
+                # Fallback parsing for non-numeric responses
+                import re
+                numbers = re.findall(r'\b0\.\d+\b|\b1\.0\b', response)
+                if numbers:
+                    return max(0.0, min(1.0, float(numbers[0])))
+                else:
+                    # Ultimate fallback to algorithmic calculation
+                    self.logger.warning("LLM confidence parsing failed, using algorithmic fallback")
+                    return self._calculate_confidence_algorithmic(supporting, contradicting, prediction)
+                    
+        except Exception as e:
+            self.logger.warning(f"LLM confidence calculation failed, using algorithmic fallback: {e}")
+            return self._calculate_confidence_algorithmic(supporting, contradicting, prediction)
+    
+    def _calculate_confidence_algorithmic(self, supporting: List[str], contradicting: List[str], 
                             prediction: TestPrediction) -> float:
-        """Calculate confidence level for test result"""
+        """Fallback algorithmic confidence calculation (original implementation)"""
         total_evidence = len(supporting) + len(contradicting)
         if total_evidence == 0:
             return 0.3  # Low confidence with no evidence
@@ -553,6 +622,64 @@ class VanEveraTestingEngine:
         
         base_confidence = support_ratio * 0.7 + evidence_volume_bonus
         return min(base_confidence, 0.95)
+    
+    def _calculate_confidence(self, supporting: List[str], contradicting: List[str], 
+                            prediction: TestPrediction) -> float:
+        """Calculate confidence level for test result with LLM enhancement"""
+        # Try LLM enhancement first if available
+        llm_query_func = self.context.get_data('llm_query_func')
+        if llm_query_func:
+            try:
+                return self._calculate_confidence_structured_llm(supporting, contradicting, prediction)
+            except Exception as e:
+                self.logger.warning(f"Structured LLM confidence calculation failed, falling back to algorithmic: {e}")
+        
+        # Fallback to algorithmic calculation
+        return self._calculate_confidence_algorithmic(supporting, contradicting, prediction)
+    
+    def _calculate_confidence_structured_llm(self, supporting: List[str], contradicting: List[str], 
+                                            prediction: TestPrediction) -> float:
+        """Use structured LLM output to calculate contextual confidence level for Van Evera test result"""
+        try:
+            # Import the structured LLM interface
+            from .van_evera_llm_interface import VanEveraLLMInterface
+            
+            # Create LLM interface
+            llm_interface = VanEveraLLMInterface()
+            
+            # Prepare evidence context
+            evidence_summary = f"Supporting evidence ({len(supporting)} items): " + \
+                              "; ".join(supporting[:3]) + \
+                              (f"... and {len(supporting)-3} more" if len(supporting) > 3 else "")
+            
+            if contradicting:
+                evidence_summary += f" | Contradicting evidence ({len(contradicting)} items): " + \
+                                   "; ".join(contradicting[:3]) + \
+                                   (f"... and {len(contradicting)-3} more" if len(contradicting) > 3 else "")
+            
+            # Get structured prediction evaluation
+            structured_result = llm_interface.evaluate_prediction_structured(
+                prediction_description=prediction.description,
+                diagnostic_type=prediction.diagnostic_type.name if prediction.diagnostic_type else 'UNKNOWN',
+                theoretical_mechanism=f"Van Evera {prediction.diagnostic_type.name if prediction.diagnostic_type else 'UNKNOWN'} test for hypothesis {prediction.hypothesis_id}",
+                evidence_context=evidence_summary
+            )
+            
+            # Extract confidence score from structured result
+            confidence_score = structured_result.confidence_score
+            
+            # Log structured analysis details
+            self.logger.debug(f"Structured LLM confidence analysis: "
+                            f"test_result={structured_result.test_result}, "
+                            f"confidence={confidence_score}, "
+                            f"evidence_quality={structured_result.evidence_quality}")
+            
+            return confidence_score
+            
+        except Exception as e:
+            self.logger.warning(f"Structured LLM confidence calculation error: {e}")
+            # Fallback to algorithmic calculation
+            return self._calculate_confidence_algorithmic(supporting, contradicting, prediction)
     
     def _assess_elimination_implications(self, prediction: TestPrediction, 
                                        result: TestResult) -> List[str]:
@@ -588,8 +715,69 @@ class VanEveraTestingEngine:
         odds = math.exp(log_odds)
         return odds / (1 + odds)
     
-    def _determine_overall_status(self, test_results: List[TestEvaluation], posterior: float) -> str:
-        """Determine overall hypothesis status"""
+    def _assess_hypothesis_standing_llm(self, test_results: List[TestEvaluation], posterior: float, 
+                                        hypothesis_desc: str, llm_query_func) -> str:
+        """Use LLM to assess hypothesis standing based on Van Evera academic standards"""
+        try:
+            # Prepare test results context
+            test_summary = []
+            for result in test_results:
+                status = "PASSED" if result.test_result == TestResult.PASS else "FAILED"
+                test_summary.append(f"- {result.diagnostic_type.name if result.diagnostic_type else 'TEST'} test {status} (confidence: {result.confidence_level:.2f})")
+            
+            failed_decisive = sum(1 for r in test_results 
+                                if r.test_result == TestResult.FAIL and 
+                                any('ELIMINATED' in imp for imp in r.elimination_implications))
+            
+            prompt = f"""
+            Assess the overall academic standing of this hypothesis based on Van Evera diagnostic test results:
+            
+            HYPOTHESIS: {hypothesis_desc}
+            POSTERIOR PROBABILITY: {posterior:.3f}
+            FAILED DECISIVE TESTS: {failed_decisive}
+            
+            TEST RESULTS SUMMARY:
+            {chr(10).join(test_summary)}
+            
+            Based on Van Evera methodology, assess the hypothesis standing considering:
+            1. Any failed hoop or doubly decisive tests (which eliminate hypotheses)
+            2. Passed smoking gun tests (which strongly confirm)
+            3. Overall evidence strength and consistency
+            4. Theoretical coherence and plausibility
+            5. Alternative explanations and rival hypotheses
+            
+            Select the most appropriate academic assessment:
+            - ELIMINATED: Failed decisive tests, hypothesis cannot be sustained
+            - STRONGLY_SUPPORTED: High confidence, strong evidence, minimal uncertainty
+            - SUPPORTED: Moderate to good evidence, reasonable confidence
+            - INCONCLUSIVE: Mixed or insufficient evidence, high uncertainty
+            - WEAKENED: Evidence undermines hypothesis, low confidence
+            
+            Respond with only one of these exact terms: ELIMINATED, STRONGLY_SUPPORTED, SUPPORTED, INCONCLUSIVE, or WEAKENED.
+            """
+            
+            response = llm_query_func(prompt).strip().upper()
+            
+            # Validate response against expected values
+            valid_responses = {"ELIMINATED", "STRONGLY_SUPPORTED", "SUPPORTED", "INCONCLUSIVE", "WEAKENED"}
+            if response in valid_responses:
+                return response
+            else:
+                # Try to extract valid response from longer text
+                for valid in valid_responses:
+                    if valid in response:
+                        return valid
+                
+                # Fallback to algorithmic assessment
+                self.logger.warning(f"LLM hypothesis assessment returned invalid response: {response}, using algorithmic fallback")
+                return self._determine_overall_status_algorithmic(test_results, posterior)
+                
+        except Exception as e:
+            self.logger.warning(f"LLM hypothesis assessment failed, using algorithmic fallback: {e}")
+            return self._determine_overall_status_algorithmic(test_results, posterior)
+    
+    def _determine_overall_status_algorithmic(self, test_results: List[TestEvaluation], posterior: float) -> str:
+        """Fallback algorithmic hypothesis status determination (original implementation)"""
         failed_decisive_tests = sum(1 for r in test_results 
                                   if r.test_result == TestResult.FAIL and 
                                   any('ELIMINATED' in imp for imp in r.elimination_implications))
@@ -604,6 +792,81 @@ class VanEveraTestingEngine:
             return "INCONCLUSIVE"
         else:
             return "WEAKENED"
+    
+    def _determine_overall_status(self, test_results: List[TestEvaluation], posterior: float) -> str:
+        """Determine overall hypothesis status with LLM enhancement"""
+        # Try LLM enhancement first if available
+        llm_query_func = self.context.get_data('llm_query_func')
+        if llm_query_func:
+            try:
+                # Get hypothesis description for context
+                hypothesis_desc = getattr(self, '_current_hypothesis_desc', 'Unknown hypothesis')
+                return self._assess_hypothesis_standing_structured_llm(test_results, posterior, hypothesis_desc)
+            except Exception as e:
+                self.logger.warning(f"Structured LLM hypothesis assessment failed, falling back to algorithmic: {e}")
+        
+        # Fallback to algorithmic assessment
+        return self._determine_overall_status_algorithmic(test_results, posterior)
+    
+    def _assess_hypothesis_standing_structured_llm(self, test_results: List[TestEvaluation], posterior: float, 
+                                                  hypothesis_desc: str) -> str:
+        """Use structured LLM output to assess hypothesis standing based on Van Evera academic standards"""
+        try:
+            # Import the structured LLM interface
+            from .van_evera_llm_interface import VanEveraLLMInterface
+            
+            # Create LLM interface
+            llm_interface = VanEveraLLMInterface()
+            
+            # Prepare test results summary for structured analysis
+            test_summary_list = []
+            for result in test_results:
+                test_summary_list.append({
+                    'diagnostic_type': result.diagnostic_type.name if result.diagnostic_type else 'UNKNOWN',
+                    'test_result': result.test_result.value,
+                    'confidence': result.confidence_level,
+                    'reasoning': result.reasoning[:100] + "..." if len(result.reasoning) > 100 else result.reasoning
+                })
+            
+            overall_evidence = f"Van Evera diagnostic test analysis for hypothesis: {hypothesis_desc}. " + \
+                              f"Posterior probability: {posterior:.3f}. " + \
+                              f"Test results: {len(test_results)} tests conducted."
+            
+            # Get structured academic conclusion
+            structured_result = llm_interface.generate_academic_conclusion(
+                hypothesis=hypothesis_desc,
+                test_results=test_summary_list,
+                overall_evidence=overall_evidence
+            )
+            
+            # Extract hypothesis status from structured conclusion
+            # ProcessTracingConclusion has hypothesis_status field
+            hypothesis_status = structured_result.hypothesis_status.upper()
+            
+            # Map to our expected values
+            status_map = {
+                'STRONGLY_SUPPORTED': 'STRONGLY_SUPPORTED',
+                'SUPPORTED': 'SUPPORTED', 
+                'INCONCLUSIVE': 'INCONCLUSIVE',
+                'ELIMINATED': 'ELIMINATED',
+                'WEAKENED': 'WEAKENED',
+                'REFUTED': 'ELIMINATED'  # Map refuted to eliminated
+            }
+            
+            final_status = status_map.get(hypothesis_status, 'INCONCLUSIVE')
+            
+            # Log structured analysis details
+            self.logger.debug(f"Structured LLM hypothesis assessment: "
+                            f"status={final_status}, "
+                            f"confidence={structured_result.confidence_level}, "
+                            f"publication_quality={structured_result.publication_quality_assessment}")
+            
+            return final_status
+            
+        except Exception as e:
+            self.logger.warning(f"Structured LLM hypothesis assessment error: {e}")
+            # Fallback to algorithmic assessment
+            return self._determine_overall_status_algorithmic(test_results, posterior)
     
     def _generate_academic_conclusion(self, hypothesis: Dict, test_results: List[TestEvaluation], 
                                     posterior: float) -> str:
@@ -635,25 +898,156 @@ class VanEveraTestingEngine:
             else:
                 conclusion += "No decisive confirming evidence.\n\n"
         
-        # Overall assessment
+        # Overall assessment using LLM-enhanced status determination
+        overall_status = self._determine_overall_status(test_results, posterior)
         conclusion += f"OVERALL ASSESSMENT: Posterior probability = {posterior:.2f}. "
-        if posterior > 0.8:
+        
+        # Use contextual assessment instead of fixed thresholds
+        if overall_status == "STRONGLY_SUPPORTED":
             conclusion += "Hypothesis STRONGLY SUPPORTED by systematic testing."
-        elif posterior > 0.6:
+        elif overall_status == "SUPPORTED":
             conclusion += "Hypothesis SUPPORTED with moderate confidence."
-        elif posterior > 0.4:
+        elif overall_status == "INCONCLUSIVE":
             conclusion += "Evidence INCONCLUSIVE - requires additional testing."
-        else:
+        elif overall_status == "ELIMINATED":
+            conclusion += "Hypothesis ELIMINATED by decisive test failure."
+        else:  # WEAKENED
             conclusion += "Hypothesis WEAKENED by available evidence."
         
         return conclusion
     
-    def _calculate_confidence_interval(self, posterior: float, test_results: List[TestEvaluation]) -> Tuple[float, float]:
-        """Calculate confidence interval for posterior probability"""
+    def _calculate_confidence_interval_llm(self, posterior: float, test_results: List[TestEvaluation], 
+                                           llm_query_func) -> Tuple[float, float]:
+        """Use LLM to calculate evidence-based confidence interval"""
+        try:
+            # Prepare test context for LLM analysis
+            test_quality_summary = []
+            for result in test_results:
+                quality_desc = "high" if result.confidence_level > 0.7 else "moderate" if result.confidence_level > 0.4 else "low"
+                test_quality_summary.append(f"- {result.diagnostic_type.name if result.diagnostic_type else 'TEST'}: {quality_desc} quality (confidence: {result.confidence_level:.2f})")
+            
+            prompt = f"""
+            Calculate an appropriate confidence interval for this Van Evera analysis:
+            
+            POSTERIOR PROBABILITY: {posterior:.3f}
+            NUMBER OF TESTS: {len(test_results)}
+            
+            TEST QUALITY ASSESSMENT:
+            {chr(10).join(test_quality_summary)}
+            
+            Consider these factors for uncertainty assessment:
+            1. Evidence quality and reliability of each test
+            2. Sample size and test coverage
+            3. Methodological limitations and potential biases
+            4. Consistency between different test types
+            5. External validation and triangulation
+            
+            Based on Van Evera academic standards, estimate the margin of error for this posterior probability.
+            Lower margins indicate high confidence in the estimate.
+            Higher margins indicate uncertainty due to limited or conflicting evidence.
+            
+            Typical ranges:
+            - High-quality, consistent evidence: 0.05-0.15 margin
+            - Moderate evidence with some inconsistencies: 0.15-0.25 margin
+            - Limited or mixed-quality evidence: 0.25-0.35 margin
+            - Insufficient evidence: 0.35-0.45 margin
+            
+            Respond with only a decimal number for the margin (e.g., 0.18).
+            """
+            
+            response = llm_query_func(prompt)
+            
+            # Parse margin with error handling
+            try:
+                margin = float(response.strip())
+                # Clamp to reasonable range
+                margin = max(0.05, min(0.5, margin))
+                return (max(0, posterior - margin), min(1, posterior + margin))
+            except (ValueError, AttributeError):
+                # Fallback parsing
+                import re
+                numbers = re.findall(r'\b0\.\d+\b', response)
+                if numbers:
+                    margin = max(0.05, min(0.5, float(numbers[0])))
+                    return (max(0, posterior - margin), min(1, posterior + margin))
+                else:
+                    # Ultimate fallback
+                    self.logger.warning("LLM confidence interval parsing failed, using algorithmic fallback")
+                    return self._calculate_confidence_interval_algorithmic(posterior, test_results)
+                    
+        except Exception as e:
+            self.logger.warning(f"LLM confidence interval calculation failed, using algorithmic fallback: {e}")
+            return self._calculate_confidence_interval_algorithmic(posterior, test_results)
+    
+    def _calculate_confidence_interval_algorithmic(self, posterior: float, test_results: List[TestEvaluation]) -> Tuple[float, float]:
+        """Fallback algorithmic confidence interval calculation (original implementation)"""
         n_tests = len(test_results)
         if n_tests == 0:
             return (max(0, posterior - 0.3), min(1, posterior + 0.3))
         
         margin = 0.4 / math.sqrt(n_tests)
         return (max(0, posterior - margin), min(1, posterior + margin))
+    
+    def _calculate_confidence_interval(self, posterior: float, test_results: List[TestEvaluation]) -> Tuple[float, float]:
+        """Calculate confidence interval for posterior probability with LLM enhancement"""
+        # Try LLM enhancement first if available
+        llm_query_func = self.context.get_data('llm_query_func')
+        if llm_query_func:
+            try:
+                return self._calculate_confidence_interval_structured_llm(posterior, test_results)
+            except Exception as e:
+                self.logger.warning(f"Structured LLM confidence interval calculation failed, falling back to algorithmic: {e}")
+        
+        # Fallback to algorithmic calculation
+        return self._calculate_confidence_interval_algorithmic(posterior, test_results)
+    
+    def _calculate_confidence_interval_structured_llm(self, posterior: float, test_results: List[TestEvaluation]) -> Tuple[float, float]:
+        """Use structured LLM output to calculate evidence-based confidence interval"""
+        try:
+            # Import the structured LLM interface
+            from .van_evera_llm_interface import VanEveraLLMInterface
+            
+            # Create LLM interface
+            llm_interface = VanEveraLLMInterface()
+            
+            # Prepare test results context for uncertainty assessment
+            test_quality_summary = []
+            for result in test_results:
+                quality_level = "high" if result.confidence_level > 0.7 else "moderate" if result.confidence_level > 0.4 else "low"
+                test_quality_summary.append(f"- {result.diagnostic_type.name if result.diagnostic_type else 'TEST'}: {quality_level} quality (confidence: {result.confidence_level:.2f})")
+            
+            # Use Bayesian parameter estimation for uncertainty analysis
+            evidence_context = f"Posterior probability: {posterior:.3f} | Test quality: {chr(10).join(test_quality_summary)}"
+            hypothesis_context = getattr(self, '_current_hypothesis_desc', 'Van Evera process tracing analysis')
+            
+            # Get structured Bayesian parameter estimation
+            structured_result = llm_interface.estimate_bayesian_parameters(
+                hypothesis=hypothesis_context,
+                evidence=evidence_context,
+                prior_context=f"Van Evera diagnostic testing with {len(test_results)} tests conducted"
+            )
+            
+            # Extract confidence interval from structured result
+            # BayesianParameterEstimation has uncertainty bounds
+            lower_bound = max(0.0, structured_result.confidence_interval_lower)
+            upper_bound = min(1.0, structured_result.confidence_interval_upper)
+            
+            # Ensure bounds are valid
+            if lower_bound >= upper_bound:
+                # Fallback to algorithmic calculation if bounds are invalid
+                self.logger.warning(f"Invalid LLM confidence bounds: [{lower_bound}, {upper_bound}], using algorithmic fallback")
+                return self._calculate_confidence_interval_algorithmic(posterior, test_results)
+            
+            # Log structured analysis details
+            self.logger.debug(f"Structured LLM confidence interval: "
+                            f"interval=[{lower_bound:.3f}, {upper_bound:.3f}], "
+                            f"margin={(upper_bound - lower_bound) / 2:.3f}, "
+                            f"confidence_in_estimates={structured_result.confidence_in_estimates}")
+            
+            return (lower_bound, upper_bound)
+            
+        except Exception as e:
+            self.logger.warning(f"Structured LLM confidence interval error: {e}")
+            # Fallback to algorithmic calculation
+            return self._calculate_confidence_interval_algorithmic(posterior, test_results)
     

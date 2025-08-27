@@ -913,10 +913,10 @@ def analyze_evidence(G):
                     
                     # Use LLM to refine evidence assessment
                     llm_response = refine_evidence_assessment_with_llm(
-                        hypothesis_node=hypothesis_node,
-                        evidence_node=evidence_node, 
-                        edge_properties=edge_props,
-                        original_text_context=source_quote
+                        evidence_description=evidence_node_data.get('description', ''),
+                        text_content=source_quote or '',
+                        context_info=f"Hypothesis: {hypothesis_node.get('description', '')}",
+                        query_llm_func=None
                     )
                     
                     # Update ev_detail with LLM refinements if successful
@@ -3177,6 +3177,7 @@ def main():
         input_json_path = Path(args.json_file)
         project_dir = input_json_path.parent
         project_name = input_json_path.stem.replace('_graph', '')
+        import json
         now_str = datetime.now().strftime('%Y%m%d_%H%M%S')
         summary_path = project_dir / f"{project_name}_analysis_summary_{now_str}.json"
         with open(summary_path, 'w', encoding='utf-8') as f:
