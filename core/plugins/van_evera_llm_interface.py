@@ -252,6 +252,48 @@ class VanEveraLLMInterface:
         
         return self._get_structured_response(prompt, ContentBasedClassification)
     
+    def classify_evidence_relationship(self, evidence_description: str, 
+                                     hypothesis_description: str) -> 'EvidenceRelationshipClassification':
+        """
+        Classify evidence-hypothesis relationship using semantic understanding.
+        Replaces keyword-based contradiction detection with LLM semantic analysis.
+        
+        Args:
+            evidence_description: Description of the evidence
+            hypothesis_description: Description of the hypothesis
+            
+        Returns:
+            Structured classification with reasoning and probative value
+        """
+        prompt = f"""
+        Analyze the semantic relationship between this evidence and hypothesis using Van Evera academic methodology.
+        
+        EVIDENCE: {evidence_description}
+        HYPOTHESIS: {hypothesis_description}
+        
+        Determine if the evidence:
+        1. SUPPORTS the hypothesis (evidence strengthens or confirms the hypothesis)
+        2. REFUTES the hypothesis (evidence weakens or contradicts the hypothesis)  
+        3. Is IRRELEVANT to the hypothesis (no clear relationship)
+        
+        Consider semantic meaning, not keyword matching. Evidence about anti-British sentiment 
+        SUPPORTS hypotheses about ideological movements, regardless of economic/political keyword conflicts.
+        
+        For contradiction_indicators, count actual semantic contradictions (0 for supporting/irrelevant, 1-3 for refuting based on severity).
+        
+        Provide detailed reasoning for your classification and assess the probative value (0.0-1.0) based on:
+        - Relevance to hypothesis
+        - Quality and reliability of evidence
+        - Strength of logical connection
+        - Academic standards for process tracing
+        
+        Be thorough in your semantic analysis - explain WHY the evidence relates to the hypothesis.
+        """
+        
+        # Import here to avoid circular imports
+        from .van_evera_llm_schemas import EvidenceRelationshipClassification
+        return self._get_structured_response(prompt, EvidenceRelationshipClassification)
+    
     def _get_structured_response(self, prompt: str, response_model: Type[T], max_retries: int = 3) -> T:
         """
         Get structured response from LLM using the specified Pydantic model with basic retry

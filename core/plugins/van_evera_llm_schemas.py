@@ -30,6 +30,34 @@ class EvidenceQuality(str, Enum):
     LOW = "low"
 
 
+class EvidenceRelationshipClassification(BaseModel):
+    """
+    LLM-based semantic classification of evidence-hypothesis relationships.
+    Replaces rule-based keyword matching with semantic understanding.
+    """
+    relationship_type: Literal["supporting", "refuting", "irrelevant"] = Field(
+        description="Semantic relationship between evidence and hypothesis"
+    )
+    confidence_score: float = Field(
+        ge=0.0, le=1.0, 
+        description="Confidence in the classification (0.0-1.0)"
+    )
+    reasoning: str = Field(
+        description="Detailed semantic reasoning for classification decision"
+    )
+    probative_value: float = Field(
+        ge=0.0, le=1.0, 
+        description="Evidence strength assessment for this hypothesis"
+    )
+    contradiction_indicators: int = Field(
+        ge=0, 
+        description="Number of semantic contradictions identified between evidence and hypothesis"
+    )
+    semantic_analysis: str = Field(
+        description="Analysis of evidence-hypothesis semantic relationship and context"
+    )
+
+
 class VanEveraPredictionEvaluation(BaseModel):
     """Structured output for Van Evera prediction evaluation"""
     test_result: TestResult = Field(description="Whether the prediction passes, fails, or is inconclusive")

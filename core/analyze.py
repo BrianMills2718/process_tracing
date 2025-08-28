@@ -1069,32 +1069,35 @@ def systematic_evidence_evaluation(hypothesis_id, hypothesis_data, all_evidence_
 
 def _identify_contradiction_patterns(hypothesis_desc, evidence_desc):
     """
-    Identify semantic patterns that might indicate contradictions between hypothesis and evidence.
+    REPLACED: Now uses LLM semantic analysis instead of keyword matching.
+    Maintains original function signature for compatibility.
     
     Returns:
-        Float: Number of contradiction indicators found
+        Float: Number of contradiction indicators found (LLM-based semantic analysis)
     """
-    contradiction_count = 0
-    
-    # Temporal contradictions
-    if 'before' in hypothesis_desc and 'after' in evidence_desc:
-        contradiction_count += 1
-    if 'caused' in hypothesis_desc and 'prevented' in evidence_desc:
-        contradiction_count += 1
+    try:
+        from core.plugins.van_evera_llm_interface import get_van_evera_llm
         
-    # Magnitude contradictions  
-    if 'major' in hypothesis_desc and 'minor' in evidence_desc:
-        contradiction_count += 0.5
-    if 'significant' in hypothesis_desc and 'negligible' in evidence_desc:
-        contradiction_count += 0.5
+        llm_interface = get_van_evera_llm()
+        classification = llm_interface.classify_evidence_relationship(
+            evidence_description=evidence_desc,
+            hypothesis_description=hypothesis_desc
+        )
         
-    # Political contradictions (American Revolution specific)
-    if 'ideological' in hypothesis_desc and 'economic' in evidence_desc:
-        contradiction_count += 0.3
-    if 'taxation' in hypothesis_desc and 'representation' not in evidence_desc and 'tax' not in evidence_desc:
-        contradiction_count += 0.4
+        logger.info(f"LLM evidence classification: {classification.relationship_type} "
+                   f"(confidence: {classification.confidence_score:.3f}, "
+                   f"probative: {classification.probative_value:.3f})")
         
-    return contradiction_count
+        # Convert LLM classification to float for compatibility with existing code
+        if classification.relationship_type == "refuting":
+            return float(classification.contradiction_indicators)  # Use LLM-assessed contradiction count
+        else:
+            return 0.0  # No contradiction for supporting/irrelevant evidence
+            
+    except Exception as e:
+        logger.error(f"LLM evidence classification failed: {e}", exc_info=True,
+                    extra={'hypothesis': hypothesis_desc[:100], 'evidence': evidence_desc[:100]})
+        return 0.0  # Conservative fallback - assume no contradiction
 
 def generate_van_evera_type_reasoning(evidence_type, evidence_description):
     """
