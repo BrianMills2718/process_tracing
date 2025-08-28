@@ -29,18 +29,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: PHASE 1 VALIDATION REQUIRED (Updated 2025-01-27)
+## 🎯 CURRENT STATUS: LLM-FIRST MIGRATION (Updated 2025-01-28)
 
-**System Status**: **Phase 1 Implementation Complete** - Three academic enhancements implemented with fail-fast error handling  
-**Current Priority**: **Critical Validation Testing** - Verify actual functionality before declaring success  
-**Academic Quality**: **Implementation Unvalidated** - Claims require empirical testing with raw evidence
+**System Status**: **Phase 1 Validation Complete** - Rule-based system identified and documented  
+**Current Priority**: **Critical Evidence Classification Fix** - Replace keyword matching with LLM semantic analysis  
+**Academic Issue**: **0% Academic Compliance** - Rule-based contradiction detection causes systematic misclassification
 
-**COMPLETED PHASE 1 IMPLEMENTATION (2025-01-27)**:
-- ✅ **Van Evera Test Integration**: Integrated test results into hypothesis confidence scoring (`core/analyze.py`)
-- ✅ **Hypothesis LLM Enhancement**: Created `core/enhance_hypotheses.py` with VanEveraLLMInterface  
-- ✅ **Evidence Balance Correction**: Implemented systematic evidence classification targeting 0.6-0.8 ratios
-- ✅ **Fail-Fast Error Handling**: Removed all fallback mechanisms from LLM interface
-- ❌ **VALIDATION STATUS**: **ZERO EMPIRICAL TESTING** - No validation of actual functionality
+**ROOT CAUSE IDENTIFIED (2025-01-28)**:
+- ❌ **Rule-Based Evidence Classification**: `_identify_contradiction_patterns()` uses keyword matching
+- ❌ **Hardcoded Academic Logic**: `'ideological' in hypothesis and 'economic' in evidence → contradiction`
+- ❌ **Systematic Misclassification**: Boston Massacre evidence incorrectly classified as refuting ideological movement
+- ❌ **Academic Compliance Failure**: 0/3 hypotheses achieve 0.6-0.8 support ratio target (0% vs ≥50% required)
 
 ## Evidence-Based Development Philosophy (Mandatory)
 
@@ -52,7 +51,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **VALIDATION + SELF-HEALING**: Every validator must have coupled self-healing capability
 
 ### Quality Standards
-- **Academic Functionality**: Target ≥80% Van Evera compliance (current: implementation unvalidated)
+- **Academic Functionality**: Target ≥50% academic compliance (0.6-0.8 support ratios)
 - **Technical Correctness**: All Pydantic validations must pass
 - **Process Adherence**: Run lint/typecheck before marking tasks complete
 - **Evidence Documentation**: Document all claims with concrete test results in structured evidence files
@@ -68,212 +67,209 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Type Safety**: Full mypy compliance across core modules
 - **Security**: Environment-based API key management
 
-## 🧪 PHASE 1 VALIDATION PROTOCOL (Critical Priority)
+## 🚨 LLM-FIRST MIGRATION PROTOCOL (Critical Priority)
 
-### **MANDATORY VALIDATION**: Verify Phase 1 Implementation Before Expansion
+### **MANDATORY MIGRATION**: Replace Rule-Based Evidence Classification
 
-**Critical Gap**: Phase 1 tasks were implemented but **never validated**. System behavior under new enhancements is unknown.
+**Critical Issue**: Evidence classification using keyword matching causes 0% academic compliance. System incorrectly classifies semantically supporting evidence as refuting based on keyword rules.
 
-**Validation Required**:
-1. **Integration Completeness**: Do all three enhancements execute during full analysis?
-2. **Evidence Balance Results**: Do we get support ratios other than 1.0 or 0S/0R?  
-3. **Van Evera Confidence Mapping**: Do hypothesis confidence scores vary with test outcomes?
-4. **LLM Enhancement Execution**: Does `enhance_hypotheses.py` actually run and generate results?
-5. **Fail-Fast Error Handling**: Does system fail immediately on validation errors without fallbacks?
+**Example Failure**:
+- **Evidence**: "Boston Massacre turning colonial sentiment against British"
+- **Hypothesis**: "American Revolution was ideological and political movement"
+- **Current System**: Classified as REFUTING (keyword rule: 'ideological' + economic context → contradiction)
+- **Should Be**: Classified as SUPPORTING (anti-British sentiment supports ideological movement)
 
-### **TASK V1: Integration Validation Test**
-**Priority**: **CRITICAL** - Must complete before any other development
-**Objective**: Verify all three Phase 1 enhancements execute in full analysis pipeline
+### **PHASE 1: Evidence Classification Migration (CRITICAL)**
 
-**Test Protocol**:
-```bash
-# Full analysis with comprehensive logging
-python -m core.analyze output_data/revolutions/revolutions_20250805_122000_graph.json --html 2>&1 | tee validation_test_$(date +%Y%m%d_%H%M%S).log
+**Objective**: Replace `_identify_contradiction_patterns()` function with LLM semantic analysis
+**Impact**: Direct fix for 0% academic compliance issue
+**Risk**: High - Core evidence classification logic
+
+#### **TASK 1A: Schema Creation (Safe)**
+**File**: `core/plugins/van_evera_llm_schemas.py`
+**Action**: Add new Pydantic schema for evidence-hypothesis relationship classification
+
+**Required Schema**:
+```python
+class EvidenceRelationshipClassification(BaseModel):
+    relationship_type: Literal["supporting", "refuting", "irrelevant"]
+    confidence_score: float = Field(ge=0.0, le=1.0)
+    reasoning: str = Field(description="Detailed semantic reasoning for classification")
+    probative_value: float = Field(ge=0.0, le=1.0, description="Evidence strength assessment")
+    contradiction_indicators: int = Field(ge=0, description="Number of semantic contradictions identified")
+    semantic_analysis: str = Field(description="Analysis of evidence-hypothesis semantic relationship")
 ```
 
-**Evidence Required**:
-- Console logs showing `[HYPOTHESIS_ENHANCEMENT]`, `[VAN_EVERA_INTEGRATION]`, `[EVIDENCE_BALANCE]` execution
-- Final HTML output demonstrating all three enhancements visible
-- Hypothesis confidence scores populated (not empty/null)
-- Evidence balance ratios measured and documented
-- Performance impact measurements (execution time, LLM calls, token usage)
+#### **TASK 1B: LLM Interface Extension (Safe)**
+**File**: `core/plugins/van_evera_llm_interface.py` 
+**Action**: Add semantic evidence classification method
+
+**Required Method**:
+```python
+def classify_evidence_relationship(self, evidence_description: str, 
+                                 hypothesis_description: str) -> EvidenceRelationshipClassification:
+    """
+    Classify evidence-hypothesis relationship using semantic understanding.
+    Replaces keyword-based contradiction detection with LLM semantic analysis.
+    
+    Args:
+        evidence_description: Description of the evidence
+        hypothesis_description: Description of the hypothesis
+        
+    Returns:
+        Structured classification with reasoning and probative value
+    """
+    prompt = f"""
+    Analyze the semantic relationship between this evidence and hypothesis using Van Evera academic methodology.
+    
+    EVIDENCE: {evidence_description}
+    HYPOTHESIS: {hypothesis_description}
+    
+    Determine if the evidence:
+    1. SUPPORTS the hypothesis (evidence strengthens or confirms the hypothesis)
+    2. REFUTES the hypothesis (evidence weakens or contradicts the hypothesis)  
+    3. Is IRRELEVANT to the hypothesis (no clear relationship)
+    
+    Consider semantic meaning, not keyword matching. Evidence about anti-British sentiment 
+    SUPPORTS hypotheses about ideological movements, regardless of economic/political keyword conflicts.
+    
+    Provide detailed reasoning for your classification and assess the probative value (0.0-1.0).
+    """
+    
+    return self._get_structured_response(prompt, EvidenceRelationshipClassification)
+```
+
+#### **TASK 1C: Function Replacement (HIGH RISK)**
+**File**: `core/analyze.py` Lines 1070-1097
+**Action**: Replace rule-based function with LLM semantic analysis
+
+**Critical Requirements**:
+1. **Preserve Function Signature**: Same parameters, same return type (float)
+2. **Maintain Compatibility**: Return value must work with existing callers
+3. **Error Resilience**: LLM failures cannot crash the system
+
+**Implementation Strategy**:
+```python
+def _identify_contradiction_patterns(hypothesis_desc, evidence_desc):
+    """
+    REPLACED: Now uses LLM semantic analysis instead of keyword matching.
+    Maintains original function signature for compatibility.
+    """
+    try:
+        from core.plugins.van_evera_llm_interface import get_van_evera_llm
+        
+        llm_interface = get_van_evera_llm()
+        classification = llm_interface.classify_evidence_relationship(
+            evidence_description=evidence_desc,
+            hypothesis_description=hypothesis_desc
+        )
+        
+        # Convert LLM classification to float for compatibility with existing code
+        if classification.relationship_type == "refuting":
+            return float(classification.contradiction_indicators)  # Use LLM-assessed contradiction count
+        else:
+            return 0.0  # No contradiction for supporting/irrelevant evidence
+            
+    except Exception as e:
+        logger.error(f"LLM evidence classification failed: {e}", exc_info=True)
+        return 0.0  # Conservative fallback - assume no contradiction
+```
+
+### **TASK 1D: Migration Validation (CRITICAL)**
+
+**Objective**: Verify academic compliance improvement and system stability
+**Test Dataset**: Use existing American Revolution analysis results
+
+**Validation Protocol**:
+```bash
+# 1. Run full analysis with LLM classification
+python -m core.analyze output_data/revolutions/revolutions_20250805_122000_graph.json --html
+
+# 2. Measure academic compliance improvement
+# Before: 0/3 hypotheses in 0.6-0.8 support ratio range (0%)
+# Target: ≥50% of hypotheses in academic range
+
+# 3. Verify semantic accuracy on known cases
+# Evidence: "Boston Massacre turning sentiment against British" 
+# Hypothesis: "Ideological movement"
+# Expected: SUPPORTING classification (not refuting)
+```
 
 **Success Criteria**:
-- All three enhancements execute without errors
-- Results visible in final output
-- No regression in existing mechanism/alternative analysis quality
-- Fail-fast behavior confirmed (no silent fallbacks)
+- ✅ Academic compliance improves from 0% to ≥20%
+- ✅ Boston Massacre evidence correctly classified as supporting ideological movement
+- ✅ System completes full analysis without crashes
+- ✅ LLM cost increase <5x current costs
+- ✅ Execution time increase <3x current time
 
-**Failure Response**: If validation fails, debug individual components before integration expansion
-
-### **TASK V2: Evidence Balance Validation**
-**Priority**: **HIGH** - Core academic quality metric
-**Objective**: Confirm evidence balance correction produces academic-standard ratios
-
-**Current Baseline**: 1.00 support ratio (100% supporting evidence, 0% refuting)
-**Academic Target**: 0.6-0.8 support ratio (balanced evidence evaluation)
-
-**Test Protocol**:
-```python
-def validate_evidence_balance(analysis_results):
-    """Measure evidence balance improvements"""
-    for hyp_id, hyp_data in analysis_results.get('evidence_analysis', {}).items():
-        supporting_count = len(hyp_data.get('supporting_evidence', []))
-        refuting_count = len(hyp_data.get('refuting_evidence', []))
-        
-        if supporting_count + refuting_count > 0:
-            support_ratio = supporting_count / (supporting_count + refuting_count)
-            print(f"Hypothesis {hyp_id}: {support_ratio:.2f} support ratio")
-            print(f"  Supporting: {supporting_count}, Refuting: {refuting_count}")
-    return evidence_balance_metrics
-```
-
-**Evidence Required**:
-- Raw evidence counts (supporting vs refuting) for each hypothesis
-- Support ratio calculations with comparison to 1.0 baseline  
-- Van Evera FAIL results mapped to refuting evidence
-- Systematic disconfirming evidence identification working
-
-### **TASK V3: Cross-Dataset Validation**
-**Priority**: **MEDIUM** - Generalizability assessment
-**Objective**: Confirm improvements work beyond American Revolution dataset
-
-**Simple Test Case Creation**:
-```
-input_text/validation_case/simple_conflict.txt:
-"Economic sanctions were imposed on Country X in January 2020. 
-Political protests erupted in March 2020, with widespread demonstrations.
-Government officials claimed the protests were due to internal political disputes.
-However, protest timing closely followed sanctions implementation.
-Some evidence suggests economic hardship from sanctions motivated protesters.
-Critics argue domestic political factors were more significant than economic pressure."
-```
-
-**Test Protocol**:
-```bash
-# Generate graph from simple case
-python -m core.extract input_text/validation_case/simple_conflict.txt
-
-# Run enhanced analysis  
-python -m core.analyze [generated_graph.json] --html
-```
-
-**Evidence Required**:
-- System processes different case successfully  
-- Hypotheses about sanctions→protests causation identified
-- Evidence balance shows mixed supporting/refuting evidence
-- Van Evera tests execute on different domain
-- LLM enhancements work across different subject matter
-
-### **TASK V4: Error Handling Validation**
-**Priority**: **MEDIUM** - Fail-fast compliance verification
-**Objective**: Confirm removal of fallback mechanisms and proper error propagation
-
-**Test Cases**:
-1. **LLM Validation Error**: Force invalid schema response from Gemini
-2. **Network Error**: Simulate API timeout/connection failure  
-3. **Missing Van Evera Results**: Test with incomplete plugin data
-4. **Pydantic Schema Error**: Test with malformed structured output
-
-**Test Protocol**:
-```python
-# Simulate validation error
-def test_fail_fast_validation():
-    invalid_llm_response = "This is not valid JSON schema"
-    # Should raise ValidationError immediately, no fallback behavior
-    with pytest.raises(ValidationError):
-        enhance_hypothesis_with_llm(test_hypothesis, [], [])
-```
-
-**Evidence Required**:
-- System fails immediately on schema validation errors
-- No silent fallback behavior observed
-- Proper error messages surface to user
-- Transient network errors retry appropriately
-- Non-recoverable errors fail fast without masking
-
-## Implementation Guidelines
-
-### **Evidence Requirements** 
-Create structured evidence files in `evidence/current/` for each validation task:
-```
-evidence/current/
-├── Evidence_INTEGRATION_Validation.md
-├── Evidence_EVIDENCE_Balance_Validation.md  
-├── Evidence_CROSS_Dataset_Validation.md
-└── Evidence_ERROR_Handling_Validation.md
-```
-
-**Required Evidence Per Task**:
-- Raw console logs with timestamps
-- Before/after comparison metrics
-- Quantified improvements with specific measurements
-- Error case documentation with actual error messages
-- Performance impact assessment
-
-### **Validation Protocol**
-**For Each Validation Task**:
-```bash
-# Document before state
-python -m core.analyze [test_case] --html > before_validation.log 2>&1
-
-# Run validation test
-[execute validation]
-
-# Document after state  
-python -m core.analyze [test_case] --html > after_validation.log 2>&1
-
-# Compare results
-diff before_validation.log after_validation.log
-```
-
-### **Success Criteria**
-- **Integration**: All three enhancements execute and produce visible results
-- **Evidence Balance**: Support ratios between 0.6-0.8 for at least 50% of hypotheses
-- **Cross-Dataset**: System works on different domains without modification
-- **Error Handling**: Immediate failure on validation errors, no silent fallbacks
-- **Performance**: No >3x execution time increase from baseline
-
-### **Quality Gates**
-- **Empirical**: All validation tests pass with documented evidence
-- **Academic**: Evidence balance improvements demonstrated with quantified metrics
-- **Technical**: No regression in existing LLM mechanism quality
-- **Reliability**: Fail-fast error handling confirmed across error types
+**Failure Criteria (Rollback Required)**:
+- ❌ System crashes or fails to generate results
+- ❌ Academic compliance doesn't improve
+- ❌ LLM classifications are semantically incorrect
+- ❌ Cost or performance impact exceeds acceptable bounds
 
 ## Codebase Structure
 
-### Key Entry Points
-- `core/analyze.py`: Main analysis orchestration with Phase 1 enhancements (lines 2940-3271)
-- `core/enhance_hypotheses.py`: LLM hypothesis enhancement pipeline (new)
-- `core/plugins/van_evera_llm_interface.py`: Fail-fast LLM interface (updated)
+### Key Files for Migration
+- `core/analyze.py`: Lines 1070-1097 contain rule-based contradiction detection (TARGET FOR REPLACEMENT)
+- `core/plugins/van_evera_llm_interface.py`: LLM interface requiring extension
+- `core/plugins/van_evera_llm_schemas.py`: Pydantic schemas requiring new evidence classification schema
+- `core/enhance_hypotheses.py`: Uses enhanced LLM interface for hypothesis evaluation
 
 ### Critical Integration Points
-- **Hypothesis Enhancement Loop**: Lines 2940-2988 in `core/analyze.py`
-- **Van Evera Result Integration**: Lines 3156-3197 in `core/analyze.py`
-- **Evidence Balance Correction**: Lines 3252-3271 in `core/analyze.py`
-- **Fail-Fast Error Handling**: Removed fallback methods in `van_evera_llm_interface.py`
+- **Evidence Classification Pipeline**: Lines 985-1068 in `core/analyze.py`
+- **Academic Compliance Calculation**: Evidence balance ratios computed from supporting/refuting classification
+- **HTML Output Generation**: Results must display in analysis summary
+- **Van Evera Test Integration**: Must work with existing test result processing
 
-### Module Organization
-- `core/plugins/`: 16 registered plugins with structured LLM integration
-- `core/logging_utils.py`: Structured logging utilities for operational context  
-- `universal_llm_kit/`: LiteLLM integration with Gemini 2.5 Flash
-- `evidence/`: Structured evidence documentation (current/ and completed/ phases)
-
-### Evidence Structure
+### Evidence Files (Phase 1 Validation)
 ```
-evidence/
-├── current/          # Active validation work only
-├── completed/        # Archived completed phases  
+evidence/current/
+├── Evidence_LLM_FIRST_Migration_Phase1.md     # Migration validation results
+└── Evidence_ACADEMIC_Compliance_Improvement.md # Before/after compliance measurements
 ```
 
-**CRITICAL**: Evidence files must contain ONLY current validation work. Archive completed phases to avoid chronological confusion.
+## Implementation Guidelines
 
-## Next Steps After Validation
+### **Git-Based Safety**
+- **Current Commit**: `e87815d` - Known working state with 0% academic compliance
+- **Rollback Strategy**: `git revert HEAD` if migration fails
+- **No Feature Flags**: Direct replacement for clean codebase
 
-**Only After Successful V1-V4 Validation**:
-- **Phase 2**: Academic rigor expansion (alternative explanations, causal chains)
-- **Multi-Document Architecture**: Corpus handling for large-scale analysis  
-- **Performance Optimization**: LLM cost reduction and caching strategies
-- **Academic Benchmarking**: Human expert comparison studies
+### **Error Handling Requirements**
+```python
+# All LLM calls must handle failures gracefully
+try:
+    return llm_semantic_analysis()
+except Exception as e:
+    logger.error(f"LLM classification failed: {e}")
+    return conservative_fallback()  # Don't crash the system
+```
 
-**System Architecture**: Phase 1 implementation complete, awaiting empirical validation to confirm functionality before expansion.
+### **Performance Monitoring**
+- **Current**: ~30-40 LLM calls per analysis
+- **After Migration**: ~40-55 LLM calls per analysis
+- **Acceptable Impact**: <3x execution time, <5x cost increase
+
+### **Validation Requirements**
+**Evidence Required for Task Completion**:
+- Console logs showing LLM classification execution
+- Before/after academic compliance measurements
+- Semantic accuracy verification on test cases
+- Performance impact assessment (time and cost)
+- No regression in existing functionality
+
+### **Success Declaration Requirements**
+- **Academic Improvement**: Quantified improvement in 0.6-0.8 support ratio compliance
+- **Semantic Accuracy**: Evidence correctly classified based on meaning, not keywords
+- **System Stability**: Full analysis completes without errors
+- **Evidence Documentation**: All claims supported with raw execution logs
+
+## Next Steps After Phase 1
+
+**Only After Successful Phase 1 Validation**:
+- **Phase 2**: Replace hardcoded probative value assignments with LLM assessment
+- **Phase 3**: Replace domain classification keyword matching with LLM semantic analysis  
+- **Phase 4**: Replace confidence threshold hardcoded ranges with LLM evaluation
+
+**System Architecture**: Phase 1 implementation replaces rule-based evidence classification with LLM semantic understanding to achieve academic compliance standards.
