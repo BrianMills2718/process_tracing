@@ -9,6 +9,17 @@ from typing import Dict, List, Any, Tuple, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 from .base import ProcessTracingPlugin, PluginValidationError
+import logging
+
+# Import LLM interface for semantic analysis
+try:
+    from .van_evera_llm_interface import get_van_evera_llm
+except ImportError:
+    # Fallback if not available
+    def get_van_evera_llm():
+        raise ImportError("Van Evera LLM interface not available")
+
+logger = logging.getLogger(__name__)
 
 
 class PredictionDomain(Enum):
@@ -483,24 +494,45 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
         }
     
     def _classify_hypothesis_domain(self, hypothesis: Dict) -> PredictionDomain:
-        """Classify hypothesis into domain for appropriate prediction generation"""
-        description = hypothesis.get('properties', {}).get('description', '').lower()
+        """
+        Classify hypothesis into domain using LLM semantic analysis.
+        Replaces keyword matching with universal domain classification.
+        """
+        description = hypothesis.get('properties', {}).get('description', '')
         
-        # Domain classification logic
-        if any(term in description for term in ['political', 'government', 'assembly', 'representation', 'constitutional']):
+        try:
+            # Use LLM for semantic domain classification
+            llm_interface = get_van_evera_llm()
+            
+            domain_classification = llm_interface.classify_hypothesis_domain(
+                hypothesis_description=description,
+                context="Advanced Van Evera prediction engine domain classification"
+            )
+            
+            # Map LLM domains to PredictionDomain enum
+            domain_mapping = {
+                'political': PredictionDomain.POLITICAL,
+                'economic': PredictionDomain.ECONOMIC,
+                'ideological': PredictionDomain.IDEOLOGICAL,
+                'military': PredictionDomain.MILITARY,
+                'social': PredictionDomain.SOCIAL,
+                'cultural': PredictionDomain.SOCIAL,  # Map cultural to social
+                'religious': PredictionDomain.IDEOLOGICAL,  # Map religious to ideological
+                'technological': PredictionDomain.INSTITUTIONAL  # Map technological to institutional
+            }
+            
+            primary_domain = domain_classification.primary_domain.lower()
+            prediction_domain = domain_mapping.get(primary_domain, PredictionDomain.POLITICAL)
+            
+            logger.info(f"LLM domain classification: {description[:50]}... -> {primary_domain} "
+                       f"(confidence: {domain_classification.confidence_score:.3f})")
+            
+            return prediction_domain
+            
+        except Exception as e:
+            logger.warning(f"LLM domain classification failed: {e}")
+            # Fallback to default (no keyword analysis)
             return PredictionDomain.POLITICAL
-        elif any(term in description for term in ['economic', 'merchant', 'trade', 'tax', 'commercial']):
-            return PredictionDomain.ECONOMIC
-        elif any(term in description for term in ['social', 'popular', 'class', 'crowd', 'people']):
-            return PredictionDomain.SOCIAL
-        elif any(term in description for term in ['military', 'war', 'army', 'soldier', 'battle']):
-            return PredictionDomain.MILITARY
-        elif any(term in description for term in ['ideological', 'ideas', 'philosophy', 'enlightenment']):
-            return PredictionDomain.IDEOLOGICAL
-        elif any(term in description for term in ['institutional', 'institution', 'organization', 'structure']):
-            return PredictionDomain.INSTITUTIONAL
-        else:
-            return PredictionDomain.POLITICAL  # Default domain
     
     def _create_domain_specific_predictions(self, hypothesis: Dict, domain: PredictionDomain) -> List[SophisticatedPrediction]:
         """Create sophisticated predictions based on domain and Van Evera methodology"""

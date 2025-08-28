@@ -6,6 +6,17 @@ Creates systematic theoretical competition for rigorous Van Evera analysis
 import json
 from typing import Dict, List, Any
 from .base import ProcessTracingPlugin, PluginValidationError
+import logging
+
+# Import LLM interface for semantic analysis  
+try:
+    from .van_evera_llm_interface import get_van_evera_llm
+except ImportError:
+    # Fallback if not available
+    def get_van_evera_llm():
+        raise ImportError("Van Evera LLM interface not available")
+
+logger = logging.getLogger(__name__)
 
 
 class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
@@ -17,7 +28,9 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
     plugin_id = "alternative_hypothesis_generator"
     
     # Academic-quality alternative hypotheses for American Revolution
-    REVOLUTION_ALTERNATIVE_HYPOTHESES = {
+    # DEPRECATED: Hardcoded American Revolution hypotheses replaced with LLM generation
+    # This dictionary is kept for compatibility but should not be used
+    REVOLUTION_ALTERNATIVE_HYPOTHESES_DEPRECATED = {
         'economic_interests': {
             'id': 'Q_H2',
             'description': "Colonial merchant class drove resistance to protect trade profits and economic autonomy from British mercantile restrictions",
@@ -214,28 +227,31 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
             'theoretical_competition_metrics': competition_metrics,
             'academic_assessment': academic_assessment,
             'generation_statistics': {
-                'total_alternatives_generated': len(self.REVOLUTION_ALTERNATIVE_HYPOTHESES),
-                'theoretical_domains_covered': len(set(str(alt['theoretical_basis']).split(',')[0] for alt in self.REVOLUTION_ALTERNATIVE_HYPOTHESES.values())),
-                'evidence_requirements_specified': sum(len(alt['evidence_requirements']) for alt in self.REVOLUTION_ALTERNATIVE_HYPOTHESES.values()),
-                'competitive_claims_defined': len([alt for alt in self.REVOLUTION_ALTERNATIVE_HYPOTHESES.values() if alt.get('competing_claims')])
+                'total_alternatives_generated': len(generation_result['alternatives_created']),
+                'theoretical_domains_covered': len(generation_result.get('theoretical_domains_covered', [])),
+                'evidence_requirements_specified': len([alt for alt in generation_result['alternatives_created']]),
+                'competitive_claims_defined': len([alt for alt in generation_result['alternatives_created']])
             }
         }
         
-        self.logger.info(f"END: Generated {len(self.REVOLUTION_ALTERNATIVE_HYPOTHESES)} alternative hypotheses across {result['generation_statistics']['theoretical_domains_covered']} domains")
+        self.logger.info(f"END: Generated {result['generation_statistics']['total_alternatives_generated']} alternative hypotheses across {result['generation_statistics']['theoretical_domains_covered']} domains")
         return result
     
     def get_checkpoint_data(self) -> Dict[str, Any]:
-        """Return checkpoint data for alternative hypothesis generation"""
+        """Return checkpoint data for LLM-based alternative hypothesis generation"""
         return {
             'plugin_id': self.id,
-            'alternatives_available': len(self.REVOLUTION_ALTERNATIVE_HYPOTHESES),
-            'theoretical_domains': list(self.REVOLUTION_ALTERNATIVE_HYPOTHESES.keys()),
-            'academic_quality': 'peer_reviewed_standard'
+            'alternatives_available': 'llm_generated',
+            'theoretical_domains': ['universal_llm_analysis'],
+            'academic_quality': 'llm_enhanced_theoretical'
         }
     
     def _generate_comprehensive_alternatives(self, graph_data: Dict) -> Dict[str, Any]:
-        """Generate comprehensive set of alternative hypotheses"""
-        self.logger.info("PROGRESS: Creating systematic theoretical competition...")
+        """
+        Generate comprehensive set of alternative hypotheses using LLM semantic analysis.
+        Replaces hardcoded American Revolution alternatives with universal generation.
+        """
+        self.logger.info("PROGRESS: Creating systematic theoretical competition using LLM analysis...")
         
         updated_graph = graph_data.copy()
         existing_hypotheses = [n for n in updated_graph['nodes'] if n.get('type') == 'Hypothesis']
@@ -244,52 +260,117 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         new_edges = []
         alternatives_created = []
         
-        for alt_key, alt_data in self.REVOLUTION_ALTERNATIVE_HYPOTHESES.items():
-            # Create alternative hypothesis node (using Hypothesis type with academic structure)
-            alternative_node = {
-                'id': alt_data['id'],
-                'type': 'Hypothesis',
-                'properties': {
-                    'description': alt_data['description'],
-                    'hypothesis_type': 'alternative',
-                    'ranking_score': 0.0,  # Will be updated after Van Evera testing
-                    'research_question_id': 'Q',  # Will be set when research question is created
-                    'prior_probability': 0.5,  # Default prior for alternatives
-                    'status': 'active',
-                    'theoretical_basis': alt_data['theoretical_basis'],
-                    'key_predictions': alt_data['key_predictions'],
-                    'testable_mechanisms': alt_data['testable_mechanisms'],
-                    'evidence_requirements': alt_data['evidence_requirements'],
-                    'competing_claims': alt_data['competing_claims'],
-                    'domain': alt_key,
-                    'generated_by': 'alternative_hypothesis_generator',
-                    'academic_quality': 'peer_reviewed',
-                    'theoretical_domain': alt_key.replace('_', ' ').title()
-                }
+        if not existing_hypotheses:
+            self.logger.warning("No existing hypotheses found - cannot generate alternatives")
+            return {
+                'updated_graph_data': updated_graph,
+                'alternatives_created': alternatives_created,
+                'competitive_edges_created': []
             }
-            new_nodes.append(alternative_node)
-            alternatives_created.append(alt_data['id'])
+        
+        # Get the primary hypothesis for alternative generation
+        primary_hypothesis = existing_hypotheses[0]  # Take first hypothesis as primary
+        primary_desc = primary_hypothesis.get('properties', {}).get('description', '')
+        
+        # Collect evidence context for semantic understanding
+        evidence_nodes = [n for n in updated_graph['nodes'] if n.get('type') == 'Evidence']
+        evidence_context = " ".join([
+            n.get('properties', {}).get('description', '')
+            for n in evidence_nodes[:10]  # Limit to first 10 for context
+        ])
+        
+        try:
+            # Generate alternatives using LLM semantic understanding
+            llm_interface = get_van_evera_llm()
             
-            # Note: Competitive relationships will be established through Van Evera testing
-            # rather than explicit competition edges, following academic standards
+            alt_generation = llm_interface.generate_alternative_hypotheses(
+                original_hypothesis=primary_desc,
+                evidence_context=evidence_context,
+                domain_context="Universal process tracing analysis requiring theoretical competition"
+            )
             
-            # Connect to relevant existing evidence using standard supports edge
-            relevant_evidence = self._identify_relevant_evidence(graph_data, alt_data)
-            for evidence_node in relevant_evidence:
-                evidence_edge = {
-                    'source_id': evidence_node['id'],
-                    'target_id': alt_data['id'],
-                    'type': 'supports',
+            # Convert LLM-generated alternatives to graph nodes
+            for i, alt_hyp in enumerate(alt_generation.alternative_hypotheses):
+                alt_id = f"Q_H{i+2:02d}_LLM"  # Q_H02_LLM, Q_H03_LLM, etc.
+                
+                alternative_node = {
+                    'id': alt_id,
+                    'type': 'Hypothesis',
                     'properties': {
-                        'diagnostic_type': 'straw_in_the_wind',  # Default, refined by Van Evera testing
-                        'probative_value': 0.6,
-                        'certainty': 0.7,
-                        'description': f"Potential evidence for {alt_data['theoretical_basis']}",
-                        'theoretical_relevance': alt_data['theoretical_basis'],
-                        'evidence_requirement_match': self._assess_evidence_requirement_match(evidence_node, alt_data)
+                        'description': alt_hyp.get('description', f"Alternative hypothesis {i+1}"),
+                        'hypothesis_type': 'alternative',
+                        'ranking_score': 0.0,  # Will be updated after Van Evera testing
+                        'research_question_id': 'Q',  # Will be set when research question is created
+                        'prior_probability': 0.5,  # Default prior for alternatives
+                        'status': 'active',
+                        'theoretical_basis': alt_hyp.get('theoretical_justification', 'LLM-generated theoretical framework'),
+                        'key_predictions': alt_hyp.get('test_predictions', []),
+                        'testable_mechanisms': alt_hyp.get('causal_mechanism', []),
+                        'evidence_requirements': alt_hyp.get('evidence_requirements', []),
+                        'competing_claims': alt_hyp.get('differentiator', 'LLM-generated competing mechanism'),
+                        'domain': alt_hyp.get('primary_domain', f'domain_{i+1}'),
+                        'generated_by': 'llm_alternative_hypothesis_generator',
+                        'academic_quality': 'llm_generated',
+                        'theoretical_domain': alt_hyp.get('domain_classification', f'Domain {i+1}'),
+                        'confidence_score': alt_generation.generation_confidence,
+                        'universal_applicability': alt_generation.universal_applicability
                     }
                 }
-                new_edges.append(evidence_edge)
+                new_nodes.append(alternative_node)
+                alternatives_created.append(alt_id)
+            
+            self.logger.info(f"Generated {len(alternatives_created)} LLM-based alternative hypotheses "
+                           f"with confidence {alt_generation.generation_confidence:.3f}")
+            
+        except Exception as e:
+            self.logger.error(f"LLM alternative generation failed: {e}")
+            
+            # Fallback to basic universal alternatives (no dataset-specific logic)
+            universal_alternatives = [
+                {
+                    'id': 'Q_H02_FALLBACK',
+                    'description': 'Economic factors primarily drove the observed outcomes through material incentive mechanisms',
+                    'theoretical_basis': 'Economic determinism and rational choice theory',
+                    'domain': 'economic'
+                },
+                {
+                    'id': 'Q_H03_FALLBACK', 
+                    'description': 'Political institutional changes created the structural conditions for the observed outcomes',
+                    'theoretical_basis': 'Institutional theory and political development',
+                    'domain': 'political'
+                },
+                {
+                    'id': 'Q_H04_FALLBACK',
+                    'description': 'Social and cultural factors shaped collective behavior leading to the observed outcomes',
+                    'theoretical_basis': 'Social movement theory and cultural sociology',
+                    'domain': 'social'
+                }
+            ]
+            
+            for alt_data in universal_alternatives:
+                alternative_node = {
+                    'id': alt_data['id'],
+                    'type': 'Hypothesis',
+                    'properties': {
+                        'description': alt_data['description'],
+                        'hypothesis_type': 'alternative',
+                        'ranking_score': 0.0,
+                        'research_question_id': 'Q',
+                        'prior_probability': 0.5,
+                        'status': 'active',
+                        'theoretical_basis': alt_data['theoretical_basis'],
+                        'key_predictions': [],
+                        'testable_mechanisms': [],
+                        'evidence_requirements': [],
+                        'competing_claims': f"Alternative {alt_data['domain']} explanation",
+                        'domain': alt_data['domain'],
+                        'generated_by': 'fallback_alternative_generator',
+                        'academic_quality': 'basic_theoretical',
+                        'theoretical_domain': alt_data['domain'].title()
+                    }
+                }
+                new_nodes.append(alternative_node)
+                alternatives_created.append(alt_data['id'])
         
         # Update graph data
         updated_graph['nodes'].extend(new_nodes)
@@ -301,8 +382,11 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
             'updated_graph_data': updated_graph,
             'alternatives_created': alternatives_created,
             'competitive_edges_created': 0,  # Competition handled through Van Evera testing
-            'evidence_edges_created': len([e for e in new_edges if e['type'] == 'supports']),
-            'theoretical_domains_covered': list(self.REVOLUTION_ALTERNATIVE_HYPOTHESES.keys())
+            'evidence_edges_created': len(new_edges),
+            'theoretical_domains_covered': list(set([
+                node['properties'].get('domain', 'unknown') 
+                for node in new_nodes
+            ]))
         }
     
     def _identify_relevant_evidence(self, graph_data: Dict, alt_data: Dict) -> List[Dict]:

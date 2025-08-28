@@ -7,6 +7,17 @@ import json
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from .base import ProcessTracingPlugin, PluginValidationError
+import logging
+
+# Import LLM interface for semantic analysis
+try:
+    from .van_evera_llm_interface import get_van_evera_llm
+except ImportError:
+    # Fallback if not available
+    def get_van_evera_llm():
+        raise ImportError("Van Evera LLM interface not available")
+
+logger = logging.getLogger(__name__)
 
 
 class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
@@ -21,8 +32,9 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
     
     plugin_id = "content_based_diagnostic_classifier"
     
-    # Van Evera diagnostic test indicators with academic precision
-    DIAGNOSTIC_INDICATORS = {
+    # DEPRECATED: Van Evera diagnostic test indicators replaced with LLM semantic analysis
+    # These keyword-based indicators are kept for compatibility but should not be used
+    DIAGNOSTIC_INDICATORS_DEPRECATED = {
         'hoop': {
             'necessary_language': [
                 'necessary', 'required', 'must', 'essential', 'prerequisite', 'needed',
@@ -103,8 +115,9 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
         }
     }
     
-    # Historical context patterns for American Revolution
-    HISTORICAL_CONTEXT_ENHANCERS = {
+    # DEPRECATED: Historical context patterns replaced with universal LLM analysis
+    # American Revolution-specific patterns are incompatible with universal system
+    HISTORICAL_CONTEXT_ENHANCERS_DEPRECATED = {
         'political_necessity': [
             'constitutional', 'rights', 'representation', 'assembly', 'government',
             'authority', 'legitimate', 'consent'
@@ -198,8 +211,8 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
         """Return checkpoint data for content-based classification"""
         return {
             'plugin_id': self.id,
-            'diagnostic_indicators_available': len(self.DIAGNOSTIC_INDICATORS),
-            'historical_context_enhancers': len(self.HISTORICAL_CONTEXT_ENHANCERS),
+            'diagnostic_indicators_available': 'llm_semantic_analysis',
+            'historical_context_enhancers': 'universal_context_analysis',
             'classification_method': 'content_analysis_with_llm_enhancement'
         }
     
@@ -338,79 +351,115 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
     
     def _classify_evidence_content(self, evidence_content: Dict, hypothesis_content: Dict, 
                                  llm_query_func) -> Dict[str, Any]:
-        """Classify evidence using content analysis and LLM enhancement"""
-        evidence_text = evidence_content['full_text'].lower()
-        hypothesis_text = hypothesis_content['full_text'].lower()
+        """
+        Classify evidence using LLM semantic analysis (no keywords).
+        Replaces rule-based content analysis with Van Evera methodology.
+        """
+        evidence_text = evidence_content['full_text']
+        hypothesis_text = hypothesis_content['full_text']
         
-        # Perform rule-based content analysis
-        content_scores = self._calculate_content_scores(evidence_text, hypothesis_text)
-        
-        # Get best classification from content analysis
-        best_type = max(content_scores, key=lambda x: content_scores[x])
-        best_score = content_scores[best_type]
-        
-        # Use LLM enhancement for borderline cases or improved accuracy
-        llm_result = None
-        if llm_query_func and (best_score < 0.6 or self._should_enhance_with_llm(content_scores)):
-            llm_result = self._enhance_classification_with_structured_llm(
-                evidence_content, hypothesis_content, content_scores
+        try:
+            # Use LLM for primary classification (no rule-based fallback)
+            llm_interface = get_van_evera_llm()
+            
+            # Classify diagnostic type using semantic understanding
+            classification = llm_interface.classify_diagnostic_type(
+                evidence_description=evidence_text,
+                hypothesis_description=hypothesis_text,
+                current_classification=""  # Let LLM determine from scratch
             )
-        
-        # Combine content analysis and LLM results
-        final_classification = self._combine_classification_results(
-            content_scores, llm_result
-        )
-        
-        return final_classification
+            
+            # Convert to expected format
+            final_classification = {
+                'recommended_diagnostic_type': classification.recommended_diagnostic_type.value,
+                'classification_confidence': classification.classification_confidence,
+                'content_analysis': classification.content_analysis,
+                'theoretical_fit': classification.theoretical_fit,
+                'necessity_assessment': classification.necessity_assessment,
+                'sufficiency_assessment': classification.sufficiency_assessment,
+                'alternatives': classification.alternative_classifications,
+                'theoretical_sophistication': classification.theoretical_sophistication,
+                'methodological_rigor': classification.methodological_rigor
+            }
+            
+            logger.info(f"LLM classification: {classification.recommended_diagnostic_type.value} "
+                       f"(confidence: {classification.classification_confidence:.3f})")
+            
+            return final_classification
+            
+        except Exception as e:
+            logger.error(f"LLM content classification failed: {e}")
+            
+            # Fallback to basic universal pattern (no keywords, no dataset-specific logic)
+            return {
+                'recommended_diagnostic_type': 'straw_in_wind',  # Conservative fallback
+                'classification_confidence': 0.3,
+                'content_analysis': 'Fallback analysis - LLM classification unavailable',
+                'theoretical_fit': 'Basic logical relationship assessment',
+                'necessity_assessment': None,
+                'sufficiency_assessment': None,
+                'alternatives': [],
+                'theoretical_sophistication': 0.3,
+                'methodological_rigor': 0.3
+            }
     
     def _calculate_content_scores(self, evidence_text: str, hypothesis_text: str) -> Dict[str, float]:
-        """Calculate diagnostic type scores based on content analysis"""
-        scores = {test_type: 0.0 for test_type in self.DIAGNOSTIC_INDICATORS.keys()}
-        
-        combined_text = f"{evidence_text} {hypothesis_text}"
-        
-        for test_type, indicators in self.DIAGNOSTIC_INDICATORS.items():
-            type_score = 0.0
-            weight = indicators.get('weight', 1.0)
+        """
+        Calculate diagnostic type scores using LLM semantic analysis.
+        Replaces keyword-based content analysis with Van Evera methodology.
+        """
+        try:
+            # Use LLM for semantic diagnostic classification
+            llm_interface = get_van_evera_llm()
             
-            # Check language indicators
-            for category, terms in indicators.items():
-                if category == 'weight':
-                    continue
-                
-                if isinstance(terms, list):
-                    # Direct term matching
-                    term_matches = sum(1 for term in terms if term in combined_text)
-                    type_score += term_matches * 0.3
-                    
-                elif category == 'contextual_patterns' and isinstance(terms, list):
-                    # Regex pattern matching
-                    pattern_matches = sum(1 for pattern in terms if re.search(pattern, combined_text))
-                    type_score += pattern_matches * 0.5
+            classification = llm_interface.classify_diagnostic_type(
+                evidence_description=evidence_text,
+                hypothesis_description=hypothesis_text,
+                current_classification=""
+            )
             
-            # Apply historical context enhancement
-            context_bonus = self._calculate_historical_context_bonus(combined_text)
-            type_score += context_bonus * 0.2
+            # Convert single classification to scores for compatibility
+            scores = {
+                'hoop': 0.0,
+                'smoking_gun': 0.0,
+                'doubly_decisive': 0.0,
+                'straw_in_wind': 0.0
+            }
             
-            # Apply weight and normalize - be conservative with doubly_decisive
-            weight_val = float(weight) if isinstance(weight, (int, float)) else 1.0
-            if test_type == 'doubly_decisive':
-                # Doubly decisive requires very strong evidence
-                scores[test_type] = min(0.8, type_score * weight_val * 0.5)  # More conservative
-            else:
-                scores[test_type] = min(1.0, type_score * weight_val)
-        
-        return scores
+            # Assign high score to recommended type, lower to alternatives
+            recommended_type = classification.recommended_diagnostic_type.value
+            if recommended_type in scores:
+                scores[recommended_type] = classification.classification_confidence
+            
+            # Add some distribution to alternatives to avoid 100% concentration
+            alternatives = classification.alternative_classifications[:2]  # Top 2 alternatives
+            for alt in alternatives:
+                alt_type = alt.get('type', '').lower()
+                alt_score = alt.get('score', 0.1)
+                if alt_type in scores:
+                    scores[alt_type] = min(0.8, alt_score * 0.6)  # Lower than primary
+            
+            logger.debug(f"LLM content scores: {scores}")
+            return scores
+            
+        except Exception as e:
+            logger.warning(f"LLM content scoring failed: {e}")
+            
+            # Fallback to universal distribution (no keyword logic)
+            return {
+                'hoop': 0.25,
+                'smoking_gun': 0.25,
+                'doubly_decisive': 0.15,
+                'straw_in_wind': 0.35
+            }
     
     def _calculate_historical_context_bonus(self, text: str) -> float:
-        """Calculate bonus score based on historical context relevance"""
-        context_score = 0.0
-        
-        for context_type, terms in self.HISTORICAL_CONTEXT_ENHANCERS.items():
-            matches = sum(1 for term in terms if term in text)
-            context_score += matches * 0.1
-        
-        return min(1.0, context_score)
+        """
+        DEPRECATED - Historical context bonuses replaced with LLM semantic understanding.
+        Returns neutral bonus to maintain compatibility.
+        """
+        # No longer uses keyword matching - LLM provides context-aware analysis
+        return 0.0
     
     def _should_enhance_with_llm(self, content_scores: Dict[str, float]) -> bool:
         """Determine if LLM enhancement would be beneficial"""

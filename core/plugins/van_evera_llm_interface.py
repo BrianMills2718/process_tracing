@@ -31,7 +31,11 @@ from .van_evera_llm_schemas import (
     CausalRelationshipAnalysis,
     ProcessTracingConclusion,
     ContentBasedClassification,
-    TestResult
+    TestResult,
+    HypothesisDomainClassification,
+    ProbativeValueAssessment,
+    AlternativeHypothesisGeneration,
+    TestGenerationSpecification
 )
 
 logger = logging.getLogger(__name__)
@@ -293,6 +297,184 @@ class VanEveraLLMInterface:
         # Import here to avoid circular imports
         from .van_evera_llm_schemas import EvidenceRelationshipClassification
         return self._get_structured_response(prompt, EvidenceRelationshipClassification)
+    
+    def classify_hypothesis_domain(self, hypothesis_description: str, 
+                                 context: Optional[str] = None) -> HypothesisDomainClassification:
+        """
+        Classify hypothesis domain using semantic understanding.
+        Replaces keyword matching with universal domain analysis.
+        
+        Args:
+            hypothesis_description: Description of the hypothesis to classify
+            context: Optional context for domain classification
+            
+        Returns:
+            Structured domain classification with reasoning
+        """
+        prompt = f"""
+        Analyze this hypothesis to determine its primary domain using semantic understanding.
+        
+        HYPOTHESIS: {hypothesis_description}
+        CONTEXT: {context or 'Universal process tracing analysis'}
+        
+        Classify the hypothesis into domains based on its SEMANTIC CONTENT, not keywords:
+        - POLITICAL: Government, authority, power structures, governance, policy
+        - ECONOMIC: Trade, resources, financial systems, markets, wealth  
+        - IDEOLOGICAL: Beliefs, values, worldviews, philosophical positions
+        - MILITARY: Armed conflict, strategy, warfare, defense
+        - SOCIAL: Community structures, relationships, class, identity
+        - CULTURAL: Traditions, customs, arts, shared practices
+        - RELIGIOUS: Faith, spiritual beliefs, religious institutions
+        - TECHNOLOGICAL: Innovation, technical advancement, tools, methods
+        
+        Provide semantic reasoning that would apply across ANY historical period or domain.
+        Avoid dataset-specific keywords - focus on universal conceptual categories.
+        
+        Consider how this classification generalizes beyond specific historical contexts.
+        Identify semantic indicators that support your domain choice.
+        If the hypothesis spans multiple domains, identify cross-domain relationships.
+        """
+        
+        return self._get_structured_response(prompt, HypothesisDomainClassification)
+    
+    def assess_probative_value(self, evidence_description: str, 
+                             hypothesis_description: str,
+                             context: Optional[str] = None) -> ProbativeValueAssessment:
+        """
+        Assess evidence probative value using LLM semantic analysis.
+        Replaces hardcoded probative value assignments.
+        
+        Args:
+            evidence_description: Description of the evidence
+            hypothesis_description: Description of the hypothesis
+            context: Optional context for assessment
+            
+        Returns:
+            Structured probative value assessment with academic reasoning
+        """
+        prompt = f"""
+        Assess the probative value of this evidence for the given hypothesis using academic process tracing standards.
+        
+        EVIDENCE: {evidence_description}
+        HYPOTHESIS: {hypothesis_description}
+        CONTEXT: {context or 'Process tracing analysis'}
+        
+        Evaluate probative value (0.0-1.0) based on:
+        1. RELEVANCE: How directly does the evidence relate to the hypothesis?
+        2. RELIABILITY: How credible and trustworthy is the evidence source?
+        3. STRENGTH: How compelling is the logical connection?
+        4. QUALITY: What is the overall quality of the evidence?
+        
+        Consider Van Evera methodology standards:
+        - High probative value (0.7-1.0): Strong, direct, reliable evidence with clear logical connection
+        - Medium probative value (0.4-0.7): Moderate evidence with some limitations or indirect connections
+        - Low probative value (0.0-0.4): Weak, indirect, or unreliable evidence with limited relevance
+        
+        Provide academic justification for your assessment.
+        Identify factors that strengthen or weaken the evidence.
+        Assess contextual relevance to the specific hypothesis.
+        Consider implications for Van Evera diagnostic testing.
+        
+        Be thorough in explaining WHY this evidence has the assigned probative value.
+        """
+        
+        return self._get_structured_response(prompt, ProbativeValueAssessment)
+    
+    def generate_alternative_hypotheses(self, original_hypothesis: str,
+                                      evidence_context: str,
+                                      domain_context: Optional[str] = None) -> AlternativeHypothesisGeneration:
+        """
+        Generate alternative hypotheses using semantic understanding.
+        Replaces keyword dictionary approaches with contextual generation.
+        
+        Args:
+            original_hypothesis: The original hypothesis to generate alternatives for
+            evidence_context: Available evidence context
+            domain_context: Optional domain context
+            
+        Returns:
+            Structured alternative hypothesis generation with reasoning
+        """
+        prompt = f"""
+        Generate competing alternative hypotheses for this process tracing analysis using semantic understanding.
+        
+        ORIGINAL HYPOTHESIS: {original_hypothesis}
+        EVIDENCE CONTEXT: {evidence_context}
+        DOMAIN CONTEXT: {domain_context or 'Universal historical analysis'}
+        
+        Generate 3-5 alternative hypotheses that:
+        1. Propose different causal mechanisms for the same outcome
+        2. Span different analytical domains (political, economic, ideological, social, etc.)
+        3. Are theoretically sophisticated and historically plausible
+        4. Could be tested using Van Evera diagnostic methodology
+        
+        For each alternative hypothesis, provide:
+        - Clear description of the alternative causal mechanism
+        - Domain classification (primary and secondary domains)
+        - Theoretical justification for why this alternative is plausible
+        - How it differs from the original hypothesis
+        - What evidence would be needed to test it
+        
+        Focus on universal causal patterns that would apply across different historical periods.
+        Avoid dataset-specific details - generate alternatives based on general theoretical principles.
+        
+        Ensure theoretical sophistication appropriate for academic process tracing.
+        Consider competing mechanisms that a rigorous analysis should examine.
+        """
+        
+        return self._get_structured_response(prompt, AlternativeHypothesisGeneration)
+    
+    def generate_van_evera_tests(self, hypothesis_description: str,
+                               domain_classification: str,
+                               evidence_context: str) -> TestGenerationSpecification:
+        """
+        Generate Van Evera diagnostic tests using semantic understanding.
+        Replaces keyword-based test creation with context-appropriate generation.
+        
+        Args:
+            hypothesis_description: The hypothesis to generate tests for
+            domain_classification: Domain classification of the hypothesis
+            evidence_context: Available evidence context
+            
+        Returns:
+            Structured test generation specification with Van Evera diagnostic logic
+        """
+        prompt = f"""
+        Generate Van Evera diagnostic tests for this hypothesis using rigorous academic methodology.
+        
+        HYPOTHESIS: {hypothesis_description}
+        DOMAIN: {domain_classification}
+        EVIDENCE CONTEXT: {evidence_context}
+        
+        Van Evera Diagnostic Test Types:
+        - HOOP (Necessary): Evidence must be present if hypothesis is true. Absence eliminates hypothesis.
+        - SMOKING GUN (Sufficient): Evidence strongly indicates hypothesis if present. Absence doesn't eliminate.
+        - DOUBLY DECISIVE: Both necessary and sufficient. Definitive test.
+        - STRAW IN WIND: Neither necessary nor sufficient. Provides incremental support.
+        
+        Generate 2-4 test predictions that:
+        1. Follow Van Evera diagnostic logic rigorously
+        2. Are appropriate for the hypothesis domain and content
+        3. Specify clear evidence requirements based on semantic analysis
+        4. Include proper diagnostic type classification with reasoning
+        5. Are universal enough to work across different historical contexts
+        
+        For each test prediction, specify:
+        - Clear prediction description
+        - Van Evera diagnostic type with justification
+        - Necessary/sufficient condition logic
+        - Evidence requirements derived from semantic analysis
+        - Why this test is theoretically appropriate
+        
+        Avoid keyword-based or dataset-specific requirements.
+        Focus on semantic relationships and theoretical logic.
+        Ensure tests meet academic standards for process tracing methodology.
+        
+        Provide diagnostic logic reasoning for test type selection.
+        Consider theoretical grounding and universal validity.
+        """
+        
+        return self._get_structured_response(prompt, TestGenerationSpecification)
     
     def _get_structured_response(self, prompt: str, response_model: Type[T], max_retries: int = 10) -> T:
         """

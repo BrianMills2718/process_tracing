@@ -158,3 +158,133 @@ class ContentBasedClassification(BaseModel):
     # Quality metrics
     theoretical_sophistication: float = Field(ge=0.0, le=1.0, description="Theoretical sophistication of classification")
     methodological_rigor: float = Field(ge=0.0, le=1.0, description="Methodological rigor of classification")
+
+
+class HypothesisDomainClassification(BaseModel):
+    """
+    LLM-based semantic classification of hypothesis domains.
+    Replaces keyword matching with universal domain analysis.
+    """
+    primary_domain: Literal["political", "economic", "ideological", "military", "social", "cultural", "religious", "technological"] = Field(
+        description="Primary domain classification based on semantic content"
+    )
+    secondary_domains: List[str] = Field(
+        default_factory=list,
+        description="Additional relevant domains that apply to this hypothesis"
+    )
+    confidence_score: float = Field(
+        ge=0.0, le=1.0,
+        description="Confidence in the domain classification (0.0-1.0)"
+    )
+    reasoning: str = Field(
+        description="Semantic reasoning for domain classification decision"
+    )
+    generalizability: str = Field(
+        description="How this domain classification applies beyond specific historical contexts"
+    )
+    domain_indicators: List[str] = Field(
+        description="Semantic indicators that support the domain classification"
+    )
+    cross_domain_relationships: List[str] = Field(
+        default_factory=list,
+        description="Relationships between domains if hypothesis spans multiple areas"
+    )
+
+
+class ProbativeValueAssessment(BaseModel):
+    """
+    LLM-generated assessment of evidence probative value.
+    Replaces hardcoded probative value assignments with semantic analysis.
+    """
+    probative_value: float = Field(
+        ge=0.0, le=1.0,
+        description="Evidence strength assessment based on semantic analysis"
+    )
+    confidence_score: float = Field(
+        ge=0.0, le=1.0,
+        description="Confidence in the probative value assessment"
+    )
+    reasoning: str = Field(
+        description="Academic justification for probative value assignment"
+    )
+    evidence_quality_factors: List[str] = Field(
+        description="Factors contributing to evidence strength assessment"
+    )
+    reliability_assessment: str = Field(
+        description="Assessment of evidence reliability and credibility"
+    )
+    van_evera_implications: str = Field(
+        description="Implications for Van Evera diagnostic testing methodology"
+    )
+    strength_indicators: List[str] = Field(
+        description="Semantic indicators that support the strength assessment"
+    )
+    weakness_factors: List[str] = Field(
+        default_factory=list,
+        description="Factors that may reduce evidence probative value"
+    )
+    contextual_relevance: float = Field(
+        ge=0.0, le=1.0,
+        description="How relevant this evidence is to the specific hypothesis context"
+    )
+
+
+class AlternativeHypothesisGeneration(BaseModel):
+    """
+    LLM-generated alternative hypotheses based on semantic understanding.
+    Replaces keyword dictionary approaches with contextual generation.
+    """
+    alternative_hypotheses: List[Dict[str, Any]] = Field(
+        description="Generated alternative hypotheses with semantic reasoning"
+    )
+    generation_confidence: float = Field(
+        ge=0.0, le=1.0,
+        description="Confidence in the quality of generated alternatives"
+    )
+    semantic_analysis: str = Field(
+        description="Analysis of semantic relationships in the original hypothesis"
+    )
+    domain_coverage: List[str] = Field(
+        description="Domains covered by the alternative hypotheses"
+    )
+    theoretical_sophistication: str = Field(
+        description="Assessment of theoretical sophistication of alternatives"
+    )
+    competing_mechanisms: List[str] = Field(
+        description="Alternative causal mechanisms identified through semantic analysis"
+    )
+    universal_applicability: str = Field(
+        description="How these alternatives apply across different historical periods and contexts"
+    )
+
+
+class TestGenerationSpecification(BaseModel):
+    """
+    LLM-generated Van Evera test specifications based on semantic understanding.
+    Replaces keyword-based test creation with context-appropriate generation.
+    """
+    test_predictions: List[Dict[str, Any]] = Field(
+        description="Generated test predictions with Van Evera diagnostic types"
+    )
+    generation_reasoning: str = Field(
+        description="Reasoning for test generation and diagnostic type selection"
+    )
+    semantic_analysis: str = Field(
+        description="Semantic analysis of hypothesis-evidence relationships"
+    )
+    theoretical_grounding: str = Field(
+        description="Theoretical foundation for the generated tests"
+    )
+    diagnostic_logic: str = Field(
+        description="Van Evera diagnostic logic applied to test generation"
+    )
+    evidence_requirements: List[str] = Field(
+        description="Evidence requirements derived through semantic analysis"
+    )
+    universal_validity: str = Field(
+        description="How these tests apply across different contexts and periods"
+    )
+    methodological_rigor: float = Field(
+        ge=0.0, le=1.0,
+        description="Assessment of methodological rigor in test generation"
+    )

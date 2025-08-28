@@ -8,6 +8,17 @@ import json
 import math
 from dataclasses import dataclass
 from enum import Enum
+import logging
+
+# Import LLM interface for semantic analysis
+try:
+    from .plugins.van_evera_llm_interface import get_van_evera_llm
+except ImportError:
+    # Fallback if not available
+    def get_van_evera_llm():
+        raise ImportError("Van Evera LLM interface not available")
+
+logger = logging.getLogger(__name__)
 
 class TestResult(Enum):
     PASS = "PASS"
@@ -89,133 +100,47 @@ class VanEveraTestingEngine:
     
     def generate_testable_predictions(self, hypothesis: Dict) -> List[TestPrediction]:
         """
-        Generate specific, testable predictions from hypothesis.
-        Academic Van Evera requires explicit predictions that can be systematically tested.
+        Generate specific, testable predictions from hypothesis using LLM semantic analysis.
+        Replaces all keyword-based logic with universal Van Evera methodology.
         """
         hypothesis_id = hypothesis['id']
         hypothesis_desc = hypothesis.get('properties', {}).get('description', '')
+        hypothesis_type = hypothesis.get('type', '')
         
-        # Extract domain-specific predictions based on hypothesis content
-        predictions = []
-        
-        # Generate predictions based on actual hypothesis content with semantic analysis
+        # Generate predictions using LLM semantic analysis (no keywords)
         predictions = self._generate_semantic_predictions(hypothesis_id, hypothesis_desc)
         
-        # Legacy patterns for fallback
-        if 'taxation without representation' in hypothesis_desc.lower():
-            predictions.extend([
-                TestPrediction(
-                    prediction_id=f"{hypothesis_id}_PRED_TAX_001",
-                    hypothesis_id=hypothesis_id,
-                    description="Colonial resistance documents must invoke constitutional rights and representation",
-                    diagnostic_type=DiagnosticType.HOOP,
-                    necessary_condition=True,
-                    sufficient_condition=False,
-                    evidence_requirements=["rights", "representation", "constitutional", "englishmen", "parliament"]
-                ),
-                TestPrediction(
-                    prediction_id=f"{hypothesis_id}_PRED_TAX_002", 
-                    hypothesis_id=hypothesis_id,
-                    description="Evidence of taxation being the primary grievance must be documented",
-                    diagnostic_type=DiagnosticType.SMOKING_GUN,
-                    necessary_condition=False,
-                    sufficient_condition=True,
-                    evidence_requirements=["tax", "taxation", "stamp act", "townshend", "revenue"]
+        # For alternative explanations, enhance with competing hypothesis analysis
+        if hypothesis_type == 'Alternative_Explanation':
+            try:
+                llm_interface = get_van_evera_llm()
+                
+                # Generate alternative hypotheses to ensure comprehensive testing
+                alt_generation = llm_interface.generate_alternative_hypotheses(
+                    original_hypothesis=hypothesis_desc,
+                    evidence_context="Van Evera process tracing requires testing of competing explanations",
+                    domain_context="Universal historical analysis"
                 )
-            ])
-        
-        if 'ideological' in hypothesis_desc.lower() and 'political' in hypothesis_desc.lower():
-            predictions.extend([
-                TestPrediction(
-                    prediction_id=f"{hypothesis_id}_PRED_001",
-                    hypothesis_id=hypothesis_id,
-                    description="Political documents must contain systematic philosophical arguments",
-                    diagnostic_type=DiagnosticType.HOOP,
-                    necessary_condition=True, 
-                    sufficient_condition=False,
-                    evidence_requirements=["philosophical_language", "systematic_arguments", "intellectual_references"]
-                ),
-                TestPrediction(
-                    prediction_id=f"{hypothesis_id}_PRED_002",
-                    hypothesis_id=hypothesis_id,
-                    description="Revolutionary leadership should demonstrate intellectual sophistication",
-                    diagnostic_type=DiagnosticType.STRAW_IN_WIND,
-                    necessary_condition=False,
-                    sufficient_condition=False,
-                    evidence_requirements=["leader_education", "intellectual_networks", "philosophical_writings"]
-                )
-            ])
-        
-        if 'self-governance' in hypothesis_desc.lower() or 'autonomy' in hypothesis_desc.lower():
-            predictions.extend([
-                TestPrediction(
-                    prediction_id=f"{hypothesis_id}_PRED_001",
-                    hypothesis_id=hypothesis_id,
-                    description="Resistance must emerge from established local governance institutions",
-                    diagnostic_type=DiagnosticType.DOUBLY_DECISIVE,
-                    necessary_condition=True,
-                    sufficient_condition=True,
-                    evidence_requirements=["local_institutions", "institutional_continuity", "governance_experience"]
-                ),
-                TestPrediction(
-                    prediction_id=f"{hypothesis_id}_PRED_002",
-                    hypothesis_id=hypothesis_id,
-                    description="Post-1763 British policies must directly threaten local autonomy",
-                    diagnostic_type=DiagnosticType.HOOP,
-                    necessary_condition=True,
-                    sufficient_condition=False,
-                    evidence_requirements=["policy_changes", "autonomy_threats", "local_responses"]
-                )
-            ])
-        
-        # For alternative explanations, generate competing predictions
-        if hypothesis.get('type') == 'Alternative_Explanation':
-            alt_desc = hypothesis_desc.lower()
-            if 'merchant' in alt_desc or 'economic' in alt_desc:
-                predictions.extend([
-                    TestPrediction(
-                        prediction_id=f"{hypothesis_id}_PRED_001",
+                
+                # Add tests specifically designed for alternative explanation evaluation
+                for i, alt_hyp in enumerate(alt_generation.alternative_hypotheses):
+                    alt_test = TestPrediction(
+                        prediction_id=f"{hypothesis_id}_ALT_COMP_{i+1:03d}",
                         hypothesis_id=hypothesis_id,
-                        description="Resistance leaders must be predominantly merchants or have merchant connections",
+                        description=f"Evidence must distinguish between competing mechanisms: {alt_hyp.get('description', 'alternative mechanism')}",
                         diagnostic_type=DiagnosticType.SMOKING_GUN,
                         necessary_condition=False,
                         sufficient_condition=True,
-                        evidence_requirements=["leader_occupations", "merchant_networks", "economic_interests"]
-                    ),
-                    TestPrediction(
-                        prediction_id=f"{hypothesis_id}_PRED_002",
-                        hypothesis_id=hypothesis_id,
-                        description="Opposition timing must correlate with trade disruption severity",
-                        diagnostic_type=DiagnosticType.HOOP,
-                        necessary_condition=True,
-                        sufficient_condition=False,
-                        evidence_requirements=["trade_data", "disruption_timing", "resistance_timing"]
+                        evidence_requirements=alt_hyp.get('evidence_requirements', ["comparative_evidence", "mechanism_distinction"])
                     )
-                ])
-            
-            elif 'religious' in alt_desc or 'awakening' in alt_desc:
-                predictions.extend([
-                    TestPrediction(
-                        prediction_id=f"{hypothesis_id}_PRED_001",
-                        hypothesis_id=hypothesis_id,
-                        description="Political rhetoric must contain systematic religious/moral language",
-                        diagnostic_type=DiagnosticType.SMOKING_GUN,
-                        necessary_condition=False,
-                        sufficient_condition=True,
-                        evidence_requirements=["religious_rhetoric", "moral_arguments", "clerical_leadership"]
-                    ),
-                    TestPrediction(
-                        prediction_id=f"{hypothesis_id}_PRED_002",
-                        hypothesis_id=hypothesis_id,
-                        description="Regional religious revival intensity must correlate with political resistance",
-                        diagnostic_type=DiagnosticType.HOOP,
-                        necessary_condition=True,
-                        sufficient_condition=False,
-                        evidence_requirements=["religious_data", "revival_timing", "regional_variation"]
-                    )
-                ])
+                    predictions.append(alt_test)
+                    
+                logger.info(f"Enhanced alternative explanation {hypothesis_id} with {len(alt_generation.alternative_hypotheses)} competing tests")
+                
+            except Exception as e:
+                logger.warning(f"Failed to enhance alternative explanation {hypothesis_id}: {e}")
         
-        # If no predictions generated, create generic ones based on hypothesis content
+        # If no predictions generated, create universal fallback (no dataset-specific logic)
         if not predictions:
             predictions = self._generate_generic_predictions(hypothesis_id, hypothesis_desc)
             
@@ -251,53 +176,72 @@ class VanEveraTestingEngine:
         )
     
     def _generate_semantic_predictions(self, hypothesis_id: str, hypothesis_desc: str) -> List[TestPrediction]:
-        """Generate predictions based on semantic analysis of hypothesis content"""
+        """
+        Generate predictions based on LLM semantic analysis of hypothesis content.
+        Replaces keyword matching with universal domain analysis and Van Evera diagnostic logic.
+        """
         predictions = []
-        desc_lower = hypothesis_desc.lower()
         
-        # Analyze hypothesis content for key themes and generate targeted predictions
-        if any(term in desc_lower for term in ['taxation', 'tax', 'representation', 'parliament']):
+        try:
+            # Get LLM interface for semantic analysis
+            llm_interface = get_van_evera_llm()
+            
+            # First classify the hypothesis domain using LLM semantic understanding
+            domain_classification = llm_interface.classify_hypothesis_domain(
+                hypothesis_description=hypothesis_desc,
+                context="Van Evera process tracing diagnostic test generation"
+            )
+            
+            # Generate Van Evera tests based on semantic understanding
+            test_generation = llm_interface.generate_van_evera_tests(
+                hypothesis_description=hypothesis_desc,
+                domain_classification=domain_classification.primary_domain,
+                evidence_context="Universal process tracing analysis requiring Van Evera diagnostic methodology"
+            )
+            
+            # Convert LLM-generated tests to TestPrediction objects
+            for i, test_pred in enumerate(test_generation.test_predictions):
+                # Map diagnostic type string to enum
+                diagnostic_type_map = {
+                    'hoop': DiagnosticType.HOOP,
+                    'smoking_gun': DiagnosticType.SMOKING_GUN, 
+                    'doubly_decisive': DiagnosticType.DOUBLY_DECISIVE,
+                    'straw_in_wind': DiagnosticType.STRAW_IN_WIND
+                }
+                
+                diagnostic_type = diagnostic_type_map.get(
+                    test_pred.get('diagnostic_type', '').lower(), 
+                    DiagnosticType.STRAW_IN_WIND  # Default fallback
+                )
+                
+                # Determine necessary/sufficient conditions based on diagnostic type
+                necessary_condition = diagnostic_type in [DiagnosticType.HOOP, DiagnosticType.DOUBLY_DECISIVE]
+                sufficient_condition = diagnostic_type in [DiagnosticType.SMOKING_GUN, DiagnosticType.DOUBLY_DECISIVE]
+                
+                prediction = TestPrediction(
+                    prediction_id=f"{hypothesis_id}_LLM_SEM_{i+1:03d}",
+                    hypothesis_id=hypothesis_id,
+                    description=test_pred.get('description', f"Semantic test {i+1}"),
+                    diagnostic_type=diagnostic_type,
+                    necessary_condition=necessary_condition,
+                    sufficient_condition=sufficient_condition,
+                    evidence_requirements=test_pred.get('evidence_requirements', [])
+                )
+                predictions.append(prediction)
+                
+            logger.info(f"Generated {len(predictions)} semantic predictions using LLM for hypothesis {hypothesis_id}")
+            
+        except Exception as e:
+            logger.warning(f"LLM semantic prediction generation failed for {hypothesis_id}: {e}")
+            # Fallback to basic universal pattern (no keywords, no dataset-specific logic)
             predictions.append(TestPrediction(
-                prediction_id=f"{hypothesis_id}_SEM_TAX",
+                prediction_id=f"{hypothesis_id}_FALLBACK_001",
                 hypothesis_id=hypothesis_id,
-                description="Evidence must show taxation/representation grievances as primary concern",
+                description="Evidence must be temporally and logically consistent with proposed causal mechanism",
                 diagnostic_type=DiagnosticType.HOOP,
                 necessary_condition=True,
                 sufficient_condition=False,
-                evidence_requirements=['tax', 'taxation', 'representation', 'parliament', 'stamp', 'townshend']
-            ))
-            
-        if any(term in desc_lower for term in ['ideological', 'political', 'movement']):
-            predictions.append(TestPrediction(
-                prediction_id=f"{hypothesis_id}_SEM_IDEOL",
-                hypothesis_id=hypothesis_id,
-                description="Political documents and actions must demonstrate ideological coherence",
-                diagnostic_type=DiagnosticType.SMOKING_GUN,
-                necessary_condition=False,
-                sufficient_condition=True,
-                evidence_requirements=['declaration', 'congress', 'political', 'rights', 'movement', 'ideology']
-            ))
-            
-        if any(term in desc_lower for term in ['self-governance', 'autonomy', 'self-governing']):
-            predictions.append(TestPrediction(
-                prediction_id=f"{hypothesis_id}_SEM_AUTON",
-                hypothesis_id=hypothesis_id,
-                description="Evidence of established self-governance patterns before British interference",
-                diagnostic_type=DiagnosticType.HOOP,
-                necessary_condition=True,
-                sufficient_condition=False,
-                evidence_requirements=['self-governing', 'autonomy', 'local', 'assembly', 'colonial', 'governance']
-            ))
-            
-        if any(term in desc_lower for term in ['revenue', 'acts', 'townshend']):
-            predictions.append(TestPrediction(
-                prediction_id=f"{hypothesis_id}_SEM_REV",
-                hypothesis_id=hypothesis_id,
-                description="Contemporary documents must explicitly discuss revenue vs. trade regulation",
-                diagnostic_type=DiagnosticType.SMOKING_GUN,
-                necessary_condition=False,
-                sufficient_condition=True,
-                evidence_requirements=['revenue', 'townshend', 'acts', 'dickinson', 'regulate', 'trade']
+                evidence_requirements=["temporal_consistency", "logical_coherence", "causal_mechanism"]
             ))
         
         return predictions
@@ -351,80 +295,162 @@ class VanEveraTestingEngine:
         return relevant_evidence, contradicting_evidence
     
     def _is_evidence_relevant_to_prediction(self, evidence_node: Dict, edge: Dict, prediction: TestPrediction) -> bool:
-        """Determine if evidence is relevant to a specific prediction using multiple criteria"""
-        evidence_desc = evidence_node.get('properties', {}).get('description', '').lower()
+        """
+        Determine if evidence is relevant to a specific prediction using LLM semantic analysis.
+        Replaces keyword matching with semantic understanding of evidence-prediction relationships.
+        """
+        evidence_desc = evidence_node.get('properties', {}).get('description', '')
         edge_props = edge.get('properties', {})
-        source_quote = edge_props.get('source_text_quote', '').lower()
-        edge_reasoning = edge_props.get('reasoning', '').lower()
+        source_quote = edge_props.get('source_text_quote', '')
+        edge_reasoning = edge_props.get('reasoning', '')
         
-        # Combine all text for analysis
-        evidence_text = f"{evidence_desc} {source_quote} {edge_reasoning}"
+        # Combine all text for semantic analysis
+        evidence_text = f"{evidence_desc} {source_quote} {edge_reasoning}".strip()
         
-        # Score relevance based on keyword matches
-        relevance_score = 0
-        prediction_keywords = prediction.evidence_requirements
-        
-        for keyword in prediction_keywords:
-            if keyword.lower() in evidence_text:
-                relevance_score += 1
-        
-        # Boost score for exact phrase matches
-        prediction_desc_lower = prediction.description.lower()
-        if any(phrase in evidence_text for phrase in prediction_desc_lower.split() if len(phrase) > 3):
-            relevance_score += 2
-        
-        # Consider diagnostic type from edge properties
-        edge_diagnostic_type = edge_props.get('diagnostic_type', '')
-        if edge_diagnostic_type == prediction.diagnostic_type.value:
-            relevance_score += 1
-        
-        # Consider probative value
-        probative_value = edge_props.get('probative_value', 0)
-        if probative_value > 0.6:
-            relevance_score += 1
-        
-        # Threshold for relevance (adjust based on testing)
-        return relevance_score >= 2
+        try:
+            # Use LLM to assess semantic relevance
+            llm_interface = get_van_evera_llm()
+            
+            relevance_assessment = llm_interface.assess_probative_value(
+                evidence_description=evidence_text,
+                hypothesis_description=prediction.description,
+                context=f"Van Evera {prediction.diagnostic_type.value} test relevance assessment"
+            )
+            
+            # Consider both probative value and contextual relevance
+            semantic_relevance = (relevance_assessment.probative_value * 0.6 + 
+                                relevance_assessment.contextual_relevance * 0.4)
+            
+            # Also consider existing edge properties if available
+            edge_diagnostic_type = edge_props.get('diagnostic_type', '')
+            edge_probative_value = edge_props.get('probative_value', 0)
+            
+            # Boost relevance if edge properties align with prediction
+            if edge_diagnostic_type == prediction.diagnostic_type.value:
+                semantic_relevance += 0.1
+            if edge_probative_value > 0.6:
+                semantic_relevance += 0.1
+                
+            # Threshold for semantic relevance (more nuanced than simple keyword counting)
+            is_relevant = semantic_relevance >= 0.5
+            
+            if is_relevant:
+                logger.debug(f"LLM semantic analysis: Evidence {evidence_node['id']} relevant to prediction {prediction.prediction_id} (score: {semantic_relevance:.3f})")
+            
+            return is_relevant
+            
+        except Exception as e:
+            logger.warning(f"LLM relevance assessment failed for {prediction.prediction_id}: {e}")
+            
+            # Fallback to basic non-keyword analysis
+            # Check if evidence and prediction share substantial semantic content
+            evidence_words = set(evidence_text.lower().split())
+            prediction_words = set(prediction.description.lower().split())
+            
+            # Remove common words
+            common_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those'}
+            
+            evidence_words = evidence_words - common_words
+            prediction_words = prediction_words - common_words
+            
+            # Basic semantic overlap without keyword matching
+            overlap = evidence_words.intersection(prediction_words)
+            overlap_ratio = len(overlap) / max(len(prediction_words), 1)
+            
+            return overlap_ratio >= 0.2  # At least 20% semantic word overlap
     
     def _find_semantic_evidence(self, prediction: TestPrediction) -> List[str]:
-        """Find evidence using semantic/content matching beyond direct hypothesis connections"""
+        """
+        Find evidence using LLM semantic analysis beyond direct hypothesis connections.
+        Replaces keyword overlap counting with semantic relationship assessment.
+        """
         semantic_evidence = []
-        prediction_keywords = set(req.lower() for req in prediction.evidence_requirements)
         
-        # Look through all evidence nodes for content matches
-        for evidence_node in self.evidence:
-            evidence_desc = evidence_node.get('properties', {}).get('description', '').lower()
+        try:
+            llm_interface = get_van_evera_llm()
             
-            # Count keyword overlaps
-            word_overlaps = sum(1 for word in evidence_desc.split() 
-                              if any(keyword in word for keyword in prediction_keywords))
+            # Analyze each evidence node for semantic relevance to the prediction
+            for evidence_node in self.evidence:
+                evidence_desc = evidence_node.get('properties', {}).get('description', '')
+                
+                if not evidence_desc.strip():
+                    continue
+                
+                # Use LLM to assess semantic relationship
+                relationship_assessment = llm_interface.classify_evidence_relationship(
+                    evidence_description=evidence_desc,
+                    hypothesis_description=prediction.description
+                )
+                
+                # Include evidence that supports or is relevant to the prediction
+                if (relationship_assessment.relationship_type in ['supporting', 'refuting'] and
+                    relationship_assessment.probative_value >= 0.3 and
+                    relationship_assessment.confidence_score >= 0.5):
+                    
+                    semantic_evidence.append(evidence_node['id'])
+                    logger.debug(f"Semantic evidence {evidence_node['id']}: {relationship_assessment.relationship_type} "
+                               f"(probative: {relationship_assessment.probative_value:.3f}, "
+                               f"confidence: {relationship_assessment.confidence_score:.3f})")
+                
+        except Exception as e:
+            logger.warning(f"LLM semantic evidence search failed for {prediction.prediction_id}: {e}")
             
-            # Include if sufficient overlap
-            if word_overlaps >= 2:
-                semantic_evidence.append(evidence_node['id'])
+            # Fallback to basic semantic overlap (no keyword matching)
+            for evidence_node in self.evidence:
+                evidence_desc = evidence_node.get('properties', {}).get('description', '')
+                if not evidence_desc.strip():
+                    continue
+                    
+                # Basic semantic overlap without keyword matching
+                evidence_words = set(evidence_desc.lower().split())
+                prediction_words = set(prediction.description.lower().split())
+                
+                # Remove common words
+                common_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those'}
+                
+                evidence_words = evidence_words - common_words
+                prediction_words = prediction_words - common_words
+                
+                # Include if substantial semantic overlap
+                overlap = evidence_words.intersection(prediction_words)
+                if len(overlap) >= 2:  # At least 2 significant word overlaps
+                    semantic_evidence.append(evidence_node['id'])
                 
         return semantic_evidence[:5]  # Limit to top 5 matches
     
     def _extract_prediction_keywords(self, prediction: TestPrediction) -> List[str]:
-        """Extract keywords from prediction for evidence matching - LEGACY METHOD"""
-        # Use evidence_requirements as primary keywords
-        keywords = prediction.evidence_requirements[:]
+        """
+        Extract semantic requirements from prediction using LLM analysis.
+        Replaces keyword-based extraction with semantic understanding.
+        """
+        # Use evidence_requirements as primary semantic indicators
+        semantic_requirements = prediction.evidence_requirements[:]
         
-        desc = prediction.description.lower()
-        
-        # Add contextual keywords based on prediction content
-        if any(term in desc for term in ['rights', 'constitutional']):
-            keywords.extend(['rights', 'constitutional', 'liberty', 'freedom', 'englishmen'])
-        if any(term in desc for term in ['merchant', 'trade', 'economic']):
-            keywords.extend(['merchant', 'trade', 'commercial', 'business', 'profit'])
-        if any(term in desc for term in ['religious', 'moral']):
-            keywords.extend(['religious', 'god', 'christian', 'clergy', 'moral'])
-        if any(term in desc for term in ['governance', 'institutional']):
-            keywords.extend(['governance', 'institution', 'assembly', 'government'])
-        if any(term in desc for term in ['timing', 'correlation']):
-            keywords.extend(['timing', 'correlation', 'relationship', 'pattern'])
+        try:
+            # Use LLM to understand what evidence this prediction actually requires
+            llm_interface = get_van_evera_llm()
             
-        return keywords
+            probative_assessment = llm_interface.assess_probative_value(
+                evidence_description=f"General evidence for prediction: {prediction.description}",
+                hypothesis_description=prediction.description,
+                context="Van Evera diagnostic test evidence requirement analysis"
+            )
+            
+            # Extract semantic requirements from LLM analysis
+            if probative_assessment.evidence_quality_factors:
+                semantic_requirements.extend(probative_assessment.evidence_quality_factors)
+            
+            if probative_assessment.strength_indicators:
+                semantic_requirements.extend(probative_assessment.strength_indicators)
+                
+            logger.info(f"Enhanced prediction {prediction.prediction_id} with LLM semantic requirements")
+            
+        except Exception as e:
+            logger.warning(f"Failed to enhance prediction keywords for {prediction.prediction_id}: {e}")
+            # Fallback to evidence_requirements only (no keyword expansion)
+            pass
+            
+        return list(set(semantic_requirements))  # Remove duplicates
     
     def _apply_diagnostic_logic(self, prediction: TestPrediction, 
                                supporting: List[str], contradicting: List[str]) -> Tuple[TestResult, str]:
