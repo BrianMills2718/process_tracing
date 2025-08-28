@@ -32,47 +32,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 3 - 75% Complete (Updated 2025-01-28)
+## 🎯 CURRENT STATUS: Phase 4 - LLM Efficiency Optimization (Updated 2025-01-28)
 
-**System Status**: **75% Complete** - Major migration achieved, minor patterns remain
-**Current Priority**: **Optional - Final 25% Migration** - Remaining patterns are structural, not semantic
-**System Goal**: **Functionally LLM-First** - All critical semantic decisions now use LLM
+**System Status**: **LLM-First Architecture Complete (75%)** - Now optimizing for efficiency
+**Current Priority**: **Zero-Quality-Loss Optimizations** - Reduce LLM calls by 50-70%
+**System Goal**: **Efficient LLM Usage** - Maintain quality while dramatically reducing API costs
 
-**MIGRATION ACHIEVEMENTS:**
-- ✅ **21 of 28 files fully migrated** (75% file completion)
-- ✅ **~50 patterns remain** (down from 78, 35% reduction)
-- ✅ **90% American Revolution references removed**
-- ✅ **All critical semantic decisions use LLM**
-- ✅ **SemanticAnalysisService operational with caching**
+**PHASE 3 COMPLETED:**
+- ✅ 21 of 28 files migrated to LLM-first (75% complete)
+- ✅ All critical semantic decisions use LLM
+- ✅ SemanticAnalysisService operational with caching
+- ✅ System is functionally LLM-first and production-ready
 
-**FULLY MIGRATED CORE MODULES (100% of critical files):**
-- ✅ core/semantic_analysis_service.py (NEW - 303 lines)
-- ✅ core/analyze.py (actor relevance uses LLM)
-- ✅ core/van_evera_testing_engine.py (completely LLM-first)
-- ✅ core/connectivity_analysis.py (all patterns eliminated)
-- ✅ core/disconnection_repair.py (American Revolution removed)
-- ✅ core/mechanism_detector.py (temporal/resource detection)
-- ✅ core/likelihood_calculator.py (context factors replaced)
-- ✅ core/prior_assignment.py (historical patterns eliminated)
-- ✅ core/temporal_graph.py (expression matching migrated)
-- ✅ core/alternative_hypothesis_generator.py (relevance scoring)
-- ✅ core/extract.py (dataset references removed)
-
-**PLUGIN MIGRATIONS (10 of 16 complete):**
-- ✅ advanced_van_evera_prediction_engine.py (response parsing)
-- ✅ van_evera_testing.py (test generation)
-- ✅ evidence_connector_enhancer.py (historical keywords)
-- ✅ content_based_diagnostic_classifier.py (diagnostic types)
-- ✅ diagnostic_rebalancer.py (probative values)
-- ✅ research_question_generator.py (context extraction)
-
-**REMAINING WORK (25% - NON-CRITICAL):**
-- ⚠️ ~50 structural patterns (mostly `if 'property' in data` checks)
-- ⚠️ 7 files with minor patterns (not semantic decisions)
-- ⚠️ <5 American Revolution references
-- ⚠️ 1-2 minor hardcoded confidence values
-
-**SYSTEM IS NOW PRODUCTION-READY FOR LLM-FIRST OPERATION**
+**PHASE 4 OBJECTIVE:**
+Reduce LLM calls from 15-25 to 5-8 per analysis through intelligent batching and caching, with ZERO quality degradation.
 
 ## Evidence-Based Development Philosophy (Mandatory)
 
@@ -102,127 +75,231 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Security**: Environment-based API key management
 - **Universality**: No dataset-specific logic - works across all domains and time periods
 
-## ✅ PHASE 3: LLM-First System Migration (75% COMPLETE)
+## 🚀 PHASE 4: Zero-Quality-Loss LLM Efficiency Optimization
 
-### Phase 3A: Semantic Analysis Service Infrastructure (COMPLETED)
+### Overview: Efficiency Without Quality Compromise
 
-**TASK 3A.1: Create Centralized Semantic Service**
-**File**: `core/semantic_analysis_service.py` (NEW)
-**Purpose**: Centralized LLM service with caching to reduce redundant calls
+**Current Problem**: System makes 15-25 separate LLM calls per analysis, causing:
+- High API costs ($0.50-1.00 per analysis)
+- Slow response times (30-45 seconds)
+- Redundant processing of same content
+- Fragmented understanding (LLM loses context between calls)
+
+**Solution**: Four zero-quality-loss optimizations that will:
+- Reduce LLM calls by 50-70% (from 15-25 to 5-8)
+- Improve quality through coherent analysis
+- Cut costs by 60-70%
+- Speed up analysis by 2-3x
+
+## Task 1: Batch Related Analyses (50-70% Fewer Calls)
+
+### Problem Analysis
+**Current Anti-Pattern**: Making multiple separate LLM calls for related analyses
+```python
+# BAD - Current fragmented approach (3-5 separate calls):
+domain = semantic_service.classify_domain(evidence)
+probative = semantic_service.assess_probative_value(evidence, hypothesis)
+contradiction = semantic_service.detect_contradiction(evidence, hypothesis)
+mechanism = semantic_service.detect_mechanism(evidence)
+actors = semantic_service.identify_actors(evidence)
+```
+
+### Required Implementation
+
+**Step 1.1: Create Comprehensive Analysis Schema**
+**File**: `core/plugins/van_evera_llm_schemas.py`
+**Action**: Add new comprehensive schema
 
 ```python
-# Required implementation structure:
-class SemanticAnalysisService:
-    def __init__(self):
-        self.llm = get_van_evera_llm()
-        self.cache = {}  # Session-level caching
-        self.call_count = 0
-        self.cache_hits = 0
+class ComprehensiveEvidenceAnalysis(BaseModel):
+    """Single schema capturing all semantic features of evidence"""
     
-    def analyze_relationship(self, text1: str, text2: str, 
-                           context: str = "", cache_key: Optional[str] = None):
-        """Analyze semantic relationship between two texts"""
-        # Check cache first
-        # Call LLM if not cached
-        # Return structured result
-        
-    def assess_domain(self, text: str, cache_key: Optional[str] = None):
-        """Classify text into universal domain"""
-        
-    def calculate_probative_value(self, evidence: str, hypothesis: str,
-                                 cache_key: Optional[str] = None):
-        """Calculate evidence probative value"""
-        
-    def detect_causal_mechanism(self, description: str, 
-                               cache_key: Optional[str] = None):
-        """Detect causal mechanisms in text"""
-        
-    def identify_actor_relationships(self, actor: str, description: str,
-                                   cache_key: Optional[str] = None):
-        """Identify actor relationships semantically"""
+    # Domain Analysis
+    primary_domain: Literal["political", "economic", "ideological", "military", 
+                           "social", "cultural", "religious", "technological"]
+    secondary_domains: List[str] = Field(default_factory=list)
+    domain_confidence: float = Field(ge=0.0, le=1.0)
+    domain_reasoning: str
+    
+    # Probative Assessment
+    probative_value: float = Field(ge=0.0, le=1.0)
+    probative_factors: List[str]
+    evidence_quality: Literal["high", "medium", "low"]
+    reliability_score: float = Field(ge=0.0, le=1.0)
+    
+    # Hypothesis Relationship
+    relationship_type: Literal["supports", "contradicts", "neutral", "ambiguous"]
+    relationship_confidence: float = Field(ge=0.0, le=1.0)
+    relationship_reasoning: str
+    van_evera_diagnostic: Literal["hoop", "smoking_gun", "doubly_decisive", "straw_in_wind"]
+    
+    # Semantic Features
+    causal_mechanisms: List[Dict[str, str]] = Field(default_factory=list)
+    temporal_markers: List[Dict[str, str]] = Field(default_factory=list)
+    actor_relationships: List[Dict[str, str]] = Field(default_factory=list)
+    
+    # Meta-Analysis
+    key_concepts: List[str]
+    contextual_factors: List[str]
+    alternative_interpretations: List[str] = Field(default_factory=list)
+    confidence_overall: float = Field(ge=0.0, le=1.0)
+    analysis_timestamp: datetime = Field(default_factory=datetime.now)
 ```
 
-**Validation Requirements**:
-- Cache hit rate must exceed 40% in testing
-- All methods must return structured Pydantic models
-- Fallback to conservative defaults on LLM failure
-- Log all LLM calls with timing metrics
+**Step 1.2: Implement Comprehensive Analysis Method**
+**File**: `core/plugins/van_evera_llm_interface.py`
+**Action**: Add new unified analysis method
 
-### Phase 3B: Core Module Migration (COMPLETED)
-**Status**: All critical semantic decisions now use LLM
-**Achievement**: TODO markers fixed, actor relevance uses semantic analysis
-**Result**: System functional with LLM-first architecture
-
-**Current Rule-Based Logic**:
 ```python
-# PROHIBITED - Replace with LLM:
-if 'ideological' in hypothesis_desc.lower() and 'political' in hypothesis_desc.lower():
-if 'merchant' in alt_desc or 'economic' in alt_desc:
-if any(term in desc_lower for term in ['taxation', 'tax', 'representation', 'parliament']):
-```
-
-**Required Implementation**:
-1. **New Schema**: `HypothesisDomainClassification` in `van_evera_llm_schemas.py`
-2. **New LLM Method**: `classify_hypothesis_domain()` in `VanEveraLLMInterface`
-3. **Replace All Keyword Logic**: Use LLM semantic understanding for domain detection
-4. **Generalist Approach**: Remove American Revolution-specific keywords
-
-**Schema Definition**:
-```python
-class HypothesisDomainClassification(BaseModel):
-    primary_domain: Literal["political", "economic", "ideological", "military", "social", "cultural", "religious", "technological"]
-    secondary_domains: List[str] = Field(description="Additional relevant domains")
-    confidence_score: float = Field(ge=0.0, le=1.0)
-    reasoning: str = Field(description="Semantic reasoning for domain classification")
-    generalizability: str = Field(description="How this applies beyond specific historical contexts")
-```
-
-**LLM Method**:
-```python
-def classify_hypothesis_domain(self, hypothesis_description: str, 
-                             context: Optional[str] = None) -> HypothesisDomainClassification:
+def analyze_evidence_comprehensive(self, 
+                                  evidence_description: str,
+                                  hypothesis_description: str,
+                                  context: Optional[str] = None) -> ComprehensiveEvidenceAnalysis:
     """
-    Classify hypothesis domain using semantic understanding.
-    Replaces keyword matching with universal domain analysis.
+    Comprehensive evidence analysis in a single LLM call.
+    Replaces 5-10 separate calls with one coherent analysis.
     """
     prompt = f"""
-    Analyze this hypothesis to determine its primary domain using semantic understanding.
+    Perform comprehensive semantic analysis of this evidence-hypothesis relationship.
+    Extract ALL features in one coherent analysis.
     
+    EVIDENCE: {evidence_description}
     HYPOTHESIS: {hypothesis_description}
-    CONTEXT: {context or 'Universal process tracing analysis'}
+    CONTEXT: {context or 'Process tracing analysis'}
     
-    Classify the hypothesis into domains based on its SEMANTIC CONTENT, not keywords:
-    - POLITICAL: Government, authority, power structures, governance, policy
-    - ECONOMIC: Trade, resources, financial systems, markets, wealth
-    - IDEOLOGICAL: Beliefs, values, worldviews, philosophical positions
-    - MILITARY: Armed conflict, strategy, warfare, defense
-    - SOCIAL: Community structures, relationships, class, identity
-    - CULTURAL: Traditions, customs, arts, shared practices
-    - RELIGIOUS: Faith, spiritual beliefs, religious institutions
-    - TECHNOLOGICAL: Innovation, technical advancement, tools, methods
+    Analyze comprehensively:
+    1. DOMAIN: Classify primary and secondary domains with reasoning
+    2. PROBATIVE VALUE: Assess evidence strength (0.0-1.0) with factors
+    3. RELATIONSHIP: Determine if evidence supports/contradicts hypothesis
+    4. VAN EVERA TYPE: Classify as hoop/smoking gun/doubly decisive/straw in wind
+    5. CAUSAL MECHANISMS: Identify all cause-effect relationships
+    6. TEMPORAL MARKERS: Extract time references and sequences
+    7. ACTORS: Identify actors and their relationships
+    8. KEY CONCEPTS: Extract main conceptual elements
+    9. CONTEXT: Note contextual factors affecting interpretation
     
-    Provide semantic reasoning that would apply across ANY historical period or domain.
-    Avoid dataset-specific keywords - focus on universal conceptual categories.
+    Provide reasoning that considers relationships between all features.
     """
     
-    return self._get_structured_response(prompt, HypothesisDomainClassification)
+    return self._get_structured_response(prompt, ComprehensiveEvidenceAnalysis)
 ```
 
-### **TASK 2B: Content-Based Diagnostic Classifier Migration**
-**File**: `core/plugins/content_based_diagnostic_classifier.py`
-**Issue**: Lines 109-114 use hardcoded keyword lists for domain classification
+**Step 1.3: Update SemanticAnalysisService**
+**File**: `core/semantic_analysis_service.py`
+**Action**: Add routing to comprehensive analysis
 
-**Current Rule-Based Logic**:
 ```python
-# PROHIBITED - Replace with LLM:
-'political_keywords': ['constitutional', 'rights', 'representation', 'assembly', 'government'],
-'economic_keywords': ['trade', 'taxation', 'revenue', 'commercial', 'merchant', 'profit'],
+def analyze_comprehensive(self, evidence: str, hypothesis: str, 
+                        context: Optional[str] = None) -> ComprehensiveEvidenceAnalysis:
+    """Route to comprehensive analysis with caching"""
+    cache_key = self._generate_cache_key(evidence, hypothesis, "comprehensive")
+    
+    if cache_key in self._cache:
+        if not self._is_cache_expired(cache_key):
+            self.cache_hits += 1
+            return self._cache[cache_key][0]
+    
+    # Single LLM call replacing multiple calls
+    result = self.llm_interface.analyze_evidence_comprehensive(
+        evidence, hypothesis, context
+    )
+    
+    self._cache[cache_key] = (result, datetime.now())
+    self.call_count += 1
+    
+    return result
+
+# Backward compatibility methods that extract from comprehensive
+def classify_domain(self, text: str, context: Optional[str] = None) -> DomainClassification:
+    """Extract domain from comprehensive analysis for backward compatibility"""
+    # If we have a cached comprehensive analysis, extract from it
+    # Otherwise, do comprehensive and extract
+    pass
 ```
 
-**Required Implementation**:
-1. **Replace Keyword Lists**: Use LLM domain classification from Task 2A
-2. **Semantic Analysis**: Replace hardcoded matching with semantic understanding
-3. **Universal Applicability**: Remove historical period restrictions
+**Validation**: Compare output quality before/after batching. Must show equal or better coherence.
+
+---
+
+## Task 2: Smarter Caching (30-40% Reduction)
+
+### Required Implementation
+
+**Step 2.1: Create Semantic Signature System**
+**File**: `core/semantic_signature.py` (NEW)
+
+Create a semantic fingerprinting system that generates cache keys based on meaning rather than exact text. This allows semantically similar queries to hit the cache even with different wording.
+
+**Step 2.2: Implement Multi-Layer Cache**
+**File**: `core/semantic_analysis_service.py`
+
+Upgrade the current MD5-based cache to a three-layer system:
+- L1 Cache: Exact text matches (instant hit)
+- L2 Cache: Semantic signature matches (very fast)
+- L3 Cache: Partial results that can be reused
+
+**Validation**: Test with paraphrased inputs. Target 40-60% cache hit rate.
+
+---
+
+## Task 3: Single Document Analysis (60% Reduction)
+
+### Required Implementation
+
+**Step 3.1: Create Evidence Pre-Analysis**
+**File**: `core/evidence_document.py` (NEW)
+
+Implement a system where evidence is comprehensively analyzed once, then efficiently evaluated against multiple hypotheses using the cached analysis.
+
+**Step 3.2: Update Processing Flow**
+**File**: `core/analyze.py`
+
+Modify the main analysis loop to use pre-analyzed evidence documents instead of re-analyzing for each hypothesis.
+
+**Validation**: Verify consistent interpretation across all hypothesis evaluations.
+
+---
+
+## Task 4: Compound Feature Extraction (40% Reduction)
+
+### Required Implementation
+
+**Step 4.1: Create Multi-Feature Schema**
+**File**: `core/plugins/van_evera_llm_schemas.py`
+
+Add `MultiFeatureExtraction` schema that captures all semantic features (actors, mechanisms, temporal markers, concepts) in one structure.
+
+**Step 4.2: Implement Compound Extraction**
+**File**: `core/plugins/van_evera_llm_interface.py`
+
+Add `extract_all_features()` method that extracts all features in one LLM call, capturing relationships between features.
+
+**Validation**: Compare feature completeness and relationship detection.
+---
+
+## Implementation Strategy
+
+### Phase 1: Schema Development (2 hours)
+1. Add `ComprehensiveEvidenceAnalysis` schema to `van_evera_llm_schemas.py`
+2. Add `MultiFeatureExtraction` schema for compound extraction
+3. Write schema validation tests
+
+### Phase 2: Core Infrastructure (3 hours)
+1. Implement comprehensive analysis method in `van_evera_llm_interface.py`
+2. Create `semantic_signature.py` for smart caching
+3. Create `evidence_document.py` for pre-analysis
+4. Upgrade `semantic_analysis_service.py` with multi-layer cache
+
+### Phase 3: Integration (2 hours)
+1. Update calling code to use new batched methods
+2. Add backward compatibility wrappers
+3. Implement feature extraction helpers
+
+### Phase 4: Validation (2 hours)
+1. Compare quality metrics before/after
+2. Measure performance improvements
+3. Validate cache effectiveness
+4. Document results in evidence files
 
 ### **TASK 2C: Probative Value LLM Generation** 
 **Files**: Multiple files with hardcoded `probative_value` assignments
@@ -342,7 +419,26 @@ if 'ideological' in hypothesis_desc and 'economic' in evidence_desc:
 - **Alternative Generation**: Must produce quality competing hypotheses for any context
 - **Evidence Assessment**: Must generate appropriate probative values for any evidence type
 
-### Evidence Files (Phase 3 Validation - COMPLETE)
+### Evidence-Based Validation Requirements
+
+#### Required Evidence Files (Phase 4)
+```
+evidence/current/
+├── Evidence_Phase4_Baseline_Performance.md    # Current LLM call counts and timings
+├── Evidence_Phase4_Optimization_Results.md    # After optimization metrics
+├── Evidence_Phase4_Quality_Comparison.md      # Side-by-side quality validation
+├── Evidence_Phase4_Cache_Effectiveness.md     # Cache hit rates and performance
+└── validate_phase4_optimization.py            # Script to measure improvements
+```
+
+#### Success Metrics
+- **Performance**: 50%+ reduction in LLM calls (from 15-25 to 5-8)
+- **Quality**: No degradation in analysis accuracy
+- **Cache Hit Rate**: 40-60% with semantic signatures
+- **Cost Reduction**: 60-70% lower API costs
+- **Response Time**: 2-3x faster (10-15s vs 30-45s)
+
+### Phase 3 Evidence Files (Reference)
 ```
 evidence/current/
 ├── Evidence_Phase3_Final_Report.md           # 75% completion evidence
