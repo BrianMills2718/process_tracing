@@ -15,6 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ❌ Domain classification using keyword lists
 - ❌ Confidence thresholds based on hardcoded ranges
 - ❌ Any `if/elif` chains for semantic understanding
+- ❌ Dataset-specific logic (American Revolution hardcoded rules)
+- ❌ Historical period-specific keyword matching
 
 **REQUIRED IMPLEMENTATIONS**:
 - ✅ LLM semantic analysis for ALL evidence-hypothesis relationships
@@ -22,6 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ LLM-based domain and diagnostic type classification
 - ✅ Structured Pydantic outputs for ALL semantic decisions
 - ✅ Evidence-based confidence scoring through LLM evaluation
+- ✅ Generalist process tracing without dataset-specific hardcoding
 
 **APPROVAL REQUIRED**: Any rule-based logic must be explicitly approved with academic justification. Default assumption: **USE LLM SEMANTIC UNDERSTANDING**.
 
@@ -29,17 +32,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: LLM-FIRST MIGRATION (Updated 2025-01-28)
+## 🎯 CURRENT STATUS: LLM-FIRST COMPREHENSIVE MIGRATION (Updated 2025-01-28)
 
-**System Status**: **Phase 1 Validation Complete** - Rule-based system identified and documented  
-**Current Priority**: **Critical Evidence Classification Fix** - Replace keyword matching with LLM semantic analysis  
-**Academic Issue**: **0% Academic Compliance** - Rule-based contradiction detection causes systematic misclassification
+**System Status**: **Phase 1 Complete, Phase 2 Required** - One function replaced, dozens more remain rule-based  
+**Current Priority**: **Complete LLM-First Migration** - Replace ALL keyword matching throughout codebase  
+**System Goal**: **Generalist Process Tracing** - Remove all dataset-specific hardcoding for universal applicability
 
-**ROOT CAUSE IDENTIFIED (2025-01-28)**:
-- ❌ **Rule-Based Evidence Classification**: `_identify_contradiction_patterns()` uses keyword matching
-- ❌ **Hardcoded Academic Logic**: `'ideological' in hypothesis and 'economic' in evidence → contradiction`
-- ❌ **Systematic Misclassification**: Boston Massacre evidence incorrectly classified as refuting ideological movement
-- ❌ **Academic Compliance Failure**: 0/3 hypotheses achieve 0.6-0.8 support ratio target (0% vs ≥50% required)
+**PHASE 1 COMPLETED (2025-01-28)**:
+- ✅ **Evidence Classification**: `_identify_contradiction_patterns()` replaced with LLM semantic analysis
+- ✅ **System Validation**: Full analysis completes successfully without crashes
+- ✅ **Semantic Accuracy**: Boston Massacre correctly classified as supporting ideological movement
+
+**PHASE 2 REQUIRED - COMPREHENSIVE RULE-BASED ELIMINATION**:
+- ❌ **Van Evera Testing**: Still uses keyword matching for hypothesis classification
+- ❌ **Domain Classification**: Still uses hardcoded keyword lists (political/economic/ideological)
+- ❌ **Probative Value Assignment**: Still uses hardcoded values (0.7, 0.6, etc.)
+- ❌ **Diagnostic Type Determination**: Still uses keyword-based Van Evera type assignment
+- ❌ **Alternative Hypothesis Generation**: Still uses domain keyword dictionaries
+- ❌ **Dataset-Specific Logic**: American Revolution-specific rules throughout codebase
 
 ## Evidence-Based Development Philosophy (Mandatory)
 
@@ -51,225 +61,284 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **VALIDATION + SELF-HEALING**: Every validator must have coupled self-healing capability
 
 ### Quality Standards
-- **Academic Functionality**: Target ≥50% academic compliance (0.6-0.8 support ratios)
+- **Semantic Understanding**: All classification based on LLM analysis, not keyword matching
+- **Generalist System**: No dataset-specific hardcoding - system works across all historical periods
 - **Technical Correctness**: All Pydantic validations must pass
 - **Process Adherence**: Run lint/typecheck before marking tasks complete
 - **Evidence Documentation**: Document all claims with concrete test results in structured evidence files
 
 ## Project Overview
 
-**LLM-Enhanced Process Tracing Toolkit** - Production-ready system implementing Van Evera academic methodology with sophisticated LLM semantic understanding for qualitative analysis using process tracing.
+**Generalist LLM-Enhanced Process Tracing Toolkit** - Universal system implementing Van Evera academic methodology with sophisticated LLM semantic understanding for qualitative analysis using process tracing across any historical period or domain.
 
 ### Architecture
-- **Plugin System**: 16 registered plugins with sophisticated LLM integration
+- **Plugin System**: 16 registered plugins requiring LLM-first conversion
 - **Van Evera Workflow**: 8-step academic analysis pipeline with enhanced intelligence
 - **LLM Integration**: VanEveraLLMInterface with structured Pydantic output (Gemini 2.5 Flash)
 - **Type Safety**: Full mypy compliance across core modules
 - **Security**: Environment-based API key management
+- **Universality**: No dataset-specific logic - works across all domains and time periods
 
-## 🚨 LLM-FIRST MIGRATION PROTOCOL (Critical Priority)
+## 🚨 PHASE 2: COMPREHENSIVE LLM-FIRST MIGRATION (Critical Priority)
 
-### **MANDATORY MIGRATION**: Replace Rule-Based Evidence Classification
+### **MANDATORY MIGRATION**: Eliminate ALL Rule-Based Logic Throughout System
 
-**Critical Issue**: Evidence classification using keyword matching causes 0% academic compliance. System incorrectly classifies semantically supporting evidence as refuting based on keyword rules.
+**Scope**: Replace ALL keyword matching, hardcoded values, and dataset-specific logic with LLM semantic understanding
 
-**Example Failure**:
-- **Evidence**: "Boston Massacre turning colonial sentiment against British"
-- **Hypothesis**: "American Revolution was ideological and political movement"
-- **Current System**: Classified as REFUTING (keyword rule: 'ideological' + economic context → contradiction)
-- **Should Be**: Classified as SUPPORTING (anti-British sentiment supports ideological movement)
+**Files Requiring Complete LLM Migration**:
+1. `core/van_evera_testing_engine.py` - Hypothesis classification, test generation
+2. `core/plugins/content_based_diagnostic_classifier.py` - Domain classification  
+3. `core/alternative_hypothesis_generator.py` - Domain keyword dictionaries
+4. `core/plugins/advanced_van_evera_prediction_engine.py` - Domain detection
+5. `core/plugins/research_question_generator.py` - Domain keywords
+6. Multiple files with hardcoded probative value assignments
 
-### **PHASE 1: Evidence Classification Migration (CRITICAL)**
+### **TASK 2A: Van Evera Testing Engine LLM Migration**
+**File**: `core/van_evera_testing_engine.py`
+**Critical Issue**: Lines 127, 174, 259, 270 use keyword matching for hypothesis classification
 
-**Objective**: Replace `_identify_contradiction_patterns()` function with LLM semantic analysis
-**Impact**: Direct fix for 0% academic compliance issue
-**Risk**: High - Core evidence classification logic
-
-#### **TASK 1A: Schema Creation (Safe)**
-**File**: `core/plugins/van_evera_llm_schemas.py`
-**Action**: Add new Pydantic schema for evidence-hypothesis relationship classification
-
-**Required Schema**:
+**Current Rule-Based Logic**:
 ```python
-class EvidenceRelationshipClassification(BaseModel):
-    relationship_type: Literal["supporting", "refuting", "irrelevant"]
-    confidence_score: float = Field(ge=0.0, le=1.0)
-    reasoning: str = Field(description="Detailed semantic reasoning for classification")
-    probative_value: float = Field(ge=0.0, le=1.0, description="Evidence strength assessment")
-    contradiction_indicators: int = Field(ge=0, description="Number of semantic contradictions identified")
-    semantic_analysis: str = Field(description="Analysis of evidence-hypothesis semantic relationship")
+# PROHIBITED - Replace with LLM:
+if 'ideological' in hypothesis_desc.lower() and 'political' in hypothesis_desc.lower():
+if 'merchant' in alt_desc or 'economic' in alt_desc:
+if any(term in desc_lower for term in ['taxation', 'tax', 'representation', 'parliament']):
 ```
 
-#### **TASK 1B: LLM Interface Extension (Safe)**
-**File**: `core/plugins/van_evera_llm_interface.py` 
-**Action**: Add semantic evidence classification method
+**Required Implementation**:
+1. **New Schema**: `HypothesisDomainClassification` in `van_evera_llm_schemas.py`
+2. **New LLM Method**: `classify_hypothesis_domain()` in `VanEveraLLMInterface`
+3. **Replace All Keyword Logic**: Use LLM semantic understanding for domain detection
+4. **Generalist Approach**: Remove American Revolution-specific keywords
 
-**Required Method**:
+**Schema Definition**:
 ```python
-def classify_evidence_relationship(self, evidence_description: str, 
-                                 hypothesis_description: str) -> EvidenceRelationshipClassification:
+class HypothesisDomainClassification(BaseModel):
+    primary_domain: Literal["political", "economic", "ideological", "military", "social", "cultural", "religious", "technological"]
+    secondary_domains: List[str] = Field(description="Additional relevant domains")
+    confidence_score: float = Field(ge=0.0, le=1.0)
+    reasoning: str = Field(description="Semantic reasoning for domain classification")
+    generalizability: str = Field(description="How this applies beyond specific historical contexts")
+```
+
+**LLM Method**:
+```python
+def classify_hypothesis_domain(self, hypothesis_description: str, 
+                             context: Optional[str] = None) -> HypothesisDomainClassification:
     """
-    Classify evidence-hypothesis relationship using semantic understanding.
-    Replaces keyword-based contradiction detection with LLM semantic analysis.
-    
-    Args:
-        evidence_description: Description of the evidence
-        hypothesis_description: Description of the hypothesis
-        
-    Returns:
-        Structured classification with reasoning and probative value
+    Classify hypothesis domain using semantic understanding.
+    Replaces keyword matching with universal domain analysis.
     """
     prompt = f"""
-    Analyze the semantic relationship between this evidence and hypothesis using Van Evera academic methodology.
+    Analyze this hypothesis to determine its primary domain using semantic understanding.
     
-    EVIDENCE: {evidence_description}
     HYPOTHESIS: {hypothesis_description}
+    CONTEXT: {context or 'Universal process tracing analysis'}
     
-    Determine if the evidence:
-    1. SUPPORTS the hypothesis (evidence strengthens or confirms the hypothesis)
-    2. REFUTES the hypothesis (evidence weakens or contradicts the hypothesis)  
-    3. Is IRRELEVANT to the hypothesis (no clear relationship)
+    Classify the hypothesis into domains based on its SEMANTIC CONTENT, not keywords:
+    - POLITICAL: Government, authority, power structures, governance, policy
+    - ECONOMIC: Trade, resources, financial systems, markets, wealth
+    - IDEOLOGICAL: Beliefs, values, worldviews, philosophical positions
+    - MILITARY: Armed conflict, strategy, warfare, defense
+    - SOCIAL: Community structures, relationships, class, identity
+    - CULTURAL: Traditions, customs, arts, shared practices
+    - RELIGIOUS: Faith, spiritual beliefs, religious institutions
+    - TECHNOLOGICAL: Innovation, technical advancement, tools, methods
     
-    Consider semantic meaning, not keyword matching. Evidence about anti-British sentiment 
-    SUPPORTS hypotheses about ideological movements, regardless of economic/political keyword conflicts.
-    
-    Provide detailed reasoning for your classification and assess the probative value (0.0-1.0).
+    Provide semantic reasoning that would apply across ANY historical period or domain.
+    Avoid dataset-specific keywords - focus on universal conceptual categories.
     """
     
-    return self._get_structured_response(prompt, EvidenceRelationshipClassification)
+    return self._get_structured_response(prompt, HypothesisDomainClassification)
 ```
 
-#### **TASK 1C: Function Replacement (HIGH RISK)**
-**File**: `core/analyze.py` Lines 1070-1097
-**Action**: Replace rule-based function with LLM semantic analysis
+### **TASK 2B: Content-Based Diagnostic Classifier Migration**
+**File**: `core/plugins/content_based_diagnostic_classifier.py`
+**Issue**: Lines 109-114 use hardcoded keyword lists for domain classification
 
-**Critical Requirements**:
-1. **Preserve Function Signature**: Same parameters, same return type (float)
-2. **Maintain Compatibility**: Return value must work with existing callers
-3. **Error Resilience**: LLM failures cannot crash the system
-
-**Implementation Strategy**:
+**Current Rule-Based Logic**:
 ```python
-def _identify_contradiction_patterns(hypothesis_desc, evidence_desc):
-    """
-    REPLACED: Now uses LLM semantic analysis instead of keyword matching.
-    Maintains original function signature for compatibility.
-    """
-    try:
-        from core.plugins.van_evera_llm_interface import get_van_evera_llm
-        
-        llm_interface = get_van_evera_llm()
-        classification = llm_interface.classify_evidence_relationship(
-            evidence_description=evidence_desc,
-            hypothesis_description=hypothesis_desc
-        )
-        
-        # Convert LLM classification to float for compatibility with existing code
-        if classification.relationship_type == "refuting":
-            return float(classification.contradiction_indicators)  # Use LLM-assessed contradiction count
-        else:
-            return 0.0  # No contradiction for supporting/irrelevant evidence
-            
-    except Exception as e:
-        logger.error(f"LLM evidence classification failed: {e}", exc_info=True)
-        return 0.0  # Conservative fallback - assume no contradiction
+# PROHIBITED - Replace with LLM:
+'political_keywords': ['constitutional', 'rights', 'representation', 'assembly', 'government'],
+'economic_keywords': ['trade', 'taxation', 'revenue', 'commercial', 'merchant', 'profit'],
 ```
 
-### **TASK 1D: Migration Validation (CRITICAL)**
+**Required Implementation**:
+1. **Replace Keyword Lists**: Use LLM domain classification from Task 2A
+2. **Semantic Analysis**: Replace hardcoded matching with semantic understanding
+3. **Universal Applicability**: Remove historical period restrictions
 
-**Objective**: Verify academic compliance improvement and system stability
-**Test Dataset**: Use existing American Revolution analysis results
+### **TASK 2C: Probative Value LLM Generation** 
+**Files**: Multiple files with hardcoded `probative_value` assignments
+**Issue**: Lines throughout codebase assign arbitrary values (0.7, 0.6, etc.)
 
-**Validation Protocol**:
-```bash
-# 1. Run full analysis with LLM classification
-python -m core.analyze output_data/revolutions/revolutions_20250805_122000_graph.json --html
-
-# 2. Measure academic compliance improvement
-# Before: 0/3 hypotheses in 0.6-0.8 support ratio range (0%)
-# Target: ≥50% of hypotheses in academic range
-
-# 3. Verify semantic accuracy on known cases
-# Evidence: "Boston Massacre turning sentiment against British" 
-# Hypothesis: "Ideological movement"
-# Expected: SUPPORTING classification (not refuting)
+**Current Rule-Based Logic**:
+```python
+# PROHIBITED - Replace with LLM:
+'probative_value': 0.7  # High probative value for academic rigor
+'probative_value': min(0.6, contradiction_indicators * 0.3)
+probative_value *= 0.7  # Reduce probative value when demoting
 ```
 
-**Success Criteria**:
-- ✅ Academic compliance improves from 0% to ≥20%
-- ✅ Boston Massacre evidence correctly classified as supporting ideological movement
-- ✅ System completes full analysis without crashes
-- ✅ LLM cost increase <5x current costs
-- ✅ Execution time increase <3x current time
+**Required Implementation**:
+1. **New Schema**: `ProbativeValueAssessment` in `van_evera_llm_schemas.py` 
+2. **New LLM Method**: `assess_probative_value()` in `VanEveraLLMInterface`
+3. **Replace All Hardcoded Values**: Use LLM assessment for evidence strength
 
-**Failure Criteria (Rollback Required)**:
-- ❌ System crashes or fails to generate results
-- ❌ Academic compliance doesn't improve
-- ❌ LLM classifications are semantically incorrect
-- ❌ Cost or performance impact exceeds acceptable bounds
+**Schema Definition**:
+```python
+class ProbativeValueAssessment(BaseModel):
+    probative_value: float = Field(ge=0.0, le=1.0, description="Evidence strength assessment")
+    confidence_score: float = Field(ge=0.0, le=1.0) 
+    reasoning: str = Field(description="Academic justification for probative value")
+    evidence_quality_factors: List[str] = Field(description="Factors contributing to evidence strength")
+    reliability_assessment: str = Field(description="Assessment of evidence reliability and credibility")
+    van_evera_implications: str = Field(description="Implications for Van Evera diagnostic testing")
+```
+
+### **TASK 2D: Alternative Hypothesis Generator Migration**
+**File**: `core/alternative_hypothesis_generator.py`
+**Issue**: Lines 239-245 use domain keyword dictionaries
+
+**Current Rule-Based Logic**:
+```python
+# PROHIBITED - Replace with LLM:
+'economic': ['merchant', 'trade', 'profit', 'economic', 'commercial', 'business'],
+'ideological': ['idea', 'philosophy', 'enlightenment', 'rights', 'liberty', 'freedom'],
+```
+
+**Required Implementation**:
+1. **Replace Keyword Dictionaries**: Use semantic understanding for alternative generation
+2. **LLM Alternative Generation**: Generate context-appropriate competing hypotheses
+3. **Universal Scope**: Generate alternatives for any domain/time period
+
+### **TASK 2E: Dataset-Specific Logic Elimination**
+**Files**: Multiple files with American Revolution-specific hardcoding
+**Issue**: System hardcoded for specific historical period instead of universal process tracing
+
+**Examples to Replace**:
+```python
+# PROHIBITED - Remove dataset-specific logic:
+# Political contradictions (American Revolution specific)
+if 'ideological' in hypothesis_desc and 'economic' in evidence_desc:
+    contradiction_count += 0.3
+
+# American Revolution keywords
+['taxation', 'tax', 'representation', 'parliament', 'stamp', 'townshend']
+```
+
+**Required Implementation**:
+1. **Generalist Approach**: Replace all historical period-specific logic with universal semantic analysis
+2. **LLM Context Awareness**: Let LLM understand context without hardcoded rules
+3. **Domain Neutrality**: System works equally well for any historical period or domain
+
+## Implementation Strategy
+
+### Phase 2A: Core LLM Infrastructure (Safe)
+1. **Extend Schemas**: Add all required Pydantic models to `van_evera_llm_schemas.py`
+2. **Extend LLM Interface**: Add all semantic analysis methods to `VanEveraLLMInterface`
+3. **Test Infrastructure**: Validate new LLM methods work correctly
+
+### Phase 2B: Van Evera Testing Engine Migration (High Risk)
+1. **Replace Hypothesis Classification**: Use LLM domain analysis instead of keywords
+2. **Replace Test Generation**: Use LLM to create context-appropriate tests
+3. **Validate Test Quality**: Ensure LLM generates proper Van Evera diagnostic tests
+
+### Phase 2C: System-Wide Keyword Elimination (High Risk)
+1. **Search and Replace**: Find all keyword matching throughout codebase
+2. **Replace with LLM Calls**: Use appropriate semantic analysis methods
+3. **Remove Hardcoded Values**: Replace all probative value assignments with LLM assessment
+
+### Phase 2D: Dataset Generalization (Medium Risk)
+1. **Remove Historical Specificity**: Eliminate American Revolution-specific logic
+2. **Universal Context**: Make system work for any historical period or domain
+3. **Test Across Domains**: Validate system works beyond American Revolution
+
+## Validation Protocol
+
+### Success Criteria
+- ✅ **Zero Keyword Matching**: No `if 'keyword' in text` anywhere in codebase
+- ✅ **Zero Hardcoded Values**: No `probative_value = 0.X` assignments  
+- ✅ **Zero Dataset Specificity**: No American Revolution-specific logic
+- ✅ **Universal Applicability**: System works for any historical period/domain
+- ✅ **LLM Semantic Understanding**: All classifications based on meaning, not rules
+
+### Test Cases
+1. **Cross-Domain Testing**: Test with French Revolution, Industrial Revolution, Cold War datasets
+2. **Semantic Accuracy**: Verify evidence classified correctly across different contexts  
+3. **Domain Neutrality**: System performs equally well across different historical periods
+4. **Alternative Generation**: LLM generates appropriate competing hypotheses for any context
 
 ## Codebase Structure
 
-### Key Files for Migration
-- `core/analyze.py`: Lines 1070-1097 contain rule-based contradiction detection (TARGET FOR REPLACEMENT)
-- `core/plugins/van_evera_llm_interface.py`: LLM interface requiring extension
-- `core/plugins/van_evera_llm_schemas.py`: Pydantic schemas requiring new evidence classification schema
-- `core/enhance_hypotheses.py`: Uses enhanced LLM interface for hypothesis evaluation
+### Files Requiring Complete Migration
+- `core/van_evera_testing_engine.py`: Hypothesis classification, test generation
+- `core/plugins/content_based_diagnostic_classifier.py`: Domain classification systems
+- `core/alternative_hypothesis_generator.py`: Alternative hypothesis generation with keywords
+- `core/plugins/advanced_van_evera_prediction_engine.py`: Domain detection logic
+- `core/plugins/research_question_generator.py`: Domain-based question generation
+- `core/confidence_calculator.py`: Hardcoded confidence thresholds
+- Multiple files: Probative value hardcoding throughout system
 
-### Critical Integration Points
-- **Evidence Classification Pipeline**: Lines 985-1068 in `core/analyze.py`
-- **Academic Compliance Calculation**: Evidence balance ratios computed from supporting/refuting classification
-- **HTML Output Generation**: Results must display in analysis summary
-- **Van Evera Test Integration**: Must work with existing test result processing
+### Integration Points
+- **Van Evera Testing Pipeline**: Must maintain academic rigor while using LLM analysis
+- **Domain Classification**: Must work universally across all subject areas
+- **Alternative Generation**: Must produce quality competing hypotheses for any context
+- **Evidence Assessment**: Must generate appropriate probative values for any evidence type
 
-### Evidence Files (Phase 1 Validation)
+### Evidence Files (Phase 2 Validation)
 ```
 evidence/current/
-├── Evidence_LLM_FIRST_Migration_Phase1.md     # Migration validation results
-└── Evidence_ACADEMIC_Compliance_Improvement.md # Before/after compliance measurements
+├── Evidence_LLM_FIRST_Migration_Phase2.md     # Comprehensive migration results
+├── Evidence_KEYWORD_Elimination_Complete.md   # Zero keyword matching validation
+├── Evidence_GENERALIST_System_Validation.md   # Cross-domain testing results
+└── Evidence_SEMANTIC_Accuracy_Assessment.md   # LLM classification quality
 ```
 
 ## Implementation Guidelines
 
 ### **Git-Based Safety**
-- **Current Commit**: `e87815d` - Known working state with 0% academic compliance
-- **Rollback Strategy**: `git revert HEAD` if migration fails
-- **No Feature Flags**: Direct replacement for clean codebase
+- **Current Commit**: Known working state after Phase 1
+- **Rollback Strategy**: `git revert HEAD` if any phase fails
+- **Incremental Commits**: Commit each task separately for granular rollback
 
-### **Error Handling Requirements**
+### **LLM Integration Requirements**
 ```python
-# All LLM calls must handle failures gracefully
+# All LLM calls must follow this pattern:
 try:
     return llm_semantic_analysis()
 except Exception as e:
-    logger.error(f"LLM classification failed: {e}")
+    logger.error(f"LLM analysis failed: {e}")
     return conservative_fallback()  # Don't crash the system
 ```
 
-### **Performance Monitoring**
-- **Current**: ~30-40 LLM calls per analysis
-- **After Migration**: ~40-55 LLM calls per analysis
-- **Acceptable Impact**: <3x execution time, <5x cost increase
+### **Performance Considerations**
+- **Expected LLM Calls**: ~100-150 per analysis (vs current ~40-55)
+- **Batch Processing**: Group similar analyses where possible
+- **Caching**: Cache repeated domain/probative value assessments
+- **Quality Trade-off**: Accept performance cost for semantic accuracy
 
 ### **Validation Requirements**
 **Evidence Required for Task Completion**:
-- Console logs showing LLM classification execution
-- Before/after academic compliance measurements
-- Semantic accuracy verification on test cases
-- Performance impact assessment (time and cost)
-- No regression in existing functionality
+- Complete keyword elimination verification (`grep -r "if.*in.*desc"` returns zero matches)
+- Cross-domain testing on non-American Revolution datasets
+- Semantic accuracy verification on diverse test cases  
+- Performance impact assessment with mitigation strategies
+- Universal applicability demonstration
 
 ### **Success Declaration Requirements**
-- **Academic Improvement**: Quantified improvement in 0.6-0.8 support ratio compliance
-- **Semantic Accuracy**: Evidence correctly classified based on meaning, not keywords
-- **System Stability**: Full analysis completes without errors
-- **Evidence Documentation**: All claims supported with raw execution logs
+- **Keyword Elimination**: Zero rule-based logic remaining in codebase
+- **Semantic Accuracy**: Evidence classified correctly across different domains
+- **Universal System**: Works equally well for any historical period or subject area
+- **Academic Quality**: Maintains Van Evera methodology standards across all contexts
+- **Evidence Documentation**: All claims supported with cross-domain test results
 
-## Next Steps After Phase 1
+## Next Steps After Phase 2
 
-**Only After Successful Phase 1 Validation**:
-- **Phase 2**: Replace hardcoded probative value assignments with LLM assessment
-- **Phase 3**: Replace domain classification keyword matching with LLM semantic analysis  
-- **Phase 4**: Replace confidence threshold hardcoded ranges with LLM evaluation
+**Only After Successful Phase 2 Validation**:
+- **Performance Optimization**: Optimize LLM calls for production use
+- **Advanced Semantic Features**: Add sophisticated causal reasoning, counterfactual analysis
+- **Multi-Language Support**: Extend system to work with non-English sources
+- **Real-Time Analysis**: Optimize for live document analysis and streaming updates
 
-**System Architecture**: Phase 1 implementation replaces rule-based evidence classification with LLM semantic understanding to achieve academic compliance standards.
+**System Architecture**: Universal LLM-first process tracing system with complete semantic understanding, no rule-based logic, and applicability across all historical periods and domains.
