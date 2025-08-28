@@ -294,7 +294,7 @@ class VanEveraLLMInterface:
         from .van_evera_llm_schemas import EvidenceRelationshipClassification
         return self._get_structured_response(prompt, EvidenceRelationshipClassification)
     
-    def _get_structured_response(self, prompt: str, response_model: Type[T], max_retries: int = 3) -> T:
+    def _get_structured_response(self, prompt: str, response_model: Type[T], max_retries: int = 10) -> T:
         """
         Get structured response from LLM using the specified Pydantic model with basic retry
         
@@ -327,23 +327,27 @@ class VanEveraLLMInterface:
                 logger.info(f"Successfully generated structured {response_model.__name__}")
                 return structured_response
                 
-            except (ConnectionError, TimeoutError) as e:
-                # Only retry on transient/network errors
+            except (ConnectionError, TimeoutError, Exception) as e:
+                # Retry on ALL errors except validation/schema issues (handled separately)
                 last_exception = e
                 if attempt < max_retries - 1:
+                    import time
+                    wait_time = min(2 ** attempt, 30)  # Exponential backoff, max 30 seconds
                     log_structured_error(
                         logger,
-                        f"Attempt {attempt + 1} failed with transient error, retrying...",
+                        f"Attempt {attempt + 1} failed, retrying in {wait_time}s... Error: {str(e)[:100]}",
                         error_category="llm_retry",
                         operation_context="structured_output_generation",
-                        exc_info=True,
+                        exc_info=False,  # Reduce log spam
                         **create_llm_context(
                             self.model_type,
                             "structured_output_retry",
                             response_model=response_model.__name__,
-                            attempt=attempt + 1
+                            attempt=attempt + 1,
+                            wait_time=wait_time
                         )
                     )
+                    time.sleep(wait_time)
                     continue
                 else:
                     # Exhausted retries - FAIL FAST
