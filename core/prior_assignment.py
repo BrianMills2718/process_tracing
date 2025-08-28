@@ -142,10 +142,17 @@ class FrequencyBasedPriorAssigner:
         if type_key in self.historical_frequencies:
             return self.historical_frequencies[type_key]
         
-        # Check description keywords
-        description_lower = hypothesis.description.lower()
+        # Use semantic analysis to match historical patterns
+        from core.semantic_analysis_service import get_semantic_service
+        semantic_service = get_semantic_service()
+        
         for pattern, frequency in self.historical_frequencies.items():
-            if pattern.lower() in description_lower:
+            assessment = semantic_service.assess_probative_value(
+                evidence_description=hypothesis.description,
+                hypothesis_description=f"Hypothesis matches historical pattern: {pattern}",
+                context="Matching hypothesis to historical frequency patterns"
+            )
+            if assessment.confidence_score > 0.7:
                 return frequency
         
         # Return default frequency
@@ -231,9 +238,17 @@ class TheoryGuidedPriorAssigner:
             plausibility = self.mechanism_plausibility[hypothesis.hypothesis_id]
             base_prior = 0.5 * base_prior + 0.5 * plausibility
         
-        # Adjust based on theoretical framework weights
+        # Use semantic analysis for theoretical framework matching
+        from core.semantic_analysis_service import get_semantic_service
+        semantic_service = get_semantic_service()
+        
         for theory_pattern, weight in self.theory_weights.items():
-            if theory_pattern.lower() in hypothesis.description.lower():
+            assessment = semantic_service.assess_probative_value(
+                evidence_description=hypothesis.description,
+                hypothesis_description=f"Hypothesis aligns with theoretical framework: {theory_pattern}",
+                context="Matching hypothesis to theoretical frameworks for prior adjustment"
+            )
+            if assessment.confidence_score > 0.65:
                 base_prior = base_prior * weight
                 break
         

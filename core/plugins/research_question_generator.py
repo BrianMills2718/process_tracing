@@ -152,7 +152,7 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
             'multiple_hypotheses': len(hypotheses) > 3,
             'cross_domain_content': len([score for score in domain_scores.values() if score > 0]) > 2,
             'causal_complexity': 'mechanism' in all_hypothesis_text.lower() or 'cause' in all_hypothesis_text.lower(),
-            'temporal_complexity': any(term in all_hypothesis_text.lower() for term in ['development', 'emergence', 'trajectory', 'process'])
+            'temporal_complexity': self._assess_temporal_complexity(all_hypothesis_text)
         }
         
         return {
@@ -248,22 +248,40 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
         else:
             return "the phenomenon under investigation"
     
+    def _assess_temporal_complexity(self, text: str) -> bool:
+        """Assess if the text has temporal complexity using semantic analysis"""
+        from core.semantic_analysis_service import get_semantic_service
+        semantic_service = get_semantic_service()
+        
+        assessment = semantic_service.assess_probative_value(
+            evidence_description=text,
+            hypothesis_description="The text describes temporal development, emergence, trajectory, or process",
+            context="Assessing temporal complexity"
+        )
+        return assessment.confidence_score > 0.6
+    
     def _extract_context(self, hypotheses: List[Dict]) -> str:
         """Extract geographical and temporal context from hypotheses"""
         all_text = " ".join([h.get('properties', {}).get('description', '') 
                            for h in hypotheses])
         
-        # Look for common geographical contexts
-        geographical_contexts = {
-            'colonial America': ['colonial', 'america', 'colonies', 'british america'],
-            'early modern Europe': ['europe', 'european', 'early modern'],
-            'modern state': ['state', 'nation', 'national', 'government'],
-            'local community': ['local', 'community', 'regional', 'provincial']
-        }
+        # Use semantic analysis to determine geographical context
+        from core.semantic_analysis_service import get_semantic_service
+        semantic_service = get_semantic_service()
         
-        for context, keywords in geographical_contexts.items():
-            if any(keyword in all_text.lower() for keyword in keywords):
-                return context
+        # Assess the geographical context semantically
+        context_assessment = semantic_service.classify_domain(
+            hypothesis_description=all_text,
+            context="Determining geographical and political context"
+        )
+        
+        # Map domain to context
+        if context_assessment.primary_domain == 'political':
+            return "the political context"
+        elif context_assessment.primary_domain == 'economic':
+            return "the economic context"
+        else:
+            return "the relevant context"
         
         return "the relevant context"
     
@@ -272,10 +290,20 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
         all_text = " ".join([h.get('properties', {}).get('description', '') 
                            for h in hypotheses])
         
-        # Look for temporal indicators
-        if any(term in all_text.lower() for term in ['18th century', '1760s', '1770s', 'revolutionary period']):
-            return "the late colonial and revolutionary period"
-        elif any(term in all_text.lower() for term in ['early', 'initial', 'beginning']):
+        # Use semantic analysis to determine temporal context
+        from core.semantic_analysis_service import get_semantic_service
+        semantic_service = get_semantic_service()
+        
+        # Assess temporal characteristics
+        temporal_assessment = semantic_service.assess_probative_value(
+            evidence_description=all_text,
+            hypothesis_description="The events occur in a historical revolutionary period",
+            context="Determining temporal timeframe"
+        )
+        
+        if temporal_assessment.confidence_score > 0.7:
+            return "the revolutionary period"
+        elif 'early' in all_text.lower() or 'initial' in all_text.lower():
             return "the early phase of development"
         elif any(term in all_text.lower() for term in ['development', 'trajectory', 'process']):
             return "the developmental period"

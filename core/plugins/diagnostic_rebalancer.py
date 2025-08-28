@@ -467,14 +467,29 @@ class DiagnosticRebalancerPlugin(ProcessTracingPlugin):
         updated_edge['properties']['diagnostic_type'] = target_type
         
         # Assign probative value based on diagnostic type
-        probative_values = {
-            'hoop': 0.8,           # High value for necessary conditions
-            'smoking_gun': 0.85,   # High value for sufficient conditions
-            'doubly_decisive': 0.95, # Highest value for decisive tests
-            'straw_in_wind': 0.5   # Lower value for weak evidence
+        # Use semantic analysis to determine appropriate probative value
+        from core.semantic_analysis_service import get_semantic_service
+        semantic_service = get_semantic_service()
+        
+        # Create description for the evidence type
+        type_descriptions = {
+            'hoop': "Evidence that is necessary but not sufficient for the hypothesis",
+            'smoking_gun': "Evidence that strongly confirms the hypothesis if found",
+            'doubly_decisive': "Evidence that is both necessary and sufficient for the hypothesis",
+            'straw_in_wind': "Evidence that weakly supports or opposes the hypothesis"
         }
         
-        updated_edge['properties']['probative_value'] = probative_values.get(target_type, 0.6)
+        evidence_desc = updated_edge['properties'].get('description', '')
+        type_desc = type_descriptions.get(target_type, "Evidence of unspecified diagnostic type")
+        
+        # Assess probative value based on evidence type and content
+        assessment = semantic_service.assess_probative_value(
+            evidence_description=evidence_desc,
+            hypothesis_description=type_desc,
+            context=f"Assigning probative value for {target_type} evidence type"
+        )
+        
+        updated_edge['properties']['probative_value'] = assessment.probative_value
         updated_edge['properties']['rule_based_enhanced'] = True
         updated_edge['properties']['target_type'] = target_type
         updated_edge['properties']['enhancement_timestamp'] = datetime.utcnow().isoformat()

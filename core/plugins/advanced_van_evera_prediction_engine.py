@@ -142,10 +142,10 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
                     'elimination_logic': ['isolated_local_incidents', 'spontaneous_popular_reaction']
                 },
                 {
-                    'template': "Strategic political timing must align resistance actions with parliamentary sessions",
+                    'template': "Strategic political timing must align opposition actions with legislative sessions",
                     'theoretical_mechanism': "strategic_political_timing_hypothesis",
                     'evidence_requirements': [EvidenceRequirementType.TEMPORAL, EvidenceRequirementType.COMPARATIVE],
-                    'qualitative_indicators': ['parliament', 'session', 'timing', 'strategic', 'coordinated'],
+                    'qualitative_indicators': ['legislature', 'session', 'timing', 'strategic', 'coordinated'],
                     'sufficiency_logic': "Strategic timing proves sophisticated political calculation",
                     'elimination_logic': ['economic_desperation_driven', 'spontaneous_emotional_response']
                 },
@@ -890,19 +890,39 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
         """Fallback parsing for non-JSON LLM responses"""
         response_lower = response.lower()
         
-        # Extract test result
+        # Use semantic analysis to determine test result
+        from core.semantic_analysis_service import get_semantic_service
+        semantic_service = get_semantic_service()
+        
+        # Assess if response indicates passing
+        pass_assessment = semantic_service.assess_probative_value(
+            evidence_description=response,
+            hypothesis_description="The test result indicates a passing condition",
+            context="Interpreting Van Evera test results from response"
+        )
+        
+        # Assess if response indicates failure
+        fail_assessment = semantic_service.assess_probative_value(
+            evidence_description=response,
+            hypothesis_description="The test result indicates a failing condition",
+            context="Interpreting Van Evera test results from response"
+        )
+        
         test_result = "INCONCLUSIVE"
-        if "pass" in response_lower and "fail" not in response_lower:
+        if pass_assessment.confidence_score > 0.7 and fail_assessment.confidence_score < 0.3:
             test_result = "PASS"
-        elif "fail" in response_lower:
+        elif fail_assessment.confidence_score > 0.7:
             test_result = "FAIL"
         
-        # Estimate confidence
-        confidence = 0.6
-        if "high confidence" in response_lower or "strong" in response_lower:
-            confidence = 0.8
-        elif "low confidence" in response_lower or "weak" in response_lower:
-            confidence = 0.4
+        # Use semantic analysis to estimate confidence level
+        confidence_assessment = semantic_service.assess_probative_value(
+            evidence_description=response,
+            hypothesis_description="The analysis shows high confidence in the conclusion",
+            context="Assessing confidence level of test evaluation"
+        )
+        
+        # Map semantic confidence to numeric value
+        confidence = confidence_assessment.confidence_score
         
         return {
             'test_result': test_result,

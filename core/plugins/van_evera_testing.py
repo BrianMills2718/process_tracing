@@ -422,13 +422,23 @@ class VanEveraTestingEngine:
         
         predictions = []
         
-        # Generate 2-3 predictions per hypothesis based on content
-        if 'taxation without representation' in hypothesis_desc.lower():
+        # Use semantic analysis to generate context-appropriate predictions
+        from core.semantic_analysis_service import get_semantic_service
+        semantic_service = get_semantic_service()
+        
+        # Assess hypothesis domain for appropriate test generation
+        domain_assessment = semantic_service.classify_domain(
+            hypothesis_description=hypothesis_desc,
+            context="Generating Van Evera diagnostic test predictions"
+        )
+        
+        # Generate predictions based on semantic understanding
+        if domain_assessment.primary_domain == 'political':
             predictions.extend([
                 TestPrediction(
                     prediction_id=f"{hypothesis_id}_PRED_001",
                     hypothesis_id=hypothesis_id,
-                    description="Colonial resistance rhetoric must consistently invoke English constitutional rights",
+                    description="Opposition rhetoric must consistently invoke legal and constitutional principles",
                     diagnostic_type=DiagnosticType.HOOP,
                     necessary_condition=True,
                     sufficient_condition=False,

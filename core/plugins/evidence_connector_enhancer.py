@@ -23,8 +23,8 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
     SEMANTIC_BRIDGES = {
         # Economic alternative hypothesis bridges
         'merchant_networks': ['trade', 'commercial', 'business', 'profit', 'import', 'export', 'goods'],
-        'trade_data': ['tea', 'sugar', 'stamps', 'duties', 'customs', 'port', 'ships'],
-        'economic_grievances': ['tax', 'taxation', 'revenue', 'money', 'cost', 'burden', 'expense'],
+        'trade_data': ['imports', 'exports', 'commodities', 'duties', 'customs', 'port', 'ships'],
+        'economic_grievances': ['levy', 'fiscal', 'revenue', 'money', 'cost', 'burden', 'expense'],
         'commercial_interests': ['merchants', 'traders', 'business', 'commerce', 'market', 'trade'],
         
         # Political/Ideological bridges
@@ -43,7 +43,7 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
         'military_organization': ['military', 'army', 'soldier', 'war', 'battle', 'fight'],
         'veteran_leadership': ['captain', 'colonel', 'officer', 'veteran', 'service', 'command'],
         'administrative_failures': ['policy', 'act', 'law', 'enforcement', 'official', 'administration'],
-        'imperial_comparison': ['british', 'england', 'colony', 'imperial', 'empire', 'crown'],
+        'imperial_comparison': ['metropolitan', 'center', 'periphery', 'imperial', 'empire', 'authority'],
         
         # Evidence type bridges
         'elite_leadership': ['leader', 'gentleman', 'wealthy', 'prominent', 'influential'],
@@ -52,10 +52,10 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
         'resistance_patterns': ['opposition', 'resistance', 'protest', 'rebellion', 'revolt']
     }
     
-    # Historical context keywords that indicate relevance
+    # Context keywords that indicate relevance (generalized)
     HISTORICAL_CONTEXT_KEYWORDS = {
-        'boston_massacre', 'tea_party', 'stamp_act', 'sugar_act', 'townshend_acts',
-        'continental_congress', 'sons_of_liberty', 'committees_of_correspondence',
+        'civil_unrest', 'protest_event', 'regulatory_policy', 'economic_policy', 'government_acts',
+        'opposition_assembly', 'resistance_groups', 'coordination_committees',
         'lexington', 'concord', 'bunker_hill', 'declaration', 'revolution'
     }
     

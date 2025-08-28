@@ -751,7 +751,18 @@ class MechanismDetector:
             graph = graphs[case_id]
             for node in graph.nodes():
                 node_data = graph.nodes[node]
-                if any(attr in node_data for attr in ['timestamp', 'sequence_order', 'temporal_uncertainty']):
+                # Check for temporal attributes using semantic understanding
+                from core.semantic_analysis_service import get_semantic_service
+                semantic_service = get_semantic_service()
+                
+                # Check if node has temporal characteristics
+                node_desc = str(node_data)
+                assessment = semantic_service.assess_probative_value(
+                    evidence_description=node_desc,
+                    hypothesis_description="Node has temporal characteristics (time, sequence, order)",
+                    context="Detecting temporal dependencies in mechanisms"
+                )
+                if assessment.confidence_score > 0.7:
                     return True
         return False
     
@@ -777,8 +788,16 @@ class MechanismDetector:
                 node_type = node_data.get('type', '').lower()
                 description = node_data.get('description', '').lower()
                 
-                if any(indicator in node_type or indicator in description 
-                      for indicator in resource_indicators):
+                # Use semantic analysis to detect resource dependencies
+                from core.semantic_analysis_service import get_semantic_service
+                semantic_service = get_semantic_service()
+                
+                assessment = semantic_service.assess_probative_value(
+                    evidence_description=f"{node_type}: {description}",
+                    hypothesis_description="Node represents resource dependency (budget, funding, capacity)",
+                    context="Detecting resource dependencies in mechanisms"
+                )
+                if assessment.confidence_score > 0.65:
                     return True
         return False
 

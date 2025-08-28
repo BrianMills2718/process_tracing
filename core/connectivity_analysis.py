@@ -217,7 +217,19 @@ class DisconnectionDetector:
                 target_desc = target_node['properties'].get('description', '').lower()
                 
                 # Suggest enabling relationships
-                if any(keyword in description for keyword in ['enable', 'allow', 'facilitate', 'distance', 'economic']):
+                # Use semantic analysis to classify condition type
+                from core.semantic_analysis_service import get_semantic_service
+                semantic_service = get_semantic_service()
+                
+                # Assess if condition is enabling based on semantic understanding
+                assessment = semantic_service.assess_probative_value(
+                    evidence_description=description,
+                    hypothesis_description="Condition acts as an enabling factor",
+                    context="Classifying contextual conditions"
+                )
+                
+                # Use confidence score to determine if it's enabling
+                if assessment.confidence_score > 0.6:
                     suggestions.append({
                         'target_id': target_node['id'],
                         'target_type': target_node['type'],
@@ -227,7 +239,16 @@ class DisconnectionDetector:
                     })
                 
                 # Suggest constraining relationships
-                if any(keyword in description for keyword in ['constrain', 'limit', 'prevent', 'naval', 'military']):
+                # Use semantic analysis to classify condition type  
+                # Assess if condition is constraining based on semantic understanding
+                assessment_constraint = semantic_service.assess_probative_value(
+                    evidence_description=description,
+                    hypothesis_description="Condition acts as a constraining factor",
+                    context="Classifying contextual conditions"
+                )
+                
+                # Use confidence score to determine if it's constraining
+                if assessment_constraint.confidence_score > 0.6:
                     if target_node['type'] in ['Event', 'Causal_Mechanism', 'Actor']:
                         suggestions.append({
                             'target_id': target_node['id'],
@@ -250,7 +271,19 @@ class DisconnectionDetector:
                 event_desc = target_node['properties'].get('description', '').lower()
                 
                 # Look for actor name in event description
-                if actor_name in event_desc or any(keyword in event_desc for keyword in ['initiate', 'start', 'launch']):
+                # Use semantic analysis to determine actor involvement
+                from core.semantic_analysis_service import get_semantic_service
+                semantic_service = get_semantic_service()
+                
+                # Assess if actor initiated the event
+                assessment = semantic_service.assess_probative_value(
+                    evidence_description=event_desc,
+                    hypothesis_description=f"Actor {actor_name} initiated or started this event",
+                    context="Determining actor involvement in event initiation"
+                )
+                
+                # Use confidence to determine involvement
+                if assessment.confidence_score > 0.7:
                     suggestions.append({
                         'target_id': target_node['id'],
                         'target_type': target_node['type'],
@@ -272,7 +305,18 @@ class DisconnectionDetector:
                 target_desc = target_node['properties'].get('description', '').lower()
                 
                 # Suggest causal connections
-                if any(keyword in event_desc for keyword in ['cause', 'lead to', 'result in']):
+                # Use semantic analysis to identify causal relationships
+                from core.semantic_analysis_service import get_semantic_service
+                semantic_service = get_semantic_service()
+                
+                assessment = semantic_service.assess_probative_value(
+                    evidence_description=event_desc,
+                    hypothesis_description="Event represents a causal relationship",
+                    context="Identifying causal mechanisms in evidence"
+                )
+                
+                # Use confidence to determine causality
+                if assessment.confidence_score > 0.65:
                     suggestions.append({
                         'target_id': target_node['id'],
                         'target_type': target_node['type'],

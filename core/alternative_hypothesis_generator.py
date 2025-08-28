@@ -250,14 +250,18 @@ class AlternativeHypothesisGenerator:
             evidence_desc = evidence_node.get('properties', {}).get('description', '').lower()
             
             # Check for keyword overlap
-            relevance_score = 0
-            for theme_keywords in relevance_keywords.values():
-                for keyword in theme_keywords:
-                    if keyword in search_text and keyword in evidence_desc:
-                        relevance_score += 1
+            # Use semantic analysis to determine evidence relevance
+            from core.semantic_analysis_service import get_semantic_service
+            semantic_service = get_semantic_service()
+            
+            assessment = semantic_service.assess_probative_value(
+                evidence_description=evidence_desc,
+                hypothesis_description=f"Evidence is relevant to: {search_text}",
+                context="Determining evidence relevance for alternative hypothesis generation"
+            )
             
             # Include evidence with sufficient relevance
-            if relevance_score >= 2:  # Threshold for relevance
+            if assessment.confidence_score >= 0.6:
                 relevant_evidence.append(evidence_node)
         
         return relevant_evidence[:10]  # Limit to top 10 most relevant pieces of evidence

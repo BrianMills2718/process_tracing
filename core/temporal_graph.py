@@ -489,7 +489,16 @@ class TemporalGraph:
         
         for node_id, node in self.temporal_nodes.items():
             node_desc = node.attr_props.get('description', '')
-            if any(word in node_desc.lower() for word in expression.context.lower().split()):
+            # Use semantic analysis to match temporal expression context
+            from core.semantic_analysis_service import get_semantic_service
+            semantic_service = get_semantic_service()
+            
+            assessment = semantic_service.assess_probative_value(
+                evidence_description=node_desc,
+                hypothesis_description=f"Node matches temporal expression context: {expression.context}",
+                context="Matching nodes to temporal expression patterns"
+            )
+            if assessment.confidence_score > 0.6:
                 matches.append(node_id)
         
         return matches

@@ -430,11 +430,19 @@ class ContextualLikelihoodCalculator:
         if context_sensitivity == 0 or not self.context_factors:
             return 1.0
         
-        # Look for relevant context factors
+        # Use semantic analysis to identify relevant context factors
+        from core.semantic_analysis_service import get_semantic_service
+        semantic_service = get_semantic_service()
+        
         relevant_factors = []
         for factor_name, factor_value in self.context_factors.items():
-            if (factor_name.lower() in evidence.description.lower() or
-                factor_name.lower() in hypothesis.description.lower()):
+            # Assess semantic relevance of context factor
+            assessment = semantic_service.assess_probative_value(
+                evidence_description=evidence.description,
+                hypothesis_description=f"Context factor '{factor_name}' is relevant to: {hypothesis.description}",
+                context="Identifying relevant context factors for likelihood calculation"
+            )
+            if assessment.confidence_score > 0.6:
                 relevant_factors.append(factor_value)
         
         if not relevant_factors:

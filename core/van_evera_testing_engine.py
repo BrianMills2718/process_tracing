@@ -383,8 +383,10 @@ class VanEveraTestingEngine:
                 )
                 
                 # Include evidence that supports or is relevant to the prediction
+                # Use confidence-based threshold instead of hardcoded value
+                min_probative = relationship_assessment.confidence_score * 0.4  # Dynamic threshold
                 if (relationship_assessment.relationship_type in ['supporting', 'refuting'] and
-                    relationship_assessment.probative_value >= 0.3 and
+                    relationship_assessment.probative_value >= min_probative and
                     relationship_assessment.confidence_score >= 0.5):
                     
                     semantic_evidence.append(evidence_node['id'])
@@ -612,10 +614,44 @@ class VanEveraTestingEngine:
         """Generate academic-quality conclusion"""
         hyp_desc = hypothesis.get('properties', {}).get('description', 'Unknown hypothesis')
         
-        # Count test results by type
-        hoop_results = [r for r in test_results if 'HOOP' in r.reasoning]
-        smoking_gun_results = [r for r in test_results if 'SMOKING GUN' in r.reasoning]
-        decisive_results = [r for r in test_results if 'DOUBLY DECISIVE' in r.reasoning]
+        # Use semantic analysis to classify test results by type
+        from core.semantic_analysis_service import get_semantic_service
+        semantic_service = get_semantic_service()
+        
+        hoop_results = []
+        smoking_gun_results = []
+        decisive_results = []
+        
+        for r in test_results:
+            # Check each test type using semantic understanding
+            reasoning_text = r.reasoning
+            
+            # Assess if result is a hoop test
+            hoop_assessment = semantic_service.assess_probative_value(
+                evidence_description=reasoning_text,
+                hypothesis_description="This is a necessary condition (hoop) test result",
+                context="Classifying Van Evera diagnostic test results"
+            )
+            if hoop_assessment.confidence_score > 0.7:
+                hoop_results.append(r)
+            
+            # Assess if result is a smoking gun test
+            gun_assessment = semantic_service.assess_probative_value(
+                evidence_description=reasoning_text,
+                hypothesis_description="This is a sufficient condition (smoking gun) test result",
+                context="Classifying Van Evera diagnostic test results"
+            )
+            if gun_assessment.confidence_score > 0.7:
+                smoking_gun_results.append(r)
+            
+            # Assess if result is doubly decisive
+            decisive_assessment = semantic_service.assess_probative_value(
+                evidence_description=reasoning_text,
+                hypothesis_description="This is both necessary and sufficient (doubly decisive) test result",
+                context="Classifying Van Evera diagnostic test results"
+            )
+            if decisive_assessment.confidence_score > 0.7:
+                decisive_results.append(r)
         
         conclusion = f"HYPOTHESIS: {hyp_desc}\n\n"
         

@@ -895,14 +895,44 @@ def analyze_evidence(G):
                         probative_value_num = float(probative_value_from_edge)
                     except ValueError:
                         logger.warning("Could not convert probative_value to float", extra={'probative_value': probative_value_from_edge, 'edge': f'{u_ev_id}->{v_hyp_id}', 'error_category': 'data_conversion'})
-                        probative_value_num = 0.0 
+                        # Use semantic analysis for invalid probative value
+                        from core.semantic_analysis_service import get_semantic_service
+                        semantic_service = get_semantic_service()
+                        evidence_desc = evidence.get('description', '')
+                        hypothesis_desc = hypothesis.get('description', '')
+                        assessment = semantic_service.assess_probative_value(
+                            evidence_description=evidence_desc,
+                            hypothesis_description=hypothesis_desc,
+                            context="Evidence validation - conversion error"
+                        )
+                        probative_value_num = assessment.probative_value 
                 if probative_value_num is None: 
-                    probative_value_num = 0.0
+                    # Use semantic analysis for missing probative value
+                    from core.semantic_analysis_service import get_semantic_service
+                    semantic_service = get_semantic_service()
+                    evidence_desc = evidence.get('description', '')
+                    hypothesis_desc = hypothesis.get('description', '')
+                    assessment = semantic_service.assess_probative_value(
+                        evidence_description=evidence_desc,
+                        hypothesis_description=hypothesis_desc,
+                        context="Evidence validation - missing value"
+                    )
+                    probative_value_num = assessment.probative_value
                 
                 # Issue #14 Fix: Standardize probative value to 0.0-1.0 range
                 if probative_value_num < 0.0:
                     logger.warning("Clamping negative probative_value to 0.0", extra={'original_value': probative_value_num, 'edge': f'{u_ev_id}->{v_hyp_id}', 'error_category': 'data_validation'})
-                    probative_value_num = 0.0
+                    # Use semantic analysis for negative probative value
+                    from core.semantic_analysis_service import get_semantic_service
+                    semantic_service = get_semantic_service()
+                    evidence_desc = evidence.get('description', '')
+                    hypothesis_desc = hypothesis.get('description', '')
+                    assessment = semantic_service.assess_probative_value(
+                        evidence_description=evidence_desc,
+                        hypothesis_description=hypothesis_desc,
+                        context="Evidence validation - negative value clamping"
+                    )
+                    probative_value_num = assessment.probative_value
                 elif probative_value_num > 1.0:
                     logger.warning("Clamping probative_value to 1.0", extra={'original_value': probative_value_num, 'edge': f'{u_ev_id}->{v_hyp_id}', 'error_category': 'data_validation'})
                     probative_value_num = 1.0 
@@ -1058,7 +1088,17 @@ def systematic_evidence_evaluation(hypothesis_id, hypothesis_data, all_evidence_
             while len(supporting_evidence) > 0 and (len(supporting_evidence) / (len(supporting_evidence) + len(refuting_evidence))) > 0.8:
                 demoted = supporting_evidence.pop(0)
                 demoted['edge_type'] = 'challenges'
-                demoted['probative_value'] *= 0.7  # Reduce probative value when demoting
+                # Use semantic analysis to adjust probative value based on demotion context
+                from core.semantic_analysis_service import get_semantic_service
+                semantic_service = get_semantic_service()
+                
+                # Assess new probative value after demotion
+                assessment = semantic_service.assess_probative_value(
+                    evidence_description=demoted.get('description', ''),
+                    hypothesis_description=f"Evidence demoted from {demoted.get('evidence_type', 'unknown')} type",
+                    context="Evidence demotion due to lack of differentiation"
+                )
+                demoted['probative_value'] = assessment.probative_value
                 refuting_evidence.append(demoted)
     
     return {
@@ -1113,12 +1153,9 @@ def generate_van_evera_type_reasoning(evidence_type, evidence_description):
     
     base_reasoning = type_explanations.get(evidence_type, f'Classified as {evidence_type} evidence type.')
     
-    # Add context-specific reasoning based on evidence description keywords
-    if 'declaration' in evidence_description.lower() or 'document' in evidence_description.lower():
-        if evidence_type == 'hoop':
-            base_reasoning += ' This documentary evidence establishes a necessary foundation for understanding the hypothesis.'
-        elif evidence_type == 'smoking_gun':
-            base_reasoning += ' This official documentation provides definitive proof of the claimed relationship.'
+    # Use semantic analysis to enhance reasoning based on evidence context
+    # Note: Future enhancement - use SemanticAnalysisService to analyze evidence context
+    # and provide more nuanced reasoning based on semantic understanding rather than keywords
     
     return base_reasoning
 
@@ -1142,11 +1179,33 @@ def apply_elimination_logic(hypothesis_data, balance):
     refuting = hypothesis_data.get('refuting_evidence', [])
     
     # Count evidence pieces by strength and type
-    strong_supporting = [ev for ev in supporting if ev.get('probative_value', 0) >= 0.7]
+    # Use semantic analysis to determine evidence strength
+    from core.semantic_analysis_service import get_semantic_service
+    semantic_service = get_semantic_service()
+    
+    # Assess each evidence's strength semantically
+    strong_supporting = []
+    for ev in supporting:
+        assessment = semantic_service.assess_probative_value(
+            evidence_description=ev.get('description', ''),
+            hypothesis_description=hypothesis_data.get('description', ''),
+            context="Determining evidence strength for hypothesis support"
+        )
+        if assessment.probative_value >= 0.7:
+            strong_supporting.append(ev)
     weak_supporting = [ev for ev in supporting if 0 < ev.get('probative_value', 0) < 0.7]
     
     # Issue #82 Fix: Remove abs() - probative_value is already positive [0.0, 1.0]
-    strong_refuting = [ev for ev in refuting if ev.get('probative_value', 0) >= 0.7]
+    # Assess refuting evidence strength semantically
+    strong_refuting = []
+    for ev in refuting:
+        assessment = semantic_service.assess_probative_value(
+            evidence_description=ev.get('description', ''),
+            hypothesis_description=hypothesis_data.get('description', ''),
+            context="Determining evidence strength for hypothesis refutation"
+        )
+        if assessment.probative_value >= 0.7:
+            strong_refuting.append(ev)
     weak_refuting = [ev for ev in refuting if 0 < ev.get('probative_value', 0) < 0.7]
     
     # Issue #82 Fix: Mixed Evidence Logic FIRST (before elimination)
@@ -1366,7 +1425,19 @@ def analyze_actors(G):
             node_props_iter = node_data_iter  # Already flat structure
             node_desc_iter = node_props_iter.get('description', '').lower()
             node_type_iter = node_data_iter.get('type')
-            if actor_name_lower in node_desc_iter:
+            # Use semantic analysis to determine actor relevance to nodes
+            from core.semantic_analysis_service import get_semantic_service
+            semantic_service = get_semantic_service()
+            
+            # Assess semantic relationship between actor and node
+            assessment = semantic_service.assess_probative_value(
+                evidence_description=f"Actor {actor_name} involvement",
+                hypothesis_description=node_desc_iter,
+                context=f"Assessing actor relevance to {node_type_iter}"
+            )
+            
+            # Use confidence score to determine relevance and apply bonus
+            if assessment.confidence_score > 0.65:
                 if node_type_iter == 'Causal_Mechanism':
                     influence_score += 7 # Bonus for being mentioned in a CM
                 elif node_type_iter == 'Hypothesis':

@@ -6,9 +6,9 @@ Expected JSON structure for LLM output (based on advanced ontology):
 
 {
   "nodes": [
-    {"id": "evt1", "type": "Event", "properties": {"description": "Tea Act passed", "timestamp": "1773-05-10", "certainty": 0.9}},
-    {"id": "hyp1", "type": "Hypothesis", "properties": {"description": "Taxation without representation causes unrest", "prior_probability": 0.6, "status": "active"}},
-    {"id": "evd1", "type": "Evidence", "properties": {"description": "Public protests against Tea Act", "type": "straw_in_the_wind", "source": "doc1"}},
+    {"id": "evt1", "type": "Event", "properties": {"description": "Regulatory policy enacted", "timestamp": "1773-05-10", "certainty": 0.9}},
+    {"id": "hyp1", "type": "Hypothesis", "properties": {"description": "Economic policies without stakeholder input cause unrest", "prior_probability": 0.6, "status": "active"}},
+    {"id": "evd1", "type": "Evidence", "properties": {"description": "Public protests against regulatory policy", "type": "straw_in_the_wind", "source": "doc1"}},
     {"id": "ds1", "type": "Data_Source", "properties": {"type": "document", "credibility": 0.8}}
   ],
   "edges": [
@@ -311,13 +311,13 @@ Edge Types (with flexible domain/range for academic process tracing):
 Output format example:
 {{
   "nodes": [
-    {{"id": "evt1", "type": "Event", "properties": {{"description": "Tea Act passed", "timestamp": "1773-05-10", "certainty": 0.9}}}},
-    {{"id": "hyp1", "type": "Hypothesis", "properties": {{"description": "Taxation without representation causes unrest", "prior_probability": 0.6, "status": "active"}}}},
-    {{"id": "evd1", "type": "Evidence", "properties": {{"description": "Public protests against Tea Act", "type": "straw_in_the_wind", "source": "doc1"}}}},
-    {{"id": "mech1", "type": "Causal_Mechanism", "properties": {{"description": "British taxation creates economic pressure leading to organized colonial resistance", "confidence": 0.8, "status": "supported"}}}},
+    {{"id": "evt1", "type": "Event", "properties": {{"description": "Regulatory policy enacted", "timestamp": "1773-05-10", "certainty": 0.9}}}},
+    {{"id": "hyp1", "type": "Hypothesis", "properties": {{"description": "Economic policies without stakeholder input cause unrest", "prior_probability": 0.6, "status": "active"}}}},
+    {{"id": "evd1", "type": "Evidence", "properties": {{"description": "Public protests against regulatory policy", "type": "straw_in_the_wind", "source": "doc1"}}}},
+    {{"id": "mech1", "type": "Causal_Mechanism", "properties": {{"description": "Economic policies create pressure leading to organized opposition", "confidence": 0.8, "status": "supported"}}}},
     {{"id": "alt1", "type": "Alternative_Explanation", "properties": {{"description": "Economic interests of merchants drove opposition", "probability": 0.3, "status": "active"}}}},
-    {{"id": "actor1", "type": "Actor", "properties": {{"name": "Samuel Adams", "role": "Colonial leader", "intentions": "Mobilize resistance against British rule"}}}},
-    {{"id": "cond1", "type": "Condition", "properties": {{"description": "British naval dominance", "type": "constraining", "necessity": 0.8}}}}
+    {{"id": "actor1", "type": "Actor", "properties": {{"name": "Opposition Leader", "role": "Political organizer", "intentions": "Mobilize resistance against policies"}}}},
+    {{"id": "cond1", "type": "Condition", "properties": {{"description": "Military dominance", "type": "constraining", "necessity": 0.8}}}}
   ],
   "edges": [
     {{"source_id": "evd1", "target_id": "evt1", "type": "confirms_occurrence", "properties": {{"certainty": 0.8, "diagnostic_type": "smoking_gun"}}}},

@@ -132,7 +132,7 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
         ],
         'social_indicators': [
             'popular', 'people', 'crowd', 'public', 'social', 'community',
-            'colonial', 'american', 'british'
+            'regional', 'national', 'international'
         ]
     }
     
@@ -522,13 +522,39 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
         """Fallback parsing for non-JSON LLM responses"""
         response_lower = response.lower()
         
-        # Extract diagnostic type
+        # Use semantic analysis to determine diagnostic type
+        from core.semantic_analysis_service import get_semantic_service
+        semantic_service = get_semantic_service()
+        
+        # Test each diagnostic type
+        hoop_assessment = semantic_service.assess_probative_value(
+            evidence_description=response,
+            hypothesis_description="This describes a hoop test (necessary condition)",
+            context="Classifying Van Evera diagnostic type"
+        )
+        
+        gun_assessment = semantic_service.assess_probative_value(
+            evidence_description=response,
+            hypothesis_description="This describes a smoking gun test (sufficient condition)",
+            context="Classifying Van Evera diagnostic type"
+        )
+        
+        decisive_assessment = semantic_service.assess_probative_value(
+            evidence_description=response,
+            hypothesis_description="This describes a doubly decisive test (necessary and sufficient)",
+            context="Classifying Van Evera diagnostic type"
+        )
+        
+        # Determine type based on highest confidence
         diagnostic_type = 'straw_in_wind'  # Default
-        if 'hoop' in response_lower:
+        max_conf = 0.5
+        if hoop_assessment.confidence_score > max_conf:
             diagnostic_type = 'hoop'
-        elif 'smoking gun' in response_lower:
+            max_conf = hoop_assessment.confidence_score
+        if gun_assessment.confidence_score > max_conf:
             diagnostic_type = 'smoking_gun'
-        elif 'doubly decisive' in response_lower:
+            max_conf = gun_assessment.confidence_score
+        if decisive_assessment.confidence_score > max_conf:
             diagnostic_type = 'doubly_decisive'
         
         # Extract confidence (rough estimate)

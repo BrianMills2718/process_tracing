@@ -82,23 +82,36 @@ class ConnectionInferenceEngine:
             # Infer 'enables' relationships
             if target_type in ['Event', 'Causal_Mechanism', 'Hypothesis']:
                 if self._matches_semantic_pattern(description, 'enables'):
-                    # Specific inference rules
-                    if 'distance' in description and 'resistance' in target_desc:
-                        edges.append(self._create_edge(node_id, target_id, 'enables', 
-                                                     "Geographic distance enables colonial resistance"))
-                    elif 'economic' in description and ('independence' in target_desc or 'revolution' in target_desc):
+                    # Use semantic analysis for enabling relationships
+                    from core.semantic_analysis_service import get_semantic_service
+                    semantic_service = get_semantic_service()
+                    
+                    assessment = semantic_service.assess_probative_value(
+                        evidence_description=description,
+                        hypothesis_description=f"Condition enables {target_desc}",
+                        context="Determining enabling relationships between conditions and outcomes"
+                    )
+                    
+                    if assessment.confidence_score > 0.7:
                         edges.append(self._create_edge(node_id, target_id, 'enables',
-                                                     "Economic development enables independence"))
-                    elif 'enlightenment' in description and 'constitutional' in target_desc:
-                        edges.append(self._create_edge(node_id, target_id, 'enables',
-                                                     "Enlightenment ideas enable constitutional principles"))
+                                                     assessment.reasoning))
             
             # Infer 'constrains' relationships
             if target_type in ['Event', 'Causal_Mechanism', 'Actor']:
                 if self._matches_semantic_pattern(description, 'constrains'):
-                    if 'naval' in description and 'colonial' in target_desc:
+                    # Use semantic analysis for constraining relationships
+                    from core.semantic_analysis_service import get_semantic_service
+                    semantic_service = get_semantic_service()
+                    
+                    assessment = semantic_service.assess_probative_value(
+                        evidence_description=description,
+                        hypothesis_description=f"Condition constrains {target_desc}",
+                        context="Determining constraining relationships"
+                    )
+                    
+                    if assessment.confidence_score > 0.7:
                         edges.append(self._create_edge(node_id, target_id, 'constrains',
-                                                     "Naval supremacy constrains colonial options"))
+                                                     assessment.reasoning))
         
         return edges
     
@@ -114,17 +127,35 @@ class ConnectionInferenceEngine:
                 target_id = target_node['id']
                 target_desc = target_node['properties'].get('description', '').lower()
                 
-                # Check if actor name appears in event description
-                if actor_name and actor_name in target_desc:
+                # Use semantic analysis to determine actor-event relationships
+                from core.semantic_analysis_service import get_semantic_service
+                semantic_service = get_semantic_service()
+                
+                assessment = semantic_service.assess_probative_value(
+                    evidence_description=target_desc,
+                    hypothesis_description=f"Actor {actor_name} is involved in this event",
+                    context="Determining actor involvement in events"
+                )
+                
+                if assessment.confidence_score > 0.65:
                     edges.append(self._create_edge(node_id, target_id, 'initiates',
                                                  f"Actor {actor_name} initiated event"))
                 
                 # Check for initiation keywords
                 if self._matches_semantic_pattern(target_desc, 'initiates'):
-                    # Specific patterns for known actors
-                    if 'hutchinson' in actor_name and 'enforcement' in target_desc:
+                    # Use semantic analysis for actor-event relationships
+                    from core.semantic_analysis_service import get_semantic_service
+                    semantic_service = get_semantic_service()
+                    
+                    assessment = semantic_service.assess_probative_value(
+                        evidence_description=f"Actor {actor_name} and event {target_desc}",
+                        hypothesis_description="Actor initiated the described event",
+                        context="Determining actor-event relationships"
+                    )
+                    
+                    if assessment.confidence_score > 0.75:
                         edges.append(self._create_edge(node_id, target_id, 'initiates',
-                                                     "Governor initiated enforcement measures"))
+                                                     assessment.reasoning))
         
         return edges
     
@@ -142,10 +173,19 @@ class ConnectionInferenceEngine:
             
             if target_type == 'Causal_Mechanism':
                 # Check if event should be part of mechanism
-                if any(keyword in description for keyword in ['stamp act', 'congress', 'declaration']):
-                    if 'resistance' in target_desc or 'imperial' in target_desc:
-                        edges.append(self._create_edge(node_id, target_id, 'part_of_mechanism',
-                                                     "Event is part of resistance mechanism"))
+                # Use semantic analysis to determine event-mechanism relationships
+                from core.semantic_analysis_service import get_semantic_service
+                semantic_service = get_semantic_service()
+                
+                assessment = semantic_service.assess_probative_value(
+                    evidence_description=description,
+                    hypothesis_description=f"Event is part of mechanism: {target_desc}",
+                    context="Determining event-mechanism relationships"
+                )
+                
+                if assessment.confidence_score > 0.7:
+                    edges.append(self._create_edge(node_id, target_id, 'part_of_mechanism',
+                                                 assessment.reasoning))
         
         return edges
     
@@ -165,35 +205,69 @@ class ConnectionInferenceEngine:
             if target_type == 'Hypothesis':
                 # Strong semantic matches for hypothesis testing
                 if self._semantic_similarity(description, target_desc) > 0.2:
-                    if 'test' in description:
-                        edges.append(self._create_edge(node_id, target_id, 'tests_hypothesis',
-                                                     "Evidence tests hypothesis validity"))
-                    elif 'support' in description or 'confirm' in description:
-                        edges.append(self._create_edge(node_id, target_id, 'supports',
-                                                     "Evidence supports hypothesis"))
-                    elif 'refute' in description or 'contradict' in description:
+                    # Use semantic analysis to determine evidence-hypothesis relationship
+                    from core.semantic_analysis_service import get_semantic_service
+                    semantic_service = get_semantic_service()
+                    
+                    # Analyze contradiction first
+                    contradiction_analysis = semantic_service.detect_contradiction(
+                        evidence_description=description,
+                        hypothesis_description=target_desc
+                    )
+                    
+                    if contradiction_analysis.contradicts_hypothesis:
                         edges.append(self._create_edge(node_id, target_id, 'refutes',
-                                                     "Evidence refutes hypothesis"))
+                                                     contradiction_analysis.semantic_reasoning))
                     else:
-                        edges.append(self._create_edge(node_id, target_id, 'provides_evidence_for',
-                                                     "Evidence provides evidence for hypothesis"))
+                        # Assess support relationship
+                        assessment = semantic_service.assess_probative_value(
+                            evidence_description=description,
+                            hypothesis_description=target_desc,
+                            context="Evidence-hypothesis relationship"
+                        )
+                        
+                        if assessment.probative_value > 0.6:
+                            edges.append(self._create_edge(node_id, target_id, 'supports',
+                                                         assessment.reasoning))
+                        else:
+                            edges.append(self._create_edge(node_id, target_id, 'provides_evidence_for',
+                                                         "Evidence relates to hypothesis"))
             
             # Connect evidence to mechanisms
             elif target_type == 'Causal_Mechanism':
                 if self._semantic_similarity(description, target_desc) > 0.2:
-                    if 'test' in description:
+                    # Use semantic analysis for evidence-mechanism relationships
+                    from core.semantic_analysis_service import get_semantic_service
+                    semantic_service = get_semantic_service()
+                    
+                    assessment = semantic_service.assess_probative_value(
+                        evidence_description=description,
+                        hypothesis_description=f"Mechanism: {target_desc}",
+                        context="Evidence-mechanism relationship"
+                    )
+                    
+                    if assessment.confidence_score > 0.7:
                         edges.append(self._create_edge(node_id, target_id, 'tests_mechanism',
-                                                     "Evidence tests mechanism operation"))
+                                                     assessment.reasoning))
                     else:
                         edges.append(self._create_edge(node_id, target_id, 'supports',
-                                                     "Evidence supports mechanism"))
+                                                     "Evidence relates to mechanism"))
             
             # Connect evidence to events (confirms/disproves occurrence)
             elif target_type == 'Event':
                 if self._semantic_similarity(description, target_desc) > 0.3:
-                    if 'disprove' in description or 'did not' in description:
+                    # Use semantic analysis for evidence-event relationships
+                    from core.semantic_analysis_service import get_semantic_service
+                    semantic_service = get_semantic_service()
+                    
+                    contradiction_analysis = semantic_service.detect_contradiction(
+                        evidence_description=description,
+                        hypothesis_description=f"Event occurred: {target_desc}"
+                    )
+                    
+                    if contradiction_analysis.contradicts_hypothesis:
                         edges.append(self._create_edge(node_id, target_id, 'disproves_occurrence',
-                                                     "Evidence disproves event occurrence"))
+                                                     contradiction_analysis.semantic_reasoning))
                     else:
                         edges.append(self._create_edge(node_id, target_id, 'confirms_occurrence',
                                                      "Evidence confirms event occurrence"))
@@ -201,12 +275,27 @@ class ConnectionInferenceEngine:
             # Connect evidence to alternative explanations
             elif target_type == 'Alternative_Explanation':
                 if self._semantic_similarity(description, target_desc) > 0.2:
-                    if 'support' in description:
-                        edges.append(self._create_edge(node_id, target_id, 'supports_alternative',
-                                                     "Evidence supports alternative explanation"))
-                    elif 'refute' in description:
+                    # Use semantic analysis for alternative explanation relationships
+                    from core.semantic_analysis_service import get_semantic_service
+                    semantic_service = get_semantic_service()
+                    
+                    contradiction_analysis = semantic_service.detect_contradiction(
+                        evidence_description=description,
+                        hypothesis_description=target_desc
+                    )
+                    
+                    if contradiction_analysis.contradicts_hypothesis:
                         edges.append(self._create_edge(node_id, target_id, 'refutes_alternative',
-                                                     "Evidence refutes alternative explanation"))
+                                                     contradiction_analysis.semantic_reasoning))
+                    else:
+                        assessment = semantic_service.assess_probative_value(
+                            evidence_description=description,
+                            hypothesis_description=target_desc,
+                            context="Evidence-alternative explanation relationship"
+                        )
+                        if assessment.probative_value > 0.6:
+                            edges.append(self._create_edge(node_id, target_id, 'supports_alternative',
+                                                         assessment.reasoning))
                     else:
                         edges.append(self._create_edge(node_id, target_id, 'tests_alternative',
                                                      "Evidence tests alternative explanation"))
