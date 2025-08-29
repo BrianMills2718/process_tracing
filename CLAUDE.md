@@ -17,6 +17,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ❌ Any `if/elif` chains for semantic understanding
 - ❌ Dataset-specific logic (American Revolution hardcoded rules)
 - ❌ Historical period-specific keyword matching
+- ❌ Word overlap/counting for semantic decisions
+- ❌ Fallback values that hide LLM unavailability
 
 **REQUIRED IMPLEMENTATIONS**:
 - ✅ LLM semantic analysis for ALL evidence-hypothesis relationships
@@ -25,6 +27,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ Structured Pydantic outputs for ALL semantic decisions
 - ✅ Evidence-based confidence scoring through LLM evaluation
 - ✅ Generalist process tracing without dataset-specific hardcoding
+- ✅ FAIL-FAST when LLM unavailable (no silent fallbacks)
+- ✅ Dynamic formula weights from LLM (no hardcoded calculations)
 
 **APPROVAL REQUIRED**: Any rule-based logic must be explicitly approved with academic justification. Default assumption: **USE LLM SEMANTIC UNDERSTANDING**.
 
@@ -32,18 +36,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 4B - Complete Batched Evaluation Integration (Updated 2025-01-29)
+## 🎯 CURRENT STATUS: Phase 6 - Complete TRUE LLM-First Migration (Updated 2025-01-29)
 
-**System Status**: **Batched Infrastructure Built (60%)** - Integration incomplete
-**Current Priority**: **COMPLETE INTEGRATION** - Make analyze.py actually use batched evaluation
-**Critical Issue**: **Production code still uses old individual evaluation approach**
+**System Status**: **Hybrid Mode (71%)** - LLM optional, not required
+**Current Priority**: **REMOVE ALL FALLBACKS** - Make LLM mandatory
+**Critical Issue**: **System still operates with fallback logic**
 
-**PHASE 4A PARTIALLY COMPLETED (2025-01-29):**
-- ✅ **Infrastructure Built**: BatchedHypothesisEvaluation schema and methods created
-- ✅ **Test Validation**: Batched evaluation works perfectly in isolation
-- ⚠️ **Integration Started**: Helper functions added but not used in main flow
-- ❌ **Main Pipeline**: analyze.py still evaluates hypotheses individually
-- ❌ **Dead Code**: Keyword matching code still exists (must be removed)
+**PHASE 5 PARTIALLY COMPLETED (2025-01-29):**
+- ✅ **Infrastructure Built**: LLM assessment schemas and methods created
+- ✅ **Integration Added**: Confidence calculator and testing engine augmented
+- ⚠️ **Fallbacks Remain**: Hardcoded values still present as "defaults"
+- ❌ **Word Overlap**: Semantic decisions still use word counting
+- ❌ **Optional LLM**: System works without LLM (violates policy)
 
 ## Evidence-Based Development Philosophy (Mandatory)
 
@@ -53,6 +57,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **EVIDENCE-BASED DEVELOPMENT**: All claims require raw evidence in structured evidence files
 - **DON'T EDIT GENERATED SYSTEMS**: Fix the autocoder itself, not generated outputs
 - **VALIDATION + SELF-HEALING**: Every validator must have coupled self-healing capability
+- **LLM-REQUIRED**: System must fail immediately if LLM unavailable
 
 ### Quality Standards
 - **Semantic Understanding**: All classification based on LLM analysis, not keyword matching
@@ -60,290 +65,323 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Technical Correctness**: All Pydantic validations must pass
 - **Process Adherence**: Run lint/typecheck before marking tasks complete
 - **Evidence Documentation**: Document all claims with concrete test results in structured evidence files
+- **Zero Fallbacks**: No try/except that continues without LLM
 
 ## Project Overview
 
 **Generalist LLM-Enhanced Process Tracing Toolkit** - Universal system implementing Van Evera academic methodology with sophisticated LLM semantic understanding for qualitative analysis using process tracing across any historical period or domain.
 
 ### Architecture
-- **Plugin System**: 16 registered plugins requiring LLM-first conversion
+- **Plugin System**: 16 registered plugins requiring TRUE LLM-first conversion
 - **Van Evera Workflow**: 8-step academic analysis pipeline with enhanced intelligence
 - **LLM Integration**: VanEveraLLMInterface with structured Pydantic output (Gemini 2.5 Flash)
 - **Type Safety**: Full mypy compliance across core modules
 - **Security**: Environment-based API key management
 - **Universality**: No dataset-specific logic - works across all domains and time periods
+- **Fail-Fast**: System must error if LLM unavailable
 
-## 🚀 PHASE 4B: Complete Batched Evaluation Integration
+## 🚀 PHASE 6: Complete TRUE LLM-First Migration
 
 ### Critical Context
-**What exists**: Batched evaluation infrastructure is built and tested
-**What's missing**: Integration into main analyze.py pipeline
-**Why it matters**: System still makes N individual LLM calls instead of 1 batched call
+**What exists**: LLM infrastructure added but not required
+**What's wrong**: Fallback logic allows system to run without LLM
+**Why it matters**: Violates ZERO TOLERANCE policy for non-LLM decisions
 
-### Task 1: Discovery - Map All Evaluation Points
+### Task 1: Create LLM-Required Infrastructure
 
-**Objective**: Find EVERY place where evidence evaluates against hypotheses
-
-**Required Actions**:
-1. Search analyze.py for these patterns:
-```bash
-grep -n "assess_probative_value\|get_comprehensive_analysis\|for.*hypothesis\|semantic_service\." core/analyze.py
-```
-
-2. Document each location in `evidence/current/Evidence_Phase4B_Discovery.md`:
-```markdown
-## Evaluation Points Found
-- Line XXX: Function name, context, loop structure
-- Line YYY: Error handling path, individual evaluation
-```
-
-3. Identify the MAIN evaluation loop (usually in a function like `execute_analysis()` or similar)
-
-### Task 2: Remove Dead Code
-
-**Objective**: Delete all keyword matching and unused code
+**Objective**: Add utilities that enforce LLM availability
 
 **Required Actions**:
-1. Delete the keyword matching function from semantic_analysis_service.py:
+
+1. Create `core/llm_required.py`:
 ```python
-# DELETE THIS ENTIRE FUNCTION (lines ~433-491):
-def evaluate_relationship_lightweight(self, ...)
-```
+"""
+LLM requirement enforcement utilities.
+System MUST fail if LLM is unavailable.
+"""
 
-2. Search for and remove any calls to this function:
-```bash
-grep -r "evaluate_relationship_lightweight" core/
-```
+class LLMRequiredError(Exception):
+    """Raised when LLM is required but unavailable"""
+    pass
 
-3. Document removal in `evidence/current/Evidence_Phase4B_Cleanup.md`
-
-### Task 3: Implement Main Pipeline Integration
-
-**Objective**: Replace individual evaluations with batched calls
-
-**Step 3.1: Create Integration Function**
-Add to analyze.py after imports:
-```python
-def batch_evaluate_evidence(evidence_node_data, hypothesis_nodes_data, G, semantic_service):
+def require_llm():
     """
-    Evaluate one evidence against all hypotheses in a single LLM call.
-    Updates graph edges with results.
-    
-    Args:
-        evidence_node_data: Dict with evidence data including 'description'
-        hypothesis_nodes_data: Dict of hypothesis_id -> hypothesis data
-        G: NetworkX graph to update
-        semantic_service: SemanticAnalysisService instance
-    
-    Returns:
-        Dict of hypothesis_id -> evaluation results
+    Ensure LLM is available or fail immediately.
+    NO FALLBACKS ALLOWED.
     """
-    # Format hypotheses for batch evaluation
-    hypotheses = [
-        {'id': hyp_id, 'text': hyp_data.get('description', '')}
-        for hyp_id, hyp_data in hypothesis_nodes_data.items()
-    ]
-    
-    # Get evidence description
-    evidence_desc = evidence_node_data.get('description', '')
-    evidence_id = evidence_node_data.get('id', 'unknown')
-    
-    # Call batched evaluation
-    batch_result = semantic_service.evaluate_evidence_against_hypotheses_batch(
-        evidence_id,
-        evidence_desc,
-        hypotheses,
-        context="Main analysis pipeline"
-    )
-    
-    # Process results and update graph
-    results = {}
-    for eval_result in batch_result.evaluations:
-        hyp_id = eval_result.hypothesis_id
-        
-        # Create/update edge in graph
-        G.add_edge(
-            evidence_id,
-            hyp_id,
-            type='supports' if eval_result.relationship_type == 'supports' else 'challenges',
-            properties={
-                'probative_value': eval_result.confidence,
-                'van_evera_diagnostic': eval_result.van_evera_diagnostic,
-                'reasoning': eval_result.reasoning,
-                'relationship_type': eval_result.relationship_type
-            }
-        )
-        
-        results[hyp_id] = eval_result
-    
-    return results
+    try:
+        from plugins.van_evera_llm_interface import get_van_evera_llm
+        llm = get_van_evera_llm()
+        if not llm:
+            raise LLMRequiredError("LLM interface required but not available")
+        return llm
+    except Exception as e:
+        raise LLMRequiredError(f"Cannot operate without LLM: {e}")
 ```
 
-**Step 3.2: Find and Replace Main Loop**
-Look for the main evidence-hypothesis evaluation loop (likely around lines 850-950):
+2. Add new schemas to `van_evera_llm_schemas.py`:
 ```python
-# REPLACE patterns like:
-for evidence_id, evidence_node_data in evidence_nodes_data.items():
-    for hypothesis_id in hypothesis_nodes_data:
-        # Individual evaluation
-        assessment = semantic_service.assess_probative_value(...)
-
-# WITH:
-for evidence_id, evidence_node_data in evidence_nodes_data.items():
-    # Batch evaluation for all hypotheses
-    evaluations = batch_evaluate_evidence(
-        evidence_node_data, 
-        hypothesis_nodes_data, 
-        G, 
-        semantic_service
-    )
+class ConfidenceFormulaWeights(BaseModel):
+    """LLM determines appropriate weights for confidence calculation"""
+    quality_weight: float = Field(ge=0.0, le=1.0)
+    quantity_weight: float = Field(ge=0.0, le=1.0)
+    diversity_weight: float = Field(ge=0.0, le=1.0)
+    balance_weight: float = Field(ge=0.0, le=1.0)
+    reasoning: str = Field(description="Justification for weight selection")
+    
+class SemanticRelevanceAssessment(BaseModel):
+    """Replace ALL word overlap with semantic assessment"""
+    is_relevant: bool
+    relevance_score: float = Field(ge=0.0, le=1.0)
+    semantic_relationship: str
+    reasoning: str
 ```
 
-### Task 4: Update Error Handling Paths
+3. Document in `evidence/current/Evidence_Phase6_Infrastructure.md`
 
-**Objective**: Make error recovery use batched evaluation too
+### Task 2: Remove ALL Fallbacks from confidence_calculator.py
 
-**Required Actions**:
-1. Find all error handling sections (lines ~898-935, ~1139, etc.)
-2. Replace individual calls with batch evaluation
-3. Ensure fallback behavior is preserved
+**Objective**: Make confidence calculation require LLM
 
-### Task 5: Validation
+**Required Changes**:
 
-**Objective**: Prove the integration works correctly
+1. Update `__init__` method:
+```python
+def __init__(self):
+    from core.llm_required import require_llm
+    self.llm = require_llm()  # Fail immediately if no LLM
+    self.evidence_quantifier = EvidenceStrengthQuantifier()
+    self.assessment_history = []
+```
 
-**Test Script**: Create `validate_phase4b_integration.py`:
+2. Remove ALL fallback values:
+- Line ~303: DELETE `mechanism_completeness = 0.7  # Default fallback`
+- Line ~306: DELETE `temporal_consistency = 0.8  # Default fallback`
+- Line ~359: DELETE `base_coherence = 0.8  # Default fallback`
+- Line ~389: DELETE `independence_score = 0.8  # Default fallback`
+- Line ~497: DELETE `posterior_uncertainty = 0.1  # Default fallback`
+
+Replace each with:
+```python
+# No fallback - LLM required
+causal_assessment = self.llm.assess_causal_mechanism(...)
+mechanism_completeness = causal_assessment.mechanism_completeness
+```
+
+3. Replace hardcoded formula weights (lines ~273-277):
+```python
+# OLD:
+evidential_confidence = (
+    0.4 * quality_score +
+    0.2 * quantity_factor +
+    ...
+)
+
+# NEW:
+weights = self.llm.determine_confidence_weights(context)
+evidential_confidence = (
+    weights.quality_weight * quality_score +
+    weights.quantity_weight * quantity_factor +
+    ...
+)
+```
+
+4. Document changes in `evidence/current/Evidence_Phase6_Confidence.md`
+
+### Task 3: Remove Word Overlap from van_evera_testing_engine.py
+
+**Objective**: Delete ALL word counting/overlap logic
+
+**Required Deletions**:
+
+1. DELETE entire method `_generate_generic_predictions()` (lines 249-265)
+
+2. DELETE word overlap in `_is_evidence_relevant_to_prediction()` (lines 346-360):
+```python
+# DELETE THIS ENTIRE SECTION:
+# Fallback to basic non-keyword analysis
+evidence_words = set(evidence_text.lower().split())
+...
+return overlap_ratio >= 0.2
+```
+
+Replace with:
+```python
+# No fallback - LLM required
+raise LLMRequiredError("LLM assessment required for relevance")
+```
+
+3. DELETE word overlap in `_find_semantic_evidence()` (lines 401-420)
+
+4. DELETE entire method `_extract_prediction_keywords()` (lines 423-455)
+
+5. Document in `evidence/current/Evidence_Phase6_VanEvera.md`
+
+### Task 4: Fix advanced_prediction_engine.py Thresholds
+
+**Objective**: Replace 18 hardcoded thresholds
+
+**Required Changes**:
+
+1. Find and replace ALL patterns like:
+```python
+'quantitative_threshold': 0.70,  # Lines 93, 102, 111, etc.
+```
+
+With:
+```python
+'quantitative_threshold': self.llm.determine_threshold(context),
+```
+
+2. Replace weight dictionaries (lines 370-382):
+```python
+# OLD:
+'weight': 0.25,
+
+# NEW:
+'weight': self.llm.determine_criterion_weight(criterion_name),
+```
+
+3. Document in `evidence/current/Evidence_Phase6_Prediction.md`
+
+### Task 5: Create Strict Validation
+
+**Objective**: Verify TRUE LLM-first compliance
+
+**Create `validate_strict_llm_first.py`**:
 ```python
 #!/usr/bin/env python3
-"""Validate Phase 4B integration is complete and working"""
+"""
+Strict validation for TRUE LLM-first architecture.
+System MUST fail without LLM - no fallbacks allowed.
+"""
 
 import os
 import sys
-import json
+import re
 from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from core.analyze import run_analysis
-from core.semantic_analysis_service import get_semantic_service
-
-def validate_integration():
-    # Load test data
-    test_graph_path = Path("test_data/american_revolution_graph.json")
-    if not test_graph_path.exists():
-        print("[FAIL] Test data not found")
+def test_llm_required():
+    """Test that system fails without LLM"""
+    # Disable LLM
+    os.environ['DISABLE_LLM'] = 'true'
+    
+    try:
+        from core.analyze import run_analysis
+        result = run_analysis("test_data/sample.json")
+        print("[FAIL] System ran without LLM - fallbacks still exist!")
         return False
+    except Exception as e:
+        if "LLM" in str(e) or "required" in str(e):
+            print("[OK] System correctly failed without LLM")
+            return True
+        else:
+            print(f"[FAIL] Wrong error: {e}")
+            return False
+
+def check_no_hardcoded_values():
+    """Verify no hardcoded probability/confidence values"""
+    files_to_check = [
+        "core/confidence_calculator.py",
+        "core/van_evera_testing_engine.py",
+        "core/plugins/advanced_van_evera_prediction_engine.py"
+    ]
     
-    # Clear cache and reset counters
-    semantic_service = get_semantic_service()
-    semantic_service.clear_cache()
-    initial_calls = semantic_service._stats['llm_calls']
+    pattern = r'= 0\.\d+(?!.*Field)'  # Exclude Pydantic Field defaults
     
-    # Run analysis
-    results = run_analysis(str(test_graph_path))
+    for file_path in files_to_check:
+        with open(file_path, 'r') as f:
+            content = f.read()
+        matches = re.findall(pattern, content)
+        if matches:
+            print(f"[FAIL] {file_path} has hardcoded values: {matches[:3]}")
+            return False
     
-    # Check call reduction
-    total_calls = semantic_service._stats['llm_calls'] - initial_calls
-    evidence_count = len([n for n in results['nodes'] if n['type'] == 'Evidence'])
-    hypothesis_count = len([n for n in results['nodes'] if n['type'] == 'Hypothesis'])
+    print("[OK] No hardcoded values found")
+    return True
+
+def check_no_word_overlap():
+    """Verify no word overlap/counting logic"""
+    forbidden_patterns = [
+        r'overlap_ratio',
+        r'len\(overlap\)',
+        r'intersection\(',
+        r'word.*overlap',
+        r'evidence_words.*prediction_words'
+    ]
     
-    expected_max_calls = evidence_count  # One batch per evidence
-    old_expected_calls = evidence_count * hypothesis_count  # Old approach
+    for pattern in forbidden_patterns:
+        result = os.popen(f'grep -r "{pattern}" core/').read()
+        if result:
+            print(f"[FAIL] Found word overlap pattern: {pattern}")
+            return False
     
-    print(f"Evidence nodes: {evidence_count}")
-    print(f"Hypothesis nodes: {hypothesis_count}")
-    print(f"LLM calls made: {total_calls}")
-    print(f"Expected with batching: {expected_max_calls}")
-    print(f"Expected without batching: {old_expected_calls}")
-    
-    if total_calls <= expected_max_calls * 1.5:  # Allow some overhead
-        print("[OK] Batching is working!")
-        return True
-    else:
-        print("[FAIL] Still making too many individual calls")
-        return False
+    print("[OK] No word overlap patterns found")
+    return True
 
 if __name__ == "__main__":
-    success = validate_integration()
-    sys.exit(0 if success else 1)
+    tests = [
+        test_llm_required(),
+        check_no_hardcoded_values(),
+        check_no_word_overlap()
+    ]
+    
+    if all(tests):
+        print("\n✅ TRUE LLM-FIRST ACHIEVED!")
+    else:
+        print("\n❌ Violations remain - not LLM-first")
+        sys.exit(1)
 ```
-
-**Evidence Requirements**:
-Document all results in `evidence/current/Evidence_Phase4B_Integration.md`:
-- Before/after LLM call counts
-- Performance metrics
-- Quality comparison
-- Any errors encountered
-
-### Task 6: Final Cleanup
-
-**Required Actions**:
-1. Remove `get_comprehensive_analysis()` helper if no longer needed
-2. Remove any TODO comments related to optimization
-3. Update docstrings to reflect batched approach
-4. Run lint and type checking
 
 ### Success Criteria
 
 **Must demonstrate**:
-- ✅ LLM calls reduced by 70%+ for multi-hypothesis scenarios
-- ✅ All tests pass with identical or better quality
-- ✅ No keyword matching code remains
-- ✅ Main analyze.py uses batched evaluation throughout
-- ✅ Error paths use batched evaluation
+- ✅ System fails immediately without LLM (no fallbacks)
+- ✅ ZERO word overlap/counting patterns
+- ✅ ZERO hardcoded values (except Pydantic schema defaults)
+- ✅ All formulas use LLM-generated weights
+- ✅ No try/except that hides LLM failures
 
 ### Expected Outcomes
 
-**Performance**: 
-- 1 LLM call per evidence (instead of N calls for N hypotheses)
-- 70-90% reduction in total LLM calls
-- 50-70% faster execution
-
-**Quality**:
-- Better semantic coherence
-- Inter-hypothesis relationship insights
-- No degradation in accuracy
-
-### Files to Modify
-
-1. **core/analyze.py**: Main integration point
-2. **core/semantic_analysis_service.py**: Remove dead code
-3. **evidence/current/**: Create evidence files for each task
+**After Phase 6**:
+- System is 100% LLM-first
+- No semantic decisions without LLM
+- Clear errors when LLM unavailable
+- Dynamic, context-aware calculations throughout
 
 ### Testing Commands
 
 ```bash
-# Run validation
-python validate_phase4b_integration.py
+# Run strict validation
+python validate_strict_llm_first.py
 
-# Check for dead code
-grep -r "evaluate_relationship_lightweight" core/
+# Test with LLM disabled (must fail)
+DISABLE_LLM=true python -m core.analyze test_data/sample.json
 
-# Count LLM calls in test
-python test_batched_evaluation.py
-
-# Run main analysis with logging
-python -m core.analyze test_data/american_revolution_graph.json
+# Search for violations
+grep -r "overlap_ratio\|= 0\.[0-9]" core/
 ```
 
 ## Evidence Files Structure
 
 Create these files in `evidence/current/`:
-- `Evidence_Phase4B_Discovery.md` - Document all evaluation points found
-- `Evidence_Phase4B_Cleanup.md` - Document dead code removal
-- `Evidence_Phase4B_Integration.md` - Document integration results
-- `Evidence_Phase4B_Validation.md` - Final validation results
+- `Evidence_Phase6_Infrastructure.md` - LLM requirement utilities
+- `Evidence_Phase6_Confidence.md` - Confidence calculator changes
+- `Evidence_Phase6_VanEvera.md` - Testing engine word overlap removal
+- `Evidence_Phase6_Prediction.md` - Prediction engine threshold replacement
+- `Evidence_Phase6_Validation.md` - Final validation results
 
 Each evidence file must contain:
 - Raw command outputs
-- Before/after metrics
-- Error logs if any
+- Before/after code snippets
+- Error logs showing LLM requirement
 - Success/failure determination
 
-## Next Phase Preview
+## Next Steps After Phase 6
 
-After Phase 4B is complete, Phase 5 will focus on:
-- Completing remaining 7 files migration to LLM-first
-- Enhancing Van Evera test generation
-- Adding counterfactual analysis
-- Strengthening causal mechanism detection
+Once TRUE LLM-first is achieved:
+1. Enhanced Van Evera test generation
+2. Counterfactual analysis implementation
+3. Causal mechanism strengthening
+4. Multi-hypothesis relationship analysis
