@@ -139,10 +139,12 @@ for file in Path('core').rglob('*.py'):
 ```
 
 3. Document results in categories:
-   - **Category A (Semantic)**: MUST be LLM-first
-   - **Category B (Computational)**: Don't need LLM
-   - **Category C (Hybrid)**: Selective LLM
-   - **Category D (Dead)**: Delete these
+   - **Category A (Semantic)**: MUST be LLM-first (including temporal_sequence_analyzer.py)
+   - **Category B (Computational)**: Keep non-LLM (network analysis, stats, visualization, file I/O)
+   - **Category C (Hybrid)**: NO LONGER NEEDED - assign to A or B
+   - **Category D (Dead)**: Delete these (confidence_calculator.py confirmed unused)
+   
+   **Note**: Pydantic Field defaults are OK - they're schema definitions, not semantic fallbacks
 
 **Validation**: 
 - Total files classified: 67
