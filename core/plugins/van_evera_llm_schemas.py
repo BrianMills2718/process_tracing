@@ -288,3 +288,157 @@ class TestGenerationSpecification(BaseModel):
         ge=0.0, le=1.0,
         description="Assessment of methodological rigor in test generation"
     )
+
+
+class ComprehensiveEvidenceAnalysis(BaseModel):
+    """
+    Single schema capturing all semantic features of evidence in one analysis.
+    Replaces multiple separate LLM calls with one coherent comprehensive analysis.
+    """
+    
+    # Domain Analysis
+    primary_domain: Literal["political", "economic", "ideological", "military", 
+                           "social", "cultural", "religious", "technological"] = Field(
+        description="Primary domain classification based on semantic content"
+    )
+    secondary_domains: List[str] = Field(
+        default_factory=list,
+        description="Additional relevant domains identified"
+    )
+    domain_confidence: float = Field(
+        ge=0.0, le=1.0,
+        description="Confidence in domain classification"
+    )
+    domain_reasoning: str = Field(
+        description="Semantic reasoning for domain classification"
+    )
+    
+    # Probative Assessment
+    probative_value: float = Field(
+        ge=0.0, le=1.0,
+        description="Evidence strength assessment (0.0-1.0)"
+    )
+    probative_factors: List[str] = Field(
+        description="Factors contributing to probative value"
+    )
+    evidence_quality: Literal["high", "medium", "low"] = Field(
+        description="Overall evidence quality assessment"
+    )
+    reliability_score: float = Field(
+        ge=0.0, le=1.0,
+        description="Evidence reliability assessment"
+    )
+    
+    # Hypothesis Relationship
+    relationship_type: Literal["supports", "contradicts", "neutral", "ambiguous"] = Field(
+        description="Relationship between evidence and hypothesis"
+    )
+    relationship_confidence: float = Field(
+        ge=0.0, le=1.0,
+        description="Confidence in relationship assessment"
+    )
+    relationship_reasoning: str = Field(
+        description="Detailed reasoning for relationship determination"
+    )
+    van_evera_diagnostic: Literal["hoop", "smoking_gun", "doubly_decisive", "straw_in_wind"] = Field(
+        description="Van Evera diagnostic test classification"
+    )
+    
+    # Semantic Features
+    causal_mechanisms: List[Dict[str, str]] = Field(
+        default_factory=list,
+        description="Identified causal mechanisms: type -> description"
+    )
+    temporal_markers: List[Dict[str, str]] = Field(
+        default_factory=list,
+        description="Temporal references: marker -> context"
+    )
+    actor_relationships: List[Dict[str, str]] = Field(
+        default_factory=list,
+        description="Actor relationships: actor -> role/relationship"
+    )
+    
+    # Meta-Analysis
+    key_concepts: List[str] = Field(
+        description="Key conceptual elements identified"
+    )
+    contextual_factors: List[str] = Field(
+        description="Contextual factors affecting interpretation"
+    )
+    alternative_interpretations: List[str] = Field(
+        default_factory=list,
+        description="Alternative ways to interpret this evidence"
+    )
+    confidence_overall: float = Field(
+        ge=0.0, le=1.0,
+        description="Overall confidence in this comprehensive analysis"
+    )
+
+
+class MultiFeatureExtraction(BaseModel):
+    """
+    Extract all semantic features in one pass for compound analysis.
+    Captures relationships between different feature types.
+    """
+    
+    # Causal Analysis
+    mechanisms: List[Dict[str, str]] = Field(
+        description="Causal mechanisms: type -> description"
+    )
+    causal_chains: List[List[str]] = Field(
+        default_factory=list,
+        description="Sequences of causal events"
+    )
+    
+    # Actor Network
+    primary_actors: List[str] = Field(
+        description="Primary actors identified in text"
+    )
+    actor_relationships: List[Dict[str, str]] = Field(
+        description="Actor -> role/relationship mapping"
+    )
+    
+    # Temporal Structure
+    temporal_sequence: List[Dict[str, str]] = Field(
+        description="Time marker -> event mapping"
+    )
+    duration_estimates: Dict[str, str] = Field(
+        default_factory=dict,
+        description="Event -> estimated duration"
+    )
+    
+    # Conceptual Analysis
+    key_concepts: List[str] = Field(
+        description="Key conceptual elements"
+    )
+    domain_indicators: List[str] = Field(
+        description="Indicators of domain classification"
+    )
+    theoretical_frameworks: List[str] = Field(
+        default_factory=list,
+        description="Theoretical frameworks referenced"
+    )
+    
+    # Contextual Factors
+    geographic_context: List[str] = Field(
+        default_factory=list,
+        description="Geographic/spatial context"
+    )
+    institutional_context: List[str] = Field(
+        default_factory=list,
+        description="Institutional context factors"
+    )
+    cultural_context: List[str] = Field(
+        default_factory=list,
+        description="Cultural context factors"
+    )
+    
+    # Feature Relationships
+    actor_mechanism_links: List[Dict[str, str]] = Field(
+        default_factory=list,
+        description="How actors relate to mechanisms"
+    )
+    temporal_causal_links: List[Dict[str, str]] = Field(
+        default_factory=list,
+        description="How timing relates to causation"
+    )

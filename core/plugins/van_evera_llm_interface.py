@@ -35,7 +35,9 @@ from .van_evera_llm_schemas import (
     HypothesisDomainClassification,
     ProbativeValueAssessment,
     AlternativeHypothesisGeneration,
-    TestGenerationSpecification
+    TestGenerationSpecification,
+    ComprehensiveEvidenceAnalysis,
+    MultiFeatureExtraction
 )
 
 logger = logging.getLogger(__name__)
@@ -475,6 +477,131 @@ class VanEveraLLMInterface:
         """
         
         return self._get_structured_response(prompt, TestGenerationSpecification)
+    
+    def analyze_evidence_comprehensive(self, 
+                                      evidence_description: str,
+                                      hypothesis_description: str,
+                                      context: Optional[str] = None) -> ComprehensiveEvidenceAnalysis:
+        """
+        Comprehensive evidence analysis in a single LLM call.
+        Replaces 5-10 separate calls with one coherent analysis.
+        
+        Args:
+            evidence_description: Description of the evidence
+            hypothesis_description: Description of the hypothesis
+            context: Optional context for analysis
+            
+        Returns:
+            Comprehensive analysis with all semantic features
+        """
+        prompt = f"""
+        Perform comprehensive semantic analysis of this evidence-hypothesis relationship.
+        Extract ALL features in one coherent analysis.
+        
+        EVIDENCE: {evidence_description}
+        HYPOTHESIS: {hypothesis_description}
+        CONTEXT: {context or 'Process tracing analysis'}
+        
+        Analyze comprehensively:
+        
+        1. DOMAIN CLASSIFICATION:
+           - Identify primary domain (political/economic/ideological/military/social/cultural/religious/technological)
+           - Note secondary domains if present
+           - Provide confidence and reasoning
+        
+        2. PROBATIVE VALUE ASSESSMENT:
+           - Calculate evidence strength (0.0-1.0)
+           - Identify factors contributing to probative value
+           - Assess evidence quality (high/medium/low)
+           - Evaluate reliability
+        
+        3. HYPOTHESIS RELATIONSHIP:
+           - Determine if evidence supports/contradicts/neutral/ambiguous
+           - Provide confidence in relationship assessment
+           - Explain detailed reasoning
+           - Classify Van Evera diagnostic type (hoop/smoking gun/doubly decisive/straw in wind)
+        
+        4. CAUSAL MECHANISMS:
+           - Identify all cause-effect relationships
+           - Map mechanism types to descriptions
+        
+        5. TEMPORAL MARKERS:
+           - Extract time references and sequences
+           - Map markers to their context
+        
+        6. ACTOR RELATIONSHIPS:
+           - Identify actors and their roles
+           - Map relationships between actors
+        
+        7. KEY CONCEPTS & CONTEXT:
+           - Extract main conceptual elements
+           - Note contextual factors affecting interpretation
+           - Consider alternative interpretations
+        
+        IMPORTANT: Provide reasoning that considers relationships between all features.
+        Consider how domains affect probative value, how actors relate to mechanisms,
+        and how temporal factors influence causation.
+        """
+        
+        return self._get_structured_response(prompt, ComprehensiveEvidenceAnalysis)
+    
+    def extract_all_features(self, text: str, 
+                            context: Optional[str] = None) -> MultiFeatureExtraction:
+        """
+        Extract all semantic features in one comprehensive pass.
+        Captures relationships between features for better understanding.
+        
+        Args:
+            text: Text to analyze for features
+            context: Optional context for extraction
+            
+        Returns:
+            Multi-feature extraction with relationships
+        """
+        prompt = f"""
+        Analyze this text comprehensively, extracting ALL semantic features and their relationships.
+        
+        TEXT: {text}
+        CONTEXT: {context or 'Feature extraction for process tracing'}
+        
+        Extract comprehensively:
+        
+        1. CAUSAL MECHANISMS:
+           - All cause-effect relationships
+           - Causal chains (sequences of events)
+           - Types and descriptions of mechanisms
+        
+        2. ACTORS:
+           - All primary actors
+           - Roles and relationships between actors
+           - Actor involvement in events
+        
+        3. TEMPORAL STRUCTURE:
+           - All time markers and sequences
+           - Event durations and estimates
+           - Temporal ordering of events
+        
+        4. CONCEPTUAL ANALYSIS:
+           - Key concepts and ideas
+           - Domain indicators
+           - Theoretical frameworks referenced
+        
+        5. CONTEXTUAL FACTORS:
+           - Geographic/spatial context
+           - Institutional context
+           - Cultural context
+        
+        CRITICAL: Also identify RELATIONSHIPS between features:
+        - Which actors are involved in which mechanisms?
+        - How does timing affect causal relationships?
+        - Which concepts are associated with which actors?
+        - How do contextual factors influence mechanisms?
+        
+        Provide comprehensive extraction that captures not just individual features
+        but also how they relate to and influence each other.
+        """
+        
+        return self._get_structured_response(prompt, MultiFeatureExtraction)
     
     def _get_structured_response(self, prompt: str, response_model: Type[T], max_retries: int = 10) -> T:
         """
