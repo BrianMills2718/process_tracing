@@ -32,22 +32,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 5 - Academic Quality Enhancement (Updated 2025-01-28)
+## 🎯 CURRENT STATUS: Phase 4B - Complete Batched Evaluation Integration (Updated 2025-01-29)
 
-**System Status**: **LLM-First Architecture Optimized (90%)** - Focus on academic rigor
-**Current Priority**: **Academic Quality Enhancement** - Improve Van Evera methodology implementation
-**System Goal**: **Production-Ready Academic System** - Complete remaining files and enhance quality
+**System Status**: **Batched Infrastructure Built (60%)** - Integration incomplete
+**Current Priority**: **COMPLETE INTEGRATION** - Make analyze.py actually use batched evaluation
+**Critical Issue**: **Production code still uses old individual evaluation approach**
 
-**PHASE 4 COMPLETED (2025-01-28):**
-- ✅ **Comprehensive Analysis**: Batched LLM calls reducing redundancy by 50%
-- ✅ **Smart Caching**: Simple exact-match cache (removed unnecessary semantic signatures)
-- ✅ **Evidence Pre-Analysis**: Documents analyzed once, evaluated against multiple hypotheses
-- ✅ **Lightweight Evaluation**: Heuristic relationship assessment without LLM calls
-- ✅ **Integration Complete**: analyze.py now uses comprehensive analysis throughout
-- ✅ **Performance Validated**: 48% time reduction, 50% call reduction, quality maintained
-
-**PHASE 4 OBJECTIVE:**
-Reduce LLM calls from 15-25 to 5-8 per analysis through intelligent batching and caching, with ZERO quality degradation.
+**PHASE 4A PARTIALLY COMPLETED (2025-01-29):**
+- ✅ **Infrastructure Built**: BatchedHypothesisEvaluation schema and methods created
+- ✅ **Test Validation**: Batched evaluation works perfectly in isolation
+- ⚠️ **Integration Started**: Helper functions added but not used in main flow
+- ❌ **Main Pipeline**: analyze.py still evaluates hypotheses individually
+- ❌ **Dead Code**: Keyword matching code still exists (must be removed)
 
 ## Evidence-Based Development Philosophy (Mandatory)
 
@@ -77,488 +73,277 @@ Reduce LLM calls from 15-25 to 5-8 per analysis through intelligent batching and
 - **Security**: Environment-based API key management
 - **Universality**: No dataset-specific logic - works across all domains and time periods
 
-## 🚀 PHASE 5: Academic Quality Enhancement & System Completion
+## 🚀 PHASE 4B: Complete Batched Evaluation Integration
 
-### Overview: Complete LLM Migration and Enhance Academic Rigor
+### Critical Context
+**What exists**: Batched evaluation infrastructure is built and tested
+**What's missing**: Integration into main analyze.py pipeline
+**Why it matters**: System still makes N individual LLM calls instead of 1 batched call
 
-**Remaining Work**: 
-- 7 files still contain rule-based logic (25% of system)
-- Van Evera test generation needs LLM enhancement
-- Causal mechanism detection requires sophistication
-- Counterfactual analysis not yet implemented
+### Task 1: Discovery - Map All Evaluation Points
 
-**Phase 5 Objectives**:
-- Complete migration of remaining 7 files to LLM-first
-- Enhance Van Evera diagnostic test quality
-- Implement sophisticated causal chain analysis
-- Add counterfactual reasoning capabilities
-- Strengthen academic documentation and evidence
+**Objective**: Find EVERY place where evidence evaluates against hypotheses
 
-## Task 1: Batch Related Analyses (50-70% Fewer Calls)
-
-### Problem Analysis
-**Current Anti-Pattern**: Making multiple separate LLM calls for related analyses
-```python
-# BAD - Current fragmented approach (3-5 separate calls):
-domain = semantic_service.classify_domain(evidence)
-probative = semantic_service.assess_probative_value(evidence, hypothesis)
-contradiction = semantic_service.detect_contradiction(evidence, hypothesis)
-mechanism = semantic_service.detect_mechanism(evidence)
-actors = semantic_service.identify_actors(evidence)
+**Required Actions**:
+1. Search analyze.py for these patterns:
+```bash
+grep -n "assess_probative_value\|get_comprehensive_analysis\|for.*hypothesis\|semantic_service\." core/analyze.py
 ```
 
-### Required Implementation
-
-**Step 1.1: Create Comprehensive Analysis Schema**
-**File**: `core/plugins/van_evera_llm_schemas.py`
-**Action**: Add new comprehensive schema
-
-```python
-class ComprehensiveEvidenceAnalysis(BaseModel):
-    """Single schema capturing all semantic features of evidence"""
-    
-    # Domain Analysis
-    primary_domain: Literal["political", "economic", "ideological", "military", 
-                           "social", "cultural", "religious", "technological"]
-    secondary_domains: List[str] = Field(default_factory=list)
-    domain_confidence: float = Field(ge=0.0, le=1.0)
-    domain_reasoning: str
-    
-    # Probative Assessment
-    probative_value: float = Field(ge=0.0, le=1.0)
-    probative_factors: List[str]
-    evidence_quality: Literal["high", "medium", "low"]
-    reliability_score: float = Field(ge=0.0, le=1.0)
-    
-    # Hypothesis Relationship
-    relationship_type: Literal["supports", "contradicts", "neutral", "ambiguous"]
-    relationship_confidence: float = Field(ge=0.0, le=1.0)
-    relationship_reasoning: str
-    van_evera_diagnostic: Literal["hoop", "smoking_gun", "doubly_decisive", "straw_in_wind"]
-    
-    # Semantic Features
-    causal_mechanisms: List[Dict[str, str]] = Field(default_factory=list)
-    temporal_markers: List[Dict[str, str]] = Field(default_factory=list)
-    actor_relationships: List[Dict[str, str]] = Field(default_factory=list)
-    
-    # Meta-Analysis
-    key_concepts: List[str]
-    contextual_factors: List[str]
-    alternative_interpretations: List[str] = Field(default_factory=list)
-    confidence_overall: float = Field(ge=0.0, le=1.0)
-    analysis_timestamp: datetime = Field(default_factory=datetime.now)
+2. Document each location in `evidence/current/Evidence_Phase4B_Discovery.md`:
+```markdown
+## Evaluation Points Found
+- Line XXX: Function name, context, loop structure
+- Line YYY: Error handling path, individual evaluation
 ```
 
-**Step 1.2: Implement Comprehensive Analysis Method**
-**File**: `core/plugins/van_evera_llm_interface.py`
-**Action**: Add new unified analysis method
+3. Identify the MAIN evaluation loop (usually in a function like `execute_analysis()` or similar)
 
+### Task 2: Remove Dead Code
+
+**Objective**: Delete all keyword matching and unused code
+
+**Required Actions**:
+1. Delete the keyword matching function from semantic_analysis_service.py:
 ```python
-def analyze_evidence_comprehensive(self, 
-                                  evidence_description: str,
-                                  hypothesis_description: str,
-                                  context: Optional[str] = None) -> ComprehensiveEvidenceAnalysis:
-    """
-    Comprehensive evidence analysis in a single LLM call.
-    Replaces 5-10 separate calls with one coherent analysis.
-    """
-    prompt = f"""
-    Perform comprehensive semantic analysis of this evidence-hypothesis relationship.
-    Extract ALL features in one coherent analysis.
-    
-    EVIDENCE: {evidence_description}
-    HYPOTHESIS: {hypothesis_description}
-    CONTEXT: {context or 'Process tracing analysis'}
-    
-    Analyze comprehensively:
-    1. DOMAIN: Classify primary and secondary domains with reasoning
-    2. PROBATIVE VALUE: Assess evidence strength (0.0-1.0) with factors
-    3. RELATIONSHIP: Determine if evidence supports/contradicts hypothesis
-    4. VAN EVERA TYPE: Classify as hoop/smoking gun/doubly decisive/straw in wind
-    5. CAUSAL MECHANISMS: Identify all cause-effect relationships
-    6. TEMPORAL MARKERS: Extract time references and sequences
-    7. ACTORS: Identify actors and their relationships
-    8. KEY CONCEPTS: Extract main conceptual elements
-    9. CONTEXT: Note contextual factors affecting interpretation
-    
-    Provide reasoning that considers relationships between all features.
-    """
-    
-    return self._get_structured_response(prompt, ComprehensiveEvidenceAnalysis)
+# DELETE THIS ENTIRE FUNCTION (lines ~433-491):
+def evaluate_relationship_lightweight(self, ...)
 ```
 
-**Step 1.3: Update SemanticAnalysisService**
-**File**: `core/semantic_analysis_service.py`
-**Action**: Add routing to comprehensive analysis
+2. Search for and remove any calls to this function:
+```bash
+grep -r "evaluate_relationship_lightweight" core/
+```
 
+3. Document removal in `evidence/current/Evidence_Phase4B_Cleanup.md`
+
+### Task 3: Implement Main Pipeline Integration
+
+**Objective**: Replace individual evaluations with batched calls
+
+**Step 3.1: Create Integration Function**
+Add to analyze.py after imports:
 ```python
-def analyze_comprehensive(self, evidence: str, hypothesis: str, 
-                        context: Optional[str] = None) -> ComprehensiveEvidenceAnalysis:
-    """Route to comprehensive analysis with caching"""
-    cache_key = self._generate_cache_key(evidence, hypothesis, "comprehensive")
+def batch_evaluate_evidence(evidence_node_data, hypothesis_nodes_data, G, semantic_service):
+    """
+    Evaluate one evidence against all hypotheses in a single LLM call.
+    Updates graph edges with results.
     
-    if cache_key in self._cache:
-        if not self._is_cache_expired(cache_key):
-            self.cache_hits += 1
-            return self._cache[cache_key][0]
+    Args:
+        evidence_node_data: Dict with evidence data including 'description'
+        hypothesis_nodes_data: Dict of hypothesis_id -> hypothesis data
+        G: NetworkX graph to update
+        semantic_service: SemanticAnalysisService instance
     
-    # Single LLM call replacing multiple calls
-    result = self.llm_interface.analyze_evidence_comprehensive(
-        evidence, hypothesis, context
+    Returns:
+        Dict of hypothesis_id -> evaluation results
+    """
+    # Format hypotheses for batch evaluation
+    hypotheses = [
+        {'id': hyp_id, 'text': hyp_data.get('description', '')}
+        for hyp_id, hyp_data in hypothesis_nodes_data.items()
+    ]
+    
+    # Get evidence description
+    evidence_desc = evidence_node_data.get('description', '')
+    evidence_id = evidence_node_data.get('id', 'unknown')
+    
+    # Call batched evaluation
+    batch_result = semantic_service.evaluate_evidence_against_hypotheses_batch(
+        evidence_id,
+        evidence_desc,
+        hypotheses,
+        context="Main analysis pipeline"
     )
     
-    self._cache[cache_key] = (result, datetime.now())
-    self.call_count += 1
+    # Process results and update graph
+    results = {}
+    for eval_result in batch_result.evaluations:
+        hyp_id = eval_result.hypothesis_id
+        
+        # Create/update edge in graph
+        G.add_edge(
+            evidence_id,
+            hyp_id,
+            type='supports' if eval_result.relationship_type == 'supports' else 'challenges',
+            properties={
+                'probative_value': eval_result.confidence,
+                'van_evera_diagnostic': eval_result.van_evera_diagnostic,
+                'reasoning': eval_result.reasoning,
+                'relationship_type': eval_result.relationship_type
+            }
+        )
+        
+        results[hyp_id] = eval_result
     
-    return result
-
-# Backward compatibility methods that extract from comprehensive
-def classify_domain(self, text: str, context: Optional[str] = None) -> DomainClassification:
-    """Extract domain from comprehensive analysis for backward compatibility"""
-    # If we have a cached comprehensive analysis, extract from it
-    # Otherwise, do comprehensive and extract
-    pass
+    return results
 ```
 
-**Validation**: Compare output quality before/after batching. Must show equal or better coherence.
-
----
-
-## Task 2: Smarter Caching (30-40% Reduction)
-
-### Required Implementation
-
-**Step 2.1: Create Semantic Signature System**
-**File**: `core/semantic_signature.py` (NEW)
-
-Create a semantic fingerprinting system that generates cache keys based on meaning rather than exact text. This allows semantically similar queries to hit the cache even with different wording.
-
-**Step 2.2: Implement Multi-Layer Cache**
-**File**: `core/semantic_analysis_service.py`
-
-Upgrade the current MD5-based cache to a three-layer system:
-- L1 Cache: Exact text matches (instant hit)
-- L2 Cache: Semantic signature matches (very fast)
-- L3 Cache: Partial results that can be reused
-
-**Validation**: Test with paraphrased inputs. Target 40-60% cache hit rate.
-
----
-
-## Task 3: Single Document Analysis (60% Reduction)
-
-### Required Implementation
-
-**Step 3.1: Create Evidence Pre-Analysis**
-**File**: `core/evidence_document.py` (NEW)
-
-Implement a system where evidence is comprehensively analyzed once, then efficiently evaluated against multiple hypotheses using the cached analysis.
-
-**Step 3.2: Update Processing Flow**
-**File**: `core/analyze.py`
-
-Modify the main analysis loop to use pre-analyzed evidence documents instead of re-analyzing for each hypothesis.
-
-**Validation**: Verify consistent interpretation across all hypothesis evaluations.
-
----
-
-## Task 4: Compound Feature Extraction (40% Reduction)
-
-### Required Implementation
-
-**Step 4.1: Create Multi-Feature Schema**
-**File**: `core/plugins/van_evera_llm_schemas.py`
-
-Add `MultiFeatureExtraction` schema that captures all semantic features (actors, mechanisms, temporal markers, concepts) in one structure.
-
-**Step 4.2: Implement Compound Extraction**
-**File**: `core/plugins/van_evera_llm_interface.py`
-
-Add `extract_all_features()` method that extracts all features in one LLM call, capturing relationships between features.
-
-**Validation**: Compare feature completeness and relationship detection.
----
-
-## Implementation Strategy
-
-### Phase 1: Schema Development (2 hours)
-1. Add `ComprehensiveEvidenceAnalysis` schema to `van_evera_llm_schemas.py`
-2. Add `MultiFeatureExtraction` schema for compound extraction
-3. Write schema validation tests
-
-### Phase 2: Core Infrastructure (3 hours)
-1. Implement comprehensive analysis method in `van_evera_llm_interface.py`
-2. Create `semantic_signature.py` for smart caching
-3. Create `evidence_document.py` for pre-analysis
-4. Upgrade `semantic_analysis_service.py` with multi-layer cache
-
-### Phase 3: Integration (2 hours)
-1. Update calling code to use new batched methods
-2. Add backward compatibility wrappers
-3. Implement feature extraction helpers
-
-### Phase 4: Validation (2 hours)
-1. Compare quality metrics before/after
-2. Measure performance improvements
-3. Validate cache effectiveness
-4. Document results in evidence files
-
-### **TASK 2C: Probative Value LLM Generation** 
-**Files**: Multiple files with hardcoded `probative_value` assignments
-**Issue**: Lines throughout codebase assign arbitrary values (0.7, 0.6, etc.)
-
-**Current Rule-Based Logic**:
+**Step 3.2: Find and Replace Main Loop**
+Look for the main evidence-hypothesis evaluation loop (likely around lines 850-950):
 ```python
-# PROHIBITED - Replace with LLM:
-'probative_value': 0.7  # High probative value for academic rigor
-'probative_value': min(0.6, contradiction_indicators * 0.3)
-probative_value *= 0.7  # Reduce probative value when demoting
+# REPLACE patterns like:
+for evidence_id, evidence_node_data in evidence_nodes_data.items():
+    for hypothesis_id in hypothesis_nodes_data:
+        # Individual evaluation
+        assessment = semantic_service.assess_probative_value(...)
+
+# WITH:
+for evidence_id, evidence_node_data in evidence_nodes_data.items():
+    # Batch evaluation for all hypotheses
+    evaluations = batch_evaluate_evidence(
+        evidence_node_data, 
+        hypothesis_nodes_data, 
+        G, 
+        semantic_service
+    )
 ```
 
-**Required Implementation**:
-1. **New Schema**: `ProbativeValueAssessment` in `van_evera_llm_schemas.py` 
-2. **New LLM Method**: `assess_probative_value()` in `VanEveraLLMInterface`
-3. **Replace All Hardcoded Values**: Use LLM assessment for evidence strength
+### Task 4: Update Error Handling Paths
 
-**Schema Definition**:
+**Objective**: Make error recovery use batched evaluation too
+
+**Required Actions**:
+1. Find all error handling sections (lines ~898-935, ~1139, etc.)
+2. Replace individual calls with batch evaluation
+3. Ensure fallback behavior is preserved
+
+### Task 5: Validation
+
+**Objective**: Prove the integration works correctly
+
+**Test Script**: Create `validate_phase4b_integration.py`:
 ```python
-class ProbativeValueAssessment(BaseModel):
-    probative_value: float = Field(ge=0.0, le=1.0, description="Evidence strength assessment")
-    confidence_score: float = Field(ge=0.0, le=1.0) 
-    reasoning: str = Field(description="Academic justification for probative value")
-    evidence_quality_factors: List[str] = Field(description="Factors contributing to evidence strength")
-    reliability_assessment: str = Field(description="Assessment of evidence reliability and credibility")
-    van_evera_implications: str = Field(description="Implications for Van Evera diagnostic testing")
+#!/usr/bin/env python3
+"""Validate Phase 4B integration is complete and working"""
+
+import os
+import sys
+import json
+from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from core.analyze import run_analysis
+from core.semantic_analysis_service import get_semantic_service
+
+def validate_integration():
+    # Load test data
+    test_graph_path = Path("test_data/american_revolution_graph.json")
+    if not test_graph_path.exists():
+        print("[FAIL] Test data not found")
+        return False
+    
+    # Clear cache and reset counters
+    semantic_service = get_semantic_service()
+    semantic_service.clear_cache()
+    initial_calls = semantic_service._stats['llm_calls']
+    
+    # Run analysis
+    results = run_analysis(str(test_graph_path))
+    
+    # Check call reduction
+    total_calls = semantic_service._stats['llm_calls'] - initial_calls
+    evidence_count = len([n for n in results['nodes'] if n['type'] == 'Evidence'])
+    hypothesis_count = len([n for n in results['nodes'] if n['type'] == 'Hypothesis'])
+    
+    expected_max_calls = evidence_count  # One batch per evidence
+    old_expected_calls = evidence_count * hypothesis_count  # Old approach
+    
+    print(f"Evidence nodes: {evidence_count}")
+    print(f"Hypothesis nodes: {hypothesis_count}")
+    print(f"LLM calls made: {total_calls}")
+    print(f"Expected with batching: {expected_max_calls}")
+    print(f"Expected without batching: {old_expected_calls}")
+    
+    if total_calls <= expected_max_calls * 1.5:  # Allow some overhead
+        print("[OK] Batching is working!")
+        return True
+    else:
+        print("[FAIL] Still making too many individual calls")
+        return False
+
+if __name__ == "__main__":
+    success = validate_integration()
+    sys.exit(0 if success else 1)
 ```
 
-### **TASK 2D: Alternative Hypothesis Generator Migration**
-**File**: `core/alternative_hypothesis_generator.py`
-**Issue**: Lines 239-245 use domain keyword dictionaries
+**Evidence Requirements**:
+Document all results in `evidence/current/Evidence_Phase4B_Integration.md`:
+- Before/after LLM call counts
+- Performance metrics
+- Quality comparison
+- Any errors encountered
 
-**Current Rule-Based Logic**:
-```python
-# PROHIBITED - Replace with LLM:
-'economic': ['merchant', 'trade', 'profit', 'economic', 'commercial', 'business'],
-'ideological': ['idea', 'philosophy', 'enlightenment', 'rights', 'liberty', 'freedom'],
+### Task 6: Final Cleanup
+
+**Required Actions**:
+1. Remove `get_comprehensive_analysis()` helper if no longer needed
+2. Remove any TODO comments related to optimization
+3. Update docstrings to reflect batched approach
+4. Run lint and type checking
+
+### Success Criteria
+
+**Must demonstrate**:
+- ✅ LLM calls reduced by 70%+ for multi-hypothesis scenarios
+- ✅ All tests pass with identical or better quality
+- ✅ No keyword matching code remains
+- ✅ Main analyze.py uses batched evaluation throughout
+- ✅ Error paths use batched evaluation
+
+### Expected Outcomes
+
+**Performance**: 
+- 1 LLM call per evidence (instead of N calls for N hypotheses)
+- 70-90% reduction in total LLM calls
+- 50-70% faster execution
+
+**Quality**:
+- Better semantic coherence
+- Inter-hypothesis relationship insights
+- No degradation in accuracy
+
+### Files to Modify
+
+1. **core/analyze.py**: Main integration point
+2. **core/semantic_analysis_service.py**: Remove dead code
+3. **evidence/current/**: Create evidence files for each task
+
+### Testing Commands
+
+```bash
+# Run validation
+python validate_phase4b_integration.py
+
+# Check for dead code
+grep -r "evaluate_relationship_lightweight" core/
+
+# Count LLM calls in test
+python test_batched_evaluation.py
+
+# Run main analysis with logging
+python -m core.analyze test_data/american_revolution_graph.json
 ```
 
-**Required Implementation**:
-1. **Replace Keyword Dictionaries**: Use semantic understanding for alternative generation
-2. **LLM Alternative Generation**: Generate context-appropriate competing hypotheses
-3. **Universal Scope**: Generate alternatives for any domain/time period
+## Evidence Files Structure
 
-### **TASK 2E: Dataset-Specific Logic Elimination**
-**Files**: Multiple files with American Revolution-specific hardcoding
-**Issue**: System hardcoded for specific historical period instead of universal process tracing
+Create these files in `evidence/current/`:
+- `Evidence_Phase4B_Discovery.md` - Document all evaluation points found
+- `Evidence_Phase4B_Cleanup.md` - Document dead code removal
+- `Evidence_Phase4B_Integration.md` - Document integration results
+- `Evidence_Phase4B_Validation.md` - Final validation results
 
-**Examples to Replace**:
-```python
-# PROHIBITED - Remove dataset-specific logic:
-# Political contradictions (American Revolution specific)
-if 'ideological' in hypothesis_desc and 'economic' in evidence_desc:
-    contradiction_count += 0.3
+Each evidence file must contain:
+- Raw command outputs
+- Before/after metrics
+- Error logs if any
+- Success/failure determination
 
-# American Revolution keywords
-['taxation', 'tax', 'representation', 'parliament', 'stamp', 'townshend']
-```
+## Next Phase Preview
 
-**Required Implementation**:
-1. **Generalist Approach**: Replace all historical period-specific logic with universal semantic analysis
-2. **LLM Context Awareness**: Let LLM understand context without hardcoded rules
-3. **Domain Neutrality**: System works equally well for any historical period or domain
-
-## Implementation Strategy
-
-### Phase 2A: Core LLM Infrastructure (Safe)
-1. **Extend Schemas**: Add all required Pydantic models to `van_evera_llm_schemas.py`
-2. **Extend LLM Interface**: Add all semantic analysis methods to `VanEveraLLMInterface`
-3. **Test Infrastructure**: Validate new LLM methods work correctly
-
-### Phase 2B: Van Evera Testing Engine Migration (High Risk)
-1. **Replace Hypothesis Classification**: Use LLM domain analysis instead of keywords
-2. **Replace Test Generation**: Use LLM to create context-appropriate tests
-3. **Validate Test Quality**: Ensure LLM generates proper Van Evera diagnostic tests
-
-### Phase 2C: System-Wide Keyword Elimination (High Risk)
-1. **Search and Replace**: Find all keyword matching throughout codebase
-2. **Replace with LLM Calls**: Use appropriate semantic analysis methods
-3. **Remove Hardcoded Values**: Replace all probative value assignments with LLM assessment
-
-### Phase 2D: Dataset Generalization (Medium Risk)
-1. **Remove Historical Specificity**: Eliminate American Revolution-specific logic
-2. **Universal Context**: Make system work for any historical period or domain
-3. **Test Across Domains**: Validate system works beyond American Revolution
-
-## Validation Protocol
-
-### Success Criteria (75% Achieved)
-- ⚠️ **Keyword Matching Reduction**: ~50 patterns remain (structural only, not semantic)
-- ✅ **Critical Semantic Decisions**: All use LLM analysis (100% complete)
-- ✅ **Dataset Generalization**: 90% of American Revolution references removed
-- ✅ **Universal Applicability**: System functional for any historical period/domain
-- ✅ **LLM Semantic Understanding**: All critical classifications based on meaning
-
-### Test Cases
-1. **Cross-Domain Testing**: Test with French Revolution, Industrial Revolution, Cold War datasets
-2. **Semantic Accuracy**: Verify evidence classified correctly across different contexts  
-3. **Domain Neutrality**: System performs equally well across different historical periods
-4. **Alternative Generation**: LLM generates appropriate competing hypotheses for any context
-
-## Codebase Structure
-
-### Files Requiring Complete Migration
-- `core/van_evera_testing_engine.py`: Hypothesis classification, test generation
-- `core/plugins/content_based_diagnostic_classifier.py`: Domain classification systems
-- `core/alternative_hypothesis_generator.py`: Alternative hypothesis generation with keywords
-- `core/plugins/advanced_van_evera_prediction_engine.py`: Domain detection logic
-- `core/plugins/research_question_generator.py`: Domain-based question generation
-- `core/confidence_calculator.py`: Hardcoded confidence thresholds
-- Multiple files: Probative value hardcoding throughout system
-
-### Integration Points
-- **Van Evera Testing Pipeline**: Must maintain academic rigor while using LLM analysis
-- **Domain Classification**: Must work universally across all subject areas
-- **Alternative Generation**: Must produce quality competing hypotheses for any context
-- **Evidence Assessment**: Must generate appropriate probative values for any evidence type
-
-### Evidence-Based Validation Requirements
-
-#### Required Evidence Files (Phase 4)
-```
-evidence/current/
-├── Evidence_Phase4_Baseline_Performance.md    # Current LLM call counts and timings
-├── Evidence_Phase4_Optimization_Results.md    # After optimization metrics
-├── Evidence_Phase4_Quality_Comparison.md      # Side-by-side quality validation
-├── Evidence_Phase4_Cache_Effectiveness.md     # Cache hit rates and performance
-└── validate_phase4_optimization.py            # Script to measure improvements
-```
-
-#### Success Metrics
-- **Performance**: 50%+ reduction in LLM calls (from 15-25 to 5-8)
-- **Quality**: No degradation in analysis accuracy
-- **Cache Hit Rate**: 40-60% with semantic signatures
-- **Cost Reduction**: 60-70% lower API costs
-- **Response Time**: 2-3x faster (10-15s vs 30-45s)
-
-### Phase 3 Evidence Files (Reference)
-```
-evidence/current/
-├── Evidence_Phase3_Final_Report.md           # 75% completion evidence
-├── Evidence_Phase3_Implementation_Start.md   # Initial state documentation  
-├── Evidence_Phase3_Session_Complete.md       # Mid-point progress (64.3%)
-└── validate_phase3.py                        # Validation showing 75% complete
-```
-
-## Phase 3 Accomplishments (75% System Migration)
-
-### Successfully Migrated (21/28 files)
-**Core Modules (11 files - 100% of critical paths):**
-- semantic_analysis_service.py - NEW centralized service (303 lines)
-- analyze.py - Actor relevance using LLM
-- van_evera_testing_engine.py - Completely LLM-first
-- connectivity_analysis.py - All patterns eliminated
-- All other critical core modules
-
-**Plugin Files (10/16 files):**
-- Advanced prediction engine
-- Evidence connector enhancer
-- Diagnostic classifier and rebalancer
-- Research question generator
-- Additional testing plugins
-
-### Remaining Work (Optional - 25%)
-**Non-Critical Patterns (~50 remaining):**
-- Structural checks: `if 'properties' in data`
-- Response validation: `if 'result' in response`
-- Minor confidence calculations
-- Not affecting semantic understanding
-
-**System Performance:**
-- LLM calls: 15-25 per analysis (with caching)
-- Cache hit rate: Improving with use
-- Response time: Acceptable for research use
-- All critical paths: Using LLM semantic analysis
-
-## Implementation Guidelines
-
-### **Git-Based Safety**
-- **Current Commit**: Known working state after Phase 1
-- **Rollback Strategy**: `git revert HEAD` if any phase fails
-- **Incremental Commits**: Commit each task separately for granular rollback
-
-### **LLM Integration Requirements**
-```python
-# All LLM calls must follow this pattern:
-try:
-    return llm_semantic_analysis()
-except Exception as e:
-    logger.error(f"LLM analysis failed: {e}")
-    return conservative_fallback()  # Don't crash the system
-```
-
-### **Performance Considerations**
-- **Expected LLM Calls**: ~100-150 per analysis (vs current ~40-55)
-- **Batch Processing**: Group similar analyses where possible
-- **Caching**: Cache repeated domain/probative value assessments
-- **Quality Trade-off**: Accept performance cost for semantic accuracy
-
-### **Validation Requirements**
-**Evidence Required for Task Completion**:
-- Complete keyword elimination verification (`grep -r "if.*in.*desc"` returns zero matches)
-- Cross-domain testing on non-American Revolution datasets
-- Semantic accuracy verification on diverse test cases  
-- Performance impact assessment with mitigation strategies
-- Universal applicability demonstration
-
-### **Success Declaration Requirements**
-- **Keyword Elimination**: Zero rule-based logic remaining in codebase
-- **Semantic Accuracy**: Evidence classified correctly across different domains
-- **Universal System**: Works equally well for any historical period or subject area
-- **Academic Quality**: Maintains Van Evera methodology standards across all contexts
-- **Evidence Documentation**: All claims supported with cross-domain test results
-
-## Phase 5 Tasks: Academic Quality Enhancement
-
-### Task 5.1: Complete Remaining File Migration (7 files)
-**Files to Migrate**:
-1. `core/van_evera_testing_engine.py` - Test generation logic
-2. `core/confidence_calculator.py` - Confidence thresholds
-3. `core/plugins/advanced_van_evera_prediction_engine.py` - Prediction logic
-4. `core/plugins/research_question_generator.py` - Question generation
-5. `core/plugins/primary_hypothesis_identifier.py` - Hypothesis identification
-6. `core/plugins/legacy_compatibility_manager.py` - Compatibility logic
-7. `core/plugins/dowhy_causal_analysis_engine.py` - Causal analysis
-
-### Task 5.2: Enhance Van Evera Test Quality
-- Implement sophisticated test generation using LLM
-- Add nuanced diagnostic type determination
-- Improve test prediction accuracy
-- Enhance counterfactual reasoning
-
-### Task 5.3: Strengthen Causal Mechanism Detection
-- Implement multi-step causal chain analysis
-- Add temporal sequencing validation
-- Enhance mechanism completeness scoring
-- Improve actor-mechanism linkage
-
-### Task 5.4: Add Advanced Academic Features
-- Implement counterfactual analysis
-- Add process tracing confidence intervals
-- Enhance alternative hypothesis generation
-- Improve evidence weighting algorithms
-
-### Task 5.5: Documentation and Evidence
-- Create comprehensive academic validation report
-- Document Van Evera methodology implementation
-- Generate cross-domain test results
-- Prepare publication-quality examples
-
-## Success Criteria for Phase 5
-- **100% LLM-First**: All 28 files fully migrated
-- **Academic Rigor**: Van Evera tests pass academic review
-- **Universal Application**: Works across all domains
-- **Production Ready**: Full test coverage and documentation
-- **Performance**: Maintains <10 LLM calls per analysis
-
-**System Architecture**: Production-ready, academically rigorous, universal LLM-first process tracing system with sophisticated Van Evera methodology implementation.
+After Phase 4B is complete, Phase 5 will focus on:
+- Completing remaining 7 files migration to LLM-first
+- Enhancing Van Evera test generation
+- Adding counterfactual analysis
+- Strengthening causal mechanism detection
