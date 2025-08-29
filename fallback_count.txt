@@ -1,0 +1,16 @@
+## Accurate Fallback Pattern Counts
+
+### return None patterns
+42
+
+### return empty dict/list patterns
+18
+
+### hardcoded thresholds in prediction engine
+15
+
+### return 0 or decimal patterns
+34
+
+### TOTAL FALLBACK PATTERNS
+42 + 18 + 15 + 34 = 109 fallback patterns

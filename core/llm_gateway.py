@@ -110,6 +110,9 @@ class LLMGateway:
         """Initialize with required LLM interface"""
         try:
             self.llm = require_llm()  # Fails immediately if LLM unavailable
+            # Get the raw query function for direct LLM calls
+            from core.plugins.van_evera_llm_interface import create_llm_query_function
+            self.llm_query = create_llm_query_function()
         except Exception as e:
             raise LLMRequiredError(f"LLM Gateway cannot initialize without LLM: {e}")
             
@@ -184,7 +187,7 @@ Respond in JSON format:
     "diagnostic_type": "hoop|smoking_gun|doubly_decisive|straw_in_wind|null"
 }}"""
 
-            response = self.llm.query(prompt)
+            response = self.llm_query(prompt)
             result_dict = json.loads(response)
             
             result = RelationshipAssessment(
@@ -241,7 +244,7 @@ Respond in JSON format:
     "secondary_domains": ["domain1", "domain2"] or null
 }}"""
 
-            response = self.llm.query(prompt)
+            response = self.llm_query(prompt)
             result_dict = json.loads(response)
             
             result = DomainClassification(
@@ -302,7 +305,7 @@ Respond in JSON format:
     "reasoning": "explanation"
 }}"""
 
-            response = self.llm.query(prompt)
+            response = self.llm_query(prompt)
             result_dict = json.loads(response)
             
             result = TemporalEvaluation(
@@ -368,7 +371,7 @@ Respond in JSON format:
     "reasoning": "explanation"
 }}"""
 
-            response = self.llm.query(prompt)
+            response = self.llm_query(prompt)
             result_dict = json.loads(response)
             
             result = VanEveraDiagnostic(
@@ -428,7 +431,7 @@ Return a single float between 0.0 and 1.0 where:
 
 Respond with just the number (e.g., "0.75")"""
 
-            response = self.llm.query(prompt)
+            response = self.llm_query(prompt)
             result = float(response.strip())
             result = max(0.0, min(1.0, result))  # Ensure in range
             
@@ -493,7 +496,7 @@ Respond in JSON format:
     "cross_hypothesis_insights": "insights about relationships between hypotheses"
 }}"""
 
-            response = self.llm.query(prompt)
+            response = self.llm_query(prompt)
             result_dict = json.loads(response)
             
             evaluations = []
@@ -559,7 +562,7 @@ Respond in JSON format:
     "testability_score": 0.0-1.0
 }}"""
 
-            response = self.llm.query(prompt)
+            response = self.llm_query(prompt)
             result_dict = json.loads(response)
             
             result = EnhancedHypothesis(
@@ -623,7 +626,7 @@ Respond in JSON format:
     "evidence_support": ["evidence for step1", "evidence for step2"]
 }}"""
 
-            response = self.llm.query(prompt)
+            response = self.llm_query(prompt)
             result_dict = json.loads(response)
             
             result = CausalMechanism(
