@@ -11,13 +11,9 @@ from enum import Enum
 from .base import ProcessTracingPlugin, PluginValidationError
 import logging
 
-# Import LLM interface for semantic analysis
-try:
-    from .van_evera_llm_interface import get_van_evera_llm
-except ImportError:
-    # Fallback if not available
-    def get_van_evera_llm():
-        raise ImportError("Van Evera LLM interface not available")
+# Import LLM interface for semantic analysis - REQUIRED
+from .van_evera_llm_interface import get_van_evera_llm
+from ..llm_required import require_llm
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +78,9 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
     
     plugin_id = "advanced_van_evera_prediction_engine"
     
+    # TODO: CRITICAL - Replace all 18 hardcoded 'quantitative_threshold' values with LLM-determined values
+    # This requires refactoring the static dictionary to dynamic initialization
+    # Lines with hardcoded thresholds: 93, 102, 111, 120, 129, 180, 189, 198, 207, 250, 259, 268, 311, 320, 329, etc.
     # Sophisticated prediction templates by domain and diagnostic type
     DOMAIN_PREDICTION_STRATEGIES = {
         PredictionDomain.POLITICAL: {

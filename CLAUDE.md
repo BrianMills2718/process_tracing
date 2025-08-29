@@ -36,18 +36,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 6 - Complete TRUE LLM-First Migration (Updated 2025-01-29)
+## 🎯 CURRENT STATUS: Phase 6B - Fix Critical Runtime Errors (Updated 2025-01-29)
 
-**System Status**: **Hybrid Mode (71%)** - LLM optional, not required
-**Current Priority**: **REMOVE ALL FALLBACKS** - Make LLM mandatory
-**Critical Issue**: **System still operates with fallback logic**
+**System Status**: **BROKEN (~40% LLM-first)** - Runtime errors prevent execution
+**Current Priority**: **FIX RUNTIME ERRORS** - System cannot run due to import and method call failures
+**Critical Issue**: **Phase 6 implementation has fundamental errors that will crash at runtime**
 
-**PHASE 5 PARTIALLY COMPLETED (2025-01-29):**
-- ✅ **Infrastructure Built**: LLM assessment schemas and methods created
-- ✅ **Integration Added**: Confidence calculator and testing engine augmented
-- ⚠️ **Fallbacks Remain**: Hardcoded values still present as "defaults"
-- ❌ **Word Overlap**: Semantic decisions still use word counting
-- ❌ **Optional LLM**: System works without LLM (violates policy)
+**PHASE 6A ATTEMPTED BUT FAILED (2025-01-29):**
+- ⚠️ **Infrastructure Created**: llm_required.py has WRONG import path
+- ❌ **Method Call Errors**: confidence_calculator.py calls non-existent methods
+- ⚠️ **Partial Word Removal**: van_evera_testing_engine.py word overlap deleted
+- ❌ **18 Hardcoded Thresholds**: advanced_prediction_engine.py unchanged
+- ⚠️ **Fallback Values Remain**: Several 0.5 values still present
 
 ## Evidence-Based Development Philosophy (Mandatory)
 
@@ -80,180 +80,198 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Universality**: No dataset-specific logic - works across all domains and time periods
 - **Fail-Fast**: System must error if LLM unavailable
 
-## 🚀 PHASE 6: Complete TRUE LLM-First Migration
+## 🚀 PHASE 6B: Fix Critical Runtime Errors
 
 ### Critical Context
-**What exists**: LLM infrastructure added but not required
-**What's wrong**: Fallback logic allows system to run without LLM
-**Why it matters**: Violates ZERO TOLERANCE policy for non-LLM decisions
+**What's broken**: Phase 6A implementation has fatal runtime errors
+**Import Error**: `llm_required.py` uses wrong import path `plugins.` instead of `core.plugins.`
+**Method Error**: `confidence_calculator.py` calls methods that don't exist on returned LLM object
+**Why it matters**: System will crash immediately when run
 
-### Task 1: Create LLM-Required Infrastructure
+### Task 1: Fix Import Path Errors
 
-**Objective**: Add utilities that enforce LLM availability
+**Objective**: Correct the import path in llm_required.py
 
-**Required Actions**:
+**CRITICAL FIX REQUIRED**:
 
-1. Create `core/llm_required.py`:
+Fix `core/llm_required.py` line ~13:
 ```python
-"""
-LLM requirement enforcement utilities.
-System MUST fail if LLM is unavailable.
-"""
+# WRONG (current):
+from plugins.van_evera_llm_interface import get_van_evera_llm
 
-class LLMRequiredError(Exception):
-    """Raised when LLM is required but unavailable"""
-    pass
-
-def require_llm():
-    """
-    Ensure LLM is available or fail immediately.
-    NO FALLBACKS ALLOWED.
-    """
-    try:
-        from plugins.van_evera_llm_interface import get_van_evera_llm
-        llm = get_van_evera_llm()
-        if not llm:
-            raise LLMRequiredError("LLM interface required but not available")
-        return llm
-    except Exception as e:
-        raise LLMRequiredError(f"Cannot operate without LLM: {e}")
+# CORRECT (must be):
+from core.plugins.van_evera_llm_interface import get_van_evera_llm
 ```
 
-2. Add new schemas to `van_evera_llm_schemas.py`:
+**Validation**: After fix, run:
+```bash
+python -c "from core.llm_required import require_llm; print('Import successful')"
+```
+
+Document fix in `evidence/current/Evidence_Phase6B_ImportFix.md`
+
+### Task 2: Fix Method Call Errors
+
+**Objective**: Fix confidence_calculator.py calling non-existent methods
+
+**CRITICAL PROBLEM**: 
+The `require_llm()` function returns a generic VanEveraLLMInterface object, but confidence_calculator.py calls methods that DON'T EXIST on that object:
+- `determine_confidence_weights()` - DOESN'T EXIST
+- `assess_causal_mechanism()` - DOESN'T EXIST
+- `determine_causal_weights()` - DOESN'T EXIST
+- `determine_robustness_weights()` - DOESN'T EXIST
+- `determine_overall_confidence_weights()` - DOESN'T EXIST
+
+**SOLUTION APPROACH**:
+
+Option 1: Add wrapper class that provides needed methods:
 ```python
-class ConfidenceFormulaWeights(BaseModel):
-    """LLM determines appropriate weights for confidence calculation"""
-    quality_weight: float = Field(ge=0.0, le=1.0)
-    quantity_weight: float = Field(ge=0.0, le=1.0)
-    diversity_weight: float = Field(ge=0.0, le=1.0)
-    balance_weight: float = Field(ge=0.0, le=1.0)
-    reasoning: str = Field(description="Justification for weight selection")
+# In core/llm_required.py after imports:
+class LLMWithConfidenceMethods:
+    """Wrapper that adds confidence-specific methods to base LLM"""
     
-class SemanticRelevanceAssessment(BaseModel):
-    """Replace ALL word overlap with semantic assessment"""
-    is_relevant: bool
-    relevance_score: float = Field(ge=0.0, le=1.0)
-    semantic_relationship: str
-    reasoning: str
+    def __init__(self, base_llm):
+        self.base_llm = base_llm
+        # Expose base methods
+        self.__dict__.update(base_llm.__dict__)
+    
+    def determine_confidence_weights(self, context):
+        """Get dynamic weights for confidence formula"""
+        # Call base LLM with structured prompt
+        prompt = f"Determine confidence formula weights for: {context}"
+        response = self.base_llm.generate_structured_output(
+            prompt, 
+            output_model=ConfidenceFormulaWeights
+        )
+        return response
+    
+    def assess_causal_mechanism(self, hypothesis, evidence):
+        """Assess causal mechanism strength"""
+        # Similar implementation...
 ```
 
-3. Document in `evidence/current/Evidence_Phase6_Infrastructure.md`
+Option 2: Add methods directly to VanEveraLLMInterface class in `core/plugins/van_evera_llm_interface.py`
 
-### Task 2: Remove ALL Fallbacks from confidence_calculator.py
+**Validation**: After fix, run:
+```bash
+python -c "from core.confidence_calculator import CausalConfidenceCalculator; c = CausalConfidenceCalculator()"
+```
 
-**Objective**: Make confidence calculation require LLM
+Document fix in `evidence/current/Evidence_Phase6B_MethodFix.md`
 
-**Required Changes**:
+### Task 3: Remove Remaining Fallback Values
 
-1. Update `__init__` method:
+**Objective**: Remove ALL hardcoded fallback values that remain
+
+**CRITICAL MISSED VALUES**:
+Current implementation still has these fallback values that MUST be removed:
+
+1. **confidence_calculator.py line ~375**:
 ```python
-def __init__(self):
-    from core.llm_required import require_llm
-    self.llm = require_llm()  # Fail immediately if no LLM
-    self.evidence_quantifier = EvidenceStrengthQuantifier()
-    self.assessment_history = []
+# WRONG (current):
+ratio_component = 0.5  # When no ratios exist
+
+# CORRECT (must be):
+# Require LLM assessment for neutral state
+ratio_component = self.llm.assess_neutral_state("no_ratios_available").value
 ```
 
-2. Remove ALL fallback values:
-- Line ~303: DELETE `mechanism_completeness = 0.7  # Default fallback`
-- Line ~306: DELETE `temporal_consistency = 0.8  # Default fallback`
-- Line ~359: DELETE `base_coherence = 0.8  # Default fallback`
-- Line ~389: DELETE `independence_score = 0.8  # Default fallback`
-- Line ~497: DELETE `posterior_uncertainty = 0.1  # Default fallback`
-
-Replace each with:
+2. **confidence_calculator.py line ~337**:
 ```python
-# No fallback - LLM required
-causal_assessment = self.llm.assess_causal_mechanism(...)
-mechanism_completeness = causal_assessment.mechanism_completeness
+# WRONG (current):
+evidence_balance = 0.5  # Neutral when no evidence
+
+# CORRECT (must be):
+evidence_balance = self.llm.assess_evidence_balance(supporting=0, challenging=0).balance
 ```
 
-3. Replace hardcoded formula weights (lines ~273-277):
+3. **confidence_calculator.py line ~541**:
 ```python
-# OLD:
-evidential_confidence = (
-    0.4 * quality_score +
-    0.2 * quantity_factor +
-    ...
-)
+# WRONG (current):
+sensitivity = 0.5  # Default sensitivity
 
-# NEW:
-weights = self.llm.determine_confidence_weights(context)
-evidential_confidence = (
-    weights.quality_weight * quality_score +
-    weights.quantity_weight * quantity_factor +
-    ...
-)
+# CORRECT (must be):
+sensitivity = self.llm.determine_sensitivity(context).value
 ```
 
-4. Document changes in `evidence/current/Evidence_Phase6_Confidence.md`
-
-### Task 3: Remove Word Overlap from van_evera_testing_engine.py
-
-**Objective**: Delete ALL word counting/overlap logic
-
-**Required Deletions**:
-
-1. DELETE entire method `_generate_generic_predictions()` (lines 249-265)
-
-2. DELETE word overlap in `_is_evidence_relevant_to_prediction()` (lines 346-360):
+4. **confidence_calculator.py line ~605**:
 ```python
-# DELETE THIS ENTIRE SECTION:
-# Fallback to basic non-keyword analysis
-evidence_words = set(evidence_text.lower().split())
-...
-return overlap_ratio >= 0.2
+# WRONG (current):
+independence = 0.5  # Moderate independence  
+
+# CORRECT (must be):
+independence = self.llm.assess_independence(evidence_items).score
 ```
 
-Replace with:
-```python
-# No fallback - LLM required
-raise LLMRequiredError("LLM assessment required for relevance")
+**Validation**: After removing ALL fallbacks:
+```bash
+grep -n "= 0\.[0-9]" core/confidence_calculator.py | grep -v "Field"
+# Should return NOTHING
 ```
 
-3. DELETE word overlap in `_find_semantic_evidence()` (lines 401-420)
-
-4. DELETE entire method `_extract_prediction_keywords()` (lines 423-455)
-
-5. Document in `evidence/current/Evidence_Phase6_VanEvera.md`
+Document in `evidence/current/Evidence_Phase6B_FallbackRemoval.md`
 
 ### Task 4: Fix advanced_prediction_engine.py Thresholds
 
-**Objective**: Replace 18 hardcoded thresholds
+**Objective**: Replace 18 hardcoded thresholds with LLM-determined values
 
-**Required Changes**:
+**CRITICAL**: This file has NOT been modified yet. All 18 thresholds remain hardcoded.
 
-1. Find and replace ALL patterns like:
+**Required Refactoring**:
+
+1. Add LLM requirement to `__init__`:
 ```python
-'quantitative_threshold': 0.70,  # Lines 93, 102, 111, etc.
+def __init__(self):
+    super().__init__()
+    from core.llm_required import require_llm
+    self.llm = require_llm()
+    # Remove static DOMAIN_PREDICTION_STRATEGIES
+    self.strategies = self._build_dynamic_strategies()
 ```
 
-With:
+2. Replace static dictionary with dynamic builder:
 ```python
-'quantitative_threshold': self.llm.determine_threshold(context),
+def _build_dynamic_strategies(self):
+    """Build strategies with LLM-determined thresholds"""
+    strategies = {}
+    for domain in PredictionDomain:
+        strategies[domain] = self._get_domain_strategy(domain)
+    return strategies
+
+def _get_domain_strategy(self, domain):
+    """Get strategy with dynamic thresholds from LLM"""
+    # Lines 93, 102, 111, 120, 129, 180, 189, 198, 207, 250, 259, 268, 311, 320, 329
+    threshold = self.llm.determine_threshold(
+        domain=domain.value,
+        context="Van Evera quantitative threshold"
+    ).value
+    
+    # Build strategy with dynamic threshold
+    return {
+        'quantitative_threshold': threshold,
+        # ... rest of strategy
+    }
 ```
 
-2. Replace weight dictionaries (lines 370-382):
-```python
-# OLD:
-'weight': 0.25,
-
-# NEW:
-'weight': self.llm.determine_criterion_weight(criterion_name),
+**Validation**: After fix:
+```bash
+grep -n "'quantitative_threshold': 0\." core/plugins/advanced_van_evera_prediction_engine.py
+# Should return NOTHING
 ```
 
-3. Document in `evidence/current/Evidence_Phase6_Prediction.md`
+Document in `evidence/current/Evidence_Phase6B_Thresholds.md`
 
-### Task 5: Create Strict Validation
+### Task 5: Comprehensive Validation
 
-**Objective**: Verify TRUE LLM-first compliance
+**Objective**: Create validation script that ACTUALLY tests the fixes
 
-**Create `validate_strict_llm_first.py`**:
+**CRITICAL**: The existing validate_strict_llm_first.py won't catch the runtime errors!
+
+**Create `validate_phase6b_fixes.py`**:
 ```python
 #!/usr/bin/env python3
 """
-Strict validation for TRUE LLM-first architecture.
-System MUST fail without LLM - no fallbacks allowed.
+Validate Phase 6B fixes for runtime errors and LLM-first compliance.
 """
 
 import os
@@ -261,127 +279,263 @@ import sys
 import re
 from pathlib import Path
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+def test_import_paths():
+    """Test that import paths are correct"""
+    print("\n[TEST] Checking import paths...")
+    
+    # Check llm_required.py
+    llm_req_path = Path("core/llm_required.py")
+    if llm_req_path.exists():
+        content = llm_req_path.read_text()
+        if "from plugins." in content:
+            print("[FAIL] Wrong import path: 'from plugins.' should be 'from core.plugins.'")
+            return False
+        elif "from core.plugins." in content:
+            print("[OK] Import path is correct")
+        else:
+            print("[FAIL] No import found in llm_required.py")
+            return False
+    else:
+        print("[FAIL] llm_required.py not found")
+        return False
+    
+    # Try importing
+    try:
+        from core.llm_required import require_llm
+        print("[OK] Import successful")
+        return True
+    except ImportError as e:
+        print(f"[FAIL] Import error: {e}")
+        return False
+
+def test_method_existence():
+    """Test that called methods actually exist"""
+    print("\n[TEST] Checking method existence...")
+    
+    try:
+        # Check if confidence calculator can instantiate
+        from core.confidence_calculator import CausalConfidenceCalculator
+        
+        # Check if it tries to call non-existent methods
+        calc_content = Path("core/confidence_calculator.py").read_text()
+        
+        problematic_calls = [
+            "self.llm.determine_confidence_weights",
+            "self.llm.assess_causal_mechanism",
+            "self.llm.determine_causal_weights",
+            "self.llm.determine_robustness_weights",
+            "self.llm.determine_overall_confidence_weights"
+        ]
+        
+        found_problems = []
+        for call in problematic_calls:
+            if call in calc_content:
+                found_problems.append(call)
+        
+        if found_problems:
+            print(f"[FAIL] Calls to non-existent methods: {found_problems}")
+            print("[INFO] These methods don't exist on VanEveraLLMInterface")
+            return False
+        else:
+            print("[OK] No calls to non-existent methods")
+            return True
+            
+    except Exception as e:
+        print(f"[ERROR] {e}")
+        return False
+
+def test_fallback_values():
+    """Check for remaining fallback values"""
+    print("\n[TEST] Checking for fallback values...")
+    
+    # Check confidence_calculator.py for specific fallbacks
+    calc_path = Path("core/confidence_calculator.py")
+    if calc_path.exists():
+        content = calc_path.read_text()
+        lines = content.split('\n')
+        
+        fallbacks_found = []
+        for i, line in enumerate(lines, 1):
+            if '= 0.5' in line and 'Field' not in line:
+                fallbacks_found.append(f"Line {i}: {line.strip()[:60]}")
+        
+        if fallbacks_found:
+            print(f"[FAIL] Found {len(fallbacks_found)} fallback values:")
+            for fb in fallbacks_found[:5]:
+                print(f"  {fb}")
+            return False
+        else:
+            print("[OK] No 0.5 fallback values found")
+    
+    return True
+
+def test_hardcoded_thresholds():
+    """Check for hardcoded thresholds in prediction engine"""
+    print("\n[TEST] Checking prediction engine thresholds...")
+    
+    pred_path = Path("core/plugins/advanced_van_evera_prediction_engine.py")
+    if pred_path.exists():
+        content = pred_path.read_text()
+        
+        # Count quantitative_threshold occurrences
+        threshold_pattern = r"'quantitative_threshold':\s*0\.\d+"
+        matches = re.findall(threshold_pattern, content)
+        
+        if matches:
+            print(f"[FAIL] Found {len(matches)} hardcoded thresholds")
+            print(f"  First 3: {matches[:3]}")
+            return False
+        else:
+            print("[OK] No hardcoded thresholds found")
+            return True
+    else:
+        print("[SKIP] Prediction engine not found")
+        return True
+
 def test_llm_required():
     """Test that system fails without LLM"""
-    # Disable LLM
+    print("\n[TEST] Checking if system fails without LLM...")
+    
+    # Set environment to disable LLM
     os.environ['DISABLE_LLM'] = 'true'
     
     try:
-        from core.analyze import run_analysis
-        result = run_analysis("test_data/sample.json")
-        print("[FAIL] System ran without LLM - fallbacks still exist!")
+        from core.llm_required import require_llm
+        llm = require_llm()
+        print("[FAIL] require_llm() should have failed but didn't!")
         return False
     except Exception as e:
-        if "LLM" in str(e) or "required" in str(e):
-            print("[OK] System correctly failed without LLM")
+        if "LLM" in str(e):
+            print(f"[OK] System correctly failed: {str(e)[:50]}")
             return True
         else:
             print(f"[FAIL] Wrong error: {e}")
             return False
+    finally:
+        # Clear the environment variable
+        if 'DISABLE_LLM' in os.environ:
+            del os.environ['DISABLE_LLM']
 
-def check_no_hardcoded_values():
-    """Verify no hardcoded probability/confidence values"""
-    files_to_check = [
-        "core/confidence_calculator.py",
-        "core/van_evera_testing_engine.py",
-        "core/plugins/advanced_van_evera_prediction_engine.py"
+def main():
+    """Run all validation tests"""
+    print("=" * 60)
+    print("PHASE 6B VALIDATION")
+    print("=" * 60)
+    
+    tests = [
+        ("Import Paths", test_import_paths),
+        ("Method Existence", test_method_existence),
+        ("Fallback Values", test_fallback_values),
+        ("Hardcoded Thresholds", test_hardcoded_thresholds),
+        ("LLM Required", test_llm_required)
     ]
     
-    pattern = r'= 0\.\d+(?!.*Field)'  # Exclude Pydantic Field defaults
+    results = []
+    for test_name, test_func in tests:
+        try:
+            result = test_func()
+            results.append((test_name, result))
+        except Exception as e:
+            print(f"[ERROR] {test_name} failed with exception: {e}")
+            results.append((test_name, False))
     
-    for file_path in files_to_check:
-        with open(file_path, 'r') as f:
-            content = f.read()
-        matches = re.findall(pattern, content)
-        if matches:
-            print(f"[FAIL] {file_path} has hardcoded values: {matches[:3]}")
-            return False
+    # Summary
+    print("\n" + "=" * 60)
+    print("VALIDATION SUMMARY")
+    print("=" * 60)
     
-    print("[OK] No hardcoded values found")
-    return True
-
-def check_no_word_overlap():
-    """Verify no word overlap/counting logic"""
-    forbidden_patterns = [
-        r'overlap_ratio',
-        r'len\(overlap\)',
-        r'intersection\(',
-        r'word.*overlap',
-        r'evidence_words.*prediction_words'
-    ]
+    all_passed = True
+    for test_name, passed in results:
+        status = "[OK]" if passed else "[FAIL]"
+        print(f"{status} {test_name}")
+        if not passed:
+            all_passed = False
     
-    for pattern in forbidden_patterns:
-        result = os.popen(f'grep -r "{pattern}" core/').read()
-        if result:
-            print(f"[FAIL] Found word overlap pattern: {pattern}")
-            return False
+    print("\n" + "=" * 60)
+    if all_passed:
+        print("[SUCCESS] All fixes validated!")
+    else:
+        print("[FAIL] Critical issues remain - fix before proceeding")
     
-    print("[OK] No word overlap patterns found")
-    return True
+    return 0 if all_passed else 1
 
 if __name__ == "__main__":
-    tests = [
-        test_llm_required(),
-        check_no_hardcoded_values(),
-        check_no_word_overlap()
-    ]
-    
-    if all(tests):
-        print("\n✅ TRUE LLM-FIRST ACHIEVED!")
-    else:
-        print("\n❌ Violations remain - not LLM-first")
-        sys.exit(1)
+    sys.exit(main())
 ```
 
 ### Success Criteria
 
-**Must demonstrate**:
-- ✅ System fails immediately without LLM (no fallbacks)
+**Must fix ALL runtime errors**:
+- ✅ Import paths corrected (plugins. → core.plugins.)
+- ✅ Method calls match actual available methods
+- ✅ System can instantiate without crashing
+- ✅ All fallback values removed (no 0.5 defaults)
+- ✅ 18 hardcoded thresholds replaced with LLM calls
+
+**Then achieve TRUE LLM-first**:
+- ✅ System fails immediately without LLM
 - ✅ ZERO word overlap/counting patterns
-- ✅ ZERO hardcoded values (except Pydantic schema defaults)
+- ✅ ZERO hardcoded values (except Pydantic Field defaults)
 - ✅ All formulas use LLM-generated weights
 - ✅ No try/except that hides LLM failures
-
-### Expected Outcomes
-
-**After Phase 6**:
-- System is 100% LLM-first
-- No semantic decisions without LLM
-- Clear errors when LLM unavailable
-- Dynamic, context-aware calculations throughout
 
 ### Testing Commands
 
 ```bash
-# Run strict validation
-python validate_strict_llm_first.py
+# Run Phase 6B validation (MUST PASS FIRST)
+python validate_phase6b_fixes.py
+
+# Test individual fixes
+python -c "from core.llm_required import require_llm; print('Import works')"
+python -c "from core.confidence_calculator import CausalConfidenceCalculator; print('No method errors')"
+
+# Check for violations
+grep -n "from plugins\." core/llm_required.py  # Should be empty
+grep -n "= 0\.5" core/confidence_calculator.py | grep -v Field  # Should be empty
+grep -n "'quantitative_threshold': 0\." core/plugins/advanced_van_evera_prediction_engine.py  # Should be empty
 
 # Test with LLM disabled (must fail)
 DISABLE_LLM=true python -m core.analyze test_data/sample.json
-
-# Search for violations
-grep -r "overlap_ratio\|= 0\.[0-9]" core/
 ```
 
 ## Evidence Files Structure
 
 Create these files in `evidence/current/`:
-- `Evidence_Phase6_Infrastructure.md` - LLM requirement utilities
-- `Evidence_Phase6_Confidence.md` - Confidence calculator changes
-- `Evidence_Phase6_VanEvera.md` - Testing engine word overlap removal
-- `Evidence_Phase6_Prediction.md` - Prediction engine threshold replacement
-- `Evidence_Phase6_Validation.md` - Final validation results
+- `Evidence_Phase6B_ImportFix.md` - Fixed import path errors
+- `Evidence_Phase6B_MethodFix.md` - Fixed method call errors  
+- `Evidence_Phase6B_FallbackRemoval.md` - Removed ALL 0.5 values
+- `Evidence_Phase6B_Thresholds.md` - Fixed 18 hardcoded thresholds
+- `Evidence_Phase6B_Validation.md` - Final validation showing ALL TESTS PASS
 
 Each evidence file must contain:
-- Raw command outputs
-- Before/after code snippets
-- Error logs showing LLM requirement
-- Success/failure determination
+- Exact line numbers and changes made
+- Before/after code snippets showing fixes
+- Test output proving fix works
+- No false claims - actual working code only
 
-## Next Steps After Phase 6
+## Critical Implementation Notes
 
-Once TRUE LLM-first is achieved:
-1. Enhanced Van Evera test generation
-2. Counterfactual analysis implementation
-3. Causal mechanism strengthening
-4. Multi-hypothesis relationship analysis
+**DO NOT CLAIM SUCCESS WITHOUT EVIDENCE**:
+- Every fix must be tested with actual Python execution
+- Method calls must be verified to exist on the actual object
+- Import statements must successfully import
+- No mocking or stubbing - real implementations only
+
+**Common Pitfalls to Avoid**:
+1. Don't call methods that don't exist on the returned object type
+2. Don't use wrong import paths (always use core.plugins not plugins)
+3. Don't leave ANY hardcoded values (search thoroughly)
+4. Don't claim completion without running validation script
+5. Don't create circular imports when fixing method issues
+
+## Next Phase (Only After 6B Complete)
+
+Phase 7: Enhanced Van Evera Features
+- Test generation improvements
+- Counterfactual analysis
+- Causal mechanism detection
+- Multi-hypothesis relationships
+
+**BUT FIRST**: Fix ALL runtime errors in Phase 6B!

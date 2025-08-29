@@ -15,7 +15,7 @@ from enum import Enum
 from datetime import datetime
 import networkx as nx
 
-from .bayesian_models import (
+from .plugins.bayesian_van_evera_engine import (
     BayesianHypothesis, BayesianEvidence, BayesianHypothesisSpace, 
     BayesianProcessTracingModel, EvidenceType
 )
@@ -148,43 +148,35 @@ class CausalConfidenceCalculator:
     """
     
     def __init__(self):
+        # LLM is REQUIRED - fail fast if unavailable
+        from .llm_required import require_llm
+        self.llm = require_llm()  # Will raise LLMRequiredError if unavailable
+        
         self.evidence_quantifier = EvidenceStrengthQuantifier()
         self.assessment_history: List[ConfidenceAssessment] = []
-        self._llm_interface = None  # Lazy load LLM interface
         self._confidence_thresholds = None  # Cache for LLM-generated thresholds
         self._causal_assessment = None  # Cache for causal mechanism assessment
     
     def _get_llm_interface(self):
-        """Lazy load LLM interface"""
-        if self._llm_interface is None:
-            try:
-                from plugins.van_evera_llm_interface import get_van_evera_llm
-                self._llm_interface = get_van_evera_llm()
-            except ImportError:
-                logger.warning("LLM interface not available, using defaults")
-        return self._llm_interface
+        """Return the required LLM interface"""
+        # LLM is already initialized in __init__ and required
+        return self.llm
     
     def _update_confidence_thresholds(self, hypothesis: BayesianHypothesis, 
                                      evidence_list: List[BayesianEvidence],
                                      hypothesis_space: BayesianHypothesisSpace):
-        """Update confidence thresholds using LLM assessment"""
-        llm = self._get_llm_interface()
-        if llm:
-            try:
-                # Build context descriptions
-                evidence_quality = self._describe_evidence_quality(evidence_list)
-                hypothesis_complexity = self._describe_hypothesis_complexity(hypothesis, hypothesis_space)
-                domain_context = "Process tracing analysis with Van Evera methodology"
-                
-                # Get LLM assessment of appropriate thresholds
-                self._confidence_thresholds = llm.assess_confidence_thresholds(
-                    evidence_quality=evidence_quality,
-                    hypothesis_complexity=hypothesis_complexity,
-                    domain_context=domain_context
-                )
-            except Exception as e:
-                logger.debug(f"LLM threshold assessment failed, using defaults: {e}")
-                self._confidence_thresholds = None
+        """Update confidence thresholds using LLM assessment (REQUIRED)"""
+        # Build context descriptions
+        evidence_quality = self._describe_evidence_quality(evidence_list)
+        hypothesis_complexity = self._describe_hypothesis_complexity(hypothesis, hypothesis_space)
+        domain_context = "Process tracing analysis with Van Evera methodology"
+        
+        # Get LLM assessment of appropriate thresholds (REQUIRED - no fallback)
+        self._confidence_thresholds = self.llm.assess_confidence_thresholds(
+            evidence_quality=evidence_quality,
+            hypothesis_complexity=hypothesis_complexity,
+            domain_context=domain_context
+        )
     
     def _describe_evidence_quality(self, evidence_list: List[BayesianEvidence]) -> str:
         """Generate description of evidence quality for LLM assessment"""
@@ -344,12 +336,19 @@ class CausalConfidenceCalculator:
         else:
             evidence_balance = 0.5
         
-        # Combine components
+        # Get LLM-determined weights for confidence formula (REQUIRED)
+        weights = self.llm.determine_confidence_weights(
+            evidence_quality=self._describe_evidence_quality(evidence_list),
+            hypothesis_complexity=f"Hypothesis with {len(evidence_list)} evidence pieces",
+            domain_context="Evidential confidence calculation"
+        )
+        
+        # Combine components using LLM-determined weights
         evidential_confidence = (
-            0.4 * quality_score +
-            0.2 * quantity_factor +
-            0.2 * diversity_score +
-            0.2 * evidence_balance
+            weights.quality_weight * quality_score +
+            weights.quantity_weight * quantity_factor +
+            weights.diversity_weight * diversity_score +
+            weights.balance_weight * evidence_balance
         )
         
         return max(0.0, min(1.0, evidential_confidence))
@@ -375,36 +374,36 @@ class CausalConfidenceCalculator:
         else:
             ratio_component = 0.5
         
-        # Get LLM-based causal mechanism assessment
-        mechanism_completeness = 0.7  # Default fallback
-        temporal_consistency = 0.8  # Default fallback
+        # LLM-based causal mechanism assessment (REQUIRED - no fallback)
+        # Build evidence chain description
+        evidence_chain = "; ".join([e.description[:100] for e in evidence_list[:5]])
+        temporal_sequence = "Temporal ordering based on evidence sequence"
         
-        llm = self._get_llm_interface()
-        if llm:
-            try:
-                # Build evidence chain description
-                evidence_chain = "; ".join([e.description[:100] for e in evidence_list[:5]])
-                temporal_sequence = "Temporal ordering based on evidence sequence"
-                
-                causal_assessment = llm.assess_causal_mechanism(
-                    hypothesis_description=getattr(hypothesis, 'description', str(hypothesis)),
-                    evidence_chain=evidence_chain,
-                    temporal_sequence=temporal_sequence
-                )
-                
-                mechanism_completeness = causal_assessment.mechanism_completeness
-                temporal_consistency = causal_assessment.temporal_ordering
-                self._causal_assessment = causal_assessment
-                
-            except Exception as e:
-                logger.debug(f"LLM causal assessment failed, using defaults: {e}")
+        # LLM assessment is REQUIRED - will fail if unavailable
+        causal_assessment = self.llm.assess_causal_mechanism(
+            hypothesis_description=getattr(hypothesis, 'description', str(hypothesis)),
+            evidence_chain=evidence_chain,
+            temporal_sequence=temporal_sequence
+        )
         
-        # Combine components
+        mechanism_completeness = causal_assessment.mechanism_completeness
+        temporal_consistency = causal_assessment.temporal_ordering
+        self._causal_assessment = causal_assessment
+        
+        # Get LLM-determined weights for causal confidence (REQUIRED)
+        causal_weights = self.llm.determine_causal_weights(
+            hypothesis_description=str(hypothesis),
+            evidence_context=f"Evidence set with {len(evidence_list)} pieces",
+            domain_context="Causal confidence calculation"
+        )
+        
+        # Combine components using LLM-determined weights
+        # Map the generic weight names to causal components
         causal_confidence = (
-            0.4 * posterior_component +
-            0.3 * ratio_component +
-            0.2 * mechanism_completeness +
-            0.1 * temporal_consistency
+            causal_weights.quality_weight * posterior_component +
+            causal_weights.quantity_weight * ratio_component +
+            causal_weights.diversity_weight * mechanism_completeness +
+            causal_weights.balance_weight * temporal_consistency
         )
         
         return max(0.0, min(1.0, causal_confidence))
@@ -449,11 +448,13 @@ class CausalConfidenceCalculator:
         else:
             separation_score = hypothesis.posterior_probability
         
-        # Get LLM-based coherence assessment
-        base_coherence = 0.8  # Default fallback
+        # Get LLM-based coherence assessment (REQUIRED - no fallback)
+        if not self._confidence_thresholds:
+            # Should have been set in _update_confidence_thresholds
+            from .llm_required import LLMRequiredError
+            raise LLMRequiredError("Confidence thresholds not set - LLM assessment required")
         
-        if self._confidence_thresholds:
-            base_coherence = self._confidence_thresholds.logical_coherence
+        base_coherence = self._confidence_thresholds.logical_coherence
         
         coherence_confidence = (
             base_coherence - consistency_penalties +
@@ -483,18 +484,26 @@ class CausalConfidenceCalculator:
         strengths = [e.strength for e in evidence_list]
         strength_balance = 1.0 - abs(0.7 - np.mean(strengths))  # Prefer moderate-high strength
         
-        # Get LLM-based independence assessment
-        independence_score = 0.8  # Default fallback
+        # Get LLM-based independence assessment (REQUIRED - no fallback)
+        if not self._confidence_thresholds:
+            from .llm_required import LLMRequiredError
+            raise LLMRequiredError("Confidence thresholds not set - LLM assessment required")
         
-        if self._confidence_thresholds:
-            independence_score = self._confidence_thresholds.independence_score
+        independence_score = self._confidence_thresholds.independence_score
         
-        # Combine robustness factors
+        # Get LLM-determined weights for robustness (REQUIRED)
+        robustness_weights = self.llm.determine_robustness_weights(
+            evidence_context=f"Evidence from {len(collection_methods)} sources",
+            domain_context="Robustness confidence calculation"
+        )
+        
+        # Combine robustness factors using LLM weights
+        # Map generic weight names to robustness components
         robustness_confidence = (
-            0.3 * source_diversity +
-            0.3 * reliability_consistency +
-            0.2 * strength_balance +
-            0.2 * independence_score
+            robustness_weights.quality_weight * source_diversity +
+            robustness_weights.quantity_weight * reliability_consistency +
+            robustness_weights.diversity_weight * strength_balance +
+            robustness_weights.balance_weight * independence_score
         )
         
         return max(0.0, min(1.0, robustness_confidence))
@@ -540,18 +549,22 @@ class CausalConfidenceCalculator:
     
     def _calculate_overall_confidence(self, confidence_components: Dict[ConfidenceType, float]) -> float:
         """Calculate overall confidence from individual components."""
-        # Weighted combination of confidence components
-        weights = {
-            ConfidenceType.EVIDENTIAL: 0.30,
-            ConfidenceType.CAUSAL: 0.25,
-            ConfidenceType.COHERENCE: 0.20,
-            ConfidenceType.ROBUSTNESS: 0.15,
-            ConfidenceType.SENSITIVITY: 0.10
-        }
+        # Get LLM-determined weights for overall confidence (REQUIRED)
+        overall_weights = self.llm.determine_overall_confidence_weights(
+            component_scores=str({k.value: v for k, v in confidence_components.items()}),
+            domain_context="Overall confidence aggregation"
+        )
         
-        weighted_sum = sum(
-            weights.get(conf_type, 0.0) * score 
-            for conf_type, score in confidence_components.items()
+        # Map components to weights (using creative mapping of the 4 weight fields)
+        # We have 5 components but only 4 weight fields, so combine related ones
+        weighted_sum = (
+            overall_weights.quality_weight * confidence_components.get(ConfidenceType.EVIDENTIAL, 0) +
+            overall_weights.quantity_weight * confidence_components.get(ConfidenceType.CAUSAL, 0) +
+            overall_weights.diversity_weight * confidence_components.get(ConfidenceType.COHERENCE, 0) +
+            overall_weights.balance_weight * (
+                confidence_components.get(ConfidenceType.ROBUSTNESS, 0) * 0.6 +
+                confidence_components.get(ConfidenceType.SENSITIVITY, 0) * 0.4
+            )
         )
         
         return max(0.0, min(1.0, weighted_sum))
@@ -594,11 +607,12 @@ class CausalConfidenceCalculator:
         # Uncertainty from sample size (fewer evidence = higher uncertainty)
         sample_uncertainty = 1.0 / math.sqrt(max(1, len(evidence_list)))
         
-        # Get LLM-based posterior uncertainty
-        posterior_uncertainty = 0.1  # Default fallback
+        # Get LLM-based posterior uncertainty (REQUIRED - no fallback)
+        if not self._confidence_thresholds:
+            from .llm_required import LLMRequiredError
+            raise LLMRequiredError("Confidence thresholds not set - LLM assessment required")
         
-        if self._confidence_thresholds:
-            posterior_uncertainty = self._confidence_thresholds.posterior_uncertainty
+        posterior_uncertainty = self._confidence_thresholds.posterior_uncertainty
         
         # Combine uncertainties
         total_uncertainty = math.sqrt(

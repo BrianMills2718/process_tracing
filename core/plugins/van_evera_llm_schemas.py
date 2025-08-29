@@ -167,6 +167,42 @@ class CausalRelationshipAnalysis(BaseModel):
     # Confounders and mediators
     potential_confounders: List[str] = Field(description="Potential confounding variables")
     potential_mediators: List[str] = Field(description="Potential mediating variables")
+
+
+class ConfidenceFormulaWeights(BaseModel):
+    """
+    LLM determines appropriate weights for confidence calculation.
+    Replaces hardcoded formula weights with dynamic, context-aware values.
+    """
+    quality_weight: float = Field(ge=0.0, le=1.0, description="Weight for evidence quality component")
+    quantity_weight: float = Field(ge=0.0, le=1.0, description="Weight for evidence quantity component")
+    diversity_weight: float = Field(ge=0.0, le=1.0, description="Weight for evidence diversity component")
+    balance_weight: float = Field(ge=0.0, le=1.0, description="Weight for evidence balance component")
+    
+    # Justification
+    reasoning: str = Field(description="Justification for weight selection based on context")
+    total_weight: float = Field(ge=0.9, le=1.1, description="Sum of weights (should be ~1.0)")
+    
+    def model_post_init(self, __context):
+        """Ensure weights sum to approximately 1.0"""
+        self.total_weight = (self.quality_weight + self.quantity_weight + 
+                           self.diversity_weight + self.balance_weight)
+
+
+class SemanticRelevanceAssessment(BaseModel):
+    """
+    Replace ALL word overlap with semantic assessment.
+    No counting, no ratios, pure semantic understanding.
+    """
+    is_relevant: bool = Field(description="Binary relevance decision based on semantic understanding")
+    relevance_score: float = Field(ge=0.0, le=1.0, description="Semantic relevance strength")
+    semantic_relationship: str = Field(description="Type of semantic relationship identified")
+    reasoning: str = Field(description="Detailed reasoning for relevance assessment")
+    
+    # Additional semantic factors
+    conceptual_alignment: float = Field(ge=0.0, le=1.0, description="Degree of conceptual alignment")
+    contextual_fit: float = Field(ge=0.0, le=1.0, description="How well evidence fits hypothesis context")
+    semantic_distance: float = Field(ge=0.0, le=1.0, description="Semantic distance between concepts")
     
     # Causal reasoning
     causal_reasoning: str = Field(description="Detailed causal reasoning and evidence")

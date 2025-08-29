@@ -40,7 +40,9 @@ from .van_evera_llm_schemas import (
     MultiFeatureExtraction,
     BatchedHypothesisEvaluation,
     ConfidenceThresholdAssessment,
-    CausalMechanismAssessment
+    CausalMechanismAssessment,
+    ConfidenceFormulaWeights,
+    SemanticRelevanceAssessment
 )
 
 logger = logging.getLogger(__name__)
@@ -261,6 +263,112 @@ class VanEveraLLMInterface:
         """
         
         return self._get_structured_response(prompt, ConfidenceThresholdAssessment)
+    
+    def determine_confidence_weights(self, evidence_quality: str, hypothesis_complexity: str,
+                                    domain_context: str) -> ConfidenceFormulaWeights:
+        """
+        Determine appropriate weights for confidence formula components.
+        Replaces hardcoded 0.4, 0.2, 0.2, 0.2 values with dynamic weights.
+        
+        Args:
+            evidence_quality: Description of evidence quality
+            hypothesis_complexity: Description of hypothesis complexity
+            domain_context: Context for weight determination
+            
+        Returns:
+            Dynamic weights for confidence calculation
+        """
+        prompt = f"""
+        Determine appropriate weights for confidence calculation components.
+        
+        EVIDENCE QUALITY: {evidence_quality}
+        HYPOTHESIS COMPLEXITY: {hypothesis_complexity}
+        DOMAIN CONTEXT: {domain_context}
+        
+        Provide weights for:
+        1. Quality weight - importance of evidence quality
+        2. Quantity weight - importance of evidence quantity
+        3. Diversity weight - importance of evidence diversity
+        4. Balance weight - importance of supporting vs contradicting balance
+        
+        Weights should sum to approximately 1.0.
+        Justify your weight selection based on the context.
+        """
+        
+        return self._get_structured_response(prompt, ConfidenceFormulaWeights)
+    
+    def determine_causal_weights(self, hypothesis_description: str, evidence_context: str,
+                                domain_context: str) -> ConfidenceFormulaWeights:
+        """
+        Determine weights for causal confidence components.
+        Replaces hardcoded 0.4, 0.3, 0.2, 0.1 values.
+        """
+        prompt = f"""
+        Determine weights for causal confidence calculation.
+        
+        HYPOTHESIS: {hypothesis_description}
+        EVIDENCE CONTEXT: {evidence_context}
+        DOMAIN: {domain_context}
+        
+        Provide weights for:
+        1. Posterior probability component (quality_weight)
+        2. Likelihood ratio component (quantity_weight)
+        3. Mechanism completeness component (diversity_weight)
+        4. Temporal consistency component (balance_weight)
+        
+        Use the weight fields creatively for these causal components.
+        Weights should sum to approximately 1.0.
+        """
+        
+        return self._get_structured_response(prompt, ConfidenceFormulaWeights)
+    
+    def determine_overall_confidence_weights(self, component_scores: str,
+                                            domain_context: str) -> ConfidenceFormulaWeights:
+        """
+        Determine weights for combining confidence components.
+        Replaces hardcoded 0.30, 0.25, 0.20, 0.15, 0.10 values.
+        """
+        prompt = f"""
+        Determine weights for overall confidence aggregation.
+        
+        COMPONENT SCORES: {component_scores}
+        DOMAIN: {domain_context}
+        
+        Provide weights for combining:
+        1. Evidential confidence (quality_weight)
+        2. Causal confidence (quantity_weight)
+        3. Coherence confidence (diversity_weight)
+        4. Robustness+Sensitivity combined (balance_weight)
+        
+        Consider the component scores and provide appropriate weights.
+        Weights should sum to approximately 1.0.
+        """
+        
+        return self._get_structured_response(prompt, ConfidenceFormulaWeights)
+    
+    def determine_robustness_weights(self, evidence_context: str, 
+                                    domain_context: str) -> ConfidenceFormulaWeights:
+        """
+        Determine weights for robustness confidence components.
+        Replaces hardcoded 0.3, 0.3, 0.2, 0.2 values.
+        """
+        prompt = f"""
+        Determine weights for robustness confidence calculation.
+        
+        EVIDENCE CONTEXT: {evidence_context}
+        DOMAIN: {domain_context}
+        
+        Provide weights for:
+        1. Source diversity (quality_weight)
+        2. Reliability consistency (quantity_weight)
+        3. Strength balance (diversity_weight)
+        4. Independence score (balance_weight)
+        
+        Map to the weight fields appropriately.
+        Weights should sum to approximately 1.0.
+        """
+        
+        return self._get_structured_response(prompt, ConfidenceFormulaWeights)
     
     def assess_causal_mechanism(self, hypothesis_description: str, evidence_chain: str,
                                temporal_sequence: str) -> CausalMechanismAssessment:

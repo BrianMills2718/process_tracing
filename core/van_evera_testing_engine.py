@@ -10,13 +10,8 @@ from dataclasses import dataclass
 from enum import Enum
 import logging
 
-# Import LLM interface for semantic analysis
-try:
-    from .plugins.van_evera_llm_interface import get_van_evera_llm
-except ImportError:
-    # Fallback if not available
-    def get_van_evera_llm():
-        raise ImportError("Van Evera LLM interface not available")
+# Import LLM interface for semantic analysis - REQUIRED
+from .plugins.van_evera_llm_interface import get_van_evera_llm
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +67,10 @@ class VanEveraTestingEngine:
     """
     
     def __init__(self, graph_data: Dict):
+        # Ensure LLM is available - REQUIRED for all operations
+        from core.llm_required import require_llm
+        self.llm = require_llm()  # Will fail if LLM unavailable
+        
         self.graph_data = graph_data
         self.hypotheses = [n for n in graph_data['nodes'] 
                           if n.get('type') in ['Hypothesis', 'Alternative_Explanation']]
@@ -140,9 +139,10 @@ class VanEveraTestingEngine:
             except Exception as e:
                 logger.warning(f"Failed to enhance alternative explanation {hypothesis_id}: {e}")
         
-        # If no predictions generated, create universal fallback (no dataset-specific logic)
+        # If no predictions generated, FAIL - no fallbacks allowed
         if not predictions:
-            predictions = self._generate_generic_predictions(hypothesis_id, hypothesis_desc)
+            from core.llm_required import LLMRequiredError
+            raise LLMRequiredError(f"LLM failed to generate predictions for hypothesis {hypothesis_id}")
             
         return predictions
     
@@ -246,23 +246,8 @@ class VanEveraTestingEngine:
         
         return predictions
     
-    def _generate_generic_predictions(self, hypothesis_id: str, hypothesis_desc: str) -> List[TestPrediction]:
-        """Generate generic predictions when semantic analysis fails"""
-        # Extract key terms from hypothesis description
-        import re
-        key_terms = re.findall(r'\b[a-zA-Z]{4,}\b', hypothesis_desc.lower())
-        key_terms = [term for term in key_terms if term not in 
-                    ['this', 'that', 'with', 'from', 'were', 'have', 'been', 'would']][:6]
-        
-        return [TestPrediction(
-            prediction_id=f"{hypothesis_id}_GEN_001",
-            hypothesis_id=hypothesis_id,
-            description=f"Evidence must support key elements: {', '.join(key_terms[:3])}",
-            diagnostic_type=DiagnosticType.STRAW_IN_WIND,
-            necessary_condition=False,
-            sufficient_condition=False,
-            evidence_requirements=key_terms
-        )]
+    # DELETED: _generate_generic_predictions method
+    # No fallback predictions allowed - LLM is REQUIRED
     
     def _find_prediction_evidence(self, prediction: TestPrediction) -> Tuple[List[str], List[str]]:
         """Enhanced evidence finding using multiple matching strategies"""
@@ -327,12 +312,26 @@ class VanEveraTestingEngine:
             
             # Boost relevance if edge properties align with prediction
             if edge_diagnostic_type == prediction.diagnostic_type.value:
-                semantic_relevance += 0.1
+                # Ask LLM for appropriate boost value
+                boost_assessment = self.llm.assess_confidence_boost(
+                    context="Edge diagnostic type matches prediction type",
+                    match_type="diagnostic_type_alignment"
+                )
+                semantic_relevance += boost_assessment.boost_value
             if edge_probative_value > 0.6:
-                semantic_relevance += 0.1
+                # Ask LLM for appropriate boost value
+                boost_assessment = self.llm.assess_confidence_boost(
+                    context="Edge has high probative value",
+                    match_type="probative_value_strength"
+                )
+                semantic_relevance += boost_assessment.boost_value
                 
-            # Threshold for semantic relevance (more nuanced than simple keyword counting)
-            is_relevant = semantic_relevance >= 0.5
+            # Get LLM-determined threshold for semantic relevance
+            threshold_assessment = self.llm.determine_semantic_threshold(
+                context="Evidence relevance to prediction",
+                evidence_type=evidence_node.get('type')
+            )
+            is_relevant = semantic_relevance >= threshold_assessment.threshold
             
             if is_relevant:
                 logger.debug(f"LLM semantic analysis: Evidence {evidence_node['id']} relevant to prediction {prediction.prediction_id} (score: {semantic_relevance:.3f})")
@@ -340,24 +339,9 @@ class VanEveraTestingEngine:
             return is_relevant
             
         except Exception as e:
-            logger.warning(f"LLM relevance assessment failed for {prediction.prediction_id}: {e}")
-            
-            # Fallback to basic non-keyword analysis
-            # Check if evidence and prediction share substantial semantic content
-            evidence_words = set(evidence_text.lower().split())
-            prediction_words = set(prediction.description.lower().split())
-            
-            # Remove common words
-            common_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those'}
-            
-            evidence_words = evidence_words - common_words
-            prediction_words = prediction_words - common_words
-            
-            # Basic semantic overlap without keyword matching
-            overlap = evidence_words.intersection(prediction_words)
-            overlap_ratio = len(overlap) / max(len(prediction_words), 1)
-            
-            return overlap_ratio >= 0.2  # At least 20% semantic word overlap
+            # No fallback - LLM is REQUIRED for relevance assessment
+            from core.llm_required import LLMRequiredError
+            raise LLMRequiredError(f"LLM assessment required for relevance of {prediction.prediction_id}: {e}")
     
     def _find_semantic_evidence(self, prediction: TestPrediction) -> List[str]:
         """
@@ -385,9 +369,15 @@ class VanEveraTestingEngine:
                 # Include evidence that supports or is relevant to the prediction
                 # Use confidence-based threshold instead of hardcoded value
                 min_probative = relationship_assessment.confidence_score * 0.4  # Dynamic threshold
+                # Get LLM-determined confidence threshold
+                confidence_threshold = llm_interface.determine_confidence_threshold(
+                    context="Semantic evidence relevance",
+                    assessment_type="relationship_confidence"
+                ).threshold
+                
                 if (relationship_assessment.relationship_type in ['supporting', 'refuting'] and
                     relationship_assessment.probative_value >= min_probative and
-                    relationship_assessment.confidence_score >= 0.5):
+                    relationship_assessment.confidence_score >= confidence_threshold):
                     
                     semantic_evidence.append(evidence_node['id'])
                     logger.debug(f"Semantic evidence {evidence_node['id']}: {relationship_assessment.relationship_type} "
@@ -395,64 +385,14 @@ class VanEveraTestingEngine:
                                f"confidence: {relationship_assessment.confidence_score:.3f})")
                 
         except Exception as e:
-            logger.warning(f"LLM semantic evidence search failed for {prediction.prediction_id}: {e}")
-            
-            # Fallback to basic semantic overlap (no keyword matching)
-            for evidence_node in self.evidence:
-                evidence_desc = evidence_node.get('properties', {}).get('description', '')
-                if not evidence_desc.strip():
-                    continue
-                    
-                # Basic semantic overlap without keyword matching
-                evidence_words = set(evidence_desc.lower().split())
-                prediction_words = set(prediction.description.lower().split())
-                
-                # Remove common words
-                common_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those'}
-                
-                evidence_words = evidence_words - common_words
-                prediction_words = prediction_words - common_words
-                
-                # Include if substantial semantic overlap
-                overlap = evidence_words.intersection(prediction_words)
-                if len(overlap) >= 2:  # At least 2 significant word overlaps
-                    semantic_evidence.append(evidence_node['id'])
+            # No fallback - LLM is REQUIRED for semantic evidence search
+            from core.llm_required import LLMRequiredError
+            raise LLMRequiredError(f"LLM assessment required for semantic evidence search: {e}")
                 
         return semantic_evidence[:5]  # Limit to top 5 matches
     
-    def _extract_prediction_keywords(self, prediction: TestPrediction) -> List[str]:
-        """
-        Extract semantic requirements from prediction using LLM analysis.
-        Replaces keyword-based extraction with semantic understanding.
-        """
-        # Use evidence_requirements as primary semantic indicators
-        semantic_requirements = prediction.evidence_requirements[:]
-        
-        try:
-            # Use LLM to understand what evidence this prediction actually requires
-            llm_interface = get_van_evera_llm()
-            
-            probative_assessment = llm_interface.assess_probative_value(
-                evidence_description=f"General evidence for prediction: {prediction.description}",
-                hypothesis_description=prediction.description,
-                context="Van Evera diagnostic test evidence requirement analysis"
-            )
-            
-            # Extract semantic requirements from LLM analysis
-            if probative_assessment.evidence_quality_factors:
-                semantic_requirements.extend(probative_assessment.evidence_quality_factors)
-            
-            if probative_assessment.strength_indicators:
-                semantic_requirements.extend(probative_assessment.strength_indicators)
-                
-            logger.info(f"Enhanced prediction {prediction.prediction_id} with LLM semantic requirements")
-            
-        except Exception as e:
-            logger.warning(f"Failed to enhance prediction keywords for {prediction.prediction_id}: {e}")
-            # Fallback to evidence_requirements only (no keyword expansion)
-            pass
-            
-        return list(set(semantic_requirements))  # Remove duplicates
+    # DELETED: _extract_prediction_keywords method
+    # No keyword extraction allowed - pure LLM semantic understanding only
     
     def _apply_diagnostic_logic(self, prediction: TestPrediction, 
                                supporting: List[str], contradicting: List[str]) -> Tuple[TestResult, str]:
@@ -547,7 +487,12 @@ class VanEveraTestingEngine:
                 print(f"[VAN_EVERA_TESTING] {prediction.diagnostic_type.value} test: {result.test_result.value}")
             
             # Calculate overall assessment with Bayesian updating
-            prior_prob = 0.5  # Neutral prior
+            # Get LLM-determined prior probability
+            prior_assessment = self.llm.determine_prior_probability(
+                hypothesis_description=hypothesis['description'],
+                context="Initial prior for Van Evera testing"
+            )
+            prior_prob = prior_assessment.prior_probability
             posterior_prob = self._calculate_posterior_probability(prior_prob, test_results)
             
             # Determine overall status
@@ -691,10 +636,19 @@ class VanEveraTestingEngine:
         """Calculate confidence interval for posterior probability"""
         n_tests = len(test_results)
         if n_tests == 0:
-            return (max(0, posterior - 0.3), min(1, posterior + 0.3))
+            # Get LLM-determined default margin for no tests
+            default_margin = self.llm.determine_confidence_margin(
+                context="No tests available - default margin",
+                n_tests=0
+            ).base_margin
+            return (max(0, posterior - default_margin), min(1, posterior + default_margin))
         
-        # Confidence narrows with more tests
-        margin = 0.4 / math.sqrt(n_tests)
+        # Confidence narrows with more tests - get LLM-determined base margin
+        margin_assessment = self.llm.determine_confidence_margin(
+            context="Confidence interval calculation",
+            n_tests=n_tests
+        )
+        margin = margin_assessment.base_margin / math.sqrt(n_tests)
         return (max(0, posterior - margin), min(1, posterior + margin))
 
 # Integration function

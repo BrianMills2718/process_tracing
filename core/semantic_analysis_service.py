@@ -19,6 +19,7 @@ import hashlib
 import json
 
 from core.plugins.van_evera_llm_interface import get_van_evera_llm, VanEveraLLMInterface
+from core.llm_required import require_llm, LLMRequiredError
 from core.plugins.van_evera_llm_schemas import (
     HypothesisDomainClassification,
     ProbativeValueAssessment,
@@ -44,7 +45,8 @@ class SemanticAnalysisService:
         Args:
             cache_ttl_minutes: Cache time-to-live in minutes
         """
-        self.llm_interface = get_van_evera_llm()
+        # Ensure LLM is available - NO FALLBACKS
+        self.llm_interface = require_llm()
         
         # Simple cache system - exact matches only
         self._cache: Dict[str, Tuple[Any, datetime]] = {}
@@ -113,14 +115,8 @@ class SemanticAnalysisService:
         except Exception as e:
             logger.error(f"Domain classification failed: {e}")
             self._stats['errors'] += 1
-            # Return conservative fallback
-            return HypothesisDomainClassification(
-                primary_domain="political",  # Most common domain
-                secondary_domains=[],
-                confidence_score=0.5,
-                reasoning="Fallback classification due to LLM error",
-                generalizability="Limited due to error condition"
-            )
+            # NO FALLBACK - LLM is required
+            raise LLMRequiredError(f"LLM required for domain classification: {e}") from e
             
     def assess_probative_value(self,
                               evidence_description: str,
@@ -155,15 +151,8 @@ class SemanticAnalysisService:
         except Exception as e:
             logger.error(f"Probative value assessment failed: {e}")
             self._stats['errors'] += 1
-            # Return conservative fallback
-            return ProbativeValueAssessment(
-                probative_value=0.5,  # Neutral value
-                confidence_score=0.5,
-                reasoning="Fallback assessment due to LLM error",
-                evidence_quality_factors=["Error condition"],
-                reliability_assessment="Unknown due to error",
-                van_evera_implications="Limited diagnostic value"
-            )
+            # NO FALLBACK - LLM is required
+            raise LLMRequiredError(f"LLM required for probative value assessment: {e}") from e
             
     def detect_contradiction(self,
                            evidence_description: str,
@@ -195,12 +184,8 @@ class SemanticAnalysisService:
         except Exception as e:
             logger.error(f"Contradiction detection failed: {e}")
             self._stats['errors'] += 1
-            # Return conservative fallback as a dict structure
-            return {
-                'contradicts_hypothesis': False,  # Conservative: assume no contradiction
-                'confidence_score': 0.5,
-                'semantic_reasoning': "Fallback analysis due to LLM error"
-            }
+            # NO FALLBACK - LLM is required
+            raise LLMRequiredError(f"LLM required for contradiction detection: {e}") from e
             
     def generate_alternatives(self,
                             original_hypothesis: str,
@@ -235,12 +220,8 @@ class SemanticAnalysisService:
         except Exception as e:
             logger.error(f"Alternative generation failed: {e}")
             self._stats['errors'] += 1
-            # Return minimal fallback
-            return AlternativeHypothesisGeneration(
-                alternative_hypotheses=[],
-                generation_confidence=0.0,
-                universal_applicability="Error prevented generation"
-            )
+            # NO FALLBACK - LLM is required
+            raise LLMRequiredError(f"LLM required for alternative generation: {e}") from e
             
     def generate_diagnostic_tests(self,
                                  hypothesis_description: str,
@@ -271,12 +252,8 @@ class SemanticAnalysisService:
         except Exception as e:
             logger.error(f"Test generation failed: {e}")
             self._stats['errors'] += 1
-            # Return minimal fallback
-            return TestGenerationSpecification(
-                test_predictions=[],
-                generation_reasoning="Error prevented test generation",
-                universal_validity="Limited due to error"
-            )
+            # NO FALLBACK - LLM is required
+            raise LLMRequiredError(f"LLM required for test generation: {e}") from e
             
     def batch_classify_domains(self,
                               hypothesis_descriptions: List[str]) -> List[HypothesisDomainClassification]:
@@ -359,29 +336,8 @@ class SemanticAnalysisService:
         except Exception as e:
             self._stats['errors'] += 1
             logger.error(f"Comprehensive analysis failed: {e}")
-            # Return a conservative fallback
-            fallback = ComprehensiveEvidenceAnalysis(
-                primary_domain="political",
-                secondary_domains=[],
-                domain_confidence=0.3,
-                domain_reasoning="Error in analysis - conservative fallback",
-                probative_value=0.5,
-                probative_factors=["Unable to assess"],
-                evidence_quality="medium",
-                reliability_score=0.5,
-                relationship_type="neutral",
-                relationship_confidence=0.3,
-                relationship_reasoning="Error in analysis - conservative fallback",
-                van_evera_diagnostic="straw_in_wind",
-                causal_mechanisms=[],
-                temporal_markers=[],
-                actor_relationships=[],
-                key_concepts=[],
-                contextual_factors=[],
-                alternative_interpretations=[],
-                confidence_overall=0.3
-            )
-            return fallback
+            # NO FALLBACK - LLM is required
+            raise LLMRequiredError(f"LLM required for comprehensive analysis: {e}") from e
     
     def extract_all_features(self, 
                            text: str,
@@ -411,24 +367,8 @@ class SemanticAnalysisService:
         except Exception as e:
             self._stats['errors'] += 1
             logger.error(f"Feature extraction failed: {e}")
-            # Return conservative fallback
-            fallback = MultiFeatureExtraction(
-                mechanisms=[],
-                causal_chains=[],
-                primary_actors=[],
-                actor_relationships=[],
-                temporal_sequence=[],
-                duration_estimates={},
-                key_concepts=[],
-                domain_indicators=[],
-                theoretical_frameworks=[],
-                geographic_context=[],
-                institutional_context=[],
-                cultural_context=[],
-                actor_mechanism_links=[],
-                temporal_causal_links=[]
-            )
-            return fallback
+            # NO FALLBACK - LLM is required
+            raise LLMRequiredError(f"LLM required for feature extraction: {e}") from e
     
     def evaluate_evidence_against_hypotheses_batch(self,
                                                   evidence_id: str,
