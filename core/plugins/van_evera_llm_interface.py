@@ -37,7 +37,8 @@ from .van_evera_llm_schemas import (
     AlternativeHypothesisGeneration,
     TestGenerationSpecification,
     ComprehensiveEvidenceAnalysis,
-    MultiFeatureExtraction
+    MultiFeatureExtraction,
+    BatchedHypothesisEvaluation
 )
 
 logger = logging.getLogger(__name__)
@@ -715,6 +716,63 @@ class VanEveraLLMInterface:
         else:
             raise RuntimeError(f"Failed to get structured response after {max_retries} attempts")
     
+    def evaluate_evidence_against_hypotheses(self,
+                                            evidence_id: str,
+                                            evidence_text: str,
+                                            hypotheses: List[Dict[str, str]],
+                                            context: Optional[str] = None) -> BatchedHypothesisEvaluation:
+        """
+        Evaluate evidence against multiple hypotheses in a single LLM call.
+        This provides better coherence and identifies inter-hypothesis relationships.
+        
+        Args:
+            evidence_id: Unique identifier for the evidence
+            evidence_text: The evidence text to evaluate
+            hypotheses: List of dicts with 'id' and 'text' keys
+            context: Optional context information
+            
+        Returns:
+            BatchedHypothesisEvaluation with all relationships and insights
+        """
+        # Format hypotheses for prompt
+        hypotheses_formatted = "\n".join([
+            f"H{i+1} (ID: {h['id']}): {h['text']}"
+            for i, h in enumerate(hypotheses)
+        ])
+        
+        prompt = f"""
+        Evaluate this evidence against ALL hypotheses simultaneously.
+        Consider how the evidence affects each hypothesis AND how it reveals
+        relationships between hypotheses.
+        
+        EVIDENCE (ID: {evidence_id}):
+        {evidence_text}
+        
+        HYPOTHESES TO EVALUATE:
+        {hypotheses_formatted}
+        
+        CONTEXT: {context or 'Process tracing analysis'}
+        
+        For EACH hypothesis, determine:
+        1. Relationship type (supports/contradicts/neutral/ambiguous)
+        2. Confidence level (0.0-1.0)
+        3. Van Evera diagnostic type (hoop/smoking_gun/doubly_decisive/straw_in_wind)
+        4. Detailed reasoning
+        5. How this affects other hypotheses
+        
+        ALSO identify:
+        - Which hypothesis is MOST supported by this evidence
+        - Which hypotheses conflict with each other based on this evidence
+        - Which hypotheses complement/reinforce each other
+        - Overall significance of this evidence (critical/important/moderate/minor)
+        
+        IMPORTANT: Consider inter-hypothesis relationships. For example:
+        - If evidence supports H1, does that strengthen or weaken H2?
+        - Do some hypotheses exclude others?
+        - Are some hypotheses complementary explanations?
+        """
+        
+        return self._get_structured_response(prompt, BatchedHypothesisEvaluation)
 
 
 # Global interface instance

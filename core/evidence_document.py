@@ -77,52 +77,70 @@ class EvidenceDocument:
             
         return self.comprehensive_analysis
     
+    def evaluate_against_hypotheses_batch(self,
+                                         hypotheses: List[Dict[str, str]],
+                                         semantic_service) -> Dict[str, HypothesisEvaluation]:
+        """
+        Evaluate evidence against ALL hypotheses in a single LLM call.
+        This is the LLM-first approach that provides the best quality.
+        
+        Args:
+            hypotheses: List of dicts with 'id' and 'text' keys
+            semantic_service: SemanticAnalysisService instance
+            
+        Returns:
+            Dict mapping hypothesis_id to HypothesisEvaluation
+        """
+        # Filter out already evaluated hypotheses
+        new_hypotheses = [h for h in hypotheses 
+                         if h['id'] not in self.hypothesis_evaluations]
+        
+        if not new_hypotheses:
+            # All hypotheses already evaluated
+            return {h['id']: self.hypothesis_evaluations[h['id']] 
+                   for h in hypotheses}
+        
+        # Get batch evaluation from LLM
+        batch_result = semantic_service.evaluate_evidence_against_hypotheses_batch(
+            self.id,
+            self.text,
+            new_hypotheses,
+            context="Process tracing batch evaluation"
+        )
+        
+        # Process batch results into individual evaluations
+        for eval_result in batch_result.evaluations:
+            evaluation = HypothesisEvaluation(
+                hypothesis_id=eval_result.hypothesis_id,
+                hypothesis_text=next(h['text'] for h in new_hypotheses 
+                                   if h['id'] == eval_result.hypothesis_id),
+                relationship_type=eval_result.relationship_type,
+                confidence=eval_result.confidence,
+                van_evera_diagnostic=eval_result.van_evera_diagnostic,
+                reasoning=eval_result.reasoning
+            )
+            self.hypothesis_evaluations[eval_result.hypothesis_id] = evaluation
+        
+        # Return all requested evaluations
+        return {h['id']: self.hypothesis_evaluations[h['id']] 
+               for h in hypotheses}
+    
     def evaluate_against_hypothesis(self, 
                                    hypothesis_id: str,
                                    hypothesis_text: str,
                                    semantic_service) -> HypothesisEvaluation:
         """
-        Evaluate pre-analyzed evidence against a specific hypothesis.
-        Uses cached features for efficient evaluation.
-        
-        Args:
-            hypothesis_id: Unique identifier for hypothesis
-            hypothesis_text: The hypothesis text
-            semantic_service: SemanticAnalysisService instance
-            
-        Returns:
-            Hypothesis-specific evaluation
+        DEPRECATED: Use evaluate_against_hypotheses_batch for better quality.
+        Kept for backward compatibility.
         """
-        # Check if we've already evaluated this hypothesis
+        # Check if already evaluated
         if hypothesis_id in self.hypothesis_evaluations:
             return self.hypothesis_evaluations[hypothesis_id]
         
-        # Ensure we have base analysis
-        if not self.comprehensive_analysis:
-            self.analyze_once(semantic_service)
-        
-        # Now do a focused evaluation using the pre-analyzed features
-        # This is much lighter than full analysis
-        full_analysis = semantic_service.analyze_comprehensive(
-            self.text,
-            hypothesis_text,
-            context="Hypothesis-specific evaluation with pre-analyzed evidence"
-        )
-        
-        # Create lightweight evaluation result
-        evaluation = HypothesisEvaluation(
-            hypothesis_id=hypothesis_id,
-            hypothesis_text=hypothesis_text,
-            relationship_type=full_analysis.relationship_type,
-            confidence=full_analysis.relationship_confidence,
-            van_evera_diagnostic=full_analysis.van_evera_diagnostic,
-            reasoning=full_analysis.relationship_reasoning
-        )
-        
-        # Cache for future use
-        self.hypothesis_evaluations[hypothesis_id] = evaluation
-        
-        return evaluation
+        # Use batch evaluation with single hypothesis
+        hypotheses = [{'id': hypothesis_id, 'text': hypothesis_text}]
+        results = self.evaluate_against_hypotheses_batch(hypotheses, semantic_service)
+        return results[hypothesis_id]
     
     def _build_feature_index(self):
         """

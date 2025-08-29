@@ -4,7 +4,7 @@ Pydantic models for precise LLM evaluation and academic reasoning
 """
 
 from pydantic import BaseModel, Field
-from typing import Literal, List, Optional, Dict, Any
+from typing import Literal, List, Optional, Dict, Any, Tuple
 from enum import Enum
 
 
@@ -441,4 +441,64 @@ class MultiFeatureExtraction(BaseModel):
     temporal_causal_links: List[Dict[str, str]] = Field(
         default_factory=list,
         description="How timing relates to causation"
+    )
+
+
+class HypothesisEvaluationResult(BaseModel):
+    """Result of evaluating evidence against a single hypothesis"""
+    hypothesis_id: str = Field(description="Unique identifier for the hypothesis")
+    relationship_type: Literal["supports", "contradicts", "neutral", "ambiguous"]
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence in the relationship")
+    van_evera_diagnostic: Literal["hoop", "smoking_gun", "doubly_decisive", "straw_in_wind"]
+    reasoning: str = Field(description="Explanation of the relationship")
+    
+    # Inter-hypothesis insights
+    strengthens_hypotheses: List[str] = Field(
+        default_factory=list,
+        description="Other hypothesis IDs that this relationship strengthens"
+    )
+    weakens_hypotheses: List[str] = Field(
+        default_factory=list,
+        description="Other hypothesis IDs that this relationship weakens"
+    )
+
+
+class BatchedHypothesisEvaluation(BaseModel):
+    """
+    Batched evaluation of evidence against multiple hypotheses.
+    Enables understanding inter-hypothesis relationships and provides
+    more coherent analysis than separate evaluations.
+    """
+    evidence_id: str = Field(description="Identifier for the evidence being evaluated")
+    evidence_summary: str = Field(description="Brief summary of the evidence")
+    
+    # Individual evaluations
+    evaluations: List[HypothesisEvaluationResult] = Field(
+        description="Evaluation results for each hypothesis"
+    )
+    
+    # Cross-hypothesis insights
+    primary_hypothesis_supported: Optional[str] = Field(
+        default=None,
+        description="ID of hypothesis most strongly supported"
+    )
+    conflicting_hypotheses: List[Tuple[str, str]] = Field(
+        default_factory=list,
+        description="Pairs of hypotheses that conflict based on this evidence"
+    )
+    complementary_hypotheses: List[Tuple[str, str]] = Field(
+        default_factory=list,
+        description="Pairs of hypotheses that reinforce each other"
+    )
+    
+    # Overall assessment
+    evidence_significance: Literal["critical", "important", "moderate", "minor"] = Field(
+        description="Overall significance of this evidence"
+    )
+    analytical_notes: str = Field(
+        description="Overall analytical insights from batch evaluation"
+    )
+    confidence_overall: float = Field(
+        ge=0.0, le=1.0,
+        description="Overall confidence in the evaluations"
     )
