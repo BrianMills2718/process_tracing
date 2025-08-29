@@ -430,66 +430,6 @@ class SemanticAnalysisService:
             )
             return fallback
     
-    def evaluate_relationship_lightweight(self,
-                                         pre_analyzed_features: Dict[str, Any],
-                                         hypothesis_text: str) -> Dict[str, Any]:
-        """
-        Lightweight relationship evaluation using pre-analyzed features.
-        This avoids re-analyzing the evidence, using cached features instead.
-        
-        Phase 4 Optimization: Reduces redundant analysis calls by 60%.
-        
-        Args:
-            pre_analyzed_features: Pre-extracted features from evidence
-            hypothesis_text: The hypothesis to evaluate against
-            
-        Returns:
-            Lightweight evaluation with relationship and confidence
-        """
-        # Create a lightweight evaluation based on pre-analyzed features
-        # This is a heuristic approach to avoid another LLM call
-        
-        # Extract key concepts from hypothesis (simple tokenization)
-        hypothesis_concepts = set(hypothesis_text.lower().split())
-        
-        # Check overlap with pre-analyzed concepts
-        evidence_concepts = set()
-        if 'key_concepts' in pre_analyzed_features:
-            for concept in pre_analyzed_features.get('key_concepts', []):
-                evidence_concepts.update(concept.lower().split())
-        
-        # Calculate concept overlap
-        overlap = hypothesis_concepts & evidence_concepts
-        overlap_ratio = len(overlap) / max(len(hypothesis_concepts), 1)
-        
-        # Determine relationship based on overlap and domain
-        if overlap_ratio > 0.3:
-            relationship = "supports"
-            confidence = min(0.5 + overlap_ratio * 0.5, 0.9)
-        elif overlap_ratio > 0.1:
-            relationship = "neutral"
-            confidence = 0.3 + overlap_ratio * 0.4
-        else:
-            relationship = "neutral"
-            confidence = 0.3
-        
-        # Determine Van Evera type based on pre-analyzed domain
-        domain = pre_analyzed_features.get('domain', 'political')
-        if domain in ['political', 'ideological']:
-            van_evera = "hoop" if confidence > 0.6 else "straw_in_wind"
-        elif domain in ['economic', 'military']:
-            van_evera = "smoking_gun" if confidence > 0.7 else "straw_in_wind"
-        else:
-            van_evera = "straw_in_wind"
-        
-        return {
-            'relationship_type': relationship,
-            'confidence': confidence,
-            'van_evera_diagnostic': van_evera,
-            'reasoning': f"Lightweight evaluation based on {overlap_ratio:.0%} concept overlap",
-            'is_lightweight': True  # Flag to indicate this was a lightweight evaluation
-        }
-    
     def evaluate_evidence_against_hypotheses_batch(self,
                                                   evidence_id: str,
                                                   evidence_text: str,

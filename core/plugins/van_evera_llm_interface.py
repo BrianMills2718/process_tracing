@@ -38,7 +38,9 @@ from .van_evera_llm_schemas import (
     TestGenerationSpecification,
     ComprehensiveEvidenceAnalysis,
     MultiFeatureExtraction,
-    BatchedHypothesisEvaluation
+    BatchedHypothesisEvaluation,
+    ConfidenceThresholdAssessment,
+    CausalMechanismAssessment
 )
 
 logger = logging.getLogger(__name__)
@@ -221,6 +223,78 @@ class VanEveraLLMInterface:
         """
         
         return self._get_structured_response(prompt, ProcessTracingConclusion)
+    
+    def assess_confidence_thresholds(self, evidence_quality: str, hypothesis_complexity: str,
+                                    domain_context: str) -> ConfidenceThresholdAssessment:
+        """
+        Generate dynamic confidence thresholds based on context.
+        Replaces hardcoded thresholds with LLM-based assessment.
+        
+        Args:
+            evidence_quality: Description of evidence quality and characteristics
+            hypothesis_complexity: Description of hypothesis complexity
+            domain_context: Domain-specific context
+            
+        Returns:
+            Dynamic confidence thresholds and quality assessments
+        """
+        prompt = f"""
+        Assess appropriate confidence thresholds for this process tracing analysis.
+        
+        EVIDENCE QUALITY: {evidence_quality}
+        HYPOTHESIS COMPLEXITY: {hypothesis_complexity}
+        DOMAIN CONTEXT: {domain_context}
+        
+        Provide dynamic confidence thresholds considering:
+        1. Evidence quality and reliability
+        2. Domain-specific standards
+        3. Methodological rigor requirements
+        4. Uncertainty factors
+        
+        Assess causal mechanism quality:
+        - Mechanism completeness (0.0-1.0)
+        - Temporal consistency (0.0-1.0)
+        - Logical coherence baseline (0.0-1.0)
+        
+        Determine evidence independence and quality factors.
+        Provide academic justification for all assessments.
+        """
+        
+        return self._get_structured_response(prompt, ConfidenceThresholdAssessment)
+    
+    def assess_causal_mechanism(self, hypothesis_description: str, evidence_chain: str,
+                               temporal_sequence: str) -> CausalMechanismAssessment:
+        """
+        Assess causal mechanism quality and completeness.
+        Replaces hardcoded mechanism scores with semantic understanding.
+        
+        Args:
+            hypothesis_description: Description of the hypothesis
+            evidence_chain: Description of evidence chain
+            temporal_sequence: Temporal ordering of events
+            
+        Returns:
+            Comprehensive causal mechanism assessment
+        """
+        prompt = f"""
+        Assess the causal mechanism quality for this hypothesis.
+        
+        HYPOTHESIS: {hypothesis_description}
+        EVIDENCE CHAIN: {evidence_chain}
+        TEMPORAL SEQUENCE: {temporal_sequence}
+        
+        Evaluate:
+        1. Mechanism clarity and completeness (0.0-1.0)
+        2. Temporal ordering consistency (0.0-1.0)
+        3. Causal chain steps and missing links
+        4. Theoretical grounding and empirical support
+        5. Alternative explanations to consider
+        6. Overall confidence with reasoning
+        
+        Apply Van Evera process tracing standards for causal assessment.
+        """
+        
+        return self._get_structured_response(prompt, CausalMechanismAssessment)
     
     def classify_diagnostic_type(self, evidence_description: str, hypothesis_description: str,
                                current_classification: str) -> ContentBasedClassification:

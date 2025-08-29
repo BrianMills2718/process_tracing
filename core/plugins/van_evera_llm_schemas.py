@@ -98,6 +98,62 @@ class BayesianParameterEstimation(BaseModel):
     uncertainty_sources: List[str] = Field(description="Sources of uncertainty in estimates")
 
 
+class ConfidenceThresholdAssessment(BaseModel):
+    """
+    LLM-based confidence threshold assessment replacing hardcoded values.
+    Provides dynamic, context-aware confidence thresholds based on evidence quality.
+    """
+    # Dynamic confidence level thresholds
+    very_high_threshold: float = Field(ge=0.7, le=1.0, description="Minimum threshold for very high confidence")
+    high_threshold: float = Field(ge=0.6, le=0.9, description="Minimum threshold for high confidence")
+    moderate_threshold: float = Field(ge=0.4, le=0.7, description="Minimum threshold for moderate confidence")
+    low_threshold: float = Field(ge=0.2, le=0.5, description="Minimum threshold for low confidence")
+    
+    # Causal mechanism assessment
+    mechanism_completeness: float = Field(ge=0.0, le=1.0, description="Completeness of causal mechanism explanation")
+    temporal_consistency: float = Field(ge=0.0, le=1.0, description="Temporal ordering consistency score")
+    logical_coherence: float = Field(ge=0.0, le=1.0, description="Base logical coherence score")
+    
+    # Evidence quality factors
+    independence_score: float = Field(ge=0.0, le=1.0, description="Evidence source independence assessment")
+    reliability_threshold: float = Field(ge=0.0, le=1.0, description="Minimum acceptable evidence reliability")
+    strength_preference: float = Field(ge=0.0, le=1.0, description="Preferred evidence strength level")
+    
+    # Uncertainty factors
+    posterior_uncertainty: float = Field(ge=0.0, le=0.5, description="Uncertainty in posterior estimation")
+    sample_size_factor: float = Field(ge=1.0, le=10.0, description="Sample size adequacy factor")
+    
+    # Academic justification
+    threshold_reasoning: str = Field(description="Reasoning for confidence threshold selections")
+    quality_assessment: str = Field(description="Overall evidence quality assessment")
+    domain_considerations: str = Field(description="Domain-specific confidence considerations")
+    methodological_notes: str = Field(description="Methodological factors affecting confidence")
+
+
+class CausalMechanismAssessment(BaseModel):
+    """
+    LLM assessment of causal mechanism quality and completeness.
+    Replaces hardcoded mechanism scores with semantic understanding.
+    """
+    mechanism_clarity: float = Field(ge=0.0, le=1.0, description="Clarity of causal mechanism description")
+    mechanism_completeness: float = Field(ge=0.0, le=1.0, description="Completeness of causal chain")
+    temporal_ordering: float = Field(ge=0.0, le=1.0, description="Temporal consistency of causal sequence")
+    
+    # Causal chain analysis
+    causal_steps: List[str] = Field(description="Identified steps in causal chain")
+    missing_links: List[str] = Field(description="Potential missing causal links")
+    strength_assessment: str = Field(description="Assessment of causal relationship strength")
+    
+    # Academic quality
+    theoretical_grounding: float = Field(ge=0.0, le=1.0, description="Theoretical foundation strength")
+    empirical_support: float = Field(ge=0.0, le=1.0, description="Empirical evidence support level")
+    alternative_explanations: List[str] = Field(description="Alternative causal explanations to consider")
+    
+    # Confidence factors
+    overall_confidence: float = Field(ge=0.0, le=1.0, description="Overall confidence in causal mechanism")
+    confidence_reasoning: str = Field(description="Reasoning for confidence assessment")
+
+
 class CausalRelationshipAnalysis(BaseModel):
     """LLM analysis of causal relationships"""
     causal_strength: float = Field(ge=0.0, le=1.0, description="Estimated strength of causal relationship")

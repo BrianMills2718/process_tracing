@@ -165,6 +165,94 @@ def get_comprehensive_analysis(evidence_desc, hypothesis_desc, context=None):
         _comprehensive_cache[cache_key] = minimal
         return minimal
 
+def batch_evaluate_evidence_edges(evidence_id, evidence_data, hypothesis_nodes_data, G, semantic_service):
+    """
+    Batch evaluate all edges from one evidence to all hypotheses.
+    Updates existing edges with validation results.
+    
+    Args:
+        evidence_id: ID of the evidence node
+        evidence_data: Evidence node data dict
+        hypothesis_nodes_data: Dict of all hypothesis nodes
+        G: NetworkX graph to update
+        semantic_service: SemanticAnalysisService instance
+        
+    Returns:
+        Dict mapping hypothesis_id to evaluation results
+    """
+    # Find all edges from this evidence to hypotheses
+    edges_to_evaluate = []
+    hypotheses_to_evaluate = []
+    
+    for u_ev_id, v_hyp_id, edge_data in G.out_edges(evidence_id, data=True):
+        if v_hyp_id in hypothesis_nodes_data:
+            edges_to_evaluate.append((u_ev_id, v_hyp_id, edge_data))
+            hypothesis_desc = hypothesis_nodes_data[v_hyp_id].get('description', '')
+            hypotheses_to_evaluate.append({
+                'id': v_hyp_id,
+                'text': hypothesis_desc
+            })
+    
+    if not hypotheses_to_evaluate:
+        return {}
+    
+    # Get evidence description
+    evidence_desc = evidence_data.get('description', '')
+    
+    # Batch evaluate all hypotheses at once
+    try:
+        batch_result = semantic_service.evaluate_evidence_against_hypotheses_batch(
+            evidence_id,
+            evidence_desc,
+            hypotheses_to_evaluate,
+            context="Edge validation and update"
+        )
+        
+        # Process results
+        results = {}
+        for eval_result in batch_result.evaluations:
+            hyp_id = eval_result.hypothesis_id
+            
+            # Update edge properties with batch evaluation results
+            edge_data = G[evidence_id][hyp_id]
+            edge_data['probative_value'] = eval_result.confidence
+            edge_data['van_evera_diagnostic'] = eval_result.van_evera_diagnostic
+            edge_data['relationship_type'] = eval_result.relationship_type
+            edge_data['reasoning'] = eval_result.reasoning
+            
+            results[hyp_id] = {
+                'probative_value': eval_result.confidence,
+                'van_evera_diagnostic': eval_result.van_evera_diagnostic,
+                'relationship_type': eval_result.relationship_type
+            }
+        
+        # Store inter-hypothesis insights if available
+        if hasattr(batch_result, 'primary_hypothesis_supported'):
+            evidence_data['primary_hypothesis'] = batch_result.primary_hypothesis_supported
+        if hasattr(batch_result, 'conflicting_hypotheses'):
+            evidence_data['conflicting_hypotheses'] = batch_result.conflicting_hypotheses
+        if hasattr(batch_result, 'complementary_hypotheses'):
+            evidence_data['complementary_hypotheses'] = batch_result.complementary_hypotheses
+            
+        return results
+        
+    except Exception as e:
+        logger.warning(f"Batch evaluation failed, falling back to individual: {e}")
+        # Fallback to individual evaluation
+        results = {}
+        for hyp in hypotheses_to_evaluate:
+            comprehensive = get_comprehensive_analysis(
+                evidence_desc,
+                hyp['text'],
+                context="Fallback individual evaluation"
+            )
+            results[hyp['id']] = {
+                'probative_value': comprehensive.probative_value,
+                'van_evera_diagnostic': comprehensive.van_evera_diagnostic if hasattr(comprehensive, 'van_evera_diagnostic') else 'straw_in_wind',
+                'relationship_type': comprehensive.relationship_type if hasattr(comprehensive, 'relationship_type') else 'neutral'
+            }
+        return results
+
 # Evidence type classifications from Van Evera's tests (specific to this analysis module)
 EVIDENCE_TYPES_VAN_EVERA = {
     "hoop": {
@@ -909,6 +997,10 @@ def analyze_evidence(G):
             'assessment': 'Undetermined / Lacks Evidence'
         }
 
+    # Get semantic service for batch evaluation
+    from core.semantic_analysis_service import get_semantic_service
+    semantic_service = get_semantic_service()
+    
     for evidence_id, evidence_node_data in evidence_nodes_data.items():
         # Use unified access pattern for evidence descriptions
         evidence_description = (
@@ -922,63 +1014,55 @@ def analyze_evidence(G):
             evidence_node_data.get('attr_props', {}).get('type') or
             evidence_node_data.get('subtype') or  # Fallback to subtype if properties not available
             'general'  # Don't fall back to node type "Evidence" - use "general" instead
-        ) 
-
+        )
+        
+        # PHASE 4B OPTIMIZATION: Use batch evaluation for all hypotheses at once
+        batch_results = batch_evaluate_evidence_edges(
+            evidence_id, 
+            evidence_node_data, 
+            hypothesis_nodes_data, 
+            G, 
+            semantic_service
+        )
+        
+        # Process the batch results for each hypothesis
         for u_ev_id, v_hyp_id, edge_data in G.out_edges(evidence_id, data=True): 
             if v_hyp_id in hypothesis_nodes_data: 
                 edge_main_type = edge_data.get('type', '')
                 # Access properties from nested structure OR top level
                 edge_props = edge_data.get('properties', {})
-                # Get probative value using standardized access (Issue #35 Fix)
-                probative_value_from_edge = get_edge_property(edge_data, 'probative_value')
+                
                 # Get source quote from evidence node properties, not edge properties (Issue #35 Fix)
                 source_quote_from_node = get_node_property(evidence_node_data, 'source_text_quote', "")
                 source_quote_from_edge = get_edge_property(edge_data, 'source_text_quote', "")
                 # Prefer node source quote over edge source quote
                 source_quote = source_quote_from_node or source_quote_from_edge
-                probative_value_num = None
-                if isinstance(probative_value_from_edge, (int, float)):
-                    probative_value_num = float(probative_value_from_edge)
-                elif isinstance(probative_value_from_edge, str):
-                    try:
-                        probative_value_num = float(probative_value_from_edge)
-                    except ValueError:
-                        logger.warning("Could not convert probative_value to float", extra={'probative_value': probative_value_from_edge, 'edge': f'{u_ev_id}->{v_hyp_id}', 'error_category': 'data_conversion'})
-                        # Use comprehensive analysis for invalid probative value
-                        evidence_desc = evidence_node_data.get('description', '')
-                        hypothesis_desc = hypothesis_nodes_data[v_hyp_id].get('description', '')
-                        comprehensive = get_comprehensive_analysis(
-                            evidence_desc,
-                            hypothesis_desc,
-                            context="Evidence validation - conversion error"
-                        )
-                        probative_value_num = comprehensive.probative_value 
-                if probative_value_num is None: 
-                    # Use comprehensive analysis for missing probative value
-                    evidence_desc = evidence_node_data.get('description', '')
-                    hypothesis_desc = hypothesis_nodes_data[v_hyp_id].get('description', '')
-                    comprehensive = get_comprehensive_analysis(
-                        evidence_desc,
-                        hypothesis_desc,
-                        context="Evidence validation - missing value"
-                    )
-                    probative_value_num = comprehensive.probative_value
                 
-                # Issue #14 Fix: Standardize probative value to 0.0-1.0 range
-                if probative_value_num < 0.0:
-                    logger.warning("Clamping negative probative_value to 0.0", extra={'original_value': probative_value_num, 'edge': f'{u_ev_id}->{v_hyp_id}', 'error_category': 'data_validation'})
-                    # Use comprehensive analysis for negative probative value
-                    evidence_desc = evidence_node_data.get('description', '')
-                    hypothesis_desc = hypothesis_nodes_data[v_hyp_id].get('description', '')
-                    comprehensive = get_comprehensive_analysis(
-                        evidence_desc,
-                        hypothesis_desc,
-                        context="Evidence validation - negative value clamping"
-                    )
-                    probative_value_num = comprehensive.probative_value
-                elif probative_value_num > 1.0:
-                    logger.warning("Clamping probative_value to 1.0", extra={'original_value': probative_value_num, 'edge': f'{u_ev_id}->{v_hyp_id}', 'error_category': 'data_validation'})
-                    probative_value_num = 1.0 
+                # PHASE 4B: Use batch results if available, otherwise get from edge
+                if v_hyp_id in batch_results:
+                    # Use the batch evaluation results
+                    probative_value_num = batch_results[v_hyp_id]['probative_value']
+                    van_evera_type = batch_results[v_hyp_id].get('van_evera_diagnostic', 'straw_in_wind')
+                    relationship_type = batch_results[v_hyp_id].get('relationship_type', 'neutral')
+                else:
+                    # Fallback to edge data if batch didn't include this hypothesis
+                    probative_value_from_edge = get_edge_property(edge_data, 'probative_value')
+                    probative_value_num = None
+                    if isinstance(probative_value_from_edge, (int, float)):
+                        probative_value_num = float(probative_value_from_edge)
+                    elif isinstance(probative_value_from_edge, str):
+                        try:
+                            probative_value_num = float(probative_value_from_edge)
+                        except ValueError:
+                            probative_value_num = 0.5  # Default value
+                    
+                    if probative_value_num is None:
+                        probative_value_num = 0.5  # Default value
+                    
+                    # Clamp to valid range
+                    probative_value_num = max(0.0, min(1.0, probative_value_num))
+                    van_evera_type = evidence_classification_type
+                    relationship_type = 'neutral' 
                 # Generate basic reasoning for Van Evera type classification
                 van_evera_reasoning = generate_van_evera_type_reasoning(evidence_classification_type, evidence_description)
                 

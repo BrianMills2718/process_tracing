@@ -33,12 +33,13 @@ class ConfidenceType(Enum):
 
 
 class ConfidenceLevel(Enum):
-    """Standardized confidence levels with thresholds."""
-    VERY_HIGH = ("very_high", 0.85, 1.00)     # 85-100%
-    HIGH = ("high", 0.70, 0.85)               # 70-85%
-    MODERATE = ("moderate", 0.50, 0.70)       # 50-70%
-    LOW = ("low", 0.30, 0.50)                 # 30-50%
-    VERY_LOW = ("very_low", 0.00, 0.30)       # 0-30%
+    """Standardized confidence levels with dynamic thresholds."""
+    # Default thresholds - will be overridden by LLM assessment
+    VERY_HIGH = ("very_high", 0.85, 1.00)     # Dynamic upper tier
+    HIGH = ("high", 0.70, 0.85)               # Dynamic high tier
+    MODERATE = ("moderate", 0.50, 0.70)       # Dynamic moderate tier
+    LOW = ("low", 0.30, 0.50)                 # Dynamic low tier
+    VERY_LOW = ("very_low", 0.00, 0.30)       # Dynamic lower tier
     
     def __init__(self, label: str, min_threshold: float, max_threshold: float):
         self.label = label
@@ -46,8 +47,22 @@ class ConfidenceLevel(Enum):
         self.max_threshold = max_threshold
     
     @classmethod
-    def from_score(cls, score: float) -> 'ConfidenceLevel':
-        """Get confidence level from numerical score."""
+    def from_score(cls, score: float, thresholds=None) -> 'ConfidenceLevel':
+        """Get confidence level from numerical score with optional dynamic thresholds."""
+        # Use LLM-generated thresholds if available
+        if thresholds:
+            if score >= thresholds.very_high_threshold:
+                return cls.VERY_HIGH
+            elif score >= thresholds.high_threshold:
+                return cls.HIGH
+            elif score >= thresholds.moderate_threshold:
+                return cls.MODERATE
+            elif score >= thresholds.low_threshold:
+                return cls.LOW
+            else:
+                return cls.VERY_LOW
+        
+        # Fallback to default thresholds
         for level in cls:
             if level.min_threshold <= score < level.max_threshold:
                 return level
@@ -135,6 +150,64 @@ class CausalConfidenceCalculator:
     def __init__(self):
         self.evidence_quantifier = EvidenceStrengthQuantifier()
         self.assessment_history: List[ConfidenceAssessment] = []
+        self._llm_interface = None  # Lazy load LLM interface
+        self._confidence_thresholds = None  # Cache for LLM-generated thresholds
+        self._causal_assessment = None  # Cache for causal mechanism assessment
+    
+    def _get_llm_interface(self):
+        """Lazy load LLM interface"""
+        if self._llm_interface is None:
+            try:
+                from plugins.van_evera_llm_interface import get_van_evera_llm
+                self._llm_interface = get_van_evera_llm()
+            except ImportError:
+                logger.warning("LLM interface not available, using defaults")
+        return self._llm_interface
+    
+    def _update_confidence_thresholds(self, hypothesis: BayesianHypothesis, 
+                                     evidence_list: List[BayesianEvidence],
+                                     hypothesis_space: BayesianHypothesisSpace):
+        """Update confidence thresholds using LLM assessment"""
+        llm = self._get_llm_interface()
+        if llm:
+            try:
+                # Build context descriptions
+                evidence_quality = self._describe_evidence_quality(evidence_list)
+                hypothesis_complexity = self._describe_hypothesis_complexity(hypothesis, hypothesis_space)
+                domain_context = "Process tracing analysis with Van Evera methodology"
+                
+                # Get LLM assessment of appropriate thresholds
+                self._confidence_thresholds = llm.assess_confidence_thresholds(
+                    evidence_quality=evidence_quality,
+                    hypothesis_complexity=hypothesis_complexity,
+                    domain_context=domain_context
+                )
+            except Exception as e:
+                logger.debug(f"LLM threshold assessment failed, using defaults: {e}")
+                self._confidence_thresholds = None
+    
+    def _describe_evidence_quality(self, evidence_list: List[BayesianEvidence]) -> str:
+        """Generate description of evidence quality for LLM assessment"""
+        if not evidence_list:
+            return "No evidence available"
+        
+        avg_reliability = np.mean([e.reliability for e in evidence_list])
+        avg_strength = np.mean([e.strength for e in evidence_list])
+        
+        return f"""Evidence set with {len(evidence_list)} pieces.
+        Average reliability: {avg_reliability:.2f}
+        Average strength: {avg_strength:.2f}
+        Evidence types: {', '.join(set(str(e.evidence_type) for e in evidence_list))}"""
+    
+    def _describe_hypothesis_complexity(self, hypothesis: BayesianHypothesis, 
+                                       hypothesis_space: BayesianHypothesisSpace) -> str:
+        """Generate description of hypothesis complexity for LLM assessment"""
+        competitors = hypothesis_space.get_competing_hypotheses(hypothesis.hypothesis_id)
+        
+        return f"""Hypothesis with {len(hypothesis.supporting_evidence)} supporting evidence.
+        Competing hypotheses: {len(competitors)}
+        Posterior probability: {hypothesis.posterior_probability:.2f}
+        Prior probability: {hypothesis.prior_probability:.2f}"""
     
     def calculate_confidence(self, 
                            hypothesis: BayesianHypothesis,
@@ -154,6 +227,9 @@ class CausalConfidenceCalculator:
         # Get relevant evidence
         if evidence_list is None:
             evidence_list = self._get_hypothesis_evidence(hypothesis, hypothesis_space)
+        
+        # Get LLM-based confidence thresholds for this context
+        self._update_confidence_thresholds(hypothesis, evidence_list, hypothesis_space)
         
         # Calculate individual confidence components
         confidence_components = {}
@@ -212,7 +288,7 @@ class CausalConfidenceCalculator:
             hypothesis_id=hypothesis.hypothesis_id,
             overall_confidence=overall_confidence,
             confidence_components=confidence_components,
-            confidence_level=ConfidenceLevel.from_score(overall_confidence),
+            confidence_level=ConfidenceLevel.from_score(overall_confidence, self._confidence_thresholds),
             evidence_quality_score=evidence_quality_score,
             logical_coherence_score=logical_coherence_score,
             robustness_score=robustness_score,
@@ -299,11 +375,29 @@ class CausalConfidenceCalculator:
         else:
             ratio_component = 0.5
         
-        # Causal mechanism completeness (placeholder - could be enhanced)
-        mechanism_completeness = 0.7  # Default assumption
+        # Get LLM-based causal mechanism assessment
+        mechanism_completeness = 0.7  # Default fallback
+        temporal_consistency = 0.8  # Default fallback
         
-        # Temporal ordering consistency (placeholder - could be enhanced)
-        temporal_consistency = 0.8  # Default assumption
+        llm = self._get_llm_interface()
+        if llm:
+            try:
+                # Build evidence chain description
+                evidence_chain = "; ".join([e.description[:100] for e in evidence_list[:5]])
+                temporal_sequence = "Temporal ordering based on evidence sequence"
+                
+                causal_assessment = llm.assess_causal_mechanism(
+                    hypothesis_description=getattr(hypothesis, 'description', str(hypothesis)),
+                    evidence_chain=evidence_chain,
+                    temporal_sequence=temporal_sequence
+                )
+                
+                mechanism_completeness = causal_assessment.mechanism_completeness
+                temporal_consistency = causal_assessment.temporal_ordering
+                self._causal_assessment = causal_assessment
+                
+            except Exception as e:
+                logger.debug(f"LLM causal assessment failed, using defaults: {e}")
         
         # Combine components
         causal_confidence = (
@@ -355,8 +449,12 @@ class CausalConfidenceCalculator:
         else:
             separation_score = hypothesis.posterior_probability
         
-        # Combine coherence factors
-        base_coherence = 0.8  # Default high coherence assumption
+        # Get LLM-based coherence assessment
+        base_coherence = 0.8  # Default fallback
+        
+        if self._confidence_thresholds:
+            base_coherence = self._confidence_thresholds.logical_coherence
+        
         coherence_confidence = (
             base_coherence - consistency_penalties +
             0.1 * type_diversity +
@@ -385,8 +483,11 @@ class CausalConfidenceCalculator:
         strengths = [e.strength for e in evidence_list]
         strength_balance = 1.0 - abs(0.7 - np.mean(strengths))  # Prefer moderate-high strength
         
-        # Independence assumptions (more independence = more robust)
-        independence_score = 0.8  # Default assumption of mostly independent evidence
+        # Get LLM-based independence assessment
+        independence_score = 0.8  # Default fallback
+        
+        if self._confidence_thresholds:
+            independence_score = self._confidence_thresholds.independence_score
         
         # Combine robustness factors
         robustness_confidence = (
@@ -493,8 +594,11 @@ class CausalConfidenceCalculator:
         # Uncertainty from sample size (fewer evidence = higher uncertainty)
         sample_uncertainty = 1.0 / math.sqrt(max(1, len(evidence_list)))
         
-        # Uncertainty from posterior variance (placeholder)
-        posterior_uncertainty = 0.1  # Could be calculated from hypothesis space
+        # Get LLM-based posterior uncertainty
+        posterior_uncertainty = 0.1  # Default fallback
+        
+        if self._confidence_thresholds:
+            posterior_uncertainty = self._confidence_thresholds.posterior_uncertainty
         
         # Combine uncertainties
         total_uncertainty = math.sqrt(
