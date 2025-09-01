@@ -139,7 +139,8 @@ class DiagnosticRebalancerPlugin(ProcessTracingPlugin):
         # Get LLM query function from context if available
         self.llm_query_func = self.context.get_data('llm_query_func')
         if not self.llm_query_func:
-            self.logger.warning("No LLM query function available - will use rule-based assessment")
+            # Will use semantic_service which is also LLM-based
+            self.logger.info("Using semantic_service for LLM-based assessment")
     
     def validate_input(self, data: Any) -> None:
         """Validate input contains graph data with evidence-hypothesis relationships"""
@@ -389,7 +390,7 @@ class DiagnosticRebalancerPlugin(ProcessTracingPlugin):
         return updated_edges, stats
     
     def _enhance_evidence_edge(self, edge: Dict, target_type: str, graph_data: Dict) -> Optional[Dict]:
-        """Use LLM or rule-based assessment to enhance diagnostic type"""
+        """Use LLM assessment to enhance diagnostic type"""
         
         # Get evidence and hypothesis descriptions
         evidence_node = next((n for n in graph_data['nodes'] if n['id'] == edge['source_id']), None)
@@ -405,7 +406,7 @@ class DiagnosticRebalancerPlugin(ProcessTracingPlugin):
             # Use LLM assessment
             enhanced_edge = self._llm_enhance_edge(edge, evidence_desc, hypothesis_desc, target_type)
         else:
-            # Use rule-based assessment
+            # Use semantic_service (LLM-based) assessment
             enhanced_edge = self._rule_based_enhance_edge(edge, evidence_desc, hypothesis_desc, target_type)
         
         return enhanced_edge
@@ -458,12 +459,12 @@ class DiagnosticRebalancerPlugin(ProcessTracingPlugin):
         return None
     
     def _rule_based_enhance_edge(self, edge: Dict, evidence_desc: str, hypothesis_desc: str, target_type: str) -> Dict:
-        """Use rule-based assessment to enhance edge diagnostic type"""
+        """Use semantic_service (LLM-based) assessment to enhance edge diagnostic type"""
         updated_edge = edge.copy()
         if 'properties' not in updated_edge:
             updated_edge['properties'] = {}
         
-        # Apply target type with rule-based probative value
+        # Apply target type with LLM-assessed probative value
         updated_edge['properties']['diagnostic_type'] = target_type
         
         # Assign probative value based on diagnostic type

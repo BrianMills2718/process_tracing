@@ -1,5 +1,6 @@
-from process_trace_advanced import query_llm
+from .plugins.van_evera_llm_interface import VanEveraLLMInterface
 from .structured_models import MechanismAssessment
+from .llm_required import LLMRequiredError
 
 def elaborate_mechanism_with_llm(mechanism_node, linked_event_nodes, original_text_context, ontology_schema):
     """
@@ -18,6 +19,8 @@ def elaborate_mechanism_with_llm(mechanism_node, linked_event_nodes, original_te
         ontology_schema (dict): The JSON schema for Event nodes.
     Returns:
         MechanismAssessment: Structured assessment from LLM.
+    Raises:
+        LLMRequiredError: If LLM is unavailable (fail-fast behavior).
     """
     # --- Prepare LLM prompt ---
     event_descriptions = "\n".join([
@@ -51,12 +54,33 @@ Your tasks are:
 Focus on the causal logic, evidence strength, and gaps in the mechanism.
 """
     
-    # Use structured output with MechanismAssessment model
-    llm_response = query_llm(
-        text_content="",  # No main text, just use prompt
-        schema=MechanismAssessment,
-        system_instruction_text=prompt,
-        use_structured_output=True
-    )
+    # Initialize LLM interface - fail fast if unavailable
+    try:
+        llm_interface = VanEveraLLMInterface()
+    except Exception as e:
+        raise LLMRequiredError(f"Cannot initialize LLM for mechanism analysis: {e}")
     
-    return llm_response 
+    # Use VanEveraLLMInterface for structured output
+    try:
+        llm_response = llm_interface.assess_causal_mechanism(
+            hypothesis_description=prompt,
+            evidence_chain=original_text_context,
+            context="Mechanism elaboration"
+        )
+        
+        # Convert to MechanismAssessment if needed
+        if not isinstance(llm_response, MechanismAssessment):
+            # Create MechanismAssessment from the response
+            return MechanismAssessment(
+                completeness=getattr(llm_response, 'completeness', 0.5),
+                plausibility=getattr(llm_response, 'plausibility', 0.5),
+                evidence_support=getattr(llm_response, 'evidence_support', 'moderate'),
+                missing_elements=getattr(llm_response, 'missing_elements', []),
+                improvement_suggestions=getattr(llm_response, 'improvement_suggestions', []),
+                reasoning=getattr(llm_response, 'reasoning', '')
+            )
+        return llm_response
+    except LLMRequiredError:
+        raise  # Re-raise LLM errors
+    except Exception as e:
+        raise LLMRequiredError(f"Failed to analyze mechanism with LLM: {e}") 

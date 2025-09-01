@@ -7,6 +7,8 @@ import json
 import re
 from typing import Dict, List, Any, Optional
 from .base import ProcessTracingPlugin, PluginValidationError
+from ..semantic_analysis_service import get_semantic_service
+from ..llm_required import LLMRequiredError
 
 
 class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
@@ -133,14 +135,24 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
             for h in hypotheses
         ])
         
-        # Domain classification
-        domain_scores = {}
-        for domain, template_data in self.DOMAIN_QUESTION_TEMPLATES.items():
-            domain_score = sum(1 for keyword in template_data['keywords'] 
-                             if keyword.lower() in all_hypothesis_text.lower())
-            domain_scores[domain] = domain_score
-        
-        primary_domain = max(domain_scores.keys(), key=lambda d: domain_scores[d])
+        # Domain classification using LLM
+        try:
+            semantic_service = get_semantic_service()
+            domain_result = semantic_service.classify_hypothesis_domain(
+                hypothesis_description=all_hypothesis_text,
+                allowed_domains=list(self.DOMAIN_QUESTION_TEMPLATES.keys())
+            )
+            primary_domain = domain_result.primary_domain
+            
+            # Build domain scores from LLM result for compatibility
+            domain_scores = {domain: 0 for domain in self.DOMAIN_QUESTION_TEMPLATES.keys()}
+            domain_scores[primary_domain] = 1
+            if hasattr(domain_result, 'secondary_domains'):
+                for secondary in domain_result.secondary_domains:
+                    if secondary in domain_scores:
+                        domain_scores[secondary] = 0.5
+        except Exception as e:
+            raise LLMRequiredError(f"LLM required for domain classification: {e}")
         
         # Extract key phenomenon and context
         phenomenon = self._extract_phenomenon(hypotheses)
@@ -151,7 +163,7 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
         complexity_indicators = {
             'multiple_hypotheses': len(hypotheses) > 3,
             'cross_domain_content': len([score for score in domain_scores.values() if score > 0]) > 2,
-            'causal_complexity': 'mechanism' in all_hypothesis_text.lower() or 'cause' in all_hypothesis_text.lower(),
+            'causal_complexity': self._assess_causal_complexity(all_hypothesis_text),
             'temporal_complexity': self._assess_temporal_complexity(all_hypothesis_text)
         }
         
@@ -248,6 +260,19 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
         else:
             return "the phenomenon under investigation"
     
+    def _assess_causal_complexity(self, text: str) -> bool:
+        """Assess if the text has causal complexity using LLM"""
+        try:
+            semantic_service = get_semantic_service()
+            assessment = semantic_service.assess_probative_value(
+                evidence_description=text,
+                hypothesis_description="This text describes complex causal mechanisms and relationships",
+                context="Assessing causal complexity"
+            )
+            return assessment.confidence_score > 0.5
+        except Exception:
+            raise LLMRequiredError("LLM required for causal complexity assessment")
+    
     def _assess_temporal_complexity(self, text: str) -> bool:
         """Assess if the text has temporal complexity using semantic analysis"""
         from core.semantic_analysis_service import get_semantic_service
@@ -301,59 +326,102 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
             context="Determining temporal timeframe"
         )
         
-        if temporal_assessment.confidence_score > 0.7:
-            return "the revolutionary period"
-        elif 'early' in all_text.lower() or 'initial' in all_text.lower():
-            return "the early phase of development"
-        elif any(term in all_text.lower() for term in ['development', 'trajectory', 'process']):
-            return "the developmental period"
-        else:
+        # Use LLM to classify temporal period
+        try:
+            temporal_classification = semantic_service.classify_hypothesis_domain(
+                hypothesis_description=all_text,
+                allowed_domains=["revolutionary period", "early phase", "developmental period", "contemporary period", "historical period"]
+            )
+            
+            if temporal_assessment.confidence_score > 0.7:
+                return "the revolutionary period"
+            elif temporal_classification.primary_domain == "early phase":
+                return "the early phase of development"
+            elif temporal_classification.primary_domain == "developmental period":
+                return "the developmental period"
+            else:
+                return "the relevant timeframe"
+        except Exception:
             return "the relevant timeframe"
     
     def _extract_key_concepts(self, text: str) -> List[str]:
-        """Extract key analytical concepts from hypothesis text"""
-        concepts = []
-        
-        # Look for theoretical concepts
-        theoretical_concepts = [
-            'mechanism', 'process', 'institution', 'structure', 'agency', 'power',
-            'interest', 'ideology', 'culture', 'network', 'resource', 'opportunity',
-            'constraint', 'mobilization', 'legitimacy', 'authority', 'resistance'
-        ]
-        
-        for concept in theoretical_concepts:
-            if concept in text.lower():
-                concepts.append(concept)
-        
-        return concepts[:10]  # Return top 10 concepts
+        """Extract key analytical concepts from hypothesis text using LLM"""
+        try:
+            semantic_service = get_semantic_service()
+            # Use LLM to extract key concepts
+            from ..plugins.van_evera_llm_interface import VanEveraLLMInterface
+            llm_interface = VanEveraLLMInterface()
+            
+            # Extract features which includes key concepts
+            features = llm_interface.extract_all_features(
+                text=text,
+                context="Extract key theoretical and analytical concepts"
+            )
+            
+            # Get concepts from the features
+            if hasattr(features, 'key_concepts'):
+                return features.key_concepts[:10]
+            elif hasattr(features, 'entities'):
+                # Fallback to entities if no key_concepts
+                return [e for e in features.entities if len(e) > 3][:10]
+            else:
+                return []
+        except Exception:
+            # If LLM fails, raise error instead of fallback
+            raise LLMRequiredError("LLM required for concept extraction")
     
     def _detect_causal_language(self, text: str) -> bool:
-        """Detect presence of causal language in hypotheses"""
-        causal_indicators = [
-            'because', 'due to', 'caused by', 'result of', 'led to', 'resulted in',
-            'mechanism', 'process', 'explains', 'accounts for', 'drives', 'enables'
-        ]
-        
-        return any(indicator in text.lower() for indicator in causal_indicators)
+        """Detect presence of causal language in hypotheses using LLM"""
+        try:
+            semantic_service = get_semantic_service()
+            # Ask LLM to assess if text contains causal relationships
+            assessment = semantic_service.assess_probative_value(
+                evidence_description=text,
+                hypothesis_description="This text contains explicit causal claims or mechanisms",
+                context="Detecting causal language and relationships"
+            )
+            # High confidence indicates causal language present
+            return assessment.confidence_score > 0.6
+        except Exception:
+            raise LLMRequiredError("LLM required for causal language detection")
     
     def _determine_scope(self, context: str, timeframe: str) -> str:
-        """Determine analytical scope based on context and timeframe"""
-        if 'colonial' in context.lower():
-            return f"Colonial-level analysis spanning {timeframe}"
-        elif 'local' in context.lower():
-            return f"Local community analysis within {timeframe}"
-        else:
-            return f"Comparative analysis across {timeframe}"
+        """Determine analytical scope based on context and timeframe using LLM"""
+        try:
+            semantic_service = get_semantic_service()
+            # Use LLM to classify the scope
+            scope_result = semantic_service.classify_hypothesis_domain(
+                hypothesis_description=context,
+                allowed_domains=["colonial", "local", "national", "international", "comparative"]
+            )
+            
+            if scope_result.primary_domain == "colonial":
+                return f"Colonial-level analysis spanning {timeframe}"
+            elif scope_result.primary_domain == "local":
+                return f"Local community analysis within {timeframe}"
+            else:
+                return f"Comparative analysis across {timeframe}"
+        except Exception:
+            return f"Comprehensive analysis across {timeframe}"
     
     def _assess_importance(self, phenomenon: str, analysis: Dict) -> str:
-        """Assess academic importance of the research question"""
-        if phenomenon in ['revolution', 'transformation']:
-            return "High theoretical importance for understanding large-scale political change"
-        elif phenomenon in ['resistance', 'mobilization']:
-            return "Significant importance for collective action and social movement theory"
-        elif phenomenon in ['formation', 'development']:
-            return "Important for institutional development and state formation theory"
-        else:
+        """Assess academic importance of the research question using LLM"""
+        try:
+            semantic_service = get_semantic_service()
+            # Use LLM to assess the theoretical importance
+            importance_assessment = semantic_service.assess_probative_value(
+                evidence_description=f"Research on {phenomenon}",
+                hypothesis_description="This phenomenon has high theoretical importance for academic research",
+                context=f"Assessing importance of studying {phenomenon}"
+            )
+            
+            if importance_assessment.confidence_score > 0.7:
+                return "High theoretical importance for understanding large-scale political change"
+            elif importance_assessment.confidence_score > 0.5:
+                return "Significant importance for collective action and social movement theory"
+            else:
+                return "Important for institutional development and state formation theory"
+        except Exception:
             return "Contributes to understanding of historical causation and process tracing methodology"
     
     def _calculate_complexity_level(self, analysis: Dict) -> str:
