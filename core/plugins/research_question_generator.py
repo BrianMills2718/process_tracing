@@ -138,9 +138,9 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
         # Domain classification using LLM
         try:
             semantic_service = get_semantic_service()
-            domain_result = semantic_service.classify_hypothesis_domain(
+            domain_result = semantic_service.classify_domain(
                 hypothesis_description=all_hypothesis_text,
-                allowed_domains=list(self.DOMAIN_QUESTION_TEMPLATES.keys())
+                context="Classifying research domain"
             )
             primary_domain = domain_result.primary_domain
             
@@ -328,9 +328,9 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
         
         # Use LLM to classify temporal period
         try:
-            temporal_classification = semantic_service.classify_hypothesis_domain(
+            temporal_classification = semantic_service.classify_domain(
                 hypothesis_description=all_text,
-                allowed_domains=["revolutionary period", "early phase", "developmental period", "contemporary period", "historical period"]
+                context="Classifying temporal period"
             )
             
             if temporal_assessment.confidence_score > 0.7:
@@ -390,9 +390,9 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
         try:
             semantic_service = get_semantic_service()
             # Use LLM to classify the scope
-            scope_result = semantic_service.classify_hypothesis_domain(
+            scope_result = semantic_service.classify_domain(
                 hypothesis_description=context,
-                allowed_domains=["colonial", "local", "national", "international", "comparative"]
+                context="Determining analytical scope"
             )
             
             if scope_result.primary_domain == "colonial":
