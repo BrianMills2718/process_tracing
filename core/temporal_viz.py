@@ -891,13 +891,33 @@ def test_temporal_visualizer():
     tg.add_temporal_node(node1)
     tg.add_temporal_node(node2)
     
-    # Add edge
+    # Add edge with LLM-based confidence assessment
+    evidence_text = "Announcement triggered public reaction"
+    
+    try:
+        from core.semantic_analysis_service import get_semantic_service
+        from core.llm_required import LLMRequiredError
+        
+        semantic_service = get_semantic_service()
+        confidence_result = semantic_service.assess_probative_value(
+            evidence_description=evidence_text,
+            hypothesis_description="Temporal relationship demonstrates causal sequence between policy announcement and public reaction",
+            context="Temporal edge confidence assessment for policy announcement → public reaction"
+        )
+        
+        if not hasattr(confidence_result, 'probative_value'):
+            raise LLMRequiredError("Confidence assessment missing probative_value - invalid LLM response")
+            
+        temporal_confidence = confidence_result.probative_value
+    except Exception as e:
+        raise LLMRequiredError(f"Cannot assess temporal confidence without LLM: {e}")
+    
     edge = TemporalEdge(
         source="policy_announcement",
         target="public_reaction",
         temporal_relation=TemporalRelation.BEFORE,
-        confidence=0.9,
-        evidence_text="Announcement triggered public reaction"
+        confidence=temporal_confidence,
+        evidence_text=evidence_text
     )
     
     tg.add_temporal_edge(edge)
@@ -912,6 +932,27 @@ def test_temporal_visualizer():
         plausibility_score=0.6
     )
     
+    # Assess juncture confidence using LLM
+    try:
+        from core.semantic_analysis_service import get_semantic_service
+        from core.llm_required import LLMRequiredError
+        
+        semantic_service = get_semantic_service()
+        juncture_evidence = "Decision meeting minutes show critical policy decision juncture with immediate announcement pathway"
+        
+        juncture_confidence_result = semantic_service.assess_probative_value(
+            evidence_description=juncture_evidence,
+            hypothesis_description="Critical juncture represents decisive decision point with significant counterfactual impact",
+            context="Critical juncture confidence assessment for policy decision point"
+        )
+        
+        if not hasattr(juncture_confidence_result, 'probative_value'):
+            raise LLMRequiredError("Juncture confidence assessment missing probative_value - invalid LLM response")
+            
+        juncture_confidence = juncture_confidence_result.probative_value
+    except Exception as e:
+        raise LLMRequiredError(f"Cannot assess juncture confidence without LLM: {e}")
+    
     juncture = CriticalJuncture(
         juncture_id="policy_decision_point",
         timestamp=datetime(2020, 1, 14),
@@ -925,12 +966,32 @@ def test_temporal_visualizer():
         actual_pathway="Immediate announcement",
         timing_sensitivity=0.8,
         counterfactual_impact=0.7,
-        confidence=0.9,
+        confidence=juncture_confidence,
         evidence_support=["Decision meeting minutes"],
         temporal_window=(datetime(2020, 1, 13), datetime(2020, 1, 15))
     )
     
-    # Create test process durations
+    # Create test process durations with LLM-based duration confidence
+    try:
+        from core.semantic_analysis_service import get_semantic_service
+        from core.llm_required import LLMRequiredError
+        
+        semantic_service = get_semantic_service()
+        duration_evidence = "Policy announcement process completed in 2 hours during initiation phase with rapid speed"
+        
+        duration_confidence_result = semantic_service.assess_probative_value(
+            evidence_description=duration_evidence,
+            hypothesis_description="Process duration estimation demonstrates reliable temporal measurement and timing accuracy",
+            context="Process duration confidence assessment for policy announcement timing"
+        )
+        
+        if not hasattr(duration_confidence_result, 'probative_value'):
+            raise LLMRequiredError("Duration confidence assessment missing probative_value - invalid LLM response")
+            
+        assessed_duration_confidence = duration_confidence_result.probative_value
+    except Exception as e:
+        raise LLMRequiredError(f"Cannot assess duration confidence without LLM: {e}")
+    
     duration1 = ProcessDuration(
         process_id="policy_announcement",
         start_time=datetime(2020, 1, 15),
@@ -938,7 +999,7 @@ def test_temporal_visualizer():
         duration=timedelta(hours=2),
         process_speed=ProcessSpeed.RAPID,
         temporal_phase=TemporalPhase.INITIATION,
-        duration_confidence=0.9,
+        duration_confidence=assessed_duration_confidence,
         relative_duration=0.5,
         duration_percentile=0.3,
         efficiency_score=0.8,

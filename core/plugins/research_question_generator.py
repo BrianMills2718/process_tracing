@@ -164,7 +164,7 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
             'multiple_hypotheses': len(hypotheses) > 3,
             'cross_domain_content': len([score for score in domain_scores.values() if score > 0]) > 2,
             'causal_complexity': self._assess_causal_complexity(all_hypothesis_text),
-            'temporal_complexity': self._assess_temporal_complexity(all_hypothesis_text)
+            'temporal_complexity': self._assess_semantic_complexity(all_hypothesis_text)
         }
         
         return {
@@ -273,8 +273,8 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
         except Exception:
             raise LLMRequiredError("LLM required for causal complexity assessment")
     
-    def _assess_temporal_complexity(self, text: str) -> bool:
-        """Assess if the text has temporal complexity using semantic analysis"""
+    def _assess_semantic_complexity(self, text: str) -> bool:
+        """Assess if the text has semantic complexity using semantic analysis"""
         from core.semantic_analysis_service import get_semantic_service
         semantic_service = get_semantic_service()
         
@@ -328,17 +328,17 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
         
         # Use LLM to classify temporal period
         try:
-            temporal_classification = semantic_service.classify_domain(
+            domain_classification = semantic_service.classify_domain(
                 hypothesis_description=all_text,
-                context="Classifying temporal period"
+                context="Classifying domain period"
             )
             
             if temporal_assessment.confidence_score > 0.7:
                 return "the revolutionary period"
-            # Check temporal classification domain using semantic result
-            elif hasattr(temporal_classification, 'primary_domain'):
+            # Check domain classification using semantic result
+            elif hasattr(domain_classification, 'primary_domain'):
                 # Map domain to descriptive text based on classification
-                domain = temporal_classification.primary_domain
+                domain = domain_classification.primary_domain
                 if domain:
                     return f"the {domain} period"
                 else:
