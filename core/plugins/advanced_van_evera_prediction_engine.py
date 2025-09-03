@@ -12,8 +12,9 @@ from .base import ProcessTracingPlugin, PluginValidationError
 import logging
 
 # Import LLM interface for semantic analysis - REQUIRED
-from .van_evera_llm_interface import get_van_evera_llm
-from ..llm_required import require_llm
+from .van_evera_llm_interface import VanEveraLLMInterface
+from ..llm_required import LLMRequiredError
+from ..semantic_analysis_service import get_semantic_service
 
 logger = logging.getLogger(__name__)
 
@@ -670,19 +671,47 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
         return relevant_evidence[:10]  # Top 10 most relevant pieces
     
     def _calculate_domain_relevance(self, domain: PredictionDomain, evidence_text: str) -> int:
-        """Calculate domain-specific relevance score for evidence"""
-        domain_keywords = {
-            PredictionDomain.POLITICAL: ['government', 'assembly', 'political', 'representation', 'law'],
-            PredictionDomain.ECONOMIC: ['trade', 'merchant', 'economic', 'tax', 'commercial', 'profit'],
-            PredictionDomain.SOCIAL: ['popular', 'people', 'crowd', 'social', 'class', 'community'],
-            PredictionDomain.MILITARY: ['military', 'army', 'war', 'battle', 'soldier', 'fight'],
-            PredictionDomain.IDEOLOGICAL: ['ideas', 'principle', 'philosophy', 'belief', 'ideology'],
-            PredictionDomain.INSTITUTIONAL: ['institution', 'organization', 'structure', 'system'],
-            PredictionDomain.CULTURAL: ['culture', 'tradition', 'custom', 'cultural', 'heritage']
-        }
-        
-        keywords = domain_keywords.get(domain, [])
-        return sum(1 for keyword in keywords if keyword in evidence_text)
+        """Calculate domain-specific relevance score for evidence using LLM"""
+        try:
+            # Use semantic service for domain relevance assessment
+            semantic_service = get_semantic_service()
+            
+            # Classify the domain of the evidence text
+            domain_result = semantic_service.classify_domain(evidence_text)
+            
+            # Check if evidence domain matches prediction domain
+            if hasattr(domain_result, 'primary_domain'):
+                evidence_domain = domain_result.primary_domain.lower()
+                prediction_domain = domain.value.lower()
+                
+                # Exact match scores highest
+                if evidence_domain == prediction_domain:
+                    return 5
+                
+                # Check secondary domains if available
+                if hasattr(domain_result, 'secondary_domains'):
+                    if prediction_domain in [d.lower() for d in domain_result.secondary_domains]:
+                        return 3
+                
+                # Related domains get partial score
+                related_domains = {
+                    'political': ['ideological', 'institutional'],
+                    'economic': ['social', 'institutional'],
+                    'social': ['cultural', 'economic'],
+                    'military': ['political', 'institutional'],
+                    'ideological': ['political', 'cultural'],
+                    'institutional': ['political', 'economic'],
+                    'cultural': ['social', 'ideological']
+                }
+                
+                if prediction_domain in related_domains.get(evidence_domain, []):
+                    return 2
+                    
+            return 0  # No domain match
+            
+        except Exception:
+            # If LLM fails, return minimal score
+            return 0
     
     def _perform_sophisticated_prediction_evaluation(self, prediction: SophisticatedPrediction,
                                                    relevant_evidence: List[Dict], 
@@ -815,29 +844,67 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
         total_evidence = qualitative_eval['total_relevant_evidence']
         indicator_matches = qualitative_eval['evidence_indicator_matches']
         
-        # Enhanced decision logic based on Van Evera methodology
-        if prediction.diagnostic_type == 'hoop':
-            # Hoop tests: necessary conditions
-            test_result = "PASS" if (strong_evidence >= 2 or indicator_matches >= 4) else "FAIL"
-            confidence = 0.8 if strong_evidence >= 3 else 0.6
-            reasoning = f"Hoop test: {strong_evidence} strong evidence pieces, {indicator_matches} indicator matches"
+        # Use LLM for confidence assessment based on evidence quality
+        try:
+            # Prepare context for LLM evaluation
+            evaluation_context = f"""
+            Diagnostic Type: {prediction.diagnostic_type}
+            Strong Evidence Count: {strong_evidence}
+            Indicator Matches: {indicator_matches}
+            Total Evidence: {total_evidence}
+            Evidence Strength: {evidence_strength}
+            """
             
-        elif prediction.diagnostic_type == 'smoking_gun':
-            # Smoking gun tests: sufficient conditions  
-            test_result = "PASS" if (strong_evidence >= 1 and indicator_matches >= 2) else "INCONCLUSIVE"
-            confidence = 0.9 if strong_evidence >= 2 else 0.7
-            reasoning = f"Smoking gun test: {strong_evidence} strong evidence, {indicator_matches} indicators"
+            # Get semantic service for LLM-based confidence assessment
+            semantic_service = get_semantic_service()
             
-        elif prediction.diagnostic_type == 'doubly_decisive':
-            # Doubly decisive: both necessary and sufficient
-            test_result = "PASS" if (strong_evidence >= 2 and indicator_matches >= 5) else "FAIL"
-            confidence = 0.9 if test_result == "PASS" else 0.5
-            reasoning = f"Doubly decisive test: {strong_evidence} strong evidence, {indicator_matches} indicators"
-            
-        else:
-            test_result = "INCONCLUSIVE"
-            confidence = 0.5
-            reasoning = "Standard evaluation applied"
+            # Determine test result based on Van Evera logic
+            if prediction.diagnostic_type == 'hoop':
+                # Hoop tests: necessary conditions
+                test_result = "PASS" if (strong_evidence >= 2 or indicator_matches >= 4) else "FAIL"
+                # Use LLM to assess confidence based on evidence quality
+                confidence_assessment = semantic_service.assess_probative_value(
+                    evidence_description=f"Hoop test with {strong_evidence} strong evidence pieces and {indicator_matches} indicator matches",
+                    hypothesis_description=prediction.prediction_text,
+                    context=evaluation_context
+                )
+                confidence = confidence_assessment.probative_value if hasattr(confidence_assessment, 'probative_value') else 0.7
+                reasoning = f"Hoop test: {strong_evidence} strong evidence pieces, {indicator_matches} indicator matches"
+                
+            elif prediction.diagnostic_type == 'smoking_gun':
+                # Smoking gun tests: sufficient conditions  
+                test_result = "PASS" if (strong_evidence >= 1 and indicator_matches >= 2) else "INCONCLUSIVE"
+                confidence_assessment = semantic_service.assess_probative_value(
+                    evidence_description=f"Smoking gun test with {strong_evidence} strong evidence and {indicator_matches} indicators",
+                    hypothesis_description=prediction.prediction_text,
+                    context=evaluation_context
+                )
+                confidence = confidence_assessment.probative_value if hasattr(confidence_assessment, 'probative_value') else 0.7
+                reasoning = f"Smoking gun test: {strong_evidence} strong evidence, {indicator_matches} indicators"
+                
+            elif prediction.diagnostic_type == 'doubly_decisive':
+                # Doubly decisive: both necessary and sufficient
+                test_result = "PASS" if (strong_evidence >= 2 and indicator_matches >= 5) else "FAIL"
+                confidence_assessment = semantic_service.assess_probative_value(
+                    evidence_description=f"Doubly decisive test with {strong_evidence} strong evidence and {indicator_matches} indicators",
+                    hypothesis_description=prediction.prediction_text,
+                    context=evaluation_context
+                )
+                confidence = confidence_assessment.probative_value if hasattr(confidence_assessment, 'probative_value') else 0.7
+                reasoning = f"Doubly decisive test: {strong_evidence} strong evidence, {indicator_matches} indicators"
+                
+            else:
+                test_result = "INCONCLUSIVE"
+                confidence_assessment = semantic_service.assess_probative_value(
+                    evidence_description=f"Standard test with {strong_evidence} evidence pieces",
+                    hypothesis_description=prediction.prediction_text,
+                    context=evaluation_context
+                )
+                confidence = confidence_assessment.probative_value if hasattr(confidence_assessment, 'probative_value') else 0.5
+                reasoning = "Standard evaluation applied"
+                
+        except Exception as e:
+            raise LLMRequiredError(f"Cannot assess confidence without LLM: {e}")
         
         # Determine elimination implications
         elimination_implications = []
@@ -941,12 +1008,25 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
         
         # Base result from content analysis
         base_result = content_evaluation['preliminary_result']
-        base_confidence = 0.6
+        # Use LLM to assess base confidence instead of hardcoding
+        try:
+            from core.semantic_analysis_service import get_semantic_service
+            semantic_service = get_semantic_service()
+            # Create context for confidence assessment
+            context_desc = f"Content evaluation result: {base_result}"
+            assessment = semantic_service.assess_probative_value(
+                evidence_description="Base content analysis",
+                hypothesis_description=context_desc,
+                context="Prediction evaluation confidence assessment"
+            )
+            base_confidence = assessment.probative_value if hasattr(assessment, 'probative_value') else 0.5
+        except Exception as e:
+            raise LLMRequiredError(f"Cannot assess base confidence without LLM: {e}")
         
         # Enhance with LLM if available
         if llm_evaluation:
             llm_result = llm_evaluation.get('test_result', base_result)
-            llm_confidence = llm_evaluation.get('confidence_score', 0.6)
+            llm_confidence = llm_evaluation.get('confidence_score', base_confidence)
             
             # Weighted combination (60% LLM, 40% content analysis)
             final_result = llm_result

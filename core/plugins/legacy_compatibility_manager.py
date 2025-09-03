@@ -7,6 +7,8 @@ import json
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from .base import ProcessTracingPlugin, PluginValidationError
+from ..semantic_analysis_service import get_semantic_service
+from ..llm_required import LLMRequiredError
 
 
 class LegacyCompatibilityManagerPlugin(ProcessTracingPlugin):
@@ -428,15 +430,27 @@ class LegacyCompatibilityManagerPlugin(ProcessTracingPlugin):
         # Length bonus (longer descriptions often more developed)
         strength_score += min(len(description) / 500.0, 0.3)
         
-        # Theoretical sophistication indicators
-        theoretical_terms = ['mechanism', 'process', 'theory', 'causal', 'systematic', 'institutional']
-        theory_score = sum(1 for term in theoretical_terms if term.lower() in description.lower())
-        strength_score += min(theory_score * 0.1, 0.2)
-        
-        # Evidence language indicators
-        evidence_terms = ['evidence', 'support', 'confirm', 'demonstrate', 'indicate']
-        evidence_score = sum(1 for term in evidence_terms if term.lower() in description.lower())
-        strength_score += min(evidence_score * 0.1, 0.2)
+        # Use semantic service to assess theoretical sophistication and evidence language
+        try:
+            semantic_service = get_semantic_service()
+            
+            # Assess theoretical sophistication through semantic analysis
+            theory_assessment = semantic_service.assess_probative_value(
+                evidence_description="Theoretical sophistication analysis",
+                hypothesis_description=description,
+                context="Assessing theoretical depth and evidence language"
+            )
+            
+            # Add scores based on semantic assessment
+            if hasattr(theory_assessment, 'probative_value'):
+                # Scale probative value to match original scoring
+                strength_score += min(theory_assessment.probative_value * 0.4, 0.4)
+            else:
+                # Minimal score if assessment fails
+                strength_score += 0.1
+                
+        except Exception as e:
+            raise LLMRequiredError(f"Cannot assess hypothesis strength without LLM: {e}")
         
         # Prefer hypothesis over alternative explanation in legacy format
         if hypothesis_item['id'].startswith('H_'):
@@ -512,22 +526,30 @@ class LegacyCompatibilityManagerPlugin(ProcessTracingPlugin):
             for h in hypotheses
         ])
         
-        # Simple pattern matching for research question generation
-        if 'revolution' in all_hypothesis_text.lower() or 'revolutionary' in all_hypothesis_text.lower():
-            description = "What factors explain the emergence and success of revolutionary resistance movements?"
-            domain = "political"
-        elif 'resistance' in all_hypothesis_text.lower():
-            description = "What mechanisms account for the development of resistance movements?"
-            domain = "political"
-        elif 'economic' in all_hypothesis_text.lower():
-            description = "What economic factors drive political and social change?"
-            domain = "economic"
-        elif 'political' in all_hypothesis_text.lower():
-            description = "What political processes explain institutional change and conflict?"
-            domain = "political"
-        else:
-            description = "What causal mechanisms explain the phenomenon under investigation?"
-            domain = "general"
+        # Use semantic service for domain classification
+        try:
+            semantic_service = get_semantic_service()
+            domain_result = semantic_service.classify_domain(all_hypothesis_text)
+            domain = domain_result.primary_domain if hasattr(domain_result, 'primary_domain') else 'general'
+            
+            # Generate research question based on classified domain
+            # Use semantic analysis to check for specific themes within political domain
+            if domain == "political":
+                # For now, generate comprehensive political question
+                # Full theme analysis would require additional LLM calls
+                description = "What political factors explain the emergence and development of resistance movements and institutional change?"
+            elif domain == "economic":
+                description = "What economic factors drive political and social change?"
+            elif domain == "social":
+                description = "What social mechanisms explain collective action and institutional change?"
+            elif domain == "military":
+                description = "What military factors and strategic considerations explain conflict outcomes?"
+            elif domain == "ideological":
+                description = "What ideological frameworks and belief systems drive political action?"
+            else:
+                description = "What causal mechanisms explain the phenomenon under investigation?"
+        except Exception as e:
+            raise LLMRequiredError(f"Cannot generate research question without LLM: {e}")
         
         return {
             'node': {

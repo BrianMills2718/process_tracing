@@ -12,6 +12,7 @@ from dataclasses import dataclass, asdict
 from .base import ProcessTracingPlugin, PluginValidationError, PluginExecutionError
 from ..structured_models import EvidenceAssessment
 from ..enhance_evidence import refine_evidence_assessment_with_llm
+from ..llm_required import LLMRequiredError
 
 
 @dataclass
@@ -397,7 +398,7 @@ class DiagnosticRebalancerPlugin(ProcessTracingPlugin):
         hypothesis_node = next((n for n in graph_data['nodes'] if n['id'] == edge['target_id']), None)
         
         if not evidence_node or not hypothesis_node:
-            return None
+            raise LLMRequiredError("Cannot enhance edge: missing evidence or hypothesis node")
         
         evidence_desc = evidence_node.get('properties', {}).get('description', edge['source_id'])
         hypothesis_desc = hypothesis_node.get('properties', {}).get('description', edge['target_id'])
@@ -453,10 +454,10 @@ class DiagnosticRebalancerPlugin(ProcessTracingPlugin):
                 
                 return updated_edge
                 
+        except LLMRequiredError:
+            raise  # Re-raise LLM errors
         except Exception as e:
-            self.logger.warning(f"LLM enhancement failed: {e}")
-            
-        return None
+            raise LLMRequiredError(f"LLM enhancement failed: {e}")
     
     def _rule_based_enhance_edge(self, edge: Dict, evidence_desc: str, hypothesis_desc: str, target_type: str) -> Dict:
         """Use semantic_service (LLM-based) assessment to enhance edge diagnostic type"""

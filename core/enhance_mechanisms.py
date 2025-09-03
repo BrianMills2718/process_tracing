@@ -65,7 +65,7 @@ Focus on the causal logic, evidence strength, and gaps in the mechanism.
         llm_response = llm_interface.assess_causal_mechanism(
             hypothesis_description=prompt,
             evidence_chain=original_text_context,
-            context="Mechanism elaboration"
+            temporal_sequence="Sequential mechanism steps"
         )
         
         # Convert to MechanismAssessment if needed

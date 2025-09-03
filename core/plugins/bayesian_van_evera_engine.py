@@ -28,8 +28,10 @@ except ImportError:
     except ImportError:
         PGMPY_AVAILABLE = False
 
-from .van_evera_llm_interface import get_van_evera_llm
+from .van_evera_llm_interface import VanEveraLLMInterface
 from .base import ProcessTracingPlugin, PluginValidationError
+from ..semantic_analysis_service import get_semantic_service
+from ..llm_required import LLMRequiredError
 
 logger = logging.getLogger(__name__)
 

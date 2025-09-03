@@ -335,10 +335,14 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
             
             if temporal_assessment.confidence_score > 0.7:
                 return "the revolutionary period"
-            elif temporal_classification.primary_domain == "early phase":
-                return "the early phase of development"
-            elif temporal_classification.primary_domain == "developmental period":
-                return "the developmental period"
+            # Check temporal classification domain using semantic result
+            elif hasattr(temporal_classification, 'primary_domain'):
+                # Map domain to descriptive text based on classification
+                domain = temporal_classification.primary_domain
+                if domain:
+                    return f"the {domain} period"
+                else:
+                    return "the relevant timeframe"
             else:
                 return "the relevant timeframe"
         except Exception:

@@ -23,8 +23,10 @@ try:
 except ImportError:
     DOWHY_AVAILABLE = False
 
-from .van_evera_llm_interface import get_van_evera_llm
+from .van_evera_llm_interface import VanEveraLLMInterface
 from .base import ProcessTracingPlugin, PluginValidationError
+from ..semantic_analysis_service import get_semantic_service
+from ..llm_required import LLMRequiredError
 
 logger = logging.getLogger(__name__)
 
@@ -205,24 +207,14 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
                     variable_type='outcome',  # Hypotheses typically outcomes
                     description=hyp_desc,
                     estimated_effect_size=causal_analysis.causal_strength,
-                    llm_confidence=0.8  # High confidence for hypotheses
+                    llm_confidence=causal_analysis.confidence_score if hasattr(causal_analysis, 'confidence_score') else 0.7
                 )
                 
                 variables.append(variable)
                 
             except Exception as e:
-                self.logger.warning(f"Causal analysis failed for hypothesis {hypothesis['id']}: {e}")
-                
-                # Fallback variable creation
-                variable = CausalVariable(
-                    variable_id=hypothesis['id'],
-                    variable_name=hyp_desc[:50],
-                    variable_type='outcome',
-                    description=hyp_desc,
-                    estimated_effect_size=0.5,
-                    llm_confidence=0.3
-                )
-                variables.append(variable)
+                # Fail-fast: raise error instead of using fallback
+                raise LLMRequiredError(f"Causal analysis failed for hypothesis {hypothesis['id']}: {e}")
         
         # Process events as potential treatments/confounders
         for event in events:
@@ -246,24 +238,14 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
                     variable_type=var_type,
                     description=event_desc,
                     estimated_effect_size=causal_analysis.causal_strength,
-                    llm_confidence=0.7  # Medium-high confidence for events
+                    llm_confidence=causal_analysis.confidence_score if hasattr(causal_analysis, 'confidence_score') else 0.6
                 )
                 
                 variables.append(variable)
                 
             except Exception as e:
-                self.logger.warning(f"Causal analysis failed for event {event['id']}: {e}")
-                
-                # Fallback variable creation  
-                variable = CausalVariable(
-                    variable_id=event['id'],
-                    variable_name=event_desc[:50],
-                    variable_type='treatment',  # Default for events
-                    description=event_desc,
-                    estimated_effect_size=0.5,
-                    llm_confidence=0.3
-                )
-                variables.append(variable)
+                # Fail-fast: raise error instead of using fallback
+                raise LLMRequiredError(f"Causal analysis failed for event {event['id']}: {e}")
         
         # Process key evidence as potential instruments/confounders
         for ev in evidence[:10]:  # Limit to top 10 evidence pieces
@@ -284,7 +266,7 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
                         variable_type='confounder',  # Evidence often confounders
                         description=ev_desc,
                         estimated_effect_size=causal_analysis.causal_strength * 0.7,  # Scaled down
-                        llm_confidence=0.6  # Medium confidence for evidence
+                        llm_confidence=causal_analysis.confidence_score if hasattr(causal_analysis, 'confidence_score') else 0.5
                     )
                     
                     variables.append(variable)

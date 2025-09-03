@@ -269,6 +269,8 @@ class PerformanceProfiler:
             recommendations.append(f"Failed phases detected: {[p.phase for p in failed_phases]}")
         
         # Suggest optimizations based on patterns
+        # Note: These are phase name checks for profiling categorization, not semantic analysis
+        # The phase names are system-defined labels, not user content requiring LLM analysis
         llm_phases = [p for p in self.phases if 'llm' in p.phase.lower() or 'extract' in p.phase.lower()]
         if llm_phases and sum(p.duration for p in llm_phases) / total_time > 0.6:
             recommendations.append("LLM calls dominate execution time - consider implementing caching")

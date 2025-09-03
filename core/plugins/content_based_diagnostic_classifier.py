@@ -10,12 +10,9 @@ from .base import ProcessTracingPlugin, PluginValidationError
 import logging
 
 # Import LLM interface for semantic analysis
-try:
-    from .van_evera_llm_interface import get_van_evera_llm
-except ImportError:
-    # Fallback if not available
-    def get_van_evera_llm():
-        raise ImportError("Van Evera LLM interface not available")
+from .van_evera_llm_interface import VanEveraLLMInterface
+from ..semantic_analysis_service import get_semantic_service
+from ..llm_required import LLMRequiredError
 
 logger = logging.getLogger(__name__)
 
@@ -557,12 +554,24 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
         if decisive_assessment.confidence_score > max_conf:
             diagnostic_type = 'doubly_decisive'
         
-        # Extract confidence (rough estimate)
-        confidence = 0.6
-        if 'high confidence' in response_lower or 'definitely' in response_lower:
-            confidence = 0.8
-        elif 'low confidence' in response_lower or 'uncertain' in response_lower:
-            confidence = 0.4
+        # Use LLM to assess confidence based on the response quality
+        try:
+            semantic_service = get_semantic_service()
+            # Create a hypothesis from the diagnostic type determination
+            hypothesis_desc = f"This evidence represents a {diagnostic_type} test"
+            
+            # Assess confidence using LLM
+            confidence_assessment = semantic_service.assess_probative_value(
+                evidence_description=response[:500],  # Use truncated response as evidence
+                hypothesis_description=hypothesis_desc,
+                context="Van Evera diagnostic classification confidence assessment"
+            )
+            
+            confidence = confidence_assessment.probative_value if hasattr(confidence_assessment, 'probative_value') else 0.6
+            
+        except Exception as e:
+            # If LLM fails, raise error (fail-fast)
+            raise LLMRequiredError(f"Cannot assess confidence without LLM: {e}")
         
         return {
             'diagnostic_type': diagnostic_type,

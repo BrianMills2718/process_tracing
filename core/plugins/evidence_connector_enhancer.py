@@ -6,6 +6,8 @@ Bridges semantic gap between historical evidence and academic alternative hypoth
 import json
 from typing import Dict, List, Any, Tuple
 from .base import ProcessTracingPlugin, PluginValidationError
+from ..semantic_analysis_service import get_semantic_service
+from ..llm_required import LLMRequiredError
 
 
 class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
@@ -219,16 +221,27 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
         direct_matches = len(hypothesis_words.intersection(evidence_words))
         relevance_score += direct_matches
         
-        # Semantic bridging matching
-        for semantic_concept, bridge_keywords in self.SEMANTIC_BRIDGES.items():
-            if semantic_concept.replace('_', ' ') in hypothesis_desc:
-                # Check if any bridge keywords appear in evidence
-                bridge_matches = sum(1 for keyword in bridge_keywords if keyword in evidence_text)
-                relevance_score += bridge_matches
-        
-        # Historical context bonus
-        historical_matches = sum(1 for keyword in self.HISTORICAL_CONTEXT_KEYWORDS if keyword.replace('_', ' ') in evidence_text)
-        relevance_score += historical_matches
+        # Use semantic service for relevance assessment instead of keyword matching
+        try:
+            semantic_service = get_semantic_service()
+            
+            # Assess semantic relationship between evidence and hypothesis
+            assessment = semantic_service.assess_probative_value(
+                evidence_description=evidence_text,
+                hypothesis_description=hypothesis_desc,
+                context="Evidence-hypothesis semantic bridging analysis"
+            )
+            
+            # Convert probative value to relevance score (scale to match original scoring)
+            if hasattr(assessment, 'probative_value'):
+                # Scale probative value (0-1) to relevance score (0-10 range)
+                semantic_relevance = int(assessment.probative_value * 10)
+                relevance_score += semantic_relevance
+            
+        except Exception as e:
+            # If LLM fails, add minimal relevance
+            self.logger.warning(f"Semantic analysis failed: {e}")
+            relevance_score += 1
         
         # Try LLM enhancement first if available
         if llm_query_func:

@@ -1,5 +1,6 @@
 # Avoid circular import - query_llm will be passed as parameter
 from .structured_models import EvidenceAssessment
+from .llm_required import LLMRequiredError
 
 def refine_evidence_assessment_with_llm(evidence_description, text_content, context_info=None, query_llm_func=None):
     """
@@ -38,8 +39,7 @@ def refine_evidence_assessment_with_llm(evidence_description, text_content, cont
             
             query_llm_func = default_query_llm
         except Exception as e:
-            print(f"[ERROR] Cannot access LLM for evidence assessment: {e}")
-            return None
+            raise LLMRequiredError(f"Cannot access LLM for evidence assessment: {e}")
     
     prompt = f"""
 You are an expert in process tracing methodology and Bayesian reasoning.
@@ -81,7 +81,7 @@ Tasks:
         llm_response = EvidenceAssessment(**response_data)
         return llm_response
     except (json.JSONDecodeError, ValueError) as e:
+        # Log error for debugging but still raise exception
         print(f"[ERROR] Failed to parse LLM response as EvidenceAssessment: {e}")
         print(f"[ERROR] Raw response: {llm_response_text[:500]}...")
-        # Return None so the enhancement gracefully fails
-        return None 
+        raise LLMRequiredError(f"Failed to parse LLM response: {e}") 

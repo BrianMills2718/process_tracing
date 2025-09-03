@@ -9,12 +9,9 @@ from .base import ProcessTracingPlugin, PluginValidationError
 import logging
 
 # Import LLM interface for semantic analysis  
-try:
-    from .van_evera_llm_interface import get_van_evera_llm
-except ImportError:
-    # Fallback if not available
-    def get_van_evera_llm():
-        raise ImportError("Van Evera LLM interface not available")
+from .van_evera_llm_interface import VanEveraLLMInterface
+from ..semantic_analysis_service import get_semantic_service
+from ..llm_required import LLMRequiredError
 
 logger = logging.getLogger(__name__)
 
@@ -408,13 +405,22 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
             evidence_desc = evidence_node.get('properties', {}).get('description', '').lower()
             source_quote = evidence_node.get('properties', {}).get('source_text_quote', '').lower()
             
-            # Calculate relevance score
-            relevance_score = 0
+            # Use semantic service for relevance assessment
             evidence_text = f"{evidence_desc} {source_quote}"
             
-            for keyword in all_keywords:
-                if keyword in evidence_text:
-                    relevance_score += 1
+            try:
+                semantic_service = get_semantic_service()
+                # Use probative value assessment to determine relevance
+                # Create a hypothesis description from keywords for comparison
+                hypothesis_desc = ' '.join(all_keywords)
+                assessment = semantic_service.assess_probative_value(
+                    evidence_description=evidence_text,
+                    hypothesis_description=hypothesis_desc
+                )
+                # Convert probative value to relevance score (scale 0-5)
+                relevance_score = assessment.probative_value * 5 if hasattr(assessment, 'probative_value') else 0
+            except Exception as e:
+                raise LLMRequiredError(f"Cannot assess evidence relevance without LLM: {e}")
             
             # Include evidence with sufficient relevance
             if relevance_score >= 2:

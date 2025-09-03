@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple
 from datetime import datetime
 from core.structured_models import EvidenceAssessment
 from core.enhance_evidence import refine_evidence_assessment_with_llm
+from core.llm_required import LLMRequiredError
 
 class VanEveraDiagnosticRebalancer:
     """
@@ -152,7 +153,7 @@ class VanEveraDiagnosticRebalancer:
             hypothesis_node = next((n for n in self.graph_data['nodes'] if n['id'] == edge['target_id']), None)
             
             if not evidence_node or not hypothesis_node:
-                return None
+                raise LLMRequiredError("Cannot enhance edge: missing evidence or hypothesis node")
                 
             evidence_desc = evidence_node.get('properties', {}).get('description', edge['source_id'])
             hypothesis_desc = hypothesis_node.get('properties', {}).get('description', edge['target_id'])
@@ -180,10 +181,10 @@ class VanEveraDiagnosticRebalancer:
                 
                 return updated_edge
                 
+        except LLMRequiredError:
+            raise  # Re-raise LLM errors
         except Exception as e:
-            print(f"[DIAGNOSTIC_REBALANCE] Error enhancing edge {edge.get('source_id', '?')}->{edge.get('target_id', '?')}: {e}")
-            
-        return None
+            raise LLMRequiredError(f"Error enhancing edge {edge.get('source_id', '?')}->{edge.get('target_id', '?')}: {e}")
     
     def _analyze_final_distribution(self, updated_edges: List[Dict]) -> Dict:
         """Analyze final diagnostic distribution after rebalancing"""
