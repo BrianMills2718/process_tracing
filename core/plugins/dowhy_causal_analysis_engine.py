@@ -178,6 +178,13 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
             'innovation_level': 'methodologically_revolutionary_completion'
         }
     
+    def _get_confidence_or_fail(self, causal_analysis: Any, context: str) -> float:
+        """Get confidence score from causal analysis or fail with LLMRequiredError"""
+        if hasattr(causal_analysis, 'confidence_score'):
+            return causal_analysis.confidence_score
+        else:
+            raise LLMRequiredError(f"Causal analysis for {context} missing confidence score - LLM required")
+    
     def _discover_causal_variables(self, graph_data: Dict) -> List[CausalVariable]:
         """Use LLM to discover and classify causal variables"""
         variables = []
@@ -207,7 +214,7 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
                     variable_type='outcome',  # Hypotheses typically outcomes
                     description=hyp_desc,
                     estimated_effect_size=causal_analysis.causal_strength,
-                    llm_confidence=causal_analysis.confidence_score if hasattr(causal_analysis, 'confidence_score') else 0.7
+                    llm_confidence=self._get_confidence_or_fail(causal_analysis, 'hypothesis')
                 )
                 
                 variables.append(variable)
@@ -238,7 +245,7 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
                     variable_type=var_type,
                     description=event_desc,
                     estimated_effect_size=causal_analysis.causal_strength,
-                    llm_confidence=causal_analysis.confidence_score if hasattr(causal_analysis, 'confidence_score') else 0.6
+                    llm_confidence=self._get_confidence_or_fail(causal_analysis, 'event')
                 )
                 
                 variables.append(variable)
@@ -266,7 +273,7 @@ class DoWhyCausalAnalysisEngine(ProcessTracingPlugin):
                         variable_type='confounder',  # Evidence often confounders
                         description=ev_desc,
                         estimated_effect_size=causal_analysis.causal_strength * 0.7,  # Scaled down
-                        llm_confidence=causal_analysis.confidence_score if hasattr(causal_analysis, 'confidence_score') else 0.5
+                        llm_confidence=self._get_confidence_or_fail(causal_analysis, 'evidence')
                     )
                     
                     variables.append(variable)

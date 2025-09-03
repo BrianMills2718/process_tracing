@@ -868,7 +868,9 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
                     hypothesis_description=prediction.prediction_text,
                     context=evaluation_context
                 )
-                confidence = confidence_assessment.probative_value if hasattr(confidence_assessment, 'probative_value') else 0.7
+                if not hasattr(confidence_assessment, 'probative_value'):
+                    raise LLMRequiredError("Hoop test assessment missing probative_value - LLM required")
+                confidence = confidence_assessment.probative_value
                 reasoning = f"Hoop test: {strong_evidence} strong evidence pieces, {indicator_matches} indicator matches"
                 
             elif prediction.diagnostic_type == 'smoking_gun':
@@ -879,7 +881,9 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
                     hypothesis_description=prediction.prediction_text,
                     context=evaluation_context
                 )
-                confidence = confidence_assessment.probative_value if hasattr(confidence_assessment, 'probative_value') else 0.7
+                if not hasattr(confidence_assessment, 'probative_value'):
+                    raise LLMRequiredError("Smoking gun test assessment missing probative_value - LLM required")
+                confidence = confidence_assessment.probative_value
                 reasoning = f"Smoking gun test: {strong_evidence} strong evidence, {indicator_matches} indicators"
                 
             elif prediction.diagnostic_type == 'doubly_decisive':
@@ -890,7 +894,9 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
                     hypothesis_description=prediction.prediction_text,
                     context=evaluation_context
                 )
-                confidence = confidence_assessment.probative_value if hasattr(confidence_assessment, 'probative_value') else 0.7
+                if not hasattr(confidence_assessment, 'probative_value'):
+                    raise LLMRequiredError("Doubly decisive test assessment missing probative_value - LLM required")
+                confidence = confidence_assessment.probative_value
                 reasoning = f"Doubly decisive test: {strong_evidence} strong evidence, {indicator_matches} indicators"
                 
             else:
@@ -900,7 +906,9 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
                     hypothesis_description=prediction.prediction_text,
                     context=evaluation_context
                 )
-                confidence = confidence_assessment.probative_value if hasattr(confidence_assessment, 'probative_value') else 0.5
+                if not hasattr(confidence_assessment, 'probative_value'):
+                    raise LLMRequiredError("Standard test assessment missing probative_value - LLM required")
+                confidence = confidence_assessment.probative_value
                 reasoning = "Standard evaluation applied"
                 
         except Exception as e:
@@ -1019,7 +1027,9 @@ class AdvancedVanEveraPredictionEngine(ProcessTracingPlugin):
                 hypothesis_description=context_desc,
                 context="Prediction evaluation confidence assessment"
             )
-            base_confidence = assessment.probative_value if hasattr(assessment, 'probative_value') else 0.5
+            if not hasattr(assessment, 'probative_value'):
+                raise LLMRequiredError("Assessment missing probative_value - LLM required for confidence scoring")
+            base_confidence = assessment.probative_value
         except Exception as e:
             raise LLMRequiredError(f"Cannot assess base confidence without LLM: {e}")
         
