@@ -34,17 +34,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 12 - Final Corrections (Updated 2025-01-30)
+## 🎯 CURRENT STATUS: Phase 12 - Partial Progress (Updated 2025-01-30)
 
 **System Status**: **86.6% Measured Compliance** (58/67 files pass validator)
-**Actual Semantic Compliance**: **~94%** (63/67 when excluding false positives)
-**Current Priority**: **FIX 2 REMAINING PLUGIN FALLBACKS** for true LLM-first
+**Reality Check**: **Only 2/5 plugins with fallbacks have been fixed**
+**Current Priority**: **FIX 3 MORE PLUGINS WITH 13+ FALLBACKS**
 
-**PHASE 11 VERIFICATION RESULTS (2025-01-30):**
-- ✅ **2 Plugins Fully Fixed**: content_based_diagnostic_classifier.py, legacy_compatibility_manager.py
-- ⚠️ **2 Plugins Still Have Fallbacks**: dowhy_causal_analysis_engine.py (3 values), advanced_van_evera_prediction_engine.py (1 value)
-- ℹ️ **5 False Positives**: Variable names, comments, dictionary keys flagged incorrectly
-- ❌ **4 Temporal Files**: Deep architectural coupling requires major refactoring
+**PHASE 12 DOUBLE-CHECK RESULTS (2025-01-30):**
+- ✅ **2 Plugins Fixed**: dowhy_causal_analysis_engine.py, advanced_van_evera_prediction_engine.py
+- ❌ **3 Plugins Still Have Fallbacks**: 
+  - content_based_diagnostic_classifier.py (1 fallback)
+  - primary_hypothesis_identifier.py (8 fallbacks!)
+  - research_question_generator.py (4 fallbacks)
+- ℹ️ **5 False Positives**: Variable names, comments, dictionary keys
+- ❌ **4 Temporal Files**: Deep architectural coupling
 
 ## Evidence-Based Development Philosophy (Mandatory)
 
@@ -74,21 +77,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Security**: Environment-based API key management
 - **Universality**: No dataset-specific logic - works across all domains and time periods
 
-## 🚀 PHASE 12: Fix Remaining Plugin Fallbacks
+## 🚀 PHASE 13: Fix Remaining Plugin Fallbacks
 
-### CRITICAL: Plugins Still Containing Hardcoded Fallbacks (2 files)
+### CRITICAL: 3 Plugins Still Containing 13+ Hardcoded Fallbacks
 
-#### PRIORITY 1: Fix These Immediately
+#### PRIORITY 1: Must Fix These
 
-1. **core/plugins/dowhy_causal_analysis_engine.py** - 3 HARDCODED VALUES
-   - Line 210: `else 0.7` - Fallback if no confidence_score attribute
-   - Line 241: `else 0.6` - Fallback if no confidence_score attribute  
-   - Line 269: `else 0.5` - Fallback if no confidence_score attribute
-   - **Fix**: Remove `else` clauses, raise LLMRequiredError if attribute missing
+1. **core/plugins/content_based_diagnostic_classifier.py** - 1 FALLBACK
+   - Line 570: `else 0.6` - Fallback confidence value
+   - **Fix**: Remove fallback, raise LLMRequiredError
 
-2. **core/plugins/advanced_van_evera_prediction_engine.py** - 1 HARDCODED VALUE
-   - Line 1022: `else 0.5` - Fallback if assessment lacks probative_value
-   - **Fix**: Remove `else` clause, raise LLMRequiredError if attribute missing
+2. **core/plugins/primary_hypothesis_identifier.py** - 8 FALLBACKS!
+   - Lines 146-149: Weight fallbacks (0.4, 0.3, 0.2, 0.1)
+   - Lines 339-342: Threshold fallbacks (0.6, 0.5, 0.4, 0.3)
+   - **Fix**: Remove all fallbacks, use LLM or configuration
+
+3. **core/plugins/research_question_generator.py** - 4 FALLBACKS
+   - Lines 447, 450, 453, 457: Score calculation fallbacks
+   - **Fix**: Replace conditional scoring with LLM assessment
 
 ### Non-Critical Issues (Can Defer)
 
@@ -108,42 +114,26 @@ These require complete architectural changes and can be deferred:
 - **core/extract.py** - Character encoding prevents reading
 - **core/structured_extractor.py** - Character encoding prevents reading
 
-## 📋 IMMEDIATE TASKS
+## 📋 REMAINING TASKS (Phase 13)
 
-### Task 1: Fix dowhy_causal_analysis_engine.py (15 minutes)
-
-**Exact Violations**:
-- Line 210: `getattr(causal_analysis, 'confidence_score', 0.7)`
-- Line 241: `getattr(causal_analysis, 'confidence_score', 0.6)`
-- Line 269: `getattr(causal_analysis, 'confidence_score', 0.5)`
-
-**Required Fix**:
-```python
-# WRONG - Has fallback value
-confidence = getattr(causal_analysis, 'confidence_score', 0.7)
-
-# CORRECT - Fail if attribute missing
-if hasattr(causal_analysis, 'confidence_score'):
-    confidence = causal_analysis.confidence_score
-else:
-    raise LLMRequiredError("Causal analysis missing confidence score - LLM required")
-```
-
-### Task 2: Fix advanced_van_evera_prediction_engine.py (10 minutes)
+### Task 1: Fix content_based_diagnostic_classifier.py (10 minutes)
 
 **Exact Violation**:
-- Line 1022: `base_confidence = assessment.probative_value if assessment else 0.5`
+- Line 570: `confidence = confidence_assessment.probative_value if hasattr(confidence_assessment, 'probative_value') else 0.6`
 
-**Required Fix**:
-```python
-# WRONG - Has fallback
-base_confidence = assessment.probative_value if assessment else 0.5
+### Task 2: Fix primary_hypothesis_identifier.py (30 minutes)
 
-# CORRECT - Fail if no assessment
-if not assessment or not hasattr(assessment, 'probative_value'):
-    raise LLMRequiredError("Cannot determine confidence without LLM assessment")
-base_confidence = assessment.probative_value
-```
+**Exact Violations**:
+- Lines 146-149: Weight fallbacks for Van Evera test types
+- Lines 339-342: Threshold fallbacks for test types
+
+### Task 3: Fix research_question_generator.py (20 minutes)
+
+**Exact Violations**:
+- Line 447: Domain score fallback (0.25/0.15)
+- Line 450: Concept count fallback (0.25/0.15)
+- Line 453: Causal language fallback (0.25/0.1)
+- Line 457: Complexity fallback (0.25/0.15/0.1)
 
 ### Task 3: Final Validation
 
@@ -161,24 +151,25 @@ echo "Phase 11 Complete: 100% LLM-First Compliance" > evidence/current/Evidence_
 
 ### Success Criteria
 
-**Realistic Goals**:
-- ✅ Remove ALL hardcoded fallback values from the 2 plugins
-- ✅ Achieve ~94% true semantic compliance (excluding false positives)
-- ✅ Document false positives properly
+**Updated Realistic Goals**:
+- ✅ Remove ALL 13+ remaining hardcoded fallback values from 3 plugins
+- ✅ Actually achieve true LLM-first in plugin system
+- ✅ Properly validate all changes
 - ✅ System remains functional
 
 **Known Limitations to Accept**:
-- ⚠️ Temporal modules require major refactoring (defer to future phase)
-- ⚠️ Validator flags false positives (document but don't fix)
-- ⚠️ Encoding issues in 2 files (exclude from semantic validation)
+- ⚠️ Temporal modules require major refactoring (defer)
+- ⚠️ Validator false positives (document only)
+- ⚠️ Encoding issues in 2 files (exclude)
 
 ### Estimated Timeline
 
-- **Task 1**: 15 minutes (dowhy_causal_analysis_engine.py fixes)
-- **Task 2**: 10 minutes (advanced_van_evera_prediction_engine.py fix)
-- **Task 3**: 10 minutes (validation and documentation)
+- **Task 1**: 10 minutes (content_based_diagnostic_classifier.py)
+- **Task 2**: 30 minutes (primary_hypothesis_identifier.py - 8 values)
+- **Task 3**: 20 minutes (research_question_generator.py - 4 values)
+- **Task 4**: 10 minutes (validation and documentation)
 
-**Total**: 35 minutes to achieve true LLM-first in all critical plugins
+**Total**: 70 minutes to ACTUALLY achieve true LLM-first in plugins
 
 ## Testing Commands
 
