@@ -567,7 +567,9 @@ class ContentBasedDiagnosticClassifierPlugin(ProcessTracingPlugin):
                 context="Van Evera diagnostic classification confidence assessment"
             )
             
-            confidence = confidence_assessment.probative_value if hasattr(confidence_assessment, 'probative_value') else 0.6
+            if not hasattr(confidence_assessment, 'probative_value'):
+                raise LLMRequiredError("LLM assessment missing probative_value attribute - invalid response format")
+            confidence = confidence_assessment.probative_value
             
         except Exception as e:
             # If LLM fails, raise error (fail-fast)

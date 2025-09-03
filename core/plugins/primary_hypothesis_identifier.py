@@ -113,6 +113,12 @@ class PrimaryHypothesisIdentifierPlugin(ProcessTracingPlugin):
             'method': 'van_evera_evidence_based_ranking'
         }
     
+    def _validate_numeric_config(self, value, name: str, expected: float):
+        """Validate configuration value is numeric or raise LLMRequiredError"""
+        if not isinstance(value, (int, float)):
+            raise LLMRequiredError(f"Invalid {name} configuration: {value} - expected numeric value {expected}")
+        return float(value)
+    
     def _calculate_hypothesis_rankings(self, graph_data: Dict, van_evera_results: Dict) -> Dict[str, Any]:
         """Calculate comprehensive ranking scores for all hypotheses"""
         hypotheses = [n for n in graph_data['nodes'] if n.get('type') in ['Hypothesis', 'Alternative_Explanation']]
@@ -142,11 +148,11 @@ class PrimaryHypothesisIdentifierPlugin(ProcessTracingPlugin):
             th_weight = self.PRIMARY_HYPOTHESIS_CRITERIA['theoretical_sophistication']['weight']
             el_weight = self.PRIMARY_HYPOTHESIS_CRITERIA['elimination_power']['weight']
             
-            # Ensure weights are numeric before casting
-            ve_weight_float = float(ve_weight) if isinstance(ve_weight, (int, float)) else 0.4
-            ev_weight_float = float(ev_weight) if isinstance(ev_weight, (int, float)) else 0.3
-            th_weight_float = float(th_weight) if isinstance(th_weight, (int, float)) else 0.2
-            el_weight_float = float(el_weight) if isinstance(el_weight, (int, float)) else 0.1
+            # Validate weights are numeric using fail-fast approach
+            ve_weight_float = self._validate_numeric_config(ve_weight, "van_evera weight", 0.4)
+            ev_weight_float = self._validate_numeric_config(ev_weight, "evidence_support weight", 0.3)
+            th_weight_float = self._validate_numeric_config(th_weight, "theoretical_sophistication weight", 0.2)
+            el_weight_float = self._validate_numeric_config(el_weight, "elimination_power weight", 0.1)
             
             composite_score = (
                 van_evera_score * ve_weight_float +
@@ -335,11 +341,11 @@ class PrimaryHypothesisIdentifierPlugin(ProcessTracingPlugin):
         th_threshold = criteria['theoretical_sophistication']['minimum_threshold']
         el_threshold = criteria['elimination_power']['minimum_threshold']
         
-        # Ensure thresholds are numeric before casting
-        ve_threshold_float = float(ve_threshold) if isinstance(ve_threshold, (int, float)) else 0.6
-        ev_threshold_float = float(ev_threshold) if isinstance(ev_threshold, (int, float)) else 0.5
-        th_threshold_float = float(th_threshold) if isinstance(th_threshold, (int, float)) else 0.4
-        el_threshold_float = float(el_threshold) if isinstance(el_threshold, (int, float)) else 0.3
+        # Validate thresholds are numeric using fail-fast approach
+        ve_threshold_float = self._validate_numeric_config(ve_threshold, "van_evera minimum_threshold", 0.6)
+        ev_threshold_float = self._validate_numeric_config(ev_threshold, "evidence_support minimum_threshold", 0.5)
+        th_threshold_float = self._validate_numeric_config(th_threshold, "theoretical_sophistication minimum_threshold", 0.4)
+        el_threshold_float = self._validate_numeric_config(el_threshold, "elimination_power minimum_threshold", 0.3)
         
         eligible_for_primary = (
             van_evera >= ve_threshold_float and

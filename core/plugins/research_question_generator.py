@@ -440,23 +440,31 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
             return "moderate"
     
     def _calculate_sophistication_score(self, analysis: Dict) -> float:
-        """Calculate academic sophistication score (0.0-1.0)"""
-        score = 0.0
-        
-        # Domain specificity (0.25)
-        score += 0.25 if analysis['domain_scores'][analysis['primary_domain']] >= 3 else 0.15
-        
-        # Theoretical sophistication (0.25)
-        score += 0.25 if len(analysis['content_analysis']['key_concepts']) >= 5 else 0.15
-        
-        # Causal complexity (0.25)
-        score += 0.25 if analysis['content_analysis']['causal_language_detected'] else 0.1
-        
-        # Analytical depth (0.25)
-        complexity_count = sum(analysis['complexity_indicators'].values())
-        score += 0.25 if complexity_count >= 3 else (0.15 if complexity_count >= 2 else 0.1)
-        
-        return min(score, 1.0)
+        """Calculate academic sophistication score using LLM assessment"""
+        try:
+            semantic_service = get_semantic_service()
+            
+            # Create sophistication assessment context
+            assessment_context = f"""
+Research Domain: {analysis['primary_domain']}
+Key Concepts: {', '.join(analysis['content_analysis']['key_concepts'][:10])}
+Causal Language Present: {analysis['content_analysis']['causal_language_detected']}
+Complexity Indicators: {dict(list(analysis['complexity_indicators'].items())[:5])}
+            """.strip()
+            
+            sophistication_result = semantic_service.assess_probative_value(
+                evidence_description=assessment_context,
+                hypothesis_description="This research demonstrates sophisticated academic inquiry with theoretical depth and methodological rigor",
+                context="Academic sophistication assessment for research question generation"
+            )
+            
+            if not hasattr(sophistication_result, 'probative_value'):
+                raise LLMRequiredError("Sophistication assessment missing probative_value - invalid LLM response")
+                
+            return sophistication_result.probative_value
+            
+        except Exception as e:
+            raise LLMRequiredError(f"Cannot assess sophistication without LLM: {e}")
     
     def _add_research_question_to_graph(self, graph_data: Dict, research_question: Dict) -> Dict[str, Any]:
         """Add research question node to graph data"""

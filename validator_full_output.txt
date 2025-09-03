@@ -1,0 +1,69 @@
+================================================================================
+TRUE LLM-First Compliance Validator
+================================================================================
+
+Validating core/ directory...
+
+Total files checked: 67
+Compliant files: 58
+Non-compliant files: 9
+Compliance rate: 86.6%
+
+================================================================================
+NON-COMPLIANT FILES:
+================================================================================
+
+core\evidence_document.py:
+  - Line 182: Domain keyword: temporal
+  - Line 199: Case-insensitive keyword matching
+  - Line 206: Case-insensitive keyword matching
+
+core\extract.py:
+  - Could not read file: 'charmap' codec can't decode byte 0x9d in position 1566: character maps to <undefined>
+
+core\performance_profiler.py:
+  - Line 274: Case-insensitive keyword matching
+  - Line 278: Case-insensitive keyword matching
+
+core\structured_extractor.py:
+  - Could not read file: 'charmap' codec can't decode byte 0x8d in position 13944: character maps to <undefined>
+
+core\temporal_extraction.py:
+  - Line 212: Direct keyword in text matching
+  - Line 214: Direct keyword in text matching
+  - Line 216: Direct keyword in text matching
+  - Line 246: Direct keyword in text matching
+  - Line 248: Direct keyword in text matching
+  ... and 15 more violations
+
+core\temporal_graph.py:
+  - Line 206: Domain keyword: temporal
+  - Line 208: Domain keyword: temporal
+  - Line 210: Domain keyword: temporal
+  - Line 212: Domain keyword: temporal
+  - Line 423: Domain keyword: temporal
+  ... and 1 more violations
+
+core\temporal_validator.py:
+  - Line 387: Domain keyword: temporal
+  - Line 433: Domain keyword: temporal
+
+core\temporal_viz.py:
+  - Line 462: Domain keyword: temporal
+  - Line 899: Hardcoded confidence
+  - Line 928: Hardcoded confidence
+  - Line 941: Hardcoded confidence
+
+core\plugins\research_question_generator.py:
+  - Line 277: Domain keyword: temporal
+  - Line 339: Domain keyword: temporal
+Traceback (most recent call last):
+  File "C:\Users\Brian\Documents\code\process_tracing\validate_true_compliance.py", line 220, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "C:\Users\Brian\Documents\code\process_tracing\validate_true_compliance.py", line 212, in main
+    print(f"\n\u274c INCOMPLETE: {len(core_results['non_compliant_files'])} files need migration")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 2: character maps to <undefined>
