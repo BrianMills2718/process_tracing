@@ -1,0 +1,101 @@
+{
+  "filename": "test_graph.json",
+  "case_identifier": "test_graph",
+  "generated_at": "2025-09-04T02:45:00.828269",
+  "causal_chains": [
+    {
+      "path": [
+        "evt_sanctions_imposed",
+        "evt_protests_erupted"
+      ],
+      "path_descriptions": [
+        "Economic sanctions imposed",
+        "Protests erupted"
+      ],
+      "edge_types": [
+        "causes"
+      ],
+      "trigger": "evt_sanctions_imposed",
+      "outcome": "evt_protests_erupted",
+      "length": 2
+    }
+  ],
+  "causal_mechanisms": [
+    {
+      "id": "mech_hardship_mobilization",
+      "name": "Economic sanctions lead to economic hardship, which increases public discontent and ultimately mobilizes into protests.",
+      "causes": [
+        "Economic sanctions imposed",
+        "Protests erupted"
+      ],
+      "effects": [],
+      "completeness": 34,
+      "confidence": 0.6,
+      "level_of_detail": "medium",
+      "llm_elaboration": {
+        "error": "Failed to analyze mechanism with LLM: 5 validation errors for MechanismAssessment\nmechanism_id\n  Field required [type=missing, input_value={'completeness': 0.5, 'pl...s': [], 'reasoning': ''}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\ncompleteness_score\n  Field required [type=missing, input_value={'completeness': 0.5, 'pl...s': [], 'reasoning': ''}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\nplausibility_score\n  Field required [type=missing, input_value={'completeness': 0.5, 'pl...s': [], 'reasoning': ''}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\nevidence_support_level\n  Field required [type=missing, input_value={'completeness': 0.5, 'pl...s': [], 'reasoning': ''}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\ndetailed_reasoning\n  Field required [type=missing, input_value={'completeness': 0.5, 'pl...s': [], 'reasoning': ''}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"
+      }
+    }
+  ],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 2,
+      "Hypothesis": 1,
+      "Causal_Mechanism": 1,
+      "Evidence": 2
+    },
+    "edge_type_distribution": {
+      "causes": 1,
+      "provides_evidence_for": 2,
+      "part_of_mechanism": 2,
+      "explains_mechanism": 1,
+      "confirms_occurrence": 2
+    },
+    "density": 0.26666666666666666,
+    "avg_path_length": "1.53 (undirected)",
+    "connectivity_type": "weakly connected",
+    "degree_centrality": {
+      "evt_protests_erupted": 0.4,
+      "evt_sanctions_imposed": 0.36,
+      "mech_hardship_mobilization": 0.36,
+      "hyp_sanctions_protests": 0.32,
+      "evd_sanctions_statement": 0.08,
+      "evd_protests_statement": 0.08
+    }
+  },
+  "hypotheses_evaluation": [
+    {
+      "hypothesis_id": "hyp_sanctions_protests",
+      "description": "Economic sanctions imposed in January 2020 caused protests to erupt in March 2020.",
+      "assessment": "Undetermined (No Evidence)",
+      "balance_score": 0.0,
+      "van_evera_applied": false,
+      "supporting_evidence_count": 0,
+      "refuting_evidence_count": 0,
+      "supporting_evidence_ids": [],
+      "refuting_evidence_ids": [],
+      "evidence_by_type": {
+        "hoop": [],
+        "smoking_gun": [],
+        "straw_in_wind": [],
+        "doubly_decisive": []
+      },
+      "van_evera_confidence_score": null,
+      "van_evera_status": "Not Tested",
+      "van_evera_test_details": {},
+      "llm_confidence_score": 0.95,
+      "llm_reasoning": "This is a Hoop Test, which means the presence of the predicted evidence is a necessary condition for the hypothesis to remain viable. The hypothesis states that economic sanctions imposed in January 2020 caused protests in March 2020, through the mechanism of economic hardship leading to discontent and mobilization. For this hypothesis to pass the Hoop Test, there must be evidence demonstrating that the sanctions were indeed imposed, led to economic hardship, which in turn fueled public discontent, and subsequently resulted in protests. Crucially, the 'EVIDENCE CONTEXT' explicitly states 'No evidence context available.' Without any evidence to support the causal chain, the necessary condition for the Hoop Test is not met. Therefore, the hypothesis fails this Hoop Test, leading to its elimination.",
+      "evidence_quality": "low",
+      "methodological_soundness": 1.0,
+      "academic_quality": "This analysis, while correctly applying the Van Evera framework to the problem statement, would not meet academic publication standards. The primary reason is the complete absence of empirical evidence. A rigorous academic publication would require robust data collection, detailed case analysis, and evidence-based findings to support or refute a hypothesis. Without any 'evidence context,' the analysis is purely theoretical and methodological in its critique of the test's failure, rather than empirically driven. To be publication-ready, this would need extensive primary or secondary source research to gather the necessary evidence, which is currently missing."
+    }
+  ],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

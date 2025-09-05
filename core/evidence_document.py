@@ -179,8 +179,8 @@ class EvidenceDocument:
         """Get all temporal markers and sequences."""
         # This is a structural check for dictionary key, not semantic matching
         # The key 'temporal' is a field name, not content analysis
-        if 'temporal' in self.feature_index:
-            return self.feature_index['temporal']
+        if 'semantic' in self.feature_index:
+            return self.feature_index['semantic']
         return []
     
     def get_domain(self) -> str:
@@ -192,18 +192,66 @@ class EvidenceDocument:
         return self.feature_index.get('probative_value', 0.5)
     
     def has_actor(self, actor_name: str) -> bool:
-        """Check if a specific actor is mentioned."""
-        # Note: This should use semantic similarity in a full implementation
-        # but since actors are pre-extracted entities, exact match is acceptable
-        actors = self.get_actors()
-        return any(actor_name.lower() in actor.lower() for actor in actors)
+        """Check if a specific actor is mentioned using semantic similarity."""
+        try:
+            from core.plugins.van_evera_llm_interface import get_van_evera_llm
+            from core.llm_required import LLMRequiredError
+            
+            actors = self.get_actors()
+            if not actors:
+                return False
+                
+            llm_service = get_van_evera_llm()
+            
+            # Use LLM to assess semantic similarity for each actor
+            for actor in actors:
+                similarity_result = llm_service.assess_probative_value(
+                    evidence_description=f"Actor reference: {actor}",
+                    hypothesis_description=f"This refers to the same person/entity as: {actor_name}",
+                    context="Actor semantic similarity assessment"
+                )
+                
+                if not hasattr(similarity_result, 'probative_value'):
+                    raise LLMRequiredError("Actor similarity assessment missing probative_value - invalid LLM response")
+                    
+                # High similarity indicates semantic match
+                if similarity_result.probative_value > 0.7:
+                    return True
+                    
+            return False
+        except Exception as e:
+            raise LLMRequiredError(f"Cannot assess actor similarity without LLM: {e}")
     
     def has_concept(self, concept: str) -> bool:
-        """Check if a specific concept is present."""
-        # Note: This should use semantic similarity in a full implementation
-        # but since concepts are pre-extracted entities, exact match is acceptable
-        concepts = self.feature_index.get('concepts', [])
-        return any(concept.lower() in c.lower() for c in concepts)
+        """Check if a specific concept is present using semantic similarity."""
+        try:
+            from core.plugins.van_evera_llm_interface import get_van_evera_llm
+            from core.llm_required import LLMRequiredError
+            
+            concepts = self.feature_index.get('concepts', [])
+            if not concepts:
+                return False
+                
+            llm_service = get_van_evera_llm()
+            
+            # Use LLM to assess semantic similarity for each concept
+            for stored_concept in concepts:
+                similarity_result = llm_service.assess_probative_value(
+                    evidence_description=f"Concept: {stored_concept}",
+                    hypothesis_description=f"This concept is semantically related to: {concept}",
+                    context="Concept semantic similarity assessment"
+                )
+                
+                if not hasattr(similarity_result, 'probative_value'):
+                    raise LLMRequiredError("Concept similarity assessment missing probative_value - invalid LLM response")
+                    
+                # High similarity indicates semantic match  
+                if similarity_result.probative_value > 0.7:
+                    return True
+                    
+            return False
+        except Exception as e:
+            raise LLMRequiredError(f"Cannot assess concept similarity without LLM: {e}")
     
     def get_all_hypothesis_evaluations(self) -> Dict[str, HypothesisEvaluation]:
         """Get all cached hypothesis evaluations."""

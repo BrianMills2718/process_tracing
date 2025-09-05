@@ -1556,7 +1556,7 @@ def analyze_actors(G):
             )
             
             # Use confidence score to determine relevance and apply bonus
-            if comprehensive.confidence_score > 0.65:
+            if comprehensive.confidence_overall > 0.65:
                 if node_type_iter == 'Causal_Mechanism':
                     influence_score += 7 # Bonus for being mentioned in a CM
                 elif node_type_iter == 'Hypothesis':

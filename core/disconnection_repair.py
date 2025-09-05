@@ -296,9 +296,9 @@ class ConnectionInferenceEngine:
                         if assessment.probative_value > 0.6:
                             edges.append(self._create_edge(node_id, target_id, 'supports_alternative',
                                                          assessment.reasoning))
-                    else:
-                        edges.append(self._create_edge(node_id, target_id, 'tests_alternative',
-                                                     "Evidence tests alternative explanation"))
+                        else:
+                            edges.append(self._create_edge(node_id, target_id, 'tests_alternative',
+                                                         "Evidence tests alternative explanation"))
         
         return edges
     

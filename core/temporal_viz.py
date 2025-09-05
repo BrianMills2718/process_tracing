@@ -459,8 +459,8 @@ class TemporalVisualizer:
             content += f"<p><strong>Efficiency:</strong> {process_info.efficiency_score:.2f}</p>"
             content += f"<p><strong>Timing Optimality:</strong> {process_info.timing_optimality:.2f}</p>"
         
-        if node.temporal_uncertainty > 0:
-            content += f"<p><strong>Uncertainty:</strong> {node.temporal_uncertainty:.2f}</p>"
+        if node.semantic_uncertainty > 0:
+            content += f"<p><strong>Uncertainty:</strong> {node.semantic_uncertainty:.2f}</p>"
         
         content += "</div>"
         return content

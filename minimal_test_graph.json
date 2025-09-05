@@ -1,0 +1,14 @@
+{
+  "nodes": [
+    {
+      "id": "evt_test",
+      "type": "Event",
+      "properties": {
+        "description": "Test event occurred",
+        "timestamp": "January 2025",
+        "date": "2025-01"
+      }
+    }
+  ],
+  "edges": []
+}

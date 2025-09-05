@@ -1,0 +1,28 @@
+{
+  "filename": "test_minimal_graph.json",
+  "case_identifier": "test_minimal_graph",
+  "generated_at": "2025-09-04T04:19:25.047936",
+  "causal_chains": [],
+  "causal_mechanisms": [],
+  "network_metrics": {
+    "node_type_distribution": {
+      "Event": 1
+    },
+    "edge_type_distribution": {},
+    "density": 0,
+    "avg_path_length": "0.00",
+    "connectivity_type": "strongly connected",
+    "degree_centrality": {
+      "test_node": 1.0
+    }
+  },
+  "hypotheses_evaluation": [],
+  "conditions": {
+    "enabling": [],
+    "constraining": []
+  },
+  "actors": [],
+  "alternative_explanations": [],
+  "van_evera_methodology_applied": true,
+  "analysis_completeness": "comprehensive"
+}

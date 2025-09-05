@@ -228,6 +228,8 @@ Example connections:
 # --- Refactored Single-Case Processing Function ---
 def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, project_name_str, global_hypothesis_text=None, global_hypothesis_id=None, bayesian_config=None):
     import subprocess
+    import json
+    import sys
     from datetime import datetime
     case_file_path = Path(case_file_path_str)
     output_dir_for_case = Path(output_dir_for_case_str)
@@ -285,6 +287,108 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
         )
     # Multi-pass extraction with aggressive connectivity repair (up to 10 passes)
     from core.extract import parse_json, analyze_graph_connectivity, create_connectivity_repair_prompt, extract_connectivity_relationships
+    
+    # Generate timestamp and output path
+    now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    graph_json_path = output_dir_for_case / f"{project_name_str}_{now_str}_graph.json"
+    
+    try:
+        print("\n" + "="*60)
+        print("PERFORMING MULTI-PASS GRAPH EXTRACTION (UP TO 10 PASSES)")
+        print("="*60)
+        print(f"[DEBUG] Using {'comprehensive' if active_prompt_template == PROMPT_TEMPLATE else 'focused'} prompt template")
+        print(f"[DEBUG] Prompt length: {len(final_system_prompt)} characters")
+        
+        # Pass 1: Standard extraction using process_trace_advanced.py approach
+        print("[INFO] Pass 1: Standard graph extraction...")
+        raw_json = query_llm(text, schema, final_system_prompt)
+        graph_data = parse_json(raw_json)
+        
+        # Save the extracted graph
+        with open(graph_json_path, "w", encoding="utf-8") as f:
+            json.dump(graph_data, f, indent=2)
+            
+        print(f"\n[SAVE] Graph data saved to {graph_json_path}")
+        
+    except Exception as e:
+        print(f"[ERROR] Multi-pass extraction failed: {e}")
+        print(f"[INFO] Falling back to single-pass extraction...")
+        
+        # Fallback to single-pass extraction
+        try:
+            raw_json = query_llm(text, schema, final_system_prompt)
+            graph_data = parse_json(raw_json)
+            with open(graph_json_path, "w", encoding="utf-8") as f:
+                json.dump(graph_data, f, indent=2)
+        except Exception as fallback_error:
+            print(f"[ERROR] Fallback extraction also failed: {fallback_error}")
+            print("[CRITICAL] Both multi-pass and single-pass extraction failed!")
+            print("[CRITICAL] This indicates a serious issue with LLM connectivity or configuration.")
+            print("[CRITICAL] Check your API keys and model configurations.")
+            raise RuntimeError(f"Complete extraction failure: Multi-pass failed, fallback also failed: {fallback_error}") from fallback_error
+    
+    # Continue with analysis phase
+    print("[INFO] Starting analysis phase...")
+    
+    # Generate visualization data for analysis
+    nodes_js = []
+    edges_js = []
+    
+    for node in graph_data.get("nodes", []):
+        nodes_js.append({
+            "id": node.get("id"),
+            "label": node.get("type"),
+            "properties": node.get("properties", {}),
+            "title": json.dumps(node.get("properties", {}), indent=2)
+        })
+    
+    for edge in graph_data.get("edges", []):
+        edges_js.append({
+            "from": edge.get("source_id") or edge.get("source"),
+            "to": edge.get("target_id") or edge.get("target"),
+            "label": edge.get("type"),
+            "properties": edge.get("properties", {}),
+            "title": json.dumps(edge.get("properties", {}), indent=2)
+        })
+
+    # Write network data for analysis
+    network_data_json = json.dumps({
+        "nodes": nodes_js,
+        "edges": edges_js,
+        "project_name": project_name_str
+    })
+
+    network_data_file = output_dir_for_case / f"{project_name_str}_network_data.json"
+    with open(network_data_file, "w", encoding="utf-8") as f:
+        f.write(network_data_json)
+
+    # Run Van Evera analysis
+    result = subprocess.run([
+        sys.executable, '-m', 'core.analyze', 
+        str(graph_json_path), 
+        '--html',
+        '--network-data', str(network_data_file)
+    ], capture_output=True, text=True)
+    
+    print(result.stdout)
+    if result.stderr:
+        print(result.stderr)
+    
+    # Check if analysis failed
+    if result.returncode != 0:
+        print(f"[ERROR] Analysis subprocess failed with return code: {result.returncode}")
+        print(f"[ERROR] Command: python -m core.analyze {graph_json_path} --html --network-data {network_data_file}")
+        if result.stdout:
+            print(f"[ERROR] Stdout: {result.stdout}")
+        if result.stderr:
+            print(f"[ERROR] Stderr: {result.stderr}")
+        raise RuntimeError(f"Analysis phase failed with return code {result.returncode}. Check Van Evera interface and LLM configuration.")
+    
+    print("[INFO] Analysis phase completed successfully!")
+    print(f"[INFO] Output files saved to: {output_dir_for_case}")
+    
+    # Return success indicator
+    return str(graph_json_path)
 
 def attempt_inference_repair(graph_data: dict, disconnected_entities: list) -> list:
     """
@@ -572,7 +676,10 @@ def attempt_inference_repair(graph_data: dict, disconnected_entities: list) -> l
                 json.dump(graph_data, f, indent=2)
         except Exception as fallback_error:
             print(f"[ERROR] Fallback extraction also failed: {fallback_error}")
-            return None
+            print("[CRITICAL] Both multi-pass and single-pass extraction failed!")
+            print("[CRITICAL] This indicates a serious issue with LLM connectivity or configuration.")
+            print("[CRITICAL] Check your API keys and model configurations.")
+            raise RuntimeError(f"Complete extraction failure: Multi-pass failed, fallback also failed: {fallback_error}") from fallback_error
     
     # Validate extraction connectivity
     try:
@@ -643,6 +750,16 @@ def attempt_inference_repair(graph_data: dict, disconnected_entities: list) -> l
     print(result.stdout)
     if result.stderr:
         print(result.stderr)
+    
+    # Check if analysis failed
+    if result.returncode != 0:
+        print(f"[ERROR] Analysis subprocess failed with return code: {result.returncode}")
+        print(f"[ERROR] Command: python -m core.analyze {graph_json_path} --html --network-data {network_data_file}")
+        if result.stdout:
+            print(f"[ERROR] Stdout: {result.stdout}")
+        if result.stderr:
+            print(f"[ERROR] Stderr: {result.stderr}")
+        raise RuntimeError(f"Analysis phase failed with return code {result.returncode}. Check Van Evera interface and LLM configuration.")
         
     # After analysis, reload the enhanced graph data for accurate network visualization
     try:
@@ -713,7 +830,11 @@ def attempt_inference_repair(graph_data: dict, disconnected_entities: list) -> l
         return summary_path
     else:
         print(f"[ERROR] Could not find analysis summary JSON in {output_dir_for_case} using pattern {glob_pattern}")
-        return None
+        print("[CRITICAL] Analysis appears to have failed - no summary file generated")
+        print(f"[CRITICAL] Expected pattern: {glob_pattern}")
+        print(f"[CRITICAL] Search directory: {output_dir_for_case}")
+        print("[CRITICAL] This indicates the Van Evera analysis phase failed silently")
+        raise RuntimeError(f"Analysis summary not found. Expected file matching pattern '{glob_pattern}' in {output_dir_for_case}")
 
 def create_bayesian_config_from_args(args):
     """Create BayesianReportConfig from command line arguments."""
@@ -816,56 +937,38 @@ def enhance_with_bayesian_analysis(summary_path, case_file_path, output_dir, pro
         print("[INFO] Continuing with traditional analysis results")
         return summary_path
 
-# --- Universal LLM Interface (replaces 108-line query_gemini) ---
-from universal_llm_kit.universal_llm import structured, chat
+# --- LiteLLM Structured Extraction Interface ---
 
 def query_llm(text_content, schema=None, system_instruction_text="", use_structured_output=True):
-    """Fixed structured output parsing with proper Pydantic model creation"""
-    import google.generativeai as genai
-    import os
+    """Use LiteLLM structured extractor instead of direct API calls"""
     import json
-    from core.extract import parse_json
+    from core.structured_extractor import StructuredProcessTracingExtractor
     
-    # Configure Gemini
-    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("No Gemini API key found. Set GOOGLE_API_KEY or GEMINI_API_KEY")
+    # Use the structured extractor which now uses GPT-5-mini via LiteLLM
+    extractor = StructuredProcessTracingExtractor()
     
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    # Combine system instruction and text content
+    full_prompt = f"{system_instruction_text}\n\n{text_content}" if system_instruction_text else text_content
     
-    prompt = f"{system_instruction_text}\n\n{text_content}" if system_instruction_text else text_content
-    
-    if use_structured_output and schema:
-        if hasattr(schema, 'model_json_schema'):
-            prompt += f"\n\nRespond with valid JSON matching this schema: {schema.model_json_schema()}"
-        else:
-            prompt += f"\n\nRespond with valid JSON matching this schema: {json.dumps(schema, indent=2)}"
-    
-    response = model.generate_content(prompt)
-    raw_result = response.text
-    print(f"[DEBUG] Gemini response length: {len(raw_result)} chars")
-    print(f"[DEBUG] Gemini response start: {raw_result[:200]}...")
-    
-    # If structured output requested, parse and create Pydantic model
-    if use_structured_output and schema and hasattr(schema, 'model_validate'):
-        try:
-            # Use existing JSON cleaning from core.extract
-            cleaned_json = parse_json(raw_result)
-            print(f"[DEBUG] Parsed JSON keys: {list(cleaned_json.keys()) if isinstance(cleaned_json, dict) else 'Not a dict'}")
-            
-            # Create Pydantic model instance
-            structured_response = schema.model_validate(cleaned_json)
-            print(f"[DEBUG] Created structured response: {type(structured_response).__name__}")
-            return structured_response
-            
-        except Exception as e:
-            print(f"[WARNING] Failed to create structured response: {e}")
-            print(f"[WARNING] Falling back to raw response")
-            # Fall back to raw response for backward compatibility
-            return raw_result
-    
-    return raw_result
+    try:
+        result = extractor.extract_graph(full_prompt)
+        
+        # Convert the structured result back to the format expected by the pipeline
+        graph_data = {
+            'nodes': [node.model_dump() for node in result.graph.nodes],
+            'edges': [edge.model_dump() for edge in result.graph.edges]
+        }
+        
+        raw_result = json.dumps(graph_data, indent=2)
+        
+        print(f"[DEBUG] LLM response length: {len(raw_result)} chars")
+        print(f"[DEBUG] LLM response start: {raw_result[:200]}...")
+        
+        return raw_result
+        
+    except Exception as e:
+        print(f"[ERROR] Structured extraction failed: {e}")
+        raise e
 
 # --- Save Output ---
 def save_output(data, out_dir, project, suffix):

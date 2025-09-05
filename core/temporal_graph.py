@@ -15,7 +15,7 @@ from enum import Enum
 import networkx as nx
 from core.temporal_extraction import TemporalExpression, TemporalRelation, TemporalType
 
-class TemporalConstraintType(Enum):
+class SemanticConstraintType(Enum):
     STRICT_ORDERING = "strict_ordering"  # A must come before B
     OVERLAP_ALLOWED = "overlap_allowed"  # A and B can overlap
     CONCURRENT_REQUIRED = "concurrent_required"  # A and B must be simultaneous
@@ -28,9 +28,9 @@ class TemporalNode:
     node_id: str
     timestamp: Optional[datetime] = None
     duration: Optional[timedelta] = None
-    temporal_uncertainty: float = 0.0
+    semantic_uncertainty: float = 0.0
     sequence_order: Optional[int] = None
-    temporal_type: TemporalType = TemporalType.UNCERTAIN
+    semantic_type: TemporalType = TemporalType.UNCERTAIN
     temporal_expressions: List[TemporalExpression] = field(default_factory=list)
     
     # Original node attributes
@@ -55,7 +55,7 @@ class TemporalEdge:
 class TemporalConstraint:
     """Represents a temporal constraint between nodes"""
     constraint_id: str
-    constraint_type: TemporalConstraintType
+    constraint_type: SemanticConstraintType
     nodes: List[str]
     constraint_value: Any  # Duration, gap time, etc.
     confidence: float
@@ -81,7 +81,7 @@ class TemporalGraph:
         self.graph = nx.DiGraph()
         self.temporal_nodes: Dict[str, TemporalNode] = {}
         self.temporal_edges: Dict[Tuple[str, str], TemporalEdge] = {}
-        self.temporal_constraints: List[TemporalConstraint] = []
+        self.semantic_constraints: List[TemporalConstraint] = []
         self.temporal_violations: List[TemporalViolation] = []
     
     def add_temporal_node(self, node: TemporalNode):
@@ -93,9 +93,9 @@ class TemporalGraph:
             node.node_id,
             timestamp=node.timestamp,
             duration=node.duration,
-            temporal_uncertainty=node.temporal_uncertainty,
+            temporal_uncertainty=node.semantic_uncertainty,
             sequence_order=node.sequence_order,
-            temporal_type=node.temporal_type.value,
+            temporal_type=node.semantic_type.value,
             node_type=node.node_type,
             attr_props=node.attr_props
         )
@@ -119,7 +119,7 @@ class TemporalGraph:
     
     def add_temporal_constraint(self, constraint: TemporalConstraint):
         """Add a temporal constraint"""
-        self.temporal_constraints.append(constraint)
+        self.semantic_constraints.append(constraint)
     
     def get_temporal_sequence(self) -> List[str]:
         """Get nodes ordered by temporal sequence"""
@@ -202,14 +202,14 @@ class TemporalGraph:
         """Check violations of explicit temporal constraints"""
         violations = []
         
-        for constraint in self.temporal_constraints:
-            if constraint.constraint_type == TemporalConstraintType.STRICT_ORDERING:
+        for constraint in self.semantic_constraints:
+            if constraint.constraint_type == SemanticConstraintType.STRICT_ORDERING:
                 violations.extend(self._check_strict_ordering_constraint(constraint))
-            elif constraint.constraint_type == TemporalConstraintType.DURATION_CONSTRAINT:
+            elif constraint.constraint_type == SemanticConstraintType.DURATION_CONSTRAINT:
                 violations.extend(self._check_duration_constraint(constraint))
-            elif constraint.constraint_type == TemporalConstraintType.GAP_CONSTRAINT:
+            elif constraint.constraint_type == SemanticConstraintType.GAP_CONSTRAINT:
                 violations.extend(self._check_gap_constraint(constraint))
-            elif constraint.constraint_type == TemporalConstraintType.CONCURRENT_REQUIRED:
+            elif constraint.constraint_type == SemanticConstraintType.CONCURRENT_REQUIRED:
                 violations.extend(self._check_concurrency_constraint(constraint))
         
         return violations
@@ -404,7 +404,7 @@ class TemporalGraph:
             'nodes_with_sequence': sum(1 for node in self.temporal_nodes.values() if node.sequence_order is not None),
             'total_edges': len(self.temporal_edges),
             'temporal_violations': len(self.temporal_violations),
-            'temporal_constraints': len(self.temporal_constraints),
+            'temporal_constraints': len(self.semantic_constraints),
         }
         
         # Calculate temporal span
@@ -419,8 +419,8 @@ class TemporalGraph:
         
         # Calculate average uncertainty
         uncertainties = [
-            node.temporal_uncertainty for node in self.temporal_nodes.values()
-            if node.temporal_uncertainty > 0
+            node.semantic_uncertainty for node in self.temporal_nodes.values()
+            if node.semantic_uncertainty > 0
         ]
         if uncertainties:
             stats['average_uncertainty'] = sum(uncertainties) / len(uncertainties)
@@ -476,8 +476,8 @@ class TemporalGraph:
                     # Update node temporal attributes based on expression
                     if expr.normalized_value and not node.timestamp:
                         node.timestamp = expr.normalized_value
-                        node.temporal_uncertainty = expr.uncertainty
-                        node.temporal_type = expr.temporal_type
+                        node.semantic_uncertainty = expr.uncertainty
+                        node.semantic_type = expr.temporal_type
                     
                     if expr.duration and not node.duration:
                         node.duration = expr.duration
@@ -513,7 +513,7 @@ def test_temporal_graph():
         timestamp=datetime(2020, 1, 15),
         duration=timedelta(days=30),
         sequence_order=1,
-        temporal_type=TemporalType.ABSOLUTE,
+        semantic_type=TemporalType.ABSOLUTE,
         node_type="Event",
         attr_props={"description": "Initial policy announcement"}
     )
@@ -522,7 +522,7 @@ def test_temporal_graph():
         node_id="event2", 
         timestamp=datetime(2020, 3, 15),
         sequence_order=2,
-        temporal_type=TemporalType.ABSOLUTE,
+        semantic_type=TemporalType.ABSOLUTE,
         node_type="Event",
         attr_props={"description": "Policy reversal"}
     )

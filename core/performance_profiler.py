@@ -268,16 +268,58 @@ class PerformanceProfiler:
         if failed_phases:
             recommendations.append(f"Failed phases detected: {[p.phase for p in failed_phases]}")
         
-        # Suggest optimizations based on patterns
-        # Note: These are phase name checks for profiling categorization, not semantic analysis
-        # The phase names are system-defined labels, not user content requiring LLM analysis
-        llm_phases = [p for p in self.phases if 'llm' in p.phase.lower() or 'extract' in p.phase.lower()]
-        if llm_phases and sum(p.duration for p in llm_phases) / total_time > 0.6:
-            recommendations.append("LLM calls dominate execution time - consider implementing caching")
+        # Suggest optimizations based on semantic phase analysis
+        from core.llm_required import LLMRequiredError
+        from core.plugins.van_evera_llm_interface import get_van_evera_llm
         
-        html_phases = [p for p in self.phases if 'html' in p.phase.lower() or 'format' in p.phase.lower()]
-        if html_phases and sum(p.duration for p in html_phases) / total_time > 0.3:
-            recommendations.append("HTML generation takes significant time - consider streaming approach")
+        llm_service = get_van_evera_llm()
+        
+        try:
+            llm_phases = []
+            
+            for p in self.phases:
+                # Use LLM to classify if this phase involves LLM processing
+                classification_result = llm_service.assess_probative_value(
+                    evidence_description=f"Performance phase: {p.phase}",
+                    hypothesis_description="This phase involves LLM processing, AI inference, or text extraction operations",
+                    context="Performance phase classification for optimization analysis"
+                )
+                
+                if not hasattr(classification_result, 'probative_value'):
+                    raise LLMRequiredError("Phase classification missing probative_value - invalid LLM response")
+                    
+                # High probability indicates LLM-related phase
+                if classification_result.probative_value > 0.7:
+                    llm_phases.append(p)
+            
+            if llm_phases and total_time > 0 and sum(p.duration for p in llm_phases) / total_time > 0.6:
+                recommendations.append("LLM calls dominate execution time - consider implementing caching")
+        except Exception as e:
+            raise LLMRequiredError(f"Cannot classify performance phases without LLM: {e}")
+        
+        # Use LLM to classify HTML/formatting phases
+        try:
+            html_phases = []
+            
+            for p in self.phases:
+                # Use LLM to classify if this phase involves HTML/formatting operations
+                classification_result = llm_service.assess_probative_value(
+                    evidence_description=f"Performance phase: {p.phase}",
+                    hypothesis_description="This phase involves HTML generation, formatting, or presentation rendering operations",
+                    context="Performance phase classification for HTML optimization analysis"
+                )
+                
+                if not hasattr(classification_result, 'probative_value'):
+                    raise LLMRequiredError("HTML phase classification missing probative_value - invalid LLM response")
+                    
+                # High probability indicates HTML/formatting-related phase
+                if classification_result.probative_value > 0.7:
+                    html_phases.append(p)
+                    
+            if html_phases and total_time > 0 and sum(p.duration for p in html_phases) / total_time > 0.3:
+                recommendations.append("HTML generation takes significant time - consider streaming approach")
+        except Exception as e:
+            raise LLMRequiredError(f"Cannot classify HTML phases without LLM: {e}")
         
         if not recommendations:
             recommendations.append("Performance is within acceptable targets")

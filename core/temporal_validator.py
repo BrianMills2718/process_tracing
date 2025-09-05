@@ -384,7 +384,7 @@ class TemporalValidator:
         
         high_uncertainty_nodes = [
             node_id for node_id, node in temporal_graph.temporal_nodes.items()
-            if node.temporal_uncertainty > self.validation_rules['uncertainty_threshold']
+            if node.semantic_uncertainty > self.validation_rules['uncertainty_threshold']
         ]
         
         if high_uncertainty_nodes:
@@ -401,7 +401,7 @@ class TemporalValidator:
         
         return warnings
     
-    def _generate_improvement_suggestions(self, temporal_graph: TemporalGraph, violations: List[TemporalViolation]) -> List[str]:
+    def _generate_improvement_suggestions(self, semantic_graph: TemporalGraph, violations: List[TemporalViolation]) -> List[str]:
         """Generate suggestions for improving temporal consistency"""
         suggestions = []
         
@@ -424,14 +424,14 @@ class TemporalValidator:
             suggestions.append("Ensure temporal relationship labels match actual timing data")
         
         # General suggestions based on data quality
-        nodes_with_timestamps = sum(1 for node in temporal_graph.temporal_nodes.values() if node.timestamp)
-        total_nodes = len(temporal_graph.temporal_nodes)
+        nodes_with_timestamps = sum(1 for node in semantic_graph.temporal_nodes.values() if node.timestamp)
+        total_nodes = len(semantic_graph.temporal_nodes)
         
         if nodes_with_timestamps / total_nodes < 0.5:
             suggestions.append("Consider adding more specific timestamps to improve temporal analysis accuracy")
         
-        if len(temporal_graph.temporal_constraints) == 0:
-            suggestions.append("Add explicit temporal constraints to validate process timing requirements")
+        if len(semantic_graph.semantic_constraints) == 0:
+            suggestions.append("Add explicit semantic constraints to validate process timing requirements")
         
         return suggestions
     
