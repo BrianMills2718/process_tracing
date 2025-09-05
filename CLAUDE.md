@@ -18,6 +18,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ❌ Dataset-specific logic (American Revolution hardcoded rules)
 - ❌ Historical period-specific keyword matching
 - ❌ Returning None/0/[] on LLM failure (must raise LLMRequiredError)
+- ❌ Mixed LLM configurations (some calls to Gemini, others to different models)
+- ❌ Direct API calls bypassing LiteLLM infrastructure
 
 **REQUIRED IMPLEMENTATIONS**:
 - ✅ LLM semantic analysis for ALL evidence-hypothesis relationships
@@ -27,6 +29,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ Evidence-based confidence scoring through LLM evaluation
 - ✅ Generalist process tracing without dataset-specific hardcoding
 - ✅ Raise LLMRequiredError on any LLM failure (fail-fast)
+- ✅ Consistent LiteLLM routing for ALL LLM operations
+- ✅ Single model configuration across entire system
 
 **APPROVAL REQUIRED**: Any rule-based logic must be explicitly approved with academic justification. Default assumption: **USE LLM SEMANTIC UNDERSTANDING**.
 
@@ -34,336 +38,340 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 14 - Quick Wins Implementation (Updated 2025-01-30)
+## 🎯 CURRENT STATUS: System Operational with Mixed Routing (Updated 2025-01-05)
 
-**System Status**: **86.6% Measured Compliance** (58/67 files pass validator)
-**Phase 13 Success**: **Zero hardcoded fallbacks remain in plugin system** (13 targeted fallbacks eliminated)
-**Target**: **Achieve 93% compliance through quick wins and infrastructure improvements**
-**Goal**: **Systematic progress toward 100% TRUE LLM-first architecture**
+**System Status**: **OPERATIONAL WITH MIXED ROUTING**  
+**Phase 17 Achievement**: **GPT-5-mini Parameter Integration SUCCESSFUL**
+**Current Priority**: **Schema refinement and complete router unification**
 
-**PHASE 14 IMPLEMENTATION STATUS:**
-- ✅ **Planning Complete**: Comprehensive ultrathink analysis completed
-- ✅ **Violation Categories**: 5 categories identified with systematic migration strategy  
-- ✅ **Risk Assessment**: Quick wins identified for immediate 6-7% compliance improvement
-- ⏳ **Implementation**: Ready to execute Phase 14 quick wins
+**PHASE 17 COMPLETION SUMMARY:**
+- ✅ **Extraction Phase**: GPT-5-mini working with router parameters (2-5s processing)
+- ✅ **Analysis Phase**: Van Evera LLM interface operational (15-20s processing, using Gemini)
+- ✅ **Parameter Integration**: Router parameters successfully integrated into StructuredExtractor
+- ⚠️ **Schema Compliance**: ~85% validation success, minor property validation issues
+- ⚠️ **Mixed Routing**: Extraction=GPT-5-mini, Analysis=Gemini (documented, functional)
 
-## Evidence-Based Development Philosophy (Mandatory)
+**ROOT CAUSE RESOLUTION**:
+- **Parameter Discovery**: Missing router parameters `use_in_pass_through=False`, `use_litellm_proxy=False`, `merge_reasoning_content_in_choices=False`
+- **Integration Success**: GPT-5-mini now generates structured output consistently
+- **Pipeline Status**: End-to-end processing functional, HTML generation capability restored
 
-### Core Principles
-- **NO LAZY IMPLEMENTATIONS**: No mocking/stubs/fallbacks/pseudo-code/simplified implementations
-- **FAIL-FAST PRINCIPLES**: Surface errors immediately via LLMRequiredError
-- **EVIDENCE-BASED DEVELOPMENT**: All claims require raw evidence in structured evidence files
-- **INCREMENTAL VALIDATION**: Test after each plugin fix to isolate issues
-- **COMPREHENSIVE VERIFICATION**: Use systematic validation before claiming completion
+---
 
-### Quality Standards
-- **Semantic Understanding**: All classification based on LLM analysis, not keyword matching
-- **Generalist System**: No dataset-specific hardcoding - system works across all historical periods
-- **Technical Correctness**: All Pydantic validations must pass
-- **Process Adherence**: Run lint/typecheck before marking tasks complete
-- **Evidence Documentation**: Document all claims with concrete test results in structured evidence files
+## 🔧 PHASE 18: Schema Refinement and Router Unification (NEXT PRIORITY)
+
+### OBJECTIVE: Achieve 100% schema compliance and complete GPT-5-mini routing
+
+**RATIONALE**: Phase 17 successfully resolved the critical infrastructure issues (GPT-5-mini connectivity). The system is now operational with mixed routing (GPT-5-mini for extraction, Gemini for analysis). Phase 18 focuses on refinement and complete unification.
+
+**STRATEGIC APPROACH**: Schema-first refinement to achieve perfect validation, followed by complete router unification.
+
+**EXPECTED IMPACT**: Mixed routing → Complete GPT-5-mini unification with 100% schema compliance
+
+## 📋 PHASE 18A: Schema Validation Refinement (30-45 minutes, MEDIUM priority)
+
+### OBJECTIVE: Achieve 100% Pydantic schema validation compliance
+**Target**: Resolve minor validation errors preventing perfect pipeline execution
+**Scope**: StructuredExtractor prompt engineering and schema alignment
+
+#### TASK 1A: Schema Error Analysis and Resolution (20 minutes)
+**Purpose**: Fix the ~15% validation errors identified in Phase 17C
+
+**Current Validation Issues**:
+```python
+# Actor nodes missing description field (have name instead)
+nodes.X.properties.description: Field required (Actor nodes using 'name')
+
+# Array fields generated as strings
+nodes.X.properties.key_predictions: Input should be array (generates string)
+
+# Non-standard enum values
+edges.X.properties.test_result: Should be 'passed'/'failed'/'ambiguous' (uses 'inconclusive', 'supports')
+edges.X.properties.agency: Should be string (generates boolean)
+```
+
+**Required Fixes**:
+1. Update prompt template to specify Actor nodes must have `description` field
+2. Add explicit array formatting examples for `key_predictions` fields
+3. Standardize enum values in prompt with exact allowed values
+4. Add type specifications for boolean vs string properties
+
+**Validation Command**:
+```bash
+python -c "
+from core.structured_extractor import StructuredProcessTracingExtractor
+result = extractor.extract_graph('Test input')
+# Expected: Zero validation errors, 100% schema compliance
+"
+```
+
+#### TASK 1B: Prompt Template Enhancement (15 minutes)
+**Purpose**: Enhance schema clarity to prevent validation issues
+
+**Enhancement Areas**:
+- Property type specifications (string vs array vs boolean)
+- Required field emphasis for all node types
+- Enum value lists with exact allowed values
+- Example JSON with perfect schema compliance
+
+**Validation**: Multiple extraction tests with different input types to confirm consistent schema compliance
+
+#### TASK 1C: Schema Compliance Testing (10 minutes)
+**Purpose**: Comprehensive validation of schema refinement
+
+**Test Cases**:
+- Simple text (2-3 events)
+- Complex text (multiple actors, alternatives)
+- Edge case inputs (minimal text, complex temporal relationships)
+
+**Success Criteria**: 100% schema validation across all test cases
+
+### PHASE 18A VALIDATION CRITERIA
+- **Zero Validation Errors**: All Pydantic schema validation passes
+- **Consistent Field Types**: Arrays, strings, booleans generated correctly
+- **Enum Compliance**: All enum values use standard allowed values
+- **Required Field Presence**: All required fields present in generated nodes/edges
+
+## 🔄 PHASE 18B: Complete Router Unification (45-60 minutes, HIGH priority)
+
+### OBJECTIVE: Migrate analysis phase from Gemini to GPT-5-mini
+**Target**: Eliminate mixed routing, achieve consistent GPT-5-mini throughout pipeline
+**Approach**: Van Evera LLM interface router configuration updates
+
+#### TASK 2A: Van Evera Interface Router Investigation (15 minutes)
+**Purpose**: Understand why analysis phase routes to Gemini instead of GPT-5-mini
+
+**Investigation Commands**:
+```bash
+# Check current Van Evera routing
+python -c "
+from core.plugins.van_evera_llm_interface import get_van_evera_llm
+llm = get_van_evera_llm()
+# Trace what router configuration is actually used
+"
+
+# Check UniversalLLM router priority
+python -c "
+from universal_llm_kit.universal_llm import get_llm
+router = get_llm()
+print(f'Router priority order: {router.router.model_list}')
+"
+```
+
+**Expected Discovery**: Identify why "smart" model routes to Gemini in analysis phase despite router configuration showing GPT-5-mini
+
+#### TASK 2B: Router Configuration Unification (20 minutes)
+**Purpose**: Force all "smart" model calls to use GPT-5-mini consistently
+
+**Potential Solutions**:
+1. Update UniversalLLM router to prioritize GPT-5-mini more strongly
+2. Modify Van Evera interface to specify model explicitly
+3. Remove Gemini from router configuration entirely (force GPT-5-mini only)
+
+**Configuration Update**:
+```python
+# In universal_llm_kit/universal_llm.py - ensure GPT-5-mini exclusivity
+if os.getenv("OPENAI_API_KEY"):
+    model_list = [
+        {"model_name": "smart", "litellm_params": {"model": "gpt-5-mini", "max_completion_tokens": 16384}},
+        {"model_name": "fast", "litellm_params": {"model": "gpt-5-mini", "max_completion_tokens": 16384}},
+    ]
+    # Remove or comment out Gemini configurations to force GPT-5-mini
+```
+
+#### TASK 2C: Unified Routing Validation (20 minutes)  
+**Purpose**: Prove complete pipeline uses GPT-5-mini exclusively
+
+**Test Commands**:
+```bash
+# Test extraction phase routing
+python -c "from core.structured_extractor import StructuredProcessTracingExtractor; ..."
+# Expected: GPT-5-mini logs
+
+# Test analysis phase routing  
+python -c "from core.plugins.van_evera_llm_interface import get_van_evera_llm; ..."
+# Expected: GPT-5-mini logs, NO Gemini logs
+
+# Full pipeline test with logging
+python process_trace_advanced.py --project test_simple > pipeline_logs.txt 2>&1
+grep -E "(gpt-5-mini|gemini)" pipeline_logs.txt
+# Expected: Only GPT-5-mini references, zero Gemini references
+```
+
+### PHASE 18B VALIDATION CRITERIA
+- **Unified Model Calls**: All LLM calls route to GPT-5-mini
+- **Zero Mixed Routing**: No Gemini calls detected in pipeline logs
+- **Performance Consistency**: Analysis phase maintains sub-20s performance with GPT-5-mini  
+- **Function Preservation**: All Van Evera functionality working with GPT-5-mini routing
+
+## 🧪 PHASE 18C: Complete Pipeline HTML Generation (30-45 minutes, VALIDATION)
+
+### OBJECTIVE: Prove unified pipeline generates HTML successfully
+**Target**: End-to-end HTML generation with 100% GPT-5-mini routing and perfect schema compliance
+**Approach**: Full pipeline execution with comprehensive validation
+
+#### TASK 3A: Schema-Compliant Pipeline Test (15 minutes)
+**Purpose**: Test pipeline with refined schema to ensure no validation errors
+
+**Test Execution**:
+```bash
+# Run complete pipeline with schema refinements
+python process_trace_advanced.py --project test_simple_phase18
+
+# Check for validation errors in output
+find output_data/test_simple_phase18 -name "*.html" -exec echo "HTML generated: {}" \; -exec ls -la {} \;
+
+# Validate unified routing in logs
+grep -E "(gpt-5-mini|gemini)" pipeline_output.log
+# Expected: Only gpt-5-mini, zero gemini
+```
+
+#### TASK 3B: HTML Quality Validation (15 minutes)
+**Purpose**: Verify generated HTML contains complete process tracing analysis
+
+**Quality Checks**:
+- HTML file size >100KB (indicates comprehensive analysis)
+- Van Evera diagnostic tests present in HTML
+- Interactive visualizations rendering correctly
+- All process tracing components (nodes, edges, analysis) included
+
+#### TASK 3C: Performance Benchmarking (15 minutes)
+**Purpose**: Document complete pipeline performance with unified GPT-5-mini routing
+
+**Benchmark Metrics**:
+- Extraction phase timing (target: <5s)
+- Analysis phase timing (target: <30s with GPT-5-mini)
+- Total pipeline timing (target: <60s)
+- HTML generation size and completeness
+
+### PHASE 18C VALIDATION CRITERIA
+- **HTML Generated**: Physical HTML file created with complete analysis
+- **Unified Routing**: 100% GPT-5-mini routing throughout pipeline
+- **Schema Perfect**: Zero validation errors in any pipeline component
+- **Performance Acceptable**: Complete pipeline under 60 seconds
+- **Quality High**: HTML contains comprehensive Van Evera process tracing analysis
+
+## 📊 COMPREHENSIVE SUCCESS VALIDATION
+
+### FINAL EVIDENCE REQUIREMENTS
+
+**Must Create Evidence Files**:
+1. **`evidence/current/Evidence_Phase18A_SchemaRefinement.md`**: Schema validation fixes and testing results
+2. **`evidence/current/Evidence_Phase18B_RouterUnification.md`**: Complete GPT-5-mini routing implementation
+3. **`evidence/current/Evidence_Phase18C_HTMLGeneration.md`**: End-to-end HTML generation proof
+4. **`evidence/current/Evidence_Phase18_Complete.md`**: Comprehensive phase 18 success summary
+
+**Each Evidence File Must Include**:
+- **Before/After Configurations**: Show exact changes made
+- **Raw Command Outputs**: All validation test results with timestamps
+- **Error Resolution**: Document how each issue was fixed
+- **Performance Metrics**: Timing and consistency measurements
+- **Success Artifacts**: Screenshots, file sizes, browser rendering proof
+- **Reproducibility Tests**: Multiple successful runs documented
+
+### CRITICAL SUCCESS CRITERIA (ALL MUST BE MET)
+
+- ✅ **Perfect Schema Compliance**: 100% Pydantic validation success across all components
+- ✅ **Unified GPT-5-mini Routing**: All LLM calls use GPT-5-mini (zero Gemini calls)
+- ✅ **HTML Report Generated**: Physical HTML file exists and renders completely in browser
+- ✅ **Pipeline Reliability**: Multiple successful runs without any errors
+- ✅ **Performance Excellent**: End-to-end completion under 60 seconds
+- ✅ **Complete Functionality**: All Van Evera process tracing features working
+
+### FAILURE CONDITIONS (ANY MEANS INCOMPLETE)
+
+- ❌ Any Pydantic validation errors in pipeline execution
+- ❌ Mixed model calls (any Gemini references in logs)
+- ❌ No HTML output generated or incomplete HTML
+- ❌ Pipeline failures or hanging processes
+- ❌ Performance degradation >60 seconds total
+- ❌ Missing Van Evera functionality in final HTML
+
+## ⚡ IMPLEMENTATION TIMELINE
+
+### **Phase 18A: Schema Refinement** (30-45 minutes)
+1. **Error Analysis** (20 min) → Fix Actor descriptions, array fields, enum values
+2. **Prompt Enhancement** (15 min) → Add detailed type specifications and examples
+3. **Compliance Testing** (10 min) → Validate 100% schema success
+
+### **Phase 18B: Router Unification** (45-60 minutes)
+1. **Routing Investigation** (15 min) → Understand Gemini vs GPT-5-mini routing
+2. **Configuration Updates** (20 min) → Force exclusive GPT-5-mini routing
+3. **Unified Validation** (20 min) → Prove complete GPT-5-mini pipeline
+
+### **Phase 18C: HTML Generation** (30-45 minutes)
+1. **Pipeline Testing** (15 min) → Schema-compliant full pipeline execution
+2. **HTML Validation** (15 min) → Quality and completeness verification
+3. **Performance Benchmarking** (15 min) → Document unified pipeline performance
+
+**Total Estimated Time**: 1.75-2.5 hours for complete system unification
+
+## 🎯 EVIDENCE-BASED DEVELOPMENT REQUIREMENTS
+
+### Mandatory Validation Process
+1. **No Claims Without Evidence**: Every success statement must be backed by command outputs
+2. **Incremental Validation**: Test after each phase before proceeding
+3. **Comprehensive Documentation**: All changes and results documented with timestamps
+4. **Reproducible Results**: Multiple successful pipeline runs required for success claim
+5. **Performance Monitoring**: Track timing and consistency across all phases
+
+### Quality Gates
+- **Schema Validation**: 100% compliance required before router unification
+- **Unified Routing**: Zero mixed model calls allowed
+- **HTML Generation**: Physical file with complete analysis required
+- **Performance Standards**: Sub-60-second total pipeline execution
+
+**Remember**: This is SYSTEM OPTIMIZATION after successful infrastructure repair. Phase 17 resolved the critical issues; Phase 18 achieves perfect unification and performance.
+
+---
 
 ## Project Overview
 
 **Generalist LLM-Enhanced Process Tracing Toolkit** - Universal system implementing Van Evera academic methodology with sophisticated LLM semantic understanding for qualitative analysis using process tracing across any historical period or domain.
 
-### Architecture
+### Current Architecture Status
 - **Plugin System**: 16+ registered plugins (100% LLM-first compliance achieved in Phase 13)
-- **Van Evera Workflow**: 8-step academic analysis pipeline with enhanced intelligence
-- **LLM Integration**: VanEveraLLMInterface with structured Pydantic output (Gemini 2.5 Flash)
+- **Van Evera Workflow**: 8-step academic analysis pipeline with enhanced intelligence  
+- **LLM Integration**: OPERATIONAL with mixed routing (GPT-5-mini extraction, Gemini analysis)
 - **Validation System**: validate_true_compliance.py for comprehensive compliance checking
 - **Type Safety**: Full mypy compliance across core modules
-- **Security**: Environment-based API key management
+- **Security**: Environment-based API key management (OpenAI configured)
 - **Universality**: No dataset-specific logic - works across all domains and time periods
-
-## 🚀 PHASE 14: Quick Wins & Infrastructure (Implementation Ready)
-
-### OBJECTIVE: Achieve 93% compliance through targeted fixes of simple violations
-
-**RATIONALE**: Phase 13 eliminated plugin fallbacks but left 40+ violations in core modules. Phase 14 targets the easiest violations for maximum compliance improvement with minimal risk.
-
-**EXPECTED IMPACT**: 86.6% → 93% compliance (6-7% improvement)
-
-### CRITICAL: 4 Quick Win Categories Identified
-
-Based on comprehensive ultrathink analysis, the following violations can be quickly resolved:
-
-#### TASK 1: Fix Hardcoded Confidence Values (30 minutes, LOW risk)
-**Files**: `core/temporal_viz.py`
-**Violations**: Lines 899, 928, 941 - Hardcoded confidence values
-**Pattern**: `confidence=0.9` → LLM-based assessment
-
-**Current Violations**:
-```python
-# Line 899: Hardcoded confidence
-edge = TemporalEdge(confidence=0.9, evidence_text="...")
-
-# Line 928: Hardcoded confidence  
-edge = TemporalEdge(confidence=0.8, evidence_text="...")
-
-# Line 941: Hardcoded confidence
-edge = TemporalEdge(confidence=0.7, evidence_text="...")
-```
-
-**Required Fix Strategy**:
-```python
-# BEFORE (hardcoded)
-edge = TemporalEdge(confidence=0.9, evidence_text="Announcement triggered public reaction")
-
-# AFTER (LLM-based)
-from core.semantic_analysis_service import get_semantic_service
-semantic_service = get_semantic_service()
-
-confidence_result = semantic_service.assess_probative_value(
-    evidence_description=evidence_text,
-    hypothesis_description="Temporal relationship demonstrates causal sequence",
-    context="Temporal edge confidence assessment"
-)
-
-if not hasattr(confidence_result, 'probative_value'):
-    raise LLMRequiredError("Confidence assessment missing probative_value - invalid LLM response")
-
-edge = TemporalEdge(confidence=confidence_result.probative_value, evidence_text=evidence_text)
-```
-
-**Validation Commands**:
-```bash
-# Check for remaining hardcoded confidence
-grep -n "confidence.*=.*0\." core/temporal_viz.py
-# Should return no results
-
-# Test file loads
-python -c "from core.temporal_viz import TemporalGraph; print('Module loads OK')"
-```
-
-#### TASK 2: Domain Method/Variable Renaming (45 minutes, LOW risk)
-**Files**: `core/plugins/research_question_generator.py`
-**Violations**: Lines 277, 339 - Domain-specific naming
-**Pattern**: Domain-specific terms → Generic semantic terms
-
-**Current Violations**:
-```python
-# Line 277: Domain-specific method name
-def _assess_temporal_complexity(self, text: str) -> bool:
-
-# Line 339: Domain-specific variable
-elif hasattr(temporal_classification, 'primary_domain'):
-```
-
-**Required Fix Strategy**:
-```python
-# BEFORE (domain-specific)
-def _assess_temporal_complexity(self, text: str) -> bool:
-    """Assess if the text has temporal complexity using semantic analysis"""
-
-temporal_classification = semantic_service.classify_content(...)
-elif hasattr(temporal_classification, 'primary_domain'):
-
-# AFTER (generic semantic)
-def _assess_semantic_complexity(self, text: str) -> bool:
-    """Assess if the text has semantic complexity using semantic analysis"""
-
-domain_classification = semantic_service.classify_content(...)
-elif hasattr(domain_classification, 'primary_domain'):
-```
-
-**Validation Commands**:
-```bash
-# Check for temporal domain references
-grep -n "temporal" core/plugins/research_question_generator.py | grep -v comment
-# Should return minimal results (only in comments/docstrings)
-
-# Test plugin loads
-python -c "from core.plugins.research_question_generator import ResearchQuestionGeneratorPlugin; print('Plugin loads OK')"
-```
-
-#### TASK 3: Validator False Positive Filtering (60 minutes, LOW risk)
-**Files**: `validate_true_compliance.py`
-**Issue**: Legitimate structural checks flagged as violations
-**Pattern**: Dictionary key access → Whitelist legitimate patterns
-
-**Current False Positives**:
-```python
-# Line 182 in evidence_document.py - LEGITIMATE dictionary key check
-if 'temporal' in self.feature_index:  # This is structural, not semantic
-    return self.feature_index['temporal']
-```
-
-**Required Fix Strategy**:
-Add whitelist patterns to validator to ignore legitimate structural code:
-```python
-# In validate_true_compliance.py, add whitelist patterns
-self.whitelist_patterns = [
-    r"if\s+['\"][a-zA-Z_]+['\"]\s+in\s+self\.\w+\s*:",  # Dictionary key checks
-    r"if\s+['\"][a-zA-Z_]+['\"]\s+in\s+\w+_index\s*:",  # Index key checks
-    r"if\s+['\"][a-zA-Z_]+['\"]\s+in\s+config\s*:",     # Config key checks
-]
-
-# Update check_file_compliance() to filter whitelisted patterns
-def check_file_compliance(self, filepath: Path) -> Tuple[bool, List[str]]:
-    # ... existing code ...
-    
-    for pattern, description in self.keyword_patterns:
-        matches = re.finditer(pattern, content, re.IGNORECASE | re.MULTILINE)
-        for match in matches:
-            # Skip if pattern matches whitelist
-            line_content = content[match.start():match.end()]
-            if any(re.search(wp, line_content) for wp in self.whitelist_patterns):
-                continue
-                
-            line_num = content[:match.start()].count('\n') + 1
-            violations.append(f"Line {line_num}: {description}")
-```
-
-**Validation Commands**:
-```bash
-# Test validator improvements
-python validate_true_compliance.py
-# Should show compliance improvement (86.6% → higher)
-
-# Verify whitelist doesn't hide real violations
-grep -n "if.*keyword.*in" core/ --include="*.py"
-# Should still catch real keyword matching violations
-```
-
-#### TASK 4: File Encoding Fixes (30 minutes, LOW risk)
-**Files**: `core/extract.py`, `core/structured_extractor.py`
-**Issue**: Character encoding prevents validation
-**Pattern**: Fix encoding to allow proper validation
-
-**Current Issue**:
-```
-Could not read file: 'charmap' codec can't decode byte 0x9d in position 1566
-```
-
-**Required Fix Strategy**:
-```python
-# Check and fix encoding issues
-def fix_file_encoding(filepath):
-    try:
-        # Try UTF-8 first
-        with open(filepath, 'r', encoding='utf-8') as f:
-            content = f.read()
-    except UnicodeDecodeError:
-        try:
-            # Try latin-1 as fallback
-            with open(filepath, 'r', encoding='latin-1') as f:
-                content = f.read()
-                # Re-save as UTF-8
-                with open(filepath, 'w', encoding='utf-8') as f_out:
-                    f_out.write(content)
-        except Exception as e:
-            print(f"Cannot fix encoding for {filepath}: {e}")
-```
-
-**Validation Commands**:
-```bash
-# Test file can be read
-python -c "with open('core/extract.py', 'r', encoding='utf-8') as f: content = f.read(); print('File readable')"
-
-# Run validator on fixed files
-python validate_true_compliance.py | grep -E "(extract|structured_extractor)"
-# Should show actual violations instead of encoding errors
-```
-
-### POST-PHASE 14 VALIDATION
-
-**Comprehensive Validation Commands**:
-```bash
-# 1. Run compliance validator
-python validate_true_compliance.py
-
-# Expected: 86.6% → 93% compliance improvement
-
-# 2. Verify no new regressions
-python -c "
-from core.plugins.research_question_generator import ResearchQuestionGeneratorPlugin
-from core.temporal_viz import TemporalGraph  
-print('All modified modules load successfully')
-"
-
-# 3. Test system functionality (if test data available)
-python -m core.analyze test_data/sample.json 2>/dev/null || echo "No test data available"
-
-# 4. Check for remaining quick wins
-grep -r "confidence.*=.*0\." core/ --include="*.py"
-grep -r "temporal.*classification" core/ --include="*.py"  
-# Should return minimal results
-```
-
-### SUCCESS CRITERIA FOR PHASE 14
-
-**Must Achieve**:
-- ✅ Compliance rate improvement to 93% (from 86.6%)
-- ✅ Zero hardcoded confidence values in temporal_viz.py
-- ✅ Generic semantic naming in research_question_generator.py
-- ✅ Improved validator accuracy with false positive filtering
-- ✅ File encoding issues resolved for proper validation
-- ✅ All modified modules load without import errors
-- ✅ System functionality preserved
-
-### EVIDENCE REQUIREMENTS
-
-**Create Evidence Files**:
-1. **`evidence/current/Evidence_Phase14_Task1.md`**: Hardcoded confidence fixes
-2. **`evidence/current/Evidence_Phase14_Task2.md`**: Domain naming improvements  
-3. **`evidence/current/Evidence_Phase14_Task3.md`**: Validator false positive filtering
-4. **`evidence/current/Evidence_Phase14_Task4.md`**: File encoding fixes
-5. **`evidence/current/Evidence_Phase14_Final.md`**: Comprehensive validation results
-
-**Each Evidence File Must Include**:
-- Before/after code snippets
-- Raw command outputs for all validation steps
-- Module loading test results
-- Compliance rate measurements
-- Any functional differences observed
-- Success/failure determination with specific metrics
-
-### IMPLEMENTATION SEQUENCE
-
-1. **Execute Task 1** (30 minutes) → Test → Document → Validate
-2. **Execute Task 2** (45 minutes) → Test → Document → Validate  
-3. **Execute Task 3** (60 minutes) → Test → Document → Validate
-4. **Execute Task 4** (30 minutes) → Test → Document → Validate
-5. **Final Validation** (15 minutes) → Comprehensive testing → Evidence documentation
-
-**Total Timeline**: 3 hours implementation + 15 minutes final validation = 3.25 hours
-
-## FUTURE PHASES ROADMAP
-
-### Phase 15: Medium Complexity Semantic Replacements (4-6 hours)
-- Replace case-insensitive string matching with LLM semantic similarity
-- Target: 93% → 97% compliance
-
-### Phase 16: Complete Rule-Based Logic Elimination (8-12 hours) 
-- Rewrite temporal_extraction.py with full LLM semantic understanding
-- Target: 97% → 100% TRUE LLM-first compliance
 
 ## Testing Commands Reference
 
 ```bash
-# Validate compliance improvements
-python validate_true_compliance.py
+# Schema validation testing
+python -c "from core.structured_extractor import StructuredProcessTracingExtractor; extractor.extract_graph('test')"
 
-# Check for remaining violations by category
-grep -r "confidence.*=.*0\." core/ --include="*.py"        # Hardcoded confidence
-grep -r "temporal.*classification" core/ --include="*.py"  # Domain naming
-grep -r "if.*keyword.*in" core/ --include="*.py"          # Keyword matching
+# Router configuration verification  
+python -c "from universal_llm_kit.universal_llm import get_llm; router = get_llm(); print(router.router.model_list)"
 
-# Test system functionality  
-python -c "import core; print('Core module loads')"
-python -m core.analyze test_data.json 2>/dev/null || echo "No test data"
+# Van Evera interface testing
+python -c "from core.plugins.van_evera_llm_interface import get_van_evera_llm; llm.assess_probative_value(...)"
 
-# Verify LLM integration
-python -c "from core.semantic_analysis_service import get_semantic_service; print('Available')"
+# Complete pipeline test
+python process_trace_advanced.py --project test_simple
+
+# HTML generation validation
+find output_data -name "*.html" -mmin -10 -exec echo "HTML: {}" \; -exec wc -c {} \;
 ```
 
 ## Critical Success Factors
 
-- **Evidence-Based Validation**: Every claim must be backed by raw command outputs
-- **Incremental Testing**: Test after each task to isolate issues quickly  
-- **Fail-Fast Implementation**: Proper LLMRequiredError, no silent fallbacks
-- **Systematic Progress**: Measure compliance improvements objectively
-- **Foundation Building**: Each phase enables the next level of complexity
+- **Evidence-First Approach**: All claims require concrete validation with command outputs
+- **Systematic Problem Solving**: Complete analysis before implementing changes
+- **Incremental Validation**: Test each component before integration
+- **Documentation Discipline**: Every change documented with before/after evidence
+- **Performance Monitoring**: Measure and validate timing across all pipeline stages
+- **Quality Focus**: 100% schema compliance and unified routing as success criteria
 
-Remember: Phase 14 focuses on **quick wins** to demonstrate systematic progress. More complex violations require architectural changes in future phases.
+**Current Priority**: The system is operational with mixed routing. Phase 18 focuses on achieving perfect unification (complete GPT-5-mini routing) and 100% schema compliance for production-ready quality.
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+      
+      IMPORTANT: this context may or may not be relevant to your tasks. You should not respond to this context unless it is highly relevant to your task.
