@@ -135,6 +135,35 @@ Focus especially on these methodologically critical edge types:
 
 Extract comprehensive causal networks following these constraints. Pay special attention to domain→range validity and diagnostic properties.
 
+## REQUIRED JSON OUTPUT STRUCTURE:
+
+You MUST return JSON with exactly this structure (use "type" not "node_type" or "edge_type"):
+
+```json
+{{
+    "nodes": [
+        {{
+            "id": "unique_id",
+            "type": "Event|Hypothesis|Evidence|Causal_Mechanism|Alternative_Explanation|Actor|Condition|Data_Source",
+            "properties": {{
+                "description": "required description"
+            }}
+        }}
+    ],
+    "edges": [
+        {{
+            "id": "unique_edge_id", 
+            "source_id": "source_node_id",
+            "target_id": "target_node_id",
+            "type": "causes|supports|refutes|tests_hypothesis|etc",
+            "properties": {{
+                
+            }}
+        }}
+    ]
+}}
+```
+
 Text to analyze:
 {text}"""
 
@@ -204,8 +233,8 @@ class StructuredProcessTracingExtractor:
     def _extract_with_structured_output(self, prompt: str) -> ProcessTracingGraph:
         """Use LiteLLM structured output with Pydantic schema - fail fast if it doesn't work"""
         try:
-            # Use direct LiteLLM completion with JSON mode (GPT-5-mini structured output may not be supported)
-            # NOTE: GPT-5-mini requires max_completion_tokens instead of max_tokens
+            # Use direct LiteLLM completion with router parameters for GPT-5-mini compatibility
+            # PHASE 17B: Apply exact router parameters discovered in 17A
             response = litellm.completion(
                 model=self.model_name,
                 messages=[
@@ -214,7 +243,10 @@ class StructuredProcessTracingExtractor:
                 ],
                 response_format={"type": "json_object"},
                 api_key=self.api_key,
-                max_completion_tokens=16384
+                max_completion_tokens=16384,
+                use_in_pass_through=False,
+                use_litellm_proxy=False,
+                merge_reasoning_content_in_choices=False
             )
             
             # Get the JSON content and parse it with our Pydantic model
