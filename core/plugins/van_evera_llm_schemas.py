@@ -594,3 +594,24 @@ class BatchedHypothesisEvaluation(BaseModel):
         ge=0.0, le=1.0,
         description="Overall confidence in the evaluations"
     )
+
+class SemanticThresholdAssessment(BaseModel):
+    """
+    LLM-based semantic threshold assessment for evidence relevance.
+    Provides dynamic thresholds based on context and evidence type.
+    """
+    threshold: float = Field(
+        ge=0.0, le=1.0,
+        description="Semantic relevance threshold for evidence-prediction relationships"
+    )
+    context_factor: float = Field(
+        ge=0.8, le=1.2,
+        description="Context-specific adjustment factor for threshold"
+    )
+    evidence_type_weight: float = Field(
+        ge=0.8, le=1.2,
+        description="Evidence type-specific weight adjustment"
+    )
+    reasoning: str = Field(
+        description="LLM reasoning for threshold determination"
+    )

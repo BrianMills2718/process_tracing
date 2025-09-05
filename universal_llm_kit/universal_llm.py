@@ -24,45 +24,52 @@ class UniversalLLM:
         self.router = self._setup_router()
     
     def _setup_router(self) -> Router:
-        """Setup router with all available models and fallbacks"""
+        """Setup router with unified GPT-5-mini configuration"""
         model_list = []
         
-        # OpenAI Models (if API key available)
+        # PHASE 16B: UNIFIED LLM CONFIGURATION - GPT-5-mini Only
+        # Priority: OpenAI models only when available, with clear fallbacks
         if os.getenv("OPENAI_API_KEY"):
+            # Use GPT-5-mini for all smart/fast operations - NOTE: GPT-5-mini uses max_completion_tokens
             model_list.extend([
-                {"model_name": "smart", "litellm_params": {"model": "gpt-4o", "max_tokens": 4096}},
+                {"model_name": "smart", "litellm_params": {"model": "gpt-5-mini", "max_completion_tokens": 16384}},
+                {"model_name": "fast", "litellm_params": {"model": "gpt-5-mini", "max_completion_tokens": 16384}},
                 {"model_name": "reasoning", "litellm_params": {"model": "o1-preview", "max_completion_tokens": 32768}},
-                {"model_name": "fast", "litellm_params": {"model": "gpt-4o-mini", "max_tokens": 16384}},
+                {"model_name": "legacy-smart", "litellm_params": {"model": "gpt-4o", "max_tokens": 4096}},
+                {"model_name": "legacy-fast", "litellm_params": {"model": "gpt-4o-mini", "max_tokens": 16384}},
             ])
+            print("[INFO] UniversalLLM: Using GPT-5-mini for unified pipeline")
         
-        # Anthropic Models (if API key available)  
-        if os.getenv("ANTHROPIC_API_KEY"):
+        # Fallback providers only when OpenAI not available
+        elif os.getenv("ANTHROPIC_API_KEY"):
             model_list.extend([
                 {"model_name": "smart", "litellm_params": {"model": "claude-3-5-sonnet-20241022", "max_tokens": 8192}},
                 {"model_name": "fast", "litellm_params": {"model": "claude-3-5-haiku-20241022", "max_tokens": 8192}},
             ])
+            print("[INFO] UniversalLLM: Fallback to Anthropic models")
         
-        # Google Models (if API key available)
-        if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"):
+        elif os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"):
             model_list.extend([
                 {"model_name": "smart", "litellm_params": {"model": "gemini/gemini-2.5-flash", "max_tokens": 65536}},
                 {"model_name": "code", "litellm_params": {"model": "gemini/gemini-2.5-flash", "max_tokens": 65536, "tools": [{"codeExecution": {}}]}},
                 {"model_name": "fast", "litellm_params": {"model": "gemini/gemini-2.5-flash", "max_tokens": 32768}},
             ])
+            print("[INFO] UniversalLLM: Fallback to Gemini models")
         
-        # OpenRouter (if API key available)
-        if os.getenv("OPENROUTER_API_KEY"):
+        # OpenRouter fallback (lowest priority)
+        elif os.getenv("OPENROUTER_API_KEY"):
             model_list.extend([
                 {"model_name": "smart", "litellm_params": {"model": "openrouter/anthropic/claude-3.5-sonnet", "max_tokens": 8192}},
                 {"model_name": "fast", "litellm_params": {"model": "openrouter/meta-llama/llama-3.1-8b-instruct:free", "max_tokens": 8192}},
             ])
+            print("[INFO] UniversalLLM: Fallback to OpenRouter models")
         
         if not model_list:
             raise ValueError("No API keys found! Please set at least one API key in .env file")
         
         return Router(
             model_list=model_list,
-            routing_strategy="cost-based-routing"  # Use cheapest available model
+            routing_strategy="simple-shuffle"  # Avoid cost-based routing issues
         )
     
     def chat(self, prompt: str, model_type: str = "smart", **kwargs) -> str:

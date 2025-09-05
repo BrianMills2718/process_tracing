@@ -42,7 +42,8 @@ from .van_evera_llm_schemas import (
     ConfidenceThresholdAssessment,
     CausalMechanismAssessment,
     ConfidenceFormulaWeights,
-    SemanticRelevanceAssessment
+    SemanticRelevanceAssessment,
+    SemanticThresholdAssessment
 )
 
 logger = logging.getLogger(__name__)
@@ -955,6 +956,49 @@ class VanEveraLLMInterface:
         """
         
         return self._get_structured_response(prompt, BatchedHypothesisEvaluation)
+    
+    def determine_semantic_threshold(self, context: str, evidence_type: str) -> SemanticThresholdAssessment:
+        """
+        Determine semantic relevance threshold for evidence-prediction relationships.
+        
+        Args:
+            context: Context for threshold assessment (e.g., "Evidence relevance to prediction")
+            evidence_type: Type of evidence being assessed
+        
+        Returns:
+            Semantic threshold assessment with reasoning
+        """
+        prompt = f"""
+        Determine the semantic relevance threshold for assessing evidence-prediction relationships.
+        
+        Context: {context}
+        Evidence Type: {evidence_type}
+        
+        Provide a context-aware semantic relevance threshold assessment that considers:
+        
+        1. **Threshold Value** (0.0-1.0): 
+           - Base semantic relevance threshold for this context and evidence type
+           - Higher thresholds for critical evidence types (smoking gun, doubly decisive)
+           - Lower thresholds for exploratory evidence types (straw in wind)
+        
+        2. **Context Factor** (0.8-1.2):
+           - Adjustment based on analytical context
+           - Higher factor for strict academic standards
+           - Lower factor for exploratory analysis
+        
+        3. **Evidence Type Weight** (0.8-1.2):
+           - Evidence type-specific adjustment
+           - Different types of evidence require different semantic precision
+        
+        4. **Reasoning**:
+           - Explain the semantic logic behind threshold determination
+           - Consider theoretical grounding and methodological rigor
+           - Account for false positive/negative trade-offs
+        
+        Provide a threshold that balances theoretical rigor with practical applicability.
+        """
+        
+        return self._get_structured_response(prompt, SemanticThresholdAssessment)
 
 
 # Global interface instance

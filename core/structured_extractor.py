@@ -144,14 +144,14 @@ class StructuredProcessTracingExtractor:
     Eliminates manual JSON parsing and validation issues
     """
     
-    def __init__(self, model_name: str = "gemini/gemini-2.5-flash"):
+    def __init__(self, model_name: str = "gpt-5-mini"):
         """Initialize with direct LiteLLM for structured extraction"""
         self.model_name = model_name
         
-        # Get API key
-        self.api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        # Get API key - prioritize OpenAI for GPT-5-mini
+        self.api_key = os.getenv("OPENAI_API_KEY") or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
-            raise ValueError("No Gemini API key found in environment variables")
+            raise ValueError("No API key found in environment variables. Set OPENAI_API_KEY, GOOGLE_API_KEY, or GEMINI_API_KEY")
         
     def extract_graph(self, text: str, project_name: str = "default") -> StructuredExtractionResult:
         """
@@ -204,12 +204,17 @@ class StructuredProcessTracingExtractor:
     def _extract_with_structured_output(self, prompt: str) -> ProcessTracingGraph:
         """Use LiteLLM structured output with Pydantic schema - fail fast if it doesn't work"""
         try:
-            # Use direct LiteLLM completion with structured output
+            # Use direct LiteLLM completion with JSON mode (GPT-5-mini structured output may not be supported)
+            # NOTE: GPT-5-mini requires max_completion_tokens instead of max_tokens
             response = litellm.completion(
                 model=self.model_name,
-                messages=[{"role": "user", "content": prompt}],
-                response_format=ProcessTracingGraph,  # Pass Pydantic model directly
-                api_key=self.api_key
+                messages=[
+                    {"role": "system", "content": "You must respond with valid JSON following the specified schema."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                api_key=self.api_key,
+                max_completion_tokens=16384
             )
             
             # Get the JSON content and parse it with our Pydantic model
