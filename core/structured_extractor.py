@@ -41,10 +41,10 @@ STRUCTURED_EXTRACTION_PROMPT = """Extract causal relationships from this text us
 - Properties: description (required), confidence (0.0-1.0), status (hypothetical/supported/refuted/unspecified), level_of_detail
 
 **Alternative_Explanation**: Competing theories or rival explanations
-- Properties: description (required), probability (0.0-1.0), status (active/eliminated/supported/undetermined), key_predictions
+- Properties: description (required), probability (0.0-1.0), status (active/eliminated/supported/undetermined), key_predictions (ARRAY of strings, not single string)
 
 **Actor**: People, groups, entities with agency and intentions
-- Properties: name (required), role, intentions, beliefs, constraints, capabilities, credibility (0.0-1.0)
+- Properties: description (required - use descriptive text, NOT just "name" field), name, role, intentions, beliefs, constraints, capabilities, credibility (0.0-1.0)
 
 **Condition**: Enabling/constraining factors that affect other entities
 - Properties: description (required), type (background/enabling/constraining/scope), necessity (0.0-1.0), temporal_scope, spatial_scope, certainty (0.0-1.0)
@@ -61,10 +61,10 @@ STRUCTURED_EXTRACTION_PROMPT = """Extract causal relationships from this text us
 - Properties: role, sequence_position, necessity (0.0-1.0)
 
 **tests_hypothesis**: Evidence,Event → Hypothesis (hypothesis testing)
-- Properties: probative_value (0.0-1.0), test_result (passed/failed/ambiguous), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
+- Properties: probative_value (0.0-1.0), test_result (MUST BE "passed", "failed", or "ambiguous" ONLY), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
 
 **tests_mechanism**: Evidence,Event → Causal_Mechanism (mechanism testing)
-- Properties: probative_value (0.0-1.0), test_result (passed/failed/ambiguous), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
+- Properties: probative_value (0.0-1.0), test_result (MUST BE "passed", "failed", or "ambiguous" ONLY), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
 
 **supports**: Evidence,Event → Hypothesis,Event,Causal_Mechanism,Actor (positive evidential support)
 - Use when: evidence/events strengthen or bolster claims, when text uses "supports", "demonstrates", "shows", "indicates", "provides evidence for", "strengthens the case that"
@@ -92,10 +92,10 @@ STRUCTURED_EXTRACTION_PROMPT = """Extract causal relationships from this text us
 - Properties: probative_value (0.0-1.0), certainty (0.0-1.0)
 
 **tests_alternative**: Evidence,Event → Alternative_Explanation (alternative testing)
-- Properties: probative_value (0.0-1.0), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general), test_result (supports/refutes/inconclusive)
+- Properties: probative_value (0.0-1.0), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general), test_result (MUST BE "passed", "failed", or "ambiguous" ONLY)
 
 **initiates**: Actor → Event (actor agency)
-- Properties: certainty (0.0-1.0), intention, agency
+- Properties: certainty (0.0-1.0), intention, agency (STRING describing actor agency, not boolean True/False)
 
 **enables**: Condition → Event,Causal_Mechanism,Hypothesis (enabling conditions)
 - Properties: necessity (0.0-1.0), certainty (0.0-1.0), type
@@ -146,7 +146,23 @@ You MUST return JSON with exactly this structure (use "type" not "node_type" or 
             "id": "unique_id",
             "type": "Event|Hypothesis|Evidence|Causal_Mechanism|Alternative_Explanation|Actor|Condition|Data_Source",
             "properties": {{
-                "description": "required description"
+                "description": "ALWAYS REQUIRED - descriptive text explaining this node"
+            }}
+        }},
+        {{
+            "id": "alt_example", 
+            "type": "Alternative_Explanation",
+            "properties": {{
+                "description": "REQUIRED descriptive text",
+                "key_predictions": ["prediction 1", "prediction 2"]
+            }}
+        }},
+        {{
+            "id": "actor_example",
+            "type": "Actor", 
+            "properties": {{
+                "description": "REQUIRED descriptive text - NOT just a name",
+                "name": "Actor Name"
             }}
         }}
     ],
@@ -155,14 +171,29 @@ You MUST return JSON with exactly this structure (use "type" not "node_type" or 
             "id": "unique_edge_id", 
             "source_id": "source_node_id",
             "target_id": "target_node_id",
-            "type": "causes|supports|refutes|tests_hypothesis|etc",
+            "type": "tests_hypothesis",
             "properties": {{
-                
+                "test_result": "passed"
+            }}
+        }},
+        {{
+            "id": "agency_edge_example",
+            "source_id": "actor_id",
+            "target_id": "event_id", 
+            "type": "initiates",
+            "properties": {{
+                "agency": "direct intentional action"
             }}
         }}
     ]
 }}
 ```
+
+CRITICAL REQUIREMENTS:
+- ALL nodes MUST have "description" property with descriptive text
+- key_predictions MUST be array of strings: ["pred1", "pred2"]
+- test_result MUST be exactly "passed", "failed", or "ambiguous"  
+- agency MUST be descriptive string, NOT boolean true/false
 
 Text to analyze:
 {text}"""

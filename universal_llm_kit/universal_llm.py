@@ -107,39 +107,45 @@ class UniversalLLM:
         return response
     
     def structured_output(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
-        """Get structured JSON output using direct LiteLLM completion"""
-        import litellm
+        """Get structured JSON output using router for unified model selection"""
         
-        # Get API key
-        api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("No Gemini API key found")
-        
-        # Prepare kwargs for structured output
-        kwargs = {
-            "model": "gemini/gemini-2.5-flash",
-            "messages": [{"role": "user", "content": prompt}],
-            "response_format": {"type": "json_object"},
-            "api_key": api_key
-        }
+        # Use the router's smart model instead of hardcoded Gemini
+        # This ensures consistent routing with the rest of the system
+        messages = [{"role": "user", "content": prompt}]
         
         # Add schema to prompt if provided
-        messages = kwargs.get("messages", [])
-        if messages and len(messages) > 0 and isinstance(messages, list):
-            message_list = list(messages)  # Ensure we have a list
-            if schema and hasattr(schema, 'model_json_schema'):
-                schema_str = schema.model_json_schema()
-                message_list[0]["content"] = f"{prompt}\n\nRespond with valid JSON matching this schema: {schema_str}"
-            elif schema:
-                import json
-                message_list[0]["content"] = f"{prompt}\n\nRespond with valid JSON matching this schema: {json.dumps(schema, indent=2)}"
-            else:
-                message_list[0]["content"] = f"{prompt}\n\nRespond with valid JSON."
-            kwargs["messages"] = message_list
+        if schema and hasattr(schema, 'model_json_schema'):
+            import json
+            schema_json = schema.model_json_schema()
+            schema_prompt = f"\n\nYou must return valid JSON that matches this schema:\n```json\n{json.dumps(schema_json, indent=2)}\n```"
+            messages[0]["content"] += schema_prompt
         
-        # Make direct LiteLLM call
-        response = litellm.completion(**kwargs)
-        return response.choices[0].message.content
+        # Use router instead of hardcoded Gemini model
+        try:
+            response = self.router.completion(
+                model="smart",  # Use smart model from router (GPT-5-mini)
+                messages=messages,
+                response_format={"type": "json_object"}
+            )
+            content = response.choices[0].message.content
+            
+            # Handle cases where the response isn't proper JSON
+            if content and not content.strip().startswith('{'):
+                # Try to extract JSON from markdown code blocks
+                import re
+                json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+                if json_match:
+                    content = json_match.group(1)
+                else:
+                    # Look for any JSON-like structure
+                    json_match = re.search(r'(\{.*\})', content, re.DOTALL)
+                    if json_match:
+                        content = json_match.group(1)
+            
+            return content
+            
+        except Exception as e:
+            raise ValueError(f"Structured output generation failed: {e}")
     
     def compare_models(self, prompt: str, models: Optional[List[str]] = None) -> Dict[str, str]:
         """Compare responses across different models"""
