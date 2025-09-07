@@ -61,10 +61,10 @@ STRUCTURED_EXTRACTION_PROMPT = """Extract causal relationships from this text us
 - Properties: role, sequence_position, necessity (0.0-1.0)
 
 **tests_hypothesis**: Evidence,Event → Hypothesis (hypothesis testing)
-- Properties: probative_value (0.0-1.0), test_result (MUST BE "passed", "failed", or "ambiguous" ONLY), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
+- Properties: probative_value (0.0-1.0), test_result (CRITICAL: MUST BE EXACTLY "passed", "failed", or "ambiguous" - NOT "supports", "refutes", "inconclusive", or any other values), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
 
 **tests_mechanism**: Evidence,Event → Causal_Mechanism (mechanism testing)
-- Properties: probative_value (0.0-1.0), test_result (MUST BE "passed", "failed", or "ambiguous" ONLY), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
+- Properties: probative_value (0.0-1.0), test_result (CRITICAL: MUST BE EXACTLY "passed", "failed", or "ambiguous" - NOT "supports", "refutes", "inconclusive", or any other values), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
 
 **supports**: Evidence,Event → Hypothesis,Event,Causal_Mechanism,Actor (positive evidential support)
 - Use when: evidence/events strengthen or bolster claims, when text uses "supports", "demonstrates", "shows", "indicates", "provides evidence for", "strengthens the case that"
@@ -92,7 +92,7 @@ STRUCTURED_EXTRACTION_PROMPT = """Extract causal relationships from this text us
 - Properties: probative_value (0.0-1.0), certainty (0.0-1.0)
 
 **tests_alternative**: Evidence,Event → Alternative_Explanation (alternative testing)
-- Properties: probative_value (0.0-1.0), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general), test_result (MUST BE "passed", "failed", or "ambiguous" ONLY)
+- Properties: probative_value (0.0-1.0), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general), test_result (CRITICAL: MUST BE EXACTLY "passed", "failed", or "ambiguous" - NOT "supports", "refutes", "inconclusive", or any other values)
 
 **initiates**: Actor → Event (actor agency)
 - Properties: certainty (0.0-1.0), intention, agency (STRING describing actor agency, not boolean True/False)
@@ -177,6 +177,15 @@ You MUST return JSON with exactly this structure (use "type" not "node_type" or 
             }}
         }},
         {{
+            "id": "test_result_example",
+            "source_id": "evidence_id",
+            "target_id": "mechanism_id", 
+            "type": "tests_mechanism",
+            "properties": {{
+                "test_result": "failed"
+            }}
+        }},
+        {{
             "id": "agency_edge_example",
             "source_id": "actor_id",
             "target_id": "event_id", 
@@ -190,10 +199,11 @@ You MUST return JSON with exactly this structure (use "type" not "node_type" or 
 ```
 
 CRITICAL REQUIREMENTS:
-- ALL nodes MUST have "description" property with descriptive text
-- key_predictions MUST be array of strings: ["pred1", "pred2"]
-- test_result MUST be exactly "passed", "failed", or "ambiguous"  
+- ALL nodes MUST have "description" property with descriptive text (NEVER omit this field - it is REQUIRED for EVERY node)
+- key_predictions MUST be array of strings: ["pred1", "pred2"] 
+- test_result MUST be exactly "passed", "failed", or "ambiguous" (NOT "supports", "refutes", "inconclusive", "confirms", or any other values)
 - agency MUST be descriptive string, NOT boolean true/false
+- Data_Source nodes MUST include "description" field even if they also have "type" property
 
 Text to analyze:
 {text}"""

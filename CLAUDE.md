@@ -38,199 +38,164 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Production-Ready with Unified Architecture (Updated 2025-01-05)
+## 🎯 CURRENT STATUS: Pipeline Silent Hang Issues (Updated 2025-09-05)
 
-**System Status**: **PRODUCTION-READY WITH UNIFIED ARCHITECTURE**  
-**Phase 18 Achievement**: **Complete System Unification SUCCESSFUL**
-**Current Priority**: **Advanced feature development and optimization**
+**System Status**: **PIPELINE HANGING - MULTIPLE BLOCKING ISSUES**  
+**Latest Achievement**: **Enum Validation Partially Fixed**  
+**Current Priority**: **Identify and Fix Silent Hang Root Cause**
 
-**PHASE 18 COMPLETION SUMMARY:**
-- ✅ **Phase 18A**: 100% schema compliance achieved - zero validation errors
-- ✅ **Phase 18B**: Complete router unification - 100% GPT-5-mini routing
-- ✅ **Unified Routing**: Both extraction and analysis use GPT-5-mini consistently  
-- ✅ **Schema Perfect**: All Pydantic validations pass, proper data types throughout
-- ✅ **Performance Excellent**: Sub-3-minute processing, reliable operation
+**RECENT PROGRESS:**
+- ✅ **Enum Validation**: Fixed test_result enum in prompt template (supports/refutes → passed/failed/ambiguous)
+- ✅ **Simple Tests**: Basic extraction works with correct enum values on small texts
+- ✅ **Non-Interactive Mode**: Identified proper --project flag usage instead of interactive menu
 
-**INFRASTRUCTURE ACHIEVEMENTS**:
-- **Schema Architecture**: 100% validation success, all required fields and types correct
-- **Router Unification**: Eliminated mixed routing, GPT-5-mini throughout pipeline
-- **System Integration**: All Van Evera functionality operational with unified model
-- **Quality Standards**: Production-ready reliability and performance achieved
+**CURRENT BLOCKING ISSUES:**
+- ❌ **Silent Hangs**: Pipeline hangs indefinitely on complex texts with zero output
+- ❌ **No Diagnostic Visibility**: No progress indicators during LLM calls or processing phases
+- ❌ **Background Process Failure**: French Revolution (52K chars) processing hangs silently
+- ❌ **Timeout Issues**: LLM calls likely timing out without proper configuration
+
+**INFRASTRUCTURE STATUS:**
+- **Simple Cases**: ✅ Work correctly (test_simple, synthetic inputs)
+- **Complex Cases**: ❌ All hang silently (test_phase18c, French Revolution)
+- **Schema Compliance**: ✅ Fixed for successful cases, untested on complex cases due to hangs
+- **Error Reporting**: ❌ Silent failures provide no diagnostic information
+- **Production Readiness**: ❌ Cannot process realistic workloads
 
 ---
 
-## 🚀 PHASE 19: Advanced Features and Performance Optimization (NEXT PRIORITY)
+## 🔧 PHASE 19B: Silent Hang Investigation (CRITICAL PRIORITY - 4-6 hours)
 
-### OBJECTIVE: Build advanced capabilities on the unified infrastructure foundation
+### OBJECTIVE: Identify and fix root cause of silent hangs on complex text processing
 
-**RATIONALE**: Phase 18 achieved complete system unification with 100% schema compliance and unified GPT-5-mini routing. The infrastructure is now production-ready, enabling focus on advanced features and optimization.
+**RATIONALE**: While enum validation is partially fixed, the pipeline hangs silently on realistic workloads (52K+ character texts). The system lacks diagnostic visibility to identify where failures occur.
 
-**STRATEGIC APPROACH**: Feature development with performance optimization and scalability enhancements.
+**STRATEGIC APPROACH**: Add comprehensive logging, timeout configuration, and diagnostic instrumentation to identify hang points.
 
-**EXPECTED IMPACT**: Production system → Advanced capabilities with enterprise-grade performance
+**EXPECTED IMPACT**: Silent hangs → Transparent processing with clear error messages and successful completion
 
-## 📋 PHASE 19A: Performance Optimization and Caching (2-3 hours, HIGH priority)
+## 📋 PHASE 19B: Silent Hang Investigation (4-6 hours, CRITICAL priority)
 
-### OBJECTIVE: Optimize pipeline performance for enterprise-scale processing
-**Target**: Reduce processing time by 30-50% through intelligent caching and optimization
-**Scope**: LLM call optimization, result caching, parallel processing enhancements
+### OBJECTIVE: Fix silent hang issues preventing complex text processing
 
-#### TASK 1A: LLM Call Analysis and Optimization (60 minutes)
-**Purpose**: Identify and optimize redundant or inefficient LLM calls
+**Target**: Enable successful French Revolution (52K chars) processing with full diagnostic visibility  
+**Scope**: Diagnostic instrumentation, timeout configuration, hang point identification
 
-**Optimization Areas**:
-- Batch similar Van Evera assessments in single calls
-- Cache probative value calculations for similar evidence-hypothesis pairs
-- Optimize prompt lengths while maintaining quality
-- Implement smart retry logic with exponential backoff
+#### TASK 1: Diagnostic Instrumentation (2 hours)
+**Purpose**: Add comprehensive logging to identify where hangs occur
 
-**Expected Impact**: 20-30% reduction in LLM API calls and costs
+**Implementation Areas**:
+- Add progress indicators to LLM calls ("Waiting for LLM response...")
+- Log each pipeline phase with timestamps ("Starting extraction...", "Extraction complete")
+- Add timeout detection with specific failure points
+- Implement LLM response inspection and validation logging
 
-#### TASK 1B: Intelligent Result Caching System (90 minutes)  
-**Purpose**: Implement semantic caching for Van Evera analysis results
+**Expected Output**: Clear visibility into hang points and failure modes
 
-**Caching Strategy**:
-- Semantic similarity detection for evidence and hypotheses
-- TTL-based cache with configurable expiration
-- Cache invalidation on schema updates
-- Performance metrics and hit rate monitoring
+#### TASK 2: Timeout Configuration (1 hour)
+**Purpose**: Configure proper timeouts for large text processing
 
-**Expected Impact**: 40-60% faster processing for similar content
+**Configuration Strategy**:
+- Increase LiteLLM completion timeouts to 30+ minutes
+- Add timeout parameters to all subprocess calls
+- Configure proper error handling for timeout scenarios
+- Test timeout behavior with diagnostic logging
 
-#### TASK 1C: Parallel Processing Enhancement (60 minutes)
-**Purpose**: Optimize parallel execution of independent analysis components
+**Expected Impact**: Proper timeout handling instead of silent hangs
 
-**Enhancement Areas**:
-- Concurrent Van Evera test execution
-- Parallel evidence analysis streams  
-- Asynchronous HTML generation components
-- Load balancing across multiple LLM instances
+#### TASK 3: Pipeline Testing with Diagnostics (2-3 hours)
+**Purpose**: Validate fixes with French Revolution processing
 
-**Expected Impact**: 25-40% faster total pipeline execution
+**Testing Progression**:
+- Level 1: test_phase18c (881 chars) with full diagnostics
+- Level 2: French Revolution (52K chars) with monitoring
+- Level 3: Full pipeline including HTML generation
 
-### PHASE 19A VALIDATION CRITERIA
-- **Performance Improvement**: ≥30% faster total processing time
-- **Cache Hit Rate**: ≥60% for repeated similar content
-- **System Reliability**: No degradation in output quality or accuracy
-- **Resource Efficiency**: Optimized memory usage and API call patterns
-
-## 🔧 PHASE 19B: Advanced Van Evera Features (2-3 hours, MEDIUM priority)
-
-### OBJECTIVE: Implement advanced Van Evera methodology features
-**Target**: Add sophisticated diagnostic capabilities and comparative analysis
-**Scope**: Multi-hypothesis comparison, uncertainty quantification, causal pathway analysis
-
-#### TASK 2A: Multi-Hypothesis Comparative Analysis (90 minutes)
-**Purpose**: Enable simultaneous evaluation of competing hypotheses
-
-**Features**:
-- Comparative probative value assessment across multiple hypotheses
-- Relative strength analysis with confidence intervals  
-- Cross-hypothesis evidence sharing and conflicts
-- Academic-quality comparative conclusions
-
-#### TASK 2B: Uncertainty Quantification System (90 minutes)
-**Purpose**: Implement rigorous uncertainty analysis for Van Evera diagnostics
-
-**Components**:
-- Bayesian confidence intervals for all assessments
-- Sensitivity analysis for key assumptions
-- Uncertainty propagation through causal chains
-- Monte Carlo simulation for complex scenarios
-
-#### TASK 2C: Causal Pathway Tracing (60 minutes)
-**Purpose**: Enhanced causal mechanism analysis and pathway verification
-
-**Capabilities**:
-- Multi-step causal chain validation
-- Mechanism completeness assessment
-- Alternative pathway exploration
-- Temporal consistency verification
+**Expected Impact**: Complete processing chain working with transparency
 
 ### PHASE 19B VALIDATION CRITERIA
-- **Comparative Analysis**: Multiple hypotheses evaluated simultaneously with relative rankings
-- **Uncertainty Metrics**: All assessments include confidence intervals and sensitivity analysis
-- **Causal Validation**: Complex causal pathways properly traced and validated
-- **Academic Quality**: Output meets publication standards for methodology journals
+- **No Silent Hangs**: All failures provide clear diagnostic information
+- **French Revolution Success**: Complete processing with graph.json and HTML output
+- **Timeout Transparency**: Clear timeout messages instead of silent hangs
+- **Diagnostic Visibility**: Progress tracking through all pipeline phases
 
-## 🚀 PHASE 19C: Enterprise Features and Scalability (3-4 hours, LOW priority)
+## ⚡ IMPLEMENTATION COMMANDS
 
-### OBJECTIVE: Add enterprise-grade features for large-scale deployment
-**Target**: Support high-volume processing, user management, and integration APIs
-**Scope**: API endpoints, batch processing, monitoring, and administrative features
+### **PHASE 19A Start Command**:
+```bash
+# Begin schema validation fix
+echo "9" | python process_trace_advanced.py  # Start with test_simple to validate fixes
+```
 
-#### TASK 3A: REST API Development (120 minutes)
-**Purpose**: Enable programmatic access to process tracing capabilities
+### **Testing Progression**:
+```bash
+# Level 0: Minimal synthetic input (direct testing)
+python -c "from core.structured_extractor import StructuredProcessTracingExtractor; 
+extractor = StructuredProcessTracingExtractor(); 
+result = extractor.extract_graph('Economic sanctions were imposed. Business leaders protested.')"
 
-**Endpoints**:
-- `/api/v1/analyze` - Single document analysis
-- `/api/v1/batch` - Bulk processing with progress tracking
-- `/api/v1/compare` - Multi-hypothesis comparison
-- `/api/v1/status` - System health and performance metrics
+# Level 1: test_simple (215 characters)
+echo "9" | python process_trace_advanced.py
 
-#### TASK 3B: Batch Processing System (90 minutes)
-**Purpose**: Support processing of large document collections
+# Level 2: test_extended (medium complexity)  
+echo "4" | python process_trace_advanced.py
 
-**Features**:
-- Queue-based batch job management
-- Progress tracking and status reporting
-- Error handling and retry logic
-- Results aggregation and export
+# Level 3: American Revolution (final validation)
+echo "1" | python process_trace_advanced.py
+```
 
-#### TASK 3C: Monitoring and Analytics Dashboard (90 minutes)
-**Purpose**: Comprehensive system monitoring and usage analytics
+### **Schema Investigation Commands**:
+```bash
+# Audit ProcessTracingGraph schema
+python -c "from core.ontology import ProcessTracingGraph; print(ProcessTracingGraph.model_json_schema())"
 
-**Components**:
-- Real-time performance metrics
-- Processing volume and success rates
-- Cost tracking and optimization recommendations
-- User activity and system utilization
+# Check enum field definitions
+grep -r "Literal\|Enum" core/ontology.py
 
-### PHASE 19C VALIDATION CRITERIA
-- **API Functionality**: All endpoints operational with proper authentication and rate limiting
-- **Batch Processing**: Reliable processing of 100+ document collections
-- **Monitoring**: Real-time visibility into system performance and health
-- **Scalability**: System handles concurrent users and high-volume processing
+# Find current prompt template
+cat core/structured_extractor.py | grep -A50 "STRUCTURED_EXTRACTION_PROMPT"
+```
 
-## 📊 PHASE 19 SUCCESS VALIDATION
+### **Error Diagnosis Commands**:
+```bash
+# Test current extraction with detailed error
+python -c "
+from core.structured_extractor import StructuredProcessTracingExtractor
+import traceback
+try:
+    extractor = StructuredProcessTracingExtractor()
+    result = extractor.extract_graph('Economic sanctions were imposed.')
+    print('SUCCESS')
+except Exception as e:
+    print(f'ERROR: {e}')
+    traceback.print_exc()
+"
+```
 
-### EVIDENCE REQUIREMENTS
-1. **`evidence/current/Evidence_Phase19A_PerformanceOptimization.md`**: Performance improvements and caching implementation
-2. **`evidence/current/Evidence_Phase19B_AdvancedFeatures.md`**: Van Evera methodology enhancements
-3. **`evidence/current/Evidence_Phase19C_EnterpriseFeatures.md`**: Scalability and API implementation
-4. **`evidence/current/Evidence_Phase19_Complete.md`**: Comprehensive advanced features summary
+## 📊 PHASE 19A SUCCESS VALIDATION
 
-### CRITICAL SUCCESS CRITERIA
-- ✅ **Performance Enhanced**: ≥30% faster processing with maintained quality
-- ✅ **Advanced Analytics**: Multi-hypothesis comparison and uncertainty quantification operational
-- ✅ **Enterprise Ready**: API endpoints and batch processing functional
-- ✅ **System Reliability**: All new features maintain 100% schema compliance and unified routing
-- ✅ **Scalability Proven**: System handles enterprise-grade workloads
+### **EVIDENCE REQUIREMENTS**
+1. **`evidence/current/Evidence_Phase19A_SchemaEnumFix.md`**: Schema audit, prompt fixes, and validation results
+2. **Evidence of successful test progression**: Level 0 → 1 → 2 → 3 all passing
+3. **American Revolution HTML output**: Complete analysis with network visualization
 
-## ⚡ IMPLEMENTATION APPROACH
+### **CRITICAL SUCCESS CRITERIA**
+- ✅ **Schema Compliance**: 100% Pydantic validation success across all test levels
+- ✅ **Output Generation**: Valid graph.json, analysis summary, and HTML files created
+- ✅ **American Revolution Success**: Complete 27,930-character document processing
+- ✅ **Error Transparency**: Any failures provide clear, actionable error messages
 
-**Priority Order**: 19A (Performance) → 19B (Features) → 19C (Enterprise)  
-**Estimated Timeline**: 7-10 hours total for comprehensive advanced capabilities  
-**Risk Mitigation**: Each phase builds incrementally on the solid Phase 18 foundation
+### **VALIDATION COMMANDS**
+```bash
+# Verify output files created
+ls -la output_data/revolutions/ | head -5
 
-**Success Strategy**: Maintain the production-ready stability achieved in Phase 18 while adding sophisticated capabilities for advanced users and enterprise deployment.
+# Validate HTML content
+find output_data -name "*.html" -mmin -10 -exec wc -l {} \;
 
-## 🎯 EVIDENCE-BASED DEVELOPMENT REQUIREMENTS
-
-### Mandatory Validation Process
-1. **No Claims Without Evidence**: Every success statement must be backed by command outputs
-2. **Incremental Validation**: Test after each phase before proceeding
-3. **Comprehensive Documentation**: All changes and results documented with timestamps
-4. **Reproducible Results**: Multiple successful pipeline runs required for success claim
-5. **Performance Monitoring**: Track timing and consistency across all phases
-
-### Quality Gates
-- **Schema Validation**: 100% compliance required before router unification
-- **Unified Routing**: Zero mixed model calls allowed
-- **HTML Generation**: Physical file with complete analysis required
-- **Performance Standards**: Sub-60-second total pipeline execution
-
-**Remember**: This is SYSTEM OPTIMIZATION after successful infrastructure repair. Phase 17 resolved the critical issues; Phase 18 achieves perfect unification and performance.
+# Check analysis summary 
+find output_data -name "*analysis_summary*.json" -mmin -10 -exec head -20 {} \;
+```
 
 ---
 
@@ -239,43 +204,55 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Generalist LLM-Enhanced Process Tracing Toolkit** - Universal system implementing Van Evera academic methodology with sophisticated LLM semantic understanding for qualitative analysis using process tracing across any historical period or domain.
 
 ### Current Architecture Status
-- **Plugin System**: 16+ registered plugins (100% LLM-first compliance achieved in Phase 13)
-- **Van Evera Workflow**: 8-step academic analysis pipeline with enhanced intelligence  
-- **LLM Integration**: OPERATIONAL with mixed routing (GPT-5-mini extraction, Gemini analysis)
-- **Validation System**: validate_true_compliance.py for comprehensive compliance checking
-- **Type Safety**: Full mypy compliance across core modules
-- **Security**: Environment-based API key management (OpenAI configured)
-- **Universality**: No dataset-specific logic - works across all domains and time periods
+- **Pipeline Structure**: ✅ FUNCTIONAL - execute_single_case_processing restored with proper extraction/analysis flow
+- **Error Handling**: ✅ ENHANCED - All silent failures now fail loudly with detailed error messages  
+- **LLM Integration**: ✅ UNIFIED - 100% GPT-5-mini routing throughout entire pipeline
+- **Schema Validation**: ❌ BLOCKING - Enum validation failures prevent successful completion
+- **Van Evera Workflow**: ✅ OPERATIONAL - 8-step academic analysis pipeline functional
+- **Plugin System**: ✅ ACTIVE - 16+ registered plugins with LLM-first compliance
+- **Security**: ✅ CONFIGURED - Environment-based API key management (OpenAI/GPT-5-mini)
+- **Universality**: ✅ MAINTAINED - No dataset-specific logic, works across all domains
 
 ## Testing Commands Reference
 
 ```bash
-# Schema validation testing
-python -c "from core.structured_extractor import StructuredProcessTracingExtractor; extractor.extract_graph('test')"
+# Current pipeline test (enum validation will fail)
+echo "9" | python process_trace_advanced.py  # test_simple
 
-# Router configuration verification  
-python -c "from universal_llm_kit.universal_llm import get_llm; router = get_llm(); print(router.router.model_list)"
+# Schema validation debugging
+python -c "from core.structured_extractor import StructuredProcessTracingExtractor; 
+extractor = StructuredProcessTracingExtractor(); 
+extractor.extract_graph('Test text')"
 
-# Van Evera interface testing
-python -c "from core.plugins.van_evera_llm_interface import get_van_evera_llm; llm.assess_probative_value(...)"
+# Router verification (should show GPT-5-mini)
+python -c "from universal_llm_kit.universal_llm import get_llm; 
+router = get_llm(); print(f'Model: {router.router.model_list}')"
 
-# Complete pipeline test
-python process_trace_advanced.py --project test_simple
+# Error diagnosis for enum issues
+python -c "
+try:
+    from core.structured_extractor import StructuredProcessTracingExtractor
+    extractor = StructuredProcessTracingExtractor()
+    result = extractor.extract_graph('Economic sanctions were imposed.')
+    print('SUCCESS - No enum errors!')
+except Exception as e:
+    print(f'ENUM ERROR: {e}')
+"
 
-# HTML generation validation
-find output_data -name "*.html" -mmin -10 -exec echo "HTML: {}" \; -exec wc -c {} \;
+# Check for recent output files
+find output_data -mmin -30 -type f | head -5
 ```
 
 ## Critical Success Factors
 
 - **Evidence-First Approach**: All claims require concrete validation with command outputs
-- **Systematic Problem Solving**: Complete analysis before implementing changes
-- **Incremental Validation**: Test each component before integration
-- **Documentation Discipline**: Every change documented with before/after evidence
-- **Performance Monitoring**: Measure and validate timing across all pipeline stages
-- **Quality Focus**: 100% schema compliance and unified routing as success criteria
+- **Schema-First Development**: 100% Pydantic validation required before claiming success
+- **Incremental Testing**: Level 0 → 1 → 2 → 3 progression with validation at each step
+- **Error Transparency**: All failures must provide clear, actionable error messages
+- **Output Verification**: Success requires actual files (graph.json, analysis, HTML) created
+- **No Silent Failures**: Every error must be caught and reported with troubleshooting guidance
 
-**Current Priority**: The system is operational with mixed routing. Phase 18 focuses on achieving perfect unification (complete GPT-5-mini routing) and 100% schema compliance for production-ready quality.
+**Current Priority**: Fix enum validation failures through systematic prompt engineering to achieve successful American Revolution processing with complete HTML analysis output.
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
