@@ -44,6 +44,8 @@ debug_*.json
 
 # Logs and debug output
 debug_output.txt
+debug/
+logs/
 temp*.txt
 validation_output.txt
 
@@ -55,7 +57,9 @@ test_extraction.json
 
 # Cache and build artifacts
 .mypy_cache/
+.pytest_cache/
 cache/
+__pycache__/
 
 # Empty/null files
 nul
@@ -65,5 +69,11 @@ nul
 
 # Testing
 .coverage
-.pytest_cache/
 htmlcov/
+tests/
+test_fixtures/
+
+# Legacy/Archive directories (keep local, don't push)
+archive/
+remediation/
+prompts/

@@ -294,21 +294,39 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
     
     try:
         print("\n" + "="*60)
-        print("PERFORMING MULTI-PASS GRAPH EXTRACTION (UP TO 10 PASSES)")
+        print("PHASE 19B: DIAGNOSTIC MULTI-PASS GRAPH EXTRACTION")
         print("="*60)
-        print(f"[DEBUG] Using {'comprehensive' if active_prompt_template == PROMPT_TEMPLATE else 'focused'} prompt template")
-        print(f"[DEBUG] Prompt length: {len(final_system_prompt)} characters")
+        print(f"[PIPELINE] Using {'comprehensive' if active_prompt_template == PROMPT_TEMPLATE else 'focused'} prompt template")
+        print(f"[PIPELINE] System prompt length: {len(final_system_prompt):,} characters")
+        print(f"[PIPELINE] Input text length: {len(text):,} characters")
+        print(f"[PIPELINE] Total processing size: {len(final_system_prompt + text):,} characters")
+        print(f"[PIPELINE] Estimated total tokens: ~{(len(final_system_prompt + text))//4:,}")
+        print(f"[PIPELINE] Timestamp: {datetime.datetime.now().isoformat()}")
         
         # Pass 1: Standard extraction using process_trace_advanced.py approach
-        print("[INFO] Pass 1: Standard graph extraction...")
+        print("\n[PIPELINE] Pass 1: Standard graph extraction...")
+        print("[PIPELINE] Calling query_llm function...")
+        
+        extraction_start = datetime.datetime.now()
         raw_json = query_llm(text, schema, final_system_prompt)
+        extraction_duration = (datetime.datetime.now() - extraction_start).total_seconds()
+        
+        print(f"[PIPELINE] query_llm returned after {extraction_duration:.2f} seconds")
+        print(f"[PIPELINE] Raw JSON length: {len(raw_json) if raw_json else 0:,} characters")
+        print("[PIPELINE] Parsing JSON response...")
+        
+        parse_start = datetime.datetime.now()
         graph_data = parse_json(raw_json)
+        parse_duration = (datetime.datetime.now() - parse_start).total_seconds()
+        
+        print(f"[PIPELINE] JSON parsed in {parse_duration:.2f} seconds")
         
         # Save the extracted graph
+        print(f"[PIPELINE] Saving graph data to {graph_json_path}...")
         with open(graph_json_path, "w", encoding="utf-8") as f:
             json.dump(graph_data, f, indent=2)
             
-        print(f"\n[SAVE] Graph data saved to {graph_json_path}")
+        print(f"[PIPELINE] ✅ Graph data saved to {graph_json_path}")
         
     except Exception as e:
         print(f"[ERROR] Multi-pass extraction failed: {e}")
@@ -944,22 +962,43 @@ def query_llm(text_content, schema=None, system_instruction_text="", use_structu
     import json
     from core.structured_extractor import StructuredProcessTracingExtractor
     
+    # PHASE 19B: Add diagnostic instrumentation for hang detection
+    print(f"[QUERY_LLM] Function called with {len(text_content):,} chars text, {len(system_instruction_text):,} chars system instruction")
+    print(f"[QUERY_LLM] Schema provided: {schema is not None}")
+    print(f"[QUERY_LLM] Use structured output: {use_structured_output}")
+    print(f"[QUERY_LLM] Timestamp: {datetime.datetime.now().isoformat()}")
+    
     # Use the structured extractor which now uses GPT-5-mini via LiteLLM
+    print(f"[QUERY_LLM] Creating StructuredProcessTracingExtractor...")
     extractor = StructuredProcessTracingExtractor()
     
     # Combine system instruction and text content
     full_prompt = f"{system_instruction_text}\n\n{text_content}" if system_instruction_text else text_content
+    print(f"[QUERY_LLM] Combined prompt size: {len(full_prompt):,} characters")
     
     try:
+        print(f"[QUERY_LLM] Calling extractor.extract_graph()...")
+        extract_start = datetime.datetime.now()
+        
         result = extractor.extract_graph(full_prompt)
         
+        extract_duration = (datetime.datetime.now() - extract_start).total_seconds()
+        print(f"[QUERY_LLM] extract_graph returned after {extract_duration:.2f} seconds")
+        
         # Convert the structured result back to the format expected by the pipeline
+        print(f"[QUERY_LLM] Converting structured result to legacy format...")
+        conversion_start = datetime.datetime.now()
+        
         graph_data = {
             'nodes': [node.model_dump() for node in result.graph.nodes],
             'edges': [edge.model_dump() for edge in result.graph.edges]
         }
         
         raw_result = json.dumps(graph_data, indent=2)
+        conversion_duration = (datetime.datetime.now() - conversion_start).total_seconds()
+        
+        print(f"[QUERY_LLM] Conversion completed in {conversion_duration:.2f} seconds")
+        print(f"[QUERY_LLM] Final result size: {len(raw_result):,} characters")
         
         print(f"[DEBUG] LLM response length: {len(raw_result)} chars")
         print(f"[DEBUG] LLM response start: {raw_result[:200]}...")
@@ -967,7 +1006,11 @@ def query_llm(text_content, schema=None, system_instruction_text="", use_structu
         return raw_result
         
     except Exception as e:
-        print(f"[ERROR] Structured extraction failed: {e}")
+        total_duration = (datetime.datetime.now() - extract_start).total_seconds() if 'extract_start' in locals() else -1
+        print(f"[ERROR] Structured extraction failed after {total_duration:.2f} seconds: {e}")
+        print(f"[ERROR] Exception type: {type(e).__name__}")
+        print(f"[ERROR] Timestamp: {datetime.datetime.now().isoformat()}")
+        print(f"[ERROR] This indicates where the hang/failure occurred in the pipeline")
         raise e
 
 # --- Save Output ---

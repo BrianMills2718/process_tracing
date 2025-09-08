@@ -61,10 +61,10 @@ STRUCTURED_EXTRACTION_PROMPT = """Extract causal relationships from this text us
 - Properties: role, sequence_position, necessity (0.0-1.0)
 
 **tests_hypothesis**: Evidence,Event → Hypothesis (hypothesis testing)
-- Properties: probative_value (0.0-1.0), test_result (CRITICAL: MUST BE EXACTLY "passed", "failed", or "ambiguous" - NOT "supports", "refutes", "inconclusive", or any other values), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
+- Properties: probative_value (0.0-1.0), test_result (🚨 VALIDATION CRITICAL: ONLY "passed"/"failed"/"ambiguous" - "supports"/"refutes" WILL CAUSE FAILURE), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
 
-**tests_mechanism**: Evidence,Event → Causal_Mechanism (mechanism testing)
-- Properties: probative_value (0.0-1.0), test_result (CRITICAL: MUST BE EXACTLY "passed", "failed", or "ambiguous" - NOT "supports", "refutes", "inconclusive", or any other values), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
+**tests_mechanism**: Evidence,Event → Causal_Mechanism (mechanism testing)  
+- Properties: probative_value (0.0-1.0), test_result (🚨 VALIDATION CRITICAL: ONLY "passed"/"failed"/"ambiguous" - "supports"/"refutes" WILL CAUSE FAILURE), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general)
 
 **supports**: Evidence,Event → Hypothesis,Event,Causal_Mechanism,Actor (positive evidential support)
 - Use when: evidence/events strengthen or bolster claims, when text uses "supports", "demonstrates", "shows", "indicates", "provides evidence for", "strengthens the case that"
@@ -92,7 +92,7 @@ STRUCTURED_EXTRACTION_PROMPT = """Extract causal relationships from this text us
 - Properties: probative_value (0.0-1.0), certainty (0.0-1.0)
 
 **tests_alternative**: Evidence,Event → Alternative_Explanation (alternative testing)
-- Properties: probative_value (0.0-1.0), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general), test_result (CRITICAL: MUST BE EXACTLY "passed", "failed", or "ambiguous" - NOT "supports", "refutes", "inconclusive", or any other values)
+- Properties: probative_value (0.0-1.0), diagnostic_type (hoop/smoking_gun/straw_in_the_wind/doubly_decisive/general), test_result (🚨 VALIDATION CRITICAL: ONLY "passed"/"failed"/"ambiguous" - "supports"/"refutes" WILL CAUSE FAILURE)
 
 **initiates**: Actor → Event (actor agency)
 - Properties: certainty (0.0-1.0), intention, agency (STRING describing actor agency, not boolean True/False)
@@ -198,12 +198,24 @@ You MUST return JSON with exactly this structure (use "type" not "node_type" or 
 }}
 ```
 
-CRITICAL REQUIREMENTS:
+🚨 CRITICAL REQUIREMENTS - VALIDATION WILL FAIL IF NOT FOLLOWED:
 - ALL nodes MUST have "description" property with descriptive text (NEVER omit this field - it is REQUIRED for EVERY node)
 - key_predictions MUST be array of strings: ["pred1", "pred2"] 
-- test_result MUST be exactly "passed", "failed", or "ambiguous" (NOT "supports", "refutes", "inconclusive", "confirms", or any other values)
+- **test_result ENFORCEMENT**: This field MUST be exactly "passed", "failed", or "ambiguous". The following values will cause VALIDATION FAILURE and must NOT be used:
+  * ❌ "supports" (FORBIDDEN - use "passed" instead)
+  * ❌ "refutes" (FORBIDDEN - use "failed" instead) 
+  * ❌ "inconclusive" (FORBIDDEN - use "ambiguous" instead)
+  * ❌ "confirms" (FORBIDDEN - use "passed" instead)
+  * ❌ "contradicts" (FORBIDDEN - use "failed" instead)
+  * ❌ "validates" (FORBIDDEN - use "passed" instead)
+  * ❌ Any other value (FORBIDDEN - only "passed"/"failed"/"ambiguous" allowed)
 - agency MUST be descriptive string, NOT boolean true/false
 - Data_Source nodes MUST include "description" field even if they also have "type" property
+
+🔍 test_result MAPPING GUIDE:
+- When evidence SUPPORTS/CONFIRMS a hypothesis → test_result: "passed"
+- When evidence REFUTES/CONTRADICTS a hypothesis → test_result: "failed"  
+- When evidence is UNCLEAR/MIXED about a hypothesis → test_result: "ambiguous"
 
 Text to analyze:
 {text}"""
@@ -234,20 +246,32 @@ class StructuredProcessTracingExtractor:
         Returns:
             StructuredExtractionResult with graph and metadata
         """
-        print(f"Extracting with structured output (model: {self.model_name})")
+        # PHASE 19B: Enhanced diagnostic logging for pipeline phases
+        print("\n" + "="*70)
+        print("PHASE 19B: DIAGNOSTIC PIPELINE EXTRACTION")
+        print("="*70)
+        print(f"[PIPELINE] Starting extraction with structured output (model: {self.model_name})")
+        print(f"[PIPELINE] Input text size: {len(text):,} characters ({len(text)//4:,} estimated tokens)")
+        print(f"[PIPELINE] Project: {project_name}")
+        print(f"[PIPELINE] Timestamp: {datetime.now().isoformat()}")
         
         # Format the prompt with input text
+        print(f"[PIPELINE] Formatting prompt template...")
         prompt = STRUCTURED_EXTRACTION_PROMPT.format(text=text)
+        print(f"[PIPELINE] Final prompt size: {len(prompt):,} characters")
         
         try:
             # Use LiteLLM structured output with Pydantic schema
+            print(f"[PIPELINE] Starting LLM extraction phase...")
             start_time = datetime.now()
-            graph = self._extract_with_structured_output(prompt)
-            extraction_time = (datetime.now() - start_time).total_seconds()
             
-            print(f"Extraction completed in {extraction_time:.2f}s")
+            graph = self._extract_with_structured_output(prompt)
+            
+            extraction_time = (datetime.now() - start_time).total_seconds()
+            print(f"[PIPELINE] ✅ Extraction completed in {extraction_time:.2f}s")
             
             # Create metadata
+            print(f"[PIPELINE] Creating extraction metadata...")
             metadata = ExtractionMetadata(
                 extraction_method="structured_output",
                 model_used=self.model_name,
@@ -273,9 +297,20 @@ class StructuredProcessTracingExtractor:
     
     def _extract_with_structured_output(self, prompt: str) -> ProcessTracingGraph:
         """Use LiteLLM structured output with Pydantic schema - fail fast if it doesn't work"""
+        import time
         try:
+            # PHASE 19B: Add diagnostic instrumentation for hang detection
+            prompt_size_kb = len(prompt) / 1024
+            print(f"[DIAGNOSTIC] Starting LiteLLM call with prompt size: {prompt_size_kb:.1f}KB")
+            print(f"[DIAGNOSTIC] Model: {self.model_name}")
+            print(f"[DIAGNOSTIC] Timestamp: {datetime.now().isoformat()}")
+            print(f"[DIAGNOSTIC] Waiting for LLM response...")
+            
+            call_start_time = time.time()
+            
             # Use direct LiteLLM completion with router parameters for GPT-5-mini compatibility
             # PHASE 17B: Apply exact router parameters discovered in 17A
+            # PHASE 19B: Add timeout configuration for large text processing
             response = litellm.completion(
                 model=self.model_name,
                 messages=[
@@ -285,22 +320,42 @@ class StructuredProcessTracingExtractor:
                 response_format={"type": "json_object"},
                 api_key=self.api_key,
                 max_completion_tokens=16384,
+                # PHASE 19B: Configure timeout for large text processing (30 minutes)
+                timeout=1800,  # 30 minutes in seconds
                 use_in_pass_through=False,
                 use_litellm_proxy=False,
                 merge_reasoning_content_in_choices=False
             )
             
+            call_duration = time.time() - call_start_time
+            print(f"[DIAGNOSTIC] LLM call completed in {call_duration:.2f} seconds")
+            
             # Get the JSON content and parse it with our Pydantic model
             json_content = response.choices[0].message.content
             if json_content:
+                print(f"[DIAGNOSTIC] LLM returned {len(json_content)} characters of JSON")
+                print(f"[DIAGNOSTIC] Starting JSON cleaning and validation...")
+                
                 # Clean and parse the JSON response
                 cleaned_response = self._clean_json_response(json_content)
-                return ProcessTracingGraph.model_validate_json(cleaned_response)
+                print(f"[DIAGNOSTIC] JSON cleaned, starting Pydantic validation...")
+                
+                validation_start = time.time()
+                result = ProcessTracingGraph.model_validate_json(cleaned_response)
+                validation_duration = time.time() - validation_start
+                
+                print(f"[DIAGNOSTIC] Pydantic validation completed in {validation_duration:.2f} seconds")
+                print(f"[DIAGNOSTIC] Graph extracted: {len(result.nodes)} nodes, {len(result.edges)} edges")
+                
+                return result
             else:
                 raise ValueError("No content returned from LiteLLM")
                 
         except Exception as e:
-            print(f"ERROR: LiteLLM structured output failed: {str(e)}")
+            call_duration = time.time() - call_start_time if 'call_start_time' in locals() else -1
+            print(f"[ERROR] LiteLLM structured output failed after {call_duration:.2f} seconds: {str(e)}")
+            print(f"[ERROR] Exception type: {type(e).__name__}")
+            print(f"[ERROR] Timestamp: {datetime.now().isoformat()}")
             print("FAIL FAST: No fallbacks, no degradation - fix the LiteLLM configuration")
             raise e
     
