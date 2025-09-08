@@ -42,6 +42,24 @@ debug_*.txt
 debug_*.json
 *.log
 
+# Logs and debug output
+debug_output.txt
+temp*.txt
+validation_output.txt
+
+# Generated analysis files
+*_analysis_*.html
+*_analysis_summary_*.json
+*_graph.json
+test_extraction.json
+
+# Cache and build artifacts
+.mypy_cache/
+cache/
+
+# Empty/null files
+nul
+
 # Ignore environment variable files
 .env
 
