@@ -119,6 +119,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Timeout Transparency**: Clear timeout messages instead of silent hangs
 - **Diagnostic Visibility**: Progress tracking through all pipeline phases
 
+## 📋 PHASE 19C: Documentation Architecture Investigation (2-3 hours)
+
+### OBJECTIVE: Investigate and resolve documentation relevance and system architecture questions
+
+**RATIONALE**: Multiple legacy documentation files exist with uncertain relevance to current system state. Need systematic investigation to determine what's implemented vs. planned.
+
+**CRITICAL QUESTIONS TO INVESTIGATE**:
+
+1. **Connectivity System Status**: 
+   - Is graph connectivity issue resolved? 
+   - Is `core/connectivity_analysis.py` fully functional?
+   - Should `CONNECTIVITY_PLAN.md` be kept or archived?
+
+2. **Diagnostic Rebalancer Implementation**:
+   - Is Van Evera diagnostic rebalancing feature complete and working?
+   - Are `core/plugins/diagnostic_rebalancer.py` files functional?
+   - Should `DIAGNOSTIC_REBALANCER_IMPLEMENTATION.md` be kept?
+
+3. **LLM-First Architecture Reality Check**:
+   - **CONFLICT**: CLAUDE.md claims "100% GPT-5-mini routing" but 0 files found with `require_llm`/`LLMRequiredError`
+   - Is the system actually LLM-first or using different patterns?
+   - Should `MASTER_PLAN_100_PERCENT_LLM_FIRST.md` be archived?
+   - Verify: Should be using structured output with LiteLLM + configurable model/provider/API key
+
+4. **Legacy Validation Documents**:
+   - Are `critical_assessment_report.md` and `debugging_disconnected_entities.md` still relevant?
+   - Should they be moved to `docs/archive/`?
+
+### INVESTIGATION SOURCES:
+- Evidence files in `evidence/` directory for historical context
+- Core implementation files for current state verification
+- Plugin system for feature completeness assessment
+- LLM routing configuration validation
+
+### EXPECTED OUTCOMES:
+- Clear documentation cleanup plan
+- Accurate system architecture understanding  
+- Resolved conflicts between claims and implementation
+- Updated CLAUDE.md with verified system status
+
+---
+
 ## ⚡ IMPLEMENTATION COMMANDS
 
 ### **PHASE 19A Start Command**:
