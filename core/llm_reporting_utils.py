@@ -1,7 +1,8 @@
 import json
 import logging
 from typing import Dict, Any, Optional
-from process_trace_advanced import query_llm
+# Avoid circular import in CLI context - import query_llm when needed
+# from process_trace_advanced import query_llm
 from .structured_models import NarrativeSummary
 
 # Phase 6C Bayesian Integration - Components moved to archive
@@ -64,6 +65,9 @@ Use clear, analytical language appropriate for academic writing.
 """
     
     # Use structured output with NarrativeSummary model
+    # Import query_llm dynamically to avoid circular import
+    from process_trace_advanced import query_llm
+    
     llm_response = query_llm(
         text_content="",  # No main text, just use prompt
         schema=NarrativeSummary,

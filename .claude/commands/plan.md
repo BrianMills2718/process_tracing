@@ -1,1 +1,1 @@
- ultrathink and methodically plan how to do this but dont implement yet
+ ultrathink and methodically plan how to do this, including systematic testing, but dont implement yet

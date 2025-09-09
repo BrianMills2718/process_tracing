@@ -3,8 +3,18 @@ Van Evera Academic Workflow Definition
 Orchestrates complete Van Evera process tracing methodology as plugin workflow
 """
 
+print("[VAN-EVERA-WORKFLOW-DEBUG] Starting van_evera_workflow.py import...")
+import time
+workflow_import_start = time.time()
+
+print("[VAN-EVERA-WORKFLOW-DEBUG] Importing typing...")
 from typing import Dict, List, Any, Optional
+
+print(f"[VAN-EVERA-WORKFLOW-DEBUG] Importing workflow... ({time.time() - workflow_import_start:.1f}s elapsed)")
 from .workflow import PluginWorkflow
+print(f"[VAN-EVERA-WORKFLOW-DEBUG] workflow imported in {time.time() - workflow_import_start:.1f}s")
+
+print(f"[VAN-EVERA-WORKFLOW-DEBUG] Defining workflow constants... ({time.time() - workflow_import_start:.1f}s elapsed)")
 
 # Van Evera Academic Process Tracing Workflow with Q/H1/H2/H3 Structure
 VAN_EVERA_ACADEMIC_WORKFLOW = [
@@ -66,6 +76,8 @@ VAN_EVERA_ACADEMIC_WORKFLOW = [
     }
 ]
 
+print(f"[VAN-EVERA-WORKFLOW-DEBUG] Workflow constants defined... ({time.time() - workflow_import_start:.1f}s elapsed)")
+print(f"[VAN-EVERA-WORKFLOW-DEBUG] Defining VanEveraWorkflow class... ({time.time() - workflow_import_start:.1f}s elapsed)")
 
 class VanEveraWorkflow(PluginWorkflow):
     """
@@ -527,3 +539,5 @@ def execute_van_evera_analysis(graph_data: Dict, case_id: str, output_dir: str =
     results = workflow.execute_van_evera_analysis(graph_data, case_id)
     
     return results
+
+print(f"[VAN-EVERA-WORKFLOW-DEBUG] van_evera_workflow.py import completed in {time.time() - workflow_import_start:.1f}s")

@@ -380,17 +380,52 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
     with open(network_data_file, "w", encoding="utf-8") as f:
         f.write(network_data_json)
 
-    # Run Van Evera analysis
-    result = subprocess.run([
+    # Run Van Evera analysis - CLI hang issue fixed by resolving circular import
+    print(f"[INFO] Starting analysis phase (circular import fixed)...")
+    analyze_cmd = [
         sys.executable, '-m', 'core.analyze', 
         str(graph_json_path), 
         '--html',
         '--network-data', str(network_data_file)
-    ], capture_output=True, text=True)
+    ]
+    # PHASE 20: Show real-time output instead of capturing
+    process = subprocess.Popen(analyze_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+                              text=True, bufsize=1)
     
-    print(result.stdout)
-    if result.stderr:
-        print(result.stderr)
+    # Stream output line by line
+    stdout_lines = []
+    stderr_lines = []
+    
+    # Read both stdout and stderr
+    import select
+    import sys
+    
+    while True:
+        # Check if process is still running
+        retcode = process.poll()
+        
+        # Read available output
+        line = process.stdout.readline()
+        if line:
+            stdout_lines.append(line)
+            print(f"[ANALYSIS] {line.rstrip()}")
+        
+        line_err = process.stderr.readline()
+        if line_err:
+            stderr_lines.append(line_err)
+            print(f"[ANALYSIS-ERR] {line_err.rstrip()}")
+        
+        # If process finished and no more output, break
+        if retcode is not None and not line and not line_err:
+            break
+    
+    # Store output for compatibility with existing code
+    result = subprocess.CompletedProcess(
+        args=analyze_cmd,
+        returncode=process.returncode,
+        stdout=''.join(stdout_lines),
+        stderr=''.join(stderr_lines)
+    )
     
     # Check if analysis failed
     if result.returncode != 0:

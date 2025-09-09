@@ -1,27 +1,50 @@
 import os
 import sys
 
+print("[MODULE-DEBUG] Starting core.analyze module import...", flush=True)
+import sys
+
 # Unicode fix for Windows
-os.environ['PYTHONIOENCODING'] = 'utf-8'
-os.environ['PYTHONUTF8'] = '1'
-if hasattr(sys.stdout, 'reconfigure'):
-    try:
-        sys.stdout.reconfigure(encoding='utf-8')
-        sys.stderr.reconfigure(encoding='utf-8')
-    except:
-        pass
+print("[IMPORT-DEBUG] Skipping Unicode setup on Windows (potential hang source)...", flush=True)
+sys.stdout.flush()
+# TEMPORARY: Comment out Unicode setup to test Windows hang theory
+# os.environ['PYTHONIOENCODING'] = 'utf-8'
+# os.environ['PYTHONUTF8'] = '1'
+# if hasattr(sys.stdout, 'reconfigure'):
+#     try:
+#         sys.stdout.reconfigure(encoding='utf-8')
+#         sys.stderr.reconfigure(encoding='utf-8')
+#     except:
+#         pass
+print("[IMPORT-DEBUG] Unicode setup skipped, starting imports...")
+print("[IMPORT-DEBUG] Importing standard libraries...")
 import json
+print("[IMPORT-DEBUG] json imported")
 import argparse
+print("[IMPORT-DEBUG] argparse imported")
 import networkx as nx
+print("[IMPORT-DEBUG] networkx imported")
 from collections import defaultdict, Counter
+print("[IMPORT-DEBUG] collections imported")
 import copy
+print("[IMPORT-DEBUG] copy imported")
 import logging
+print("[IMPORT-DEBUG] logging imported")
+import time
+print("[IMPORT-DEBUG] time imported")
+from datetime import datetime
+print("[IMPORT-DEBUG] datetime imported")
 import matplotlib
+print("[IMPORT-DEBUG] matplotlib imported")
+print("[IMPORT-DEBUG] All libraries imported successfully")
 
 # Import structured logging utilities
+print("[IMPORT-DEBUG] Importing logging utilities...")
 try:
     from .logging_utils import log_structured_error, log_structured_info, create_analysis_context
+    print("[IMPORT-DEBUG] Logging utilities imported successfully")
 except ImportError:
+    print("[IMPORT-DEBUG] Logging utilities not available, using fallbacks")
     # Fallback if logging_utils not available
     def log_structured_error(logger, message, error_category, operation_context=None, exc_info=True, **extra_context):
         logger.error(message, exc_info=exc_info)
@@ -40,12 +63,111 @@ from datetime import datetime
 # Module-level logger
 logger = logging.getLogger(__name__)
 
+# PHASE 20: Progress tracking
+class ProgressTracker:
+    def __init__(self):
+        self.start_time = time.time()
+        self.checkpoints = []
+    
+    def checkpoint(self, name, details=""):
+        elapsed = time.time() - self.start_time
+        self.checkpoints.append((name, elapsed, details))
+        print(f"[PROGRESS] {elapsed:.1f}s | {name} | {details}")
+        return elapsed
+
+progress = ProgressTracker()
+
+# PHASE 20: LLM call tracking
+class LLMCallTracker:
+    def __init__(self):
+        self.calls = []
+        self.total_time = 0.0
+        self.call_count = 0
+    
+    def start_call(self, function_name, input_size):
+        self.call_count += 1
+        print(f"[LLM-CALL-{self.call_count}] Starting: {function_name} | Input: {input_size} chars")
+        return time.time()
+    
+    def end_call(self, start_time, function_name, success=True):
+        duration = time.time() - start_time
+        self.total_time += duration
+        self.calls.append({
+            "function": function_name,
+            "duration": duration,
+            "success": success,
+            "cumulative_time": self.total_time
+        })
+        print(f"[LLM-COMPLETE-{self.call_count}] {function_name} | Duration: {duration:.2f}s | Total: {self.total_time:.2f}s")
+        return duration
+
+llm_tracker = LLMCallTracker()
+
+# PHASE 20: Persistent diagnostics
+class DiagnosticLogger:
+    def __init__(self, output_dir):
+        from pathlib import Path
+        self.output_dir = Path(output_dir) if output_dir else Path(".")
+        self.log_file = self.output_dir / f"analysis_diagnostics_{datetime.now():%Y%m%d_%H%M%S}.json"
+        self.data = {
+            "start_time": datetime.now().isoformat(),
+            "progress": [],
+            "llm_calls": [],
+            "errors": []
+        }
+    
+    def save(self):
+        with open(self.log_file, 'w') as f:
+            json.dump(self.data, f, indent=2)
+        print(f"[DIAGNOSTIC] Saved to {self.log_file}")
+    
+    def log_progress(self, checkpoint, elapsed, details):
+        self.data["progress"].append({
+            "checkpoint": checkpoint,
+            "elapsed": elapsed,
+            "details": details,
+            "timestamp": datetime.now().isoformat()
+        })
+        self.save()
+    
+    def log_llm_call(self, function, duration, success):
+        self.data["llm_calls"].append({
+            "function": function,
+            "duration": duration,
+            "success": success,
+            "timestamp": datetime.now().isoformat()
+        })
+        self.save()
+
+# Global diagnostic logger - will be initialized in analyze_graph
+diagnostics = None
+
+print("[IMPORT-DEBUG] About to import ontology module...")
 # Assuming this file will be in core/ and ontology.py is in core/
+print("[MODULE-DEBUG] Importing ontology...")
 from core.ontology import NODE_TYPES as CORE_NODE_TYPES, NODE_COLORS
+print("[IMPORT-DEBUG] Ontology import completed successfully")
+
+print("[MODULE-DEBUG] Importing enhance_evidence...")
 from core.enhance_evidence import refine_evidence_assessment_with_llm
+print("[IMPORT-DEBUG] enhance_evidence import completed successfully")
+
+print("[MODULE-DEBUG] Importing llm_reporting_utils...")
+llm_import_start = time.time()
 from core.llm_reporting_utils import generate_narrative_summary_with_llm
+print(f"[MODULE-DEBUG] llm_reporting_utils imported in {time.time() - llm_import_start:.1f}s")
+
+print("[MODULE-DEBUG] Importing enhance_mechanisms...")
+mech_import_start = time.time()
 from core.enhance_mechanisms import elaborate_mechanism_with_llm
+print(f"[MODULE-DEBUG] enhance_mechanisms imported in {time.time() - mech_import_start:.1f}s")
+
+print("[MODULE-DEBUG] Importing van_evera_workflow...")
+workflow_import_start = time.time()
 from core.plugins.van_evera_workflow import execute_van_evera_analysis
+print(f"[MODULE-DEBUG] van_evera_workflow imported in {time.time() - workflow_import_start:.1f}s")
+
+print(f"[MODULE-DEBUG] Starting function definitions section...")
 
 # Phase 2B: Advanced analytical capabilities
 
@@ -90,16 +212,27 @@ def get_edge_property(edge_data, property_name, default=None):
         return edge_data[property_name]
     
     return default
+
+print("[MODULE-DEBUG] Importing dag_analysis...")
+dag_import_start = time.time()
 from core.dag_analysis import find_complex_causal_patterns
+print(f"[MODULE-DEBUG] dag_analysis imported in {time.time() - dag_import_start:.1f}s")
 
 # Advanced analysis components moved to archive - using fallback
 def analyze_cross_domain_patterns(*args, **kwargs):
     return {"patterns": [], "cross_domain_connections": []}
 
 # Phase 4: Temporal process tracing capabilities
+print("[MODULE-DEBUG] Importing temporal components...")
+temporal_import_start = time.time()
 from core.temporal_extraction import TemporalExtractor
+print(f"[MODULE-DEBUG] TemporalExtractor imported in {time.time() - temporal_import_start:.1f}s")
+
 from core.temporal_graph import TemporalGraph
+print(f"[MODULE-DEBUG] TemporalGraph imported in {time.time() - temporal_import_start:.1f}s")
+
 from core.temporal_validator import TemporalValidator
+print(f"[MODULE-DEBUG] TemporalValidator imported in {time.time() - temporal_import_start:.1f}s")
 
 # Critical junctures moved to archive - using fallback
 class CriticalJunctureAnalyzer:
@@ -114,7 +247,10 @@ class DurationAnalyzer:
     def analyze(self, *args, **kwargs):
         return {"duration_analysis": []}
 
+print("[MODULE-DEBUG] Importing temporal_viz...")
+temporal_viz_import_start = time.time()
 from core.temporal_viz import TemporalVisualizer
+print(f"[MODULE-DEBUG] TemporalVisualizer imported in {time.time() - temporal_viz_import_start:.1f}s")
 
 # Phase 4 Optimization: Comprehensive analysis cache
 _comprehensive_cache = {}
@@ -138,21 +274,27 @@ def get_comprehensive_analysis(evidence_desc, hypothesis_desc, context=None):
     semantic_service = get_semantic_service()
     
     try:
+        print(f"[COMPREHENSIVE-LLM] Starting analyze_comprehensive: evidence={len(evidence_desc)} chars, hypothesis={len(hypothesis_desc)} chars")
+        llm_start = time.time()
         comprehensive = semantic_service.analyze_comprehensive(
             evidence=evidence_desc,
             hypothesis=hypothesis_desc,
             context=context
         )
+        print(f"[COMPREHENSIVE-LLM] analyze_comprehensive completed in {time.time() - llm_start:.1f}s")
         _comprehensive_cache[cache_key] = comprehensive
         return comprehensive
     except Exception as e:
         logger.warning(f"Comprehensive analysis failed, falling back to separate calls: {e}")
         # Fallback to separate calls if comprehensive fails
+        print(f"[FALLBACK-LLM] Starting assess_probative_value fallback")
+        fallback_start = time.time()
         assessment = semantic_service.assess_probative_value(
             evidence_description=evidence_desc,
             hypothesis_description=hypothesis_desc,
             context=context
         )
+        print(f"[FALLBACK-LLM] assess_probative_value completed in {time.time() - fallback_start:.1f}s")
         # Create minimal comprehensive object for compatibility
         class MinimalComprehensive:
             def __init__(self, assessment):
@@ -201,12 +343,16 @@ def batch_evaluate_evidence_edges(evidence_id, evidence_data, hypothesis_nodes_d
     
     # Batch evaluate all hypotheses at once
     try:
+        total_hyp_chars = sum(len(h['text']) for h in hypotheses_to_evaluate)
+        print(f"[BATCH-DEBUG] Starting LLM call for evidence {evidence_id} ({len(evidence_desc)} chars) vs {len(hypotheses_to_evaluate)} hypotheses ({total_hyp_chars} chars total)")
+        llm_start = time.time()
         batch_result = semantic_service.evaluate_evidence_against_hypotheses_batch(
             evidence_id,
             evidence_desc,
             hypotheses_to_evaluate,
             context="Edge validation and update"
         )
+        print(f"[BATCH-DEBUG] LLM call completed in {time.time() - llm_start:.1f}s")
         
         # Process results
         results = {}
@@ -239,13 +385,17 @@ def batch_evaluate_evidence_edges(evidence_id, evidence_data, hypothesis_nodes_d
     except Exception as e:
         logger.warning(f"Batch evaluation failed, falling back to individual: {e}")
         # Fallback to individual evaluation
+        print(f"[FALLBACK-BATCH] Batch failed, processing {len(hypotheses_to_evaluate)} hypotheses individually")
         results = {}
-        for hyp in hypotheses_to_evaluate:
+        for i, hyp in enumerate(hypotheses_to_evaluate, 1):
+            print(f"[FALLBACK-INDIVIDUAL] Processing hypothesis {i}/{len(hypotheses_to_evaluate)}: {hyp['id']}")
+            individual_start = time.time()
             comprehensive = get_comprehensive_analysis(
                 evidence_desc,
                 hyp['text'],
                 context="Fallback individual evaluation"
             )
+            print(f"[FALLBACK-INDIVIDUAL] Hypothesis {i}/{len(hypotheses_to_evaluate)} completed in {time.time() - individual_start:.1f}s")
             results[hyp['id']] = {
                 'probative_value': comprehensive.probative_value,
                 'van_evera_diagnostic': comprehensive.van_evera_diagnostic if hasattr(comprehensive, 'van_evera_diagnostic') else 'straw_in_wind',
@@ -557,17 +707,28 @@ def load_graph(json_file):
     
     Implements fail-fast principle - fails loud on missing file or invalid data.
     """
+    load_start = time.time()
+    progress.checkpoint("load_graph", f"Loading from {json_file}")
+    
+    print(f"[LOAD-DEBUG] Starting load_graph({json_file})")
+    
     # Fail fast on missing file
     if not os.path.exists(json_file):
         raise FileNotFoundError(f"Required file missing: {json_file}")
     
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | File exists check completed")
+    
+    file_start = time.time()
     with open(json_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | JSON file loaded in {time.time() - file_start:.1f}s")
     
     if not data:
         raise ValueError(f"File {json_file} is empty - cannot proceed")
 
+    graph_start = time.time()
     G = nx.DiGraph()
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | NetworkX graph created in {time.time() - graph_start:.1f}s")
 
     def sanitize_value(value):
         if isinstance(value, str):
@@ -577,7 +738,14 @@ def load_graph(json_file):
                 value = value.encode('utf-8', 'replace').decode('ascii', 'replace')
         return value
 
-    for node_data in data.get('nodes', []):
+    nodes_start = time.time()
+    node_count = len(data.get('nodes', []))
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Processing {node_count} nodes...")
+    
+    for i, node_data in enumerate(data.get('nodes', [])):
+        if i > 0 and i % 100 == 0:  # Progress every 100 nodes
+            print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Processed {i}/{node_count} nodes")
+        
         node_id = node_data.get('id')
         main_type_from_json = node_data.get('type')
 
@@ -606,7 +774,16 @@ def load_graph(json_file):
         except Exception as e:
             logger.warning("Skipping node due to attribute error", exc_info=True, extra={'node_id': node_id, 'main_type': main_type_from_json, 'error_category': 'graph_corruption'})
 
-    for edge_data in data.get('edges', []):
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Node processing completed in {time.time() - nodes_start:.1f}s")
+    
+    edges_start = time.time()
+    edge_count = len(data.get('edges', []))
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Processing {edge_count} edges...")
+    
+    for i, edge_data in enumerate(data.get('edges', [])):
+        if i > 0 and i % 100 == 0:  # Progress every 100 edges
+            print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Processed {i}/{edge_count} edges")
+        
         source = edge_data.get('source') or edge_data.get('source_id')
         target = edge_data.get('target') or edge_data.get('target_id')
         edge_id = edge_data.get('id', f"{source}_to_{target}_{edge_data.get('type', 'edge')}")
@@ -642,11 +819,21 @@ def load_graph(json_file):
         except Exception as e:
             logger.warning("Skipping edge due to attribute error", exc_info=True, extra={'edge_id': edge_id, 'source': source, 'target': target, 'main_type': main_edge_type_from_json, 'error_category': 'graph_corruption'})
     
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Edge processing completed in {time.time() - edges_start:.1f}s")
+    
     # Apply connectivity repair to fix disconnected graph
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Starting connectivity repair...")
+    connectivity_start = time.time()
     logger.info("Checking graph connectivity", extra={'operation': 'connectivity_repair'})
+    
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Importing disconnection_repair...")
+    import_repair_start = time.time()
     from .disconnection_repair import repair_graph_connectivity
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Import completed in {time.time() - import_repair_start:.1f}s")
     
     # Convert graph data to format expected by repair system
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Converting graph data for repair...")
+    conversion_start = time.time()
     graph_data_for_repair = {
         'nodes': [
             {
@@ -667,9 +854,13 @@ def load_graph(json_file):
             for source, target, edge_attrs in G.edges(data=True)
         ]
     }
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Conversion completed in {time.time() - conversion_start:.1f}s")
     
     # Repair connectivity
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Calling repair_graph_connectivity()...")
+    repair_start = time.time()
     repaired_graph_data = repair_graph_connectivity(graph_data_for_repair)
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Repair completed in {time.time() - repair_start:.1f}s")
     
     # Add any new edges back to the NetworkX graph
     if len(repaired_graph_data['edges']) > len(graph_data_for_repair['edges']):
@@ -692,7 +883,10 @@ def load_graph(json_file):
                 }
                 edge_attributes.update(properties)
                 G.add_edge(source, target, key=edge_id, **edge_attributes)
-            
+    
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Connectivity repair total time: {time.time() - connectivity_start:.1f}s")
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | load_graph() completed successfully")
+    
     return G, data
 
 def identify_causal_chains(G):
@@ -959,9 +1153,11 @@ def evaluate_mechanisms(G):
     return mechanisms
 
 def analyze_evidence(G):
+    print("[EVIDENCE-DEBUG] 0.0 | analyze_evidence() started")
     hypothesis_results = {}
     evidence_nodes_data = {n: d for n, d in G.nodes(data=True) if d.get('type') == 'Evidence'}
     hypothesis_nodes_data = {n: d for n, d in G.nodes(data=True) if d.get('type') == 'Hypothesis'}
+    print(f"[EVIDENCE-DEBUG] 0.1 | Found {len(evidence_nodes_data)} evidence nodes, {len(hypothesis_nodes_data)} hypothesis nodes")
 
 
     for hyp_id, hyp_node_data in hypothesis_nodes_data.items():
@@ -1001,7 +1197,14 @@ def analyze_evidence(G):
     from core.semantic_analysis_service import get_semantic_service
     semantic_service = get_semantic_service()
     
+    processed_evidence = 0
+    total_evidence = len(evidence_nodes_data)
+    print(f"[EVIDENCE-DEBUG] 1.0 | Starting evidence processing loop - {total_evidence} evidence nodes")
+    
     for evidence_id, evidence_node_data in evidence_nodes_data.items():
+        processed_evidence += 1
+        print(f"[EVIDENCE-DEBUG] 1.{processed_evidence} | Processing evidence {evidence_id} ({processed_evidence}/{total_evidence})")
+        
         # Use unified access pattern for evidence descriptions
         evidence_description = (
             evidence_node_data.get('description') or 
@@ -1017,6 +1220,8 @@ def analyze_evidence(G):
         )
         
         # PHASE 4B OPTIMIZATION: Use batch evaluation for all hypotheses at once
+        print(f"[EVIDENCE-DEBUG] 2.{processed_evidence} | Starting batch_evaluate_evidence_edges() - CRITICAL LLM CALL")
+        batch_start = time.time()
         batch_results = batch_evaluate_evidence_edges(
             evidence_id, 
             evidence_node_data, 
@@ -1024,6 +1229,7 @@ def analyze_evidence(G):
             G, 
             semantic_service
         )
+        print(f"[EVIDENCE-DEBUG] 3.{processed_evidence} | batch_evaluate_evidence_edges() completed in {time.time() - batch_start:.1f}s")
         
         # Process the batch results for each hypothesis
         for u_ev_id, v_hyp_id, edge_data in G.out_edges(evidence_id, data=True): 
@@ -3109,13 +3315,34 @@ def generate_evidence_strength_chart(results):
 # (Keep your existing main() function structure. Ensure it calls the refactored functions
 # and passes G and results['filename'] to formatting functions correctly.)
 def main():
+    print("[MAIN-DEBUG] 0.0 | main() function started")
+    
     args = parse_args()
+    print("[MAIN-DEBUG] 0.1 | parse_args() completed")
+    
     if not os.path.isfile(args.json_file):
         logger.error(f"File not found: {args.json_file}"); sys.exit(1)
     
+    print(f"[MAIN-DEBUG] 0.2 | File check passed: {args.json_file}")
+    
+    # PHASE 20: Initialize diagnostic logger
+    global diagnostics
+    output_dir = Path(args.json_file).parent if hasattr(args, 'json_file') else Path(".")
+    diagnostics = DiagnosticLogger(output_dir)
+    
+    print("[MAIN-DEBUG] 0.3 | Diagnostic logger initialized")
+    
+    progress.checkpoint("main", f"Starting analysis of {os.path.basename(args.json_file)}")
+    
+    print("[MAIN-DEBUG] 0.4 | Progress checkpoint reached")
+    
     logger.info(f"Analyzing data from {os.path.basename(args.json_file)}", extra={'operation': 'main_analysis', 'file': os.path.basename(args.json_file)})
+    print("[MAIN-DEBUG] 0.5 | Logger.info completed")
     try:
+        print("[MAIN-DEBUG] 1.0 | Starting load_graph() call...")
+        load_start_main = time.time()
         G, data = load_graph(args.json_file)
+        print(f"[MAIN-DEBUG] 1.1 | load_graph() completed in {time.time() - load_start_main:.1f}s")
     except Exception as e:
         log_structured_error(
             logger,
@@ -3130,9 +3357,47 @@ def main():
         )
         sys.exit(1)
     
+    print("[MAIN-DEBUG] 1.2 | Starting logger.info for successful load...")
     logger.info("Successfully loaded graph", extra={'nodes': G.number_of_nodes(), 'edges': G.number_of_edges(), 'operation': 'graph_loading'})
+    print("[MAIN-DEBUG] 1.3 | Logger.info completed")
+    
+    # PHASE 20: Analyze graph complexity upfront
+    print("[MAIN-DEBUG] 1.4 | Starting complexity analysis...")
+    def analyze_complexity(graph, data):
+        nodes = data.get('nodes', [])
+        edges = data.get('edges', [])
+        
+        evidence_nodes = [n for n in nodes if n.get('type') == 'Evidence']
+        hypothesis_nodes = [n for n in nodes if n.get('type') == 'Hypothesis']
+        evidence_edges = [e for e in edges if 'evidence' in e.get('type', '').lower() or 'tests' in e.get('type', '').lower()]
+        
+        estimated_llm_calls = len(evidence_nodes) * len(hypothesis_nodes)
+        estimated_time = estimated_llm_calls * 3  # 3 seconds per call average
+        
+        complexity_info = f"""
+[GRAPH-COMPLEXITY] Workload Analysis:
+  Total Nodes: {len(nodes)}
+  Evidence Nodes: {len(evidence_nodes)}
+  Hypothesis Nodes: {len(hypothesis_nodes)}
+  Evidence Edges: {len(evidence_edges)}
+  Estimated LLM Calls: {estimated_llm_calls}
+  Estimated Time: {estimated_time}s ({estimated_time/60:.1f} minutes)
+  WARNING: {'HEAVY WORKLOAD - Consider timeout increase' if estimated_llm_calls > 50 else 'Normal workload'}
+"""
+        print(complexity_info)
+        progress.checkpoint("complexity_analysis", f"{estimated_llm_calls} LLM calls estimated")
+        
+        if diagnostics:
+            diagnostics.log_progress("complexity_analysis", progress.checkpoints[-1][1], complexity_info)
+        
+        return estimated_llm_calls
+
+    complexity_start_main = time.time()
+    estimated_calls = analyze_complexity(G, data)
+    print(f"[MAIN-DEBUG] 1.5 | Complexity analysis completed in {time.time() - complexity_start_main:.1f}s")
     
     # Check if plugin integration is requested via environment variable
+    print("[MAIN-DEBUG] 2.0 | Checking plugin integration...")
     use_plugins = os.environ.get('PROCESS_TRACING_USE_PLUGINS', 'false').lower() == 'true'
     
     if use_plugins:
@@ -3163,38 +3428,91 @@ def main():
     
     # Run standard analysis if plugins not used
     if not use_plugins:
+        print("[MAIN-DEBUG] 3.0 | Starting analyze_evidence() - CRITICAL SECTION")
+        evidence_start = time.time()
         evidence_analysis = analyze_evidence(G)['by_hypothesis']
+        print(f"[MAIN-DEBUG] 3.1 | analyze_evidence() completed in {time.time() - evidence_start:.1f}s")
         
         # Apply systematic evidence balance correction
+        print("[MAIN-DEBUG] 4.0 | Starting evidence balance correction")
+        balance_start = time.time()
         logger.info("Applying evidence balance correction for academic standards", extra={'operation': 'evidence_balance_correction'})
         all_evidence_nodes = {n: d for n, d in G.nodes(data=True) if d.get('type') == 'Evidence'}
+        print(f"[MAIN-DEBUG] 4.1 | Found {len(all_evidence_nodes)} evidence nodes for balance correction")
+        print(f"[MAIN-DEBUG] 4.2 | Processing {len(evidence_analysis)} hypotheses for balance correction")
         
+        processed_hyp = 0
         for hyp_id, hyp_data in evidence_analysis.items():
+            processed_hyp += 1
+            print(f"[MAIN-DEBUG] 4.3.{processed_hyp} | Processing hypothesis {hyp_id} ({processed_hyp}/{len(evidence_analysis)})")
+            balance_hyp_start = time.time()
             balanced_evidence = systematic_evidence_evaluation(
                 hypothesis_id=hyp_id,
                 hypothesis_data=hyp_data,
                 all_evidence_nodes=all_evidence_nodes,
                 van_evera_results=None  # Will be integrated later with Van Evera testing
             )
+            print(f"[MAIN-DEBUG] 4.4.{processed_hyp} | systematic_evidence_evaluation completed in {time.time() - balance_hyp_start:.1f}s")
             
             # Update hypothesis data with balanced evidence
             evidence_analysis[hyp_id]['supporting_evidence'] = balanced_evidence['supporting_evidence']
             evidence_analysis[hyp_id]['refuting_evidence'] = balanced_evidence['refuting_evidence']
             evidence_analysis[hyp_id]['evidence_balance'] = balanced_evidence['evidence_balance']
         
+        print(f"[MAIN-DEBUG] 4.5 | Evidence balance correction completed in {time.time() - balance_start:.1f}s")
+        
+        print("[MAIN-DEBUG] 5.0 | Building analysis_results structure")
+        results_start = time.time()
+        
+        print("[MAIN-DEBUG] 5.1 | Calling identify_causal_chains()")
+        causal_start = time.time()
+        causal_chains = identify_causal_chains(G)
+        print(f"[MAIN-DEBUG] 5.2 | identify_causal_chains() completed in {time.time() - causal_start:.1f}s")
+        
+        print("[MAIN-DEBUG] 5.3 | Calling evaluate_mechanisms()")
+        mech_start = time.time()
+        mechanisms = evaluate_mechanisms(G)
+        print(f"[MAIN-DEBUG] 5.4 | evaluate_mechanisms() completed in {time.time() - mech_start:.1f}s")
+        
+        print("[MAIN-DEBUG] 5.5 | Calling identify_conditions()")
+        cond_start = time.time()
+        conditions = identify_conditions(G)
+        print(f"[MAIN-DEBUG] 5.6 | identify_conditions() completed in {time.time() - cond_start:.1f}s")
+        
+        print("[MAIN-DEBUG] 5.7 | Calling analyze_actors()")
+        actors_start = time.time()
+        actors = analyze_actors(G)
+        print(f"[MAIN-DEBUG] 5.8 | analyze_actors() completed in {time.time() - actors_start:.1f}s")
+        
+        print("[MAIN-DEBUG] 5.9 | Calling analyze_alternative_explanations()")
+        alt_start = time.time()
+        alternatives = analyze_alternative_explanations(G)
+        print(f"[MAIN-DEBUG] 5.10 | analyze_alternative_explanations() completed in {time.time() - alt_start:.1f}s")
+        
+        print("[MAIN-DEBUG] 5.11 | Calling calculate_network_metrics()")
+        metrics_start = time.time()
+        metrics = calculate_network_metrics(G)
+        print(f"[MAIN-DEBUG] 5.12 | calculate_network_metrics() completed in {time.time() - metrics_start:.1f}s")
+        
         analysis_results = { 
             'filename': args.json_file, 
-            'causal_chains': identify_causal_chains(G),
-            'mechanisms': evaluate_mechanisms(G),
+            'causal_chains': causal_chains,
+            'mechanisms': mechanisms,
             'evidence_analysis': evidence_analysis,
-            'conditions': identify_conditions(G),
-            'actors': analyze_actors(G),
-            'alternatives': analyze_alternative_explanations(G),
-            'metrics': calculate_network_metrics(G)
+            'conditions': conditions,
+            'actors': actors,
+            'alternatives': alternatives,
+            'metrics': metrics
         }
+        print(f"[MAIN-DEBUG] 5.13 | analysis_results structure built in {time.time() - results_start:.1f}s")
 
     # --- LLM Mechanism Elaboration ---
+    print(f"[MAIN-DEBUG] 6.0 | Starting LLM Mechanism Elaboration - {len(analysis_results['mechanisms'])} mechanisms")
+    mech_elab_start = time.time()
+    processed_mechs = 0
     for mech in analysis_results['mechanisms']:
+        processed_mechs += 1
+        print(f"[MAIN-DEBUG] 6.{processed_mechs} | Processing mechanism {processed_mechs}/{len(analysis_results['mechanisms'])}")
         mech_id = mech['id']
         if not G.has_node(mech_id):
             continue
@@ -3436,9 +3754,17 @@ def main():
                 network_data_json = None
         # Run Van Evera systematic testing if HTML output is requested
         try:
+            print("[VAN-EVERA-DEBUG] Starting Van Evera testing import...")
+            import_start = time.time()
             from core.van_evera_testing_engine import perform_van_evera_testing
+            print(f"[VAN-EVERA-DEBUG] Import completed in {time.time() - import_start:.1f}s")
+            
             logger.info("Running systematic hypothesis testing", extra={'operation': 'van_evera_testing', 'methodology': 'Van Evera'})
+            print(f"[VAN-EVERA-DEBUG] Starting perform_van_evera_testing() call...")
+            testing_start = time.time()
             van_evera_results = perform_van_evera_testing(data)
+            print(f"[VAN-EVERA-DEBUG] Testing completed in {time.time() - testing_start:.1f}s")
+            
             analysis_results['van_evera_assessment'] = van_evera_results
             logger.info("Completed Van Evera hypothesis testing", extra={'hypotheses_count': len(van_evera_results), 'operation': 'van_evera_testing'})
             
@@ -3629,10 +3955,16 @@ def main():
         with open(summary_path, 'w', encoding='utf-8') as f:
             json.dump(summary, f, indent=2)
         logger.info("Analysis summary JSON saved", extra={'summary_path': str(summary_path), 'operation': 'summary_generation'})
+        print(f"[MAIN-DEBUG] FINAL | Analysis summary JSON saved to {summary_path}")
     except Exception as e:
         logger.error("Could not write analysis summary JSON", exc_info=True, extra={'error_category': 'io_operation', 'operation': 'summary_generation'})
+        print(f"[MAIN-DEBUG] ERROR | Could not write analysis summary JSON: {e}")
     
+    print("[MAIN-DEBUG] COMPLETE | main() function completed successfully")
     sys.exit(0)
 
+print("[MODULE-DEBUG] Reached end of analyze.py module - all imports and definitions complete!")
+
 if __name__ == "__main__":
+    print("[MODULE-DEBUG] __main__ block executing...")
     main()

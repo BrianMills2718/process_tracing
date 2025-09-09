@@ -402,6 +402,12 @@ class SemanticAnalysisService:
             return cached_result
         
         try:
+            import time
+            print(f"[SEMANTIC-LLM] Starting batch evaluation: evidence={evidence_id}, {len(hypotheses)} hypotheses")
+            print(f"[SEMANTIC-LLM] Evidence text length: {len(evidence_text)} chars")
+            print(f"[SEMANTIC-LLM] Hypotheses: {[h.get('id', 'unknown') for h in hypotheses]}")
+            
+            llm_start = time.time()
             self._stats['llm_calls'] += 1
             result = self.llm_interface.evaluate_evidence_against_hypotheses(
                 evidence_id,
@@ -409,6 +415,9 @@ class SemanticAnalysisService:
                 hypotheses,
                 context
             )
+            llm_duration = time.time() - llm_start
+            print(f"[SEMANTIC-LLM] Batch evaluation completed in {llm_duration:.1f}s")
+            
             self._update_cache(cache_key, result)
             logger.info(f"Batch evaluation completed for {len(hypotheses)} hypotheses")
             return result

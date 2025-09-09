@@ -545,23 +545,35 @@ class VanEveraLLMInterface:
         HYPOTHESIS: {hypothesis_description}
         CONTEXT: {context or 'Process tracing analysis'}
         
-        Evaluate probative value (0.0-1.0) based on:
-        1. RELEVANCE: How directly does the evidence relate to the hypothesis?
-        2. RELIABILITY: How credible and trustworthy is the evidence source?
-        3. STRENGTH: How compelling is the logical connection?
-        4. QUALITY: What is the overall quality of the evidence?
+        CRITICAL: You MUST return a valid JSON object with ALL 8 required fields. Here is the exact format:
         
-        Consider Van Evera methodology standards:
-        - High probative value (0.7-1.0): Strong, direct, reliable evidence with clear logical connection
-        - Medium probative value (0.4-0.7): Moderate evidence with some limitations or indirect connections
-        - Low probative value (0.0-0.4): Weak, indirect, or unreliable evidence with limited relevance
+        {{
+            "probative_value": 0.75,
+            "confidence_score": 0.85,
+            "reasoning": "Academic justification explaining why this probative value was assigned",
+            "evidence_quality_factors": ["factor1", "factor2", "factor3"],
+            "reliability_assessment": "Assessment of evidence reliability and credibility",
+            "van_evera_implications": "Implications for Van Evera diagnostic testing methodology", 
+            "strength_indicators": ["indicator1", "indicator2"],
+            "contextual_relevance": 0.80
+        }}
         
-        Provide academic justification for your assessment.
-        Identify factors that strengthen or weaken the evidence.
-        Assess contextual relevance to the specific hypothesis.
-        Consider implications for Van Evera diagnostic testing.
+        FIELD REQUIREMENTS:
+        1. probative_value (float 0.0-1.0): Evidence strength assessment
+        2. confidence_score (float 0.0-1.0): Your confidence in the assessment  
+        3. reasoning (string): Academic justification for probative value
+        4. evidence_quality_factors (array of strings): Factors contributing to strength
+        5. reliability_assessment (string): Assessment of evidence reliability
+        6. van_evera_implications (string): Van Evera methodology implications
+        7. strength_indicators (array of strings): Semantic strength indicators
+        8. contextual_relevance (float 0.0-1.0): Evidence relevance to hypothesis
         
-        Be thorough in explaining WHY this evidence has the assigned probative value.
+        Van Evera standards for probative_value:
+        - High probative value (0.7-1.0): Strong, direct, reliable evidence
+        - Medium probative value (0.4-0.7): Moderate evidence with limitations  
+        - Low probative value (0.0-0.4): Weak, indirect, or unreliable evidence
+        
+        Return ONLY the JSON object. Do not include any text before or after the JSON.
         """
         
         return self._get_structured_response(prompt, ProbativeValueAssessment)
@@ -808,11 +820,21 @@ class VanEveraLLMInterface:
         
         for attempt in range(max_retries):
             try:
+                # DEBUG: Log the prompt being sent
+                logger.info(f"[DEBUG] Sending prompt to LLM for {response_model.__name__}:")
+                logger.info(f"[DEBUG] Prompt: {prompt[:500]}...")
+                
                 # Get structured output using universal LLM
                 response_text = self.llm.structured_output(prompt, response_model)
                 
+                # DEBUG: Log the raw response
+                logger.info(f"[DEBUG] Raw LLM response: {response_text}")
+                
                 # Parse JSON response - FAIL FAST if invalid JSON structure
                 response_data = json.loads(response_text)
+                
+                # DEBUG: Log the parsed JSON
+                logger.info(f"[DEBUG] Parsed JSON keys: {list(response_data.keys()) if isinstance(response_data, dict) else 'Not a dict'}")
                 
                 # Create and validate Pydantic model - FAIL FAST if schema mismatch
                 structured_response = response_model.model_validate(response_data)
@@ -828,10 +850,10 @@ class VanEveraLLMInterface:
                     wait_time = min(2 ** attempt, 30)  # Exponential backoff, max 30 seconds
                     log_structured_error(
                         logger,
-                        f"Attempt {attempt + 1} failed, retrying in {wait_time}s... Error: {str(e)[:100]}",
+                        f"Attempt {attempt + 1} failed, retrying in {wait_time}s... Full Error: {str(e)}",
                         error_category="llm_retry",
                         operation_context="structured_output_generation",
-                        exc_info=False,  # Reduce log spam
+                        exc_info=True,  # Show full traceback for debugging
                         **create_llm_context(
                             self.model_type,
                             "structured_output_retry",
