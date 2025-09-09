@@ -380,52 +380,54 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
     with open(network_data_file, "w", encoding="utf-8") as f:
         f.write(network_data_json)
 
-    # Run Van Evera analysis - CLI hang issue fixed by resolving circular import
-    print(f"[INFO] Starting analysis phase (circular import fixed)...")
+    # HANG FIX: Use timeout and kill hanging analysis subprocess
+    print(f"[INFO] Starting analysis phase with 300-second timeout...")
     analyze_cmd = [
         sys.executable, '-m', 'core.analyze', 
         str(graph_json_path), 
         '--html',
         '--network-data', str(network_data_file)
     ]
-    # PHASE 20: Show real-time output instead of capturing
-    process = subprocess.Popen(analyze_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
-                              text=True, bufsize=1)
     
-    # Stream output line by line
-    stdout_lines = []
-    stderr_lines = []
-    
-    # Read both stdout and stderr
-    import select
-    import sys
-    
-    while True:
-        # Check if process is still running
-        retcode = process.poll()
+    # Use timeout to prevent infinite hangs
+    try:
+        result = subprocess.run(
+            analyze_cmd, 
+            capture_output=True, 
+            text=True, 
+            timeout=300  # 5 minute timeout
+        )
+        print("[INFO] Analysis completed within timeout")
         
-        # Read available output
-        line = process.stdout.readline()
-        if line:
-            stdout_lines.append(line)
-            print(f"[ANALYSIS] {line.rstrip()}")
+    except subprocess.TimeoutExpired as e:
+        print(f"[ERROR] Analysis timed out after 300 seconds - killing process")
+        print(f"[ERROR] This indicates a hang in the analysis phase import/execution")
+        print(f"[ERROR] Command: {' '.join(analyze_cmd)}")
         
-        line_err = process.stderr.readline()
-        if line_err:
-            stderr_lines.append(line_err)
-            print(f"[ANALYSIS-ERR] {line_err.rstrip()}")
+        # Create failed result
+        result = subprocess.CompletedProcess(
+            args=analyze_cmd,
+            returncode=124,  # Standard timeout exit code
+            stdout=e.stdout.decode() if e.stdout else "",
+            stderr=e.stderr.decode() if e.stderr else ""
+        )
         
-        # If process finished and no more output, break
-        if retcode is not None and not line and not line_err:
-            break
+    except Exception as e:
+        print(f"[ERROR] Analysis failed with exception: {e}")
+        result = subprocess.CompletedProcess(
+            args=analyze_cmd,
+            returncode=1,
+            stdout="",
+            stderr=str(e)
+        )
     
-    # Store output for compatibility with existing code
-    result = subprocess.CompletedProcess(
-        args=analyze_cmd,
-        returncode=process.returncode,
-        stdout=''.join(stdout_lines),
-        stderr=''.join(stderr_lines)
-    )
+    # Show output
+    if result.stdout:
+        print("[ANALYSIS OUTPUT]:")
+        print(result.stdout)
+    if result.stderr:
+        print("[ANALYSIS ERRORS]:")
+        print(result.stderr)
     
     # Check if analysis failed
     if result.returncode != 0:
@@ -1123,6 +1125,8 @@ def visualize_graph(graph_data, html_path, project):
 
 # --- Main Pipeline ---
 def main():
+    print("[MAIN-DEBUG] main() function started")
+    sys.stdout.flush()
     parser = argparse.ArgumentParser(
         description="Advanced Process Tracing Pipeline (Gemini JSON Mode)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1142,6 +1146,7 @@ Examples:
         """
     )
     parser.add_argument("-p", "--project", type=str, help="Project name (subdirectory of input_text/)")
+    parser.add_argument("-f", "--file", type=str, help="Direct path to input text file (bypasses project selection)")
     parser.add_argument("-o", "--output", type=str, default=None, help="Directory for outputs (default: output_data/<project>)")
     parser.add_argument("--extract-only", action="store_true", help="Run extraction and save initial graph + editable files, then exit.")
     parser.add_argument("--export-editable", action="store_true", help="Export editable_nodes.json and editable_edges.json from a graph JSON file.")
@@ -1168,7 +1173,11 @@ Examples:
     parser.add_argument("--no-visualizations", action="store_true", 
                        help="Disable visualization generation in Bayesian reports")
     
+    print("[MAIN-DEBUG] About to parse arguments")
+    sys.stdout.flush()
     args = parser.parse_args()
+    print(f"[MAIN-DEBUG] Arguments parsed: file={getattr(args, 'file', None)}")
+    sys.stdout.flush()
 
     # --- Export editable nodes/edges from a graph JSON ---
     if args.export_editable:
@@ -1265,17 +1274,27 @@ Examples:
         if not projects:
             print("ERROR: No projects found in input_text/.")
             sys.exit(1)
-        project = args.project
-        if not project or project not in projects:
-            if len(projects) == 1:
-                project = projects[0]
-                print(f"[INFO] Only one project found: {project}")
-            else:
-                project = prompt_for_project(projects)
-        project_dir = input_text_dir / project
-        input_path = find_first_txt(project_dir)
-        print(f"\nUsing input: {input_path}\n")
-        out_dir = Path(args.output) if args.output else Path('output_data') / project
+        # HANG FIX: Handle direct file input to bypass project selection
+        if args.file:
+            input_path = Path(args.file)
+            if not input_path.exists():
+                print(f"[ERROR] File not found: {args.file}")
+                sys.exit(1)
+            print(f"[INFO] Using direct file input: {input_path}")
+            project = input_path.stem  # Use filename as project name
+            out_dir = Path(args.output) if args.output else Path('output_data') / project
+        else:
+            project = args.project
+            if not project or project not in projects:
+                if len(projects) == 1:
+                    project = projects[0]
+                    print(f"[INFO] Only one project found: {project}")
+                else:
+                    project = prompt_for_project(projects)
+            project_dir = input_text_dir / project
+            input_path = find_first_txt(project_dir)
+            print(f"\nUsing input: {input_path}\n")
+            out_dir = Path(args.output) if args.output else Path('output_data') / project
         out_dir.mkdir(parents=True, exist_ok=True)
         print(f"[INFO] Reading input text from {input_path} ...")
         # Create Bayesian configuration if requested
@@ -1285,28 +1304,54 @@ Examples:
         sys.exit(0)
 
     # --- Default: Full pipeline (extract, visualize, analyze) ---
-    input_text_dir = Path('input_text')
-    projects = list_projects(input_text_dir)
-    if not projects:
-        print("ERROR: No projects found in input_text/.")
-        sys.exit(1)
+    print("[MAIN-DEBUG] Entering default pipeline section")
+    sys.stdout.flush()
+    # HANG FIX: Handle direct file input to bypass project selection (second code path)
+    if args.file:
+        print("[MAIN-DEBUG] Using --file parameter")
+        sys.stdout.flush()
+        input_path = Path(args.file)
+        print(f"[MAIN-DEBUG] File path created: {input_path}")
+        sys.stdout.flush()
+        if not input_path.exists():
+            print(f"[ERROR] File not found: {args.file}")
+            sys.exit(1)
+        print(f"[INFO] Using direct file input: {input_path}")
+        print(f"[MAIN-DEBUG] Setting up project and output directory")
+        sys.stdout.flush()
+        project = input_path.stem  # Use filename as project name
+        out_dir = Path(args.output) if args.output else Path('output_data') / project
+        print(f"[MAIN-DEBUG] Project: {project}, Output dir: {out_dir}")
+        sys.stdout.flush()
+    else:
+        input_text_dir = Path('input_text')
+        projects = list_projects(input_text_dir)
+        if not projects:
+            print("ERROR: No projects found in input_text/.")
+            sys.exit(1)
 
-    project = args.project
-    if not project or not project in projects:
-        if len(projects) == 1:
-            project = projects[0]
-            print(f"[INFO] Only one project found: {project}")
-        else:
-            project = prompt_for_project(projects)
+        project = args.project
+        if not project or not project in projects:
+            if len(projects) == 1:
+                project = projects[0]
+                print(f"[INFO] Only one project found: {project}")
+            else:
+                project = prompt_for_project(projects)
 
-    project_dir = input_text_dir / project
-    input_path = find_first_txt(project_dir)
-    safe_print(f"\nFile: Using input: {input_path}\n")
-    out_dir = Path(args.output) if args.output else Path('output_data') / project
+        project_dir = input_text_dir / project
+        input_path = find_first_txt(project_dir)
+        safe_print(f"\nFile: Using input: {input_path}\n")
+        out_dir = Path(args.output) if args.output else Path('output_data') / project
+    print(f"[MAIN-DEBUG] About to create output directory")
+    sys.stdout.flush()
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"[INFO] Reading input text from {input_path} ...")
+    print(f"[MAIN-DEBUG] About to create Bayesian config")
+    sys.stdout.flush()
     # Create Bayesian configuration if requested
     bayesian_config = create_bayesian_config_from_args(args)
+    print(f"[MAIN-DEBUG] Bayesian config created, about to call execute_single_case_processing")
+    sys.stdout.flush()
     # Use the new function for single-case processing
     execute_single_case_processing(str(input_path), str(out_dir), project, bayesian_config=bayesian_config)
 

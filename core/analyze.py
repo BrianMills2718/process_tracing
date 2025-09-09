@@ -60,8 +60,10 @@ from pathlib import Path
 import textwrap # Used in format_html_analysis
 from datetime import datetime
 
-# Module-level logger
-logger = logging.getLogger(__name__)
+# Module-level logger - handle both import and script execution
+logger_name = __name__ if __name__ != "__main__" else "core.analyze"
+logger = logging.getLogger(logger_name)
+print(f"[LOGGER-DEBUG] Logger initialized: {logger_name}")
 
 # PHASE 20: Progress tracking
 class ProgressTracker:
@@ -3316,9 +3318,14 @@ def generate_evidence_strength_chart(results):
 # and passes G and results['filename'] to formatting functions correctly.)
 def main():
     print("[MAIN-DEBUG] 0.0 | main() function started")
+    import sys
+    sys.stdout.flush()
     
+    print("[MAIN-DEBUG] 0.05 | About to call parse_args()")
+    sys.stdout.flush()
     args = parse_args()
     print("[MAIN-DEBUG] 0.1 | parse_args() completed")
+    sys.stdout.flush()
     
     if not os.path.isfile(args.json_file):
         logger.error(f"File not found: {args.json_file}"); sys.exit(1)
@@ -3964,7 +3971,11 @@ def main():
     sys.exit(0)
 
 print("[MODULE-DEBUG] Reached end of analyze.py module - all imports and definitions complete!")
+print("[MODULE-DEBUG] __name__ is:", __name__)
 
 if __name__ == "__main__":
     print("[MODULE-DEBUG] __main__ block executing...")
+    print("[MODULE-DEBUG] About to call main() function...")
+    import sys
+    sys.stdout.flush()
     main()

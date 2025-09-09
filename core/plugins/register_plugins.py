@@ -41,9 +41,12 @@ import_start = time.time()
 from .diagnostic_rebalancer import DiagnosticRebalancerPlugin
 print(f"[IMPORT-DEBUG] {time.time() - start_time:.1f}s | DiagnosticRebalancerPlugin imported ({time.time() - import_start:.1f}s)")
 
-import_start = time.time()
-from .alternative_hypothesis_generator import AlternativeHypothesisGeneratorPlugin
-print(f"[IMPORT-DEBUG] {time.time() - start_time:.1f}s | AlternativeHypothesisGeneratorPlugin imported ({time.time() - import_start:.1f}s)")
+# HANG FIX: Temporarily disable problematic AlternativeHypothesisGeneratorPlugin 
+print(f"[IMPORT-DEBUG] {time.time() - start_time:.1f}s | AlternativeHypothesisGeneratorPlugin DISABLED (hang prevention)")
+# import_start = time.time()
+# from .alternative_hypothesis_generator import AlternativeHypothesisGeneratorPlugin
+# print(f"[IMPORT-DEBUG] {time.time() - start_time:.1f}s | AlternativeHypothesisGeneratorPlugin imported ({time.time() - import_start:.1f}s)")
+AlternativeHypothesisGeneratorPlugin = None  # Placeholder
 
 import_start = time.time()
 from .evidence_connector_enhancer import EvidenceConnectorEnhancerPlugin
@@ -95,7 +98,7 @@ def register_all_plugins():
         CheckpointPlugin,
         VanEveraTestingPlugin,
         DiagnosticRebalancerPlugin,
-        AlternativeHypothesisGeneratorPlugin,
+        # AlternativeHypothesisGeneratorPlugin,  # HANG FIX: Temporarily disabled
         EvidenceConnectorEnhancerPlugin,
         ContentBasedDiagnosticClassifierPlugin,
         ResearchQuestionGeneratorPlugin,
