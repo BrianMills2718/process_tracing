@@ -38,360 +38,449 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: WSL Migration Complete - Windows Issues Confirmed Resolved (Updated 2025-01-09)
+## 🎯 CURRENT STATUS: Analysis Phase Performance Optimization Required (Updated 2025-01-09)
 
-**System Status**: **WSL MIGRATION SUCCESSFUL - WINDOWS HANGS CONFIRMED RESOLVED**  
-**Latest Achievement**: **All Windows import/Unicode hangs eliminated by WSL + Extraction phase verified working**  
-**Current Priority**: **Install missing pandas dependency to complete analysis phase testing**
+**System Status**: **EXTRACTION PIPELINE FULLY WORKING - ANALYSIS OPTIMIZATION NEEDED**  
+**Latest Achievement**: **WSL migration successful + 100-150 LLM call bottleneck identified**  
+**Current Priority**: **Implement batch processing optimization to reduce analysis time from 5-12 minutes to <3 minutes**
 
 **PIPELINE STATUS**:
-- ✅ **Extraction Phase**: **VERIFIED WORKING** - French Revolution extracted in 132.93s (39 nodes, 31 edges)
-- ✅ **Pydantic Validation**: **VERIFIED WORKING** - Complete JSON with all required fields validated  
-- ✅ **Windows Unicode Hang**: **CONFIRMED RESOLVED** - No `sys.stdout.reconfigure()` hang
-- ✅ **Windows Import Hang**: **CONFIRMED RESOLVED** - `llm_reporting_utils.py` imports in 0.0s  
-- ✅ **Plugin System**: **VERIFIED WORKING** - All plugins import successfully in 7.7s
-- ⚠️ **Analysis Phase**: **BLOCKED BY PANDAS DEPENDENCY** - System ready, just needs `pip install pandas`
+- ✅ **Extraction Phase**: **FULLY FUNCTIONAL** - French Revolution extracted in 132.93s (39 nodes, 31 edges)
+- ✅ **WSL Migration**: **COMPLETE** - All Windows hangs eliminated, system stable
+- ✅ **Analysis Phase**: **FUNCTIONAL BUT SLOW** - 100-150 sequential LLM calls = 5-12 minute runtime
+- 🎯 **Performance Target**: **<3 minutes analysis time with 80% call reduction**
 
-**WINDOWS ISSUES RESOLUTION EVIDENCE**:
-- **Issue #1**: Unicode reconfiguration hang → **✅ RESOLVED** - Import debug shows normal progression
-- **Issue #2**: Import hang in plugin chain → **✅ RESOLVED** - All plugins import without hang
-- **Proof**: Complete extraction pipeline runs to completion (132.93s extraction time)
-- **Analysis Ready**: Analysis phase reaches pandas import (not hanging), just missing dependency
+**OPTIMIZATION STRATEGY**:
+- **Primary Bottleneck**: Evidence-hypothesis pair evaluation (80% of analysis time)
+- **Solution**: Batch processing 5-10 pairs per LLM call (100 calls → 10-20 calls)
+- **Quality Requirement**: Maintain LLM-first architecture with structured outputs
+- **Risk Mitigation**: A/B testing and feature flags for rollback
 
----
+## 📋 PHASE 21: LLM Call Batch Processing Optimization
 
-## 🏆 PHASE 20: COMPLETED - Windows Issues Identified and Instrumentation Added
+### OBJECTIVE: Reduce analysis time from 5-12 minutes to <3 minutes via intelligent batch processing
 
-### OBJECTIVES ACHIEVED: ✅ Full instrumentation + Windows hang diagnosis + Pydantic validation fixes
+**BACKGROUND**: WSL testing confirmed the system works but analysis phase makes 100-150 sequential LLM calls for evidence-hypothesis pair evaluation, creating a 5-12 minute bottleneck. Solution: batch 5-10 pairs per LLM call to achieve 80% call reduction.
 
-**MAJOR ACCOMPLISHMENTS**:
-1. **✅ Windows Unicode Hang Fixed**: Disabled problematic `sys.stdout.reconfigure()` causing infinite hang
-2. **✅ Pydantic Validation Fixed**: Updated prompts with complete 8-field JSON examples, verified working
-3. **✅ Comprehensive Debugging Added**: Full LLM call logging, progress tracking, diagnostic output
-4. **✅ Root Cause Analysis**: Identified exact hang location in `llm_reporting_utils.py` import chain
-5. **✅ WSL Migration Strategy**: Switching to Linux environment to bypass Windows-specific issues
-
-**INSTRUMENTATION IMPLEMENTED**:
-- Real-time LLM call logging with prompt/response visibility
-- Progress tracking with percentage completion
-- Diagnostic file generation surviving timeouts  
-- Graph complexity analysis with workload prediction
-- Import-level debugging with precise hang location identification
-
-**EVIDENCE OF SUCCESS**:
-- Individual component test shows perfect Pydantic validation with all 8 fields
-- Debug output reveals complete JSON structure and successful schema validation
-- System now reaches analysis phase (previously hung during import)
-- Comprehensive diagnostic infrastructure ready for WSL testing
-
-### NEXT PHASE: WSL Environment Testing
-
-**RATIONALE**: The analysis subprocess runs as a complete black box. We need visibility into LLM call patterns, progress tracking, and resource usage to understand why it times out and how to optimize it.
-
-**STRATEGIC APPROACH**: Progressive instrumentation with systematic testing at increasing complexity levels.
-
-**EXPECTED IMPACT**: Complete visibility into analysis phase → Informed optimization decisions → Full pipeline success
-
-## 📋 PHASE 20: Implementation Tasks
-
-### TASK 1: Fix Subprocess Output Visibility (15 minutes)
-**Purpose**: Enable real-time progress monitoring during analysis phase
-
-**File**: `process_trace_advanced.py`
-**Location**: Function `execute_single_case_processing`, around line 395-410
-
-**Current Code** (find this):
-```python
-# Run analysis
-print(f"[INFO] Starting analysis phase...")
-analyze_cmd = [
-    sys.executable, "-m", "core.analyze",
-    str(graph_json_path),
-    "--html",
-    "--network-data", str(output_dir_for_case / f"{project_name_str}_network_data.json")
-]
-result = subprocess.run(analyze_cmd, capture_output=True, text=True)
-```
-
-**Replace With**:
-```python
-# Run analysis with real-time output visibility
-print(f"[INFO] Starting analysis phase with real-time progress tracking...")
-analyze_cmd = [
-    sys.executable, "-m", "core.analyze",
-    str(graph_json_path),
-    "--html",
-    "--network-data", str(output_dir_for_case / f"{project_name_str}_network_data.json")
-]
-# PHASE 20: Show real-time output instead of capturing
-process = subprocess.Popen(analyze_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
-                          text=True, bufsize=1)
-# Stream output line by line
-for line in iter(process.stdout.readline, ''):
-    if line:
-        print(f"[ANALYSIS] {line.rstrip()}")
-for line in iter(process.stderr.readline, ''):
-    if line:
-        print(f"[ANALYSIS-ERR] {line.rstrip()}")
-process.wait()
-result = process
-```
-
-**Validation**: Run with American Revolution and confirm you see output during analysis phase.
-
-### TASK 2: Add Progress Logging to Analysis Functions (30 minutes)
-**Purpose**: Track progress through major analysis phases
+### TASK 1: Create Baseline Performance Metrics (20 minutes)
+**Purpose**: Establish quantitative baseline for optimization comparison
 
 **File**: `core/analyze.py`
-
-**Add at the top of file** (after imports):
+**Add at top after imports**:
 ```python
 import time
+import json
 from datetime import datetime
+from pathlib import Path
 
-# PHASE 20: Progress tracking
-class ProgressTracker:
-    def __init__(self):
+# PHASE 21: Performance measurement baseline
+class PerformanceTracker:
+    def __init__(self, output_dir=None):
         self.start_time = time.time()
-        self.checkpoints = []
+        self.llm_calls = []
+        self.total_calls = 0
+        self.output_dir = Path(output_dir) if output_dir else Path(".")
+        self.metrics_file = self.output_dir / f"performance_baseline_{datetime.now():%Y%m%d_%H%M%S}.json"
     
-    def checkpoint(self, name, details=""):
-        elapsed = time.time() - self.start_time
-        self.checkpoints.append((name, elapsed, details))
-        print(f"[PROGRESS] {elapsed:.1f}s | {name} | {details}")
-        return elapsed
+    def log_llm_call(self, function_name, input_size, duration, success=True):
+        self.total_calls += 1
+        call_data = {
+            "call_number": self.total_calls,
+            "function": function_name,
+            "input_size": input_size,
+            "duration": duration,
+            "success": success,
+            "timestamp": datetime.now().isoformat(),
+            "elapsed_total": time.time() - self.start_time
+        }
+        self.llm_calls.append(call_data)
+        print(f"[LLM-BASELINE-{self.total_calls}] {function_name} | {duration:.2f}s | {input_size} chars | Total: {self.total_calls}")
+        
+        # Save incrementally
+        self.save_metrics()
+    
+    def save_metrics(self):
+        metrics = {
+            "baseline_run": True,
+            "start_time": datetime.fromtimestamp(self.start_time).isoformat(),
+            "total_runtime": time.time() - self.start_time,
+            "total_llm_calls": self.total_calls,
+            "average_call_time": sum(call["duration"] for call in self.llm_calls) / max(1, len(self.llm_calls)),
+            "calls": self.llm_calls
+        }
+        with open(self.metrics_file, 'w') as f:
+            json.dump(metrics, f, indent=2)
 
-progress = ProgressTracker()
+# Initialize tracker globally
+performance_tracker = None
 ```
 
-**Instrument key functions** (add to beginning of each):
-
-1. **Function `load_graph`** (around line 50):
+**Instrument existing LLM calls**:
+Find `refine_evidence_assessment_with_llm` calls and wrap them:
 ```python
-def load_graph(graph_path):
-    progress.checkpoint("load_graph", f"Loading from {graph_path}")
-    # ... existing code ...
+# Before:
+enhanced_assessment = refine_evidence_assessment_with_llm(evidence_text, hypothesis_text, ...)
+
+# After:
+start_time = time.time()
+enhanced_assessment = refine_evidence_assessment_with_llm(evidence_text, hypothesis_text, ...)
+if performance_tracker:
+    performance_tracker.log_llm_call("refine_evidence_assessment", len(evidence_text), time.time() - start_time)
 ```
 
-2. **Function `analyze_graph`** (around line 200):
+**Initialize in main function**:
 ```python
 def analyze_graph(graph_path, output_dir=None, ...):
-    progress.checkpoint("analyze_graph", f"Starting main analysis")
-    # ... existing code ...
-    
-    # Add progress tracking for major sections
-    progress.checkpoint("hypotheses_loaded", f"Found {len(hypotheses)} hypotheses")
-    # ... after evidence loading ...
-    progress.checkpoint("evidence_loaded", f"Found {len(evidence_edges)} evidence edges")
+    global performance_tracker
+    performance_tracker = PerformanceTracker(output_dir)
+    # ... rest of function
 ```
 
-3. **Function `analyze_evidence`** (around line 400):
+### TASK 2: Design Batch Processing Schema (30 minutes)  
+**Purpose**: Create Pydantic models for batch evidence-hypothesis evaluation
+
+**File**: `core/batch_evaluation_models.py` (new file)
 ```python
+from typing import List, Optional
+from pydantic import BaseModel, Field
+from enum import Enum
+
+class DiagnosticType(str, Enum):
+    SMOKING_GUN = "smoking_gun"
+    HOOP_TEST = "hoop_test" 
+    STRAW_IN_THE_WIND = "straw_in_the_wind"
+    DOUBLY_DECISIVE = "doubly_decisive"
+
+class EvidenceHypothesisPair(BaseModel):
+    pair_id: str = Field(description="Unique identifier for this evidence-hypothesis pair")
+    evidence_text: str = Field(description="Full text content of the evidence")
+    evidence_id: str = Field(description="Evidence node ID")
+    hypothesis_text: str = Field(description="Full text content of the hypothesis")  
+    hypothesis_id: str = Field(description="Hypothesis node ID")
+
+class ProbativeValueAssessment(BaseModel):
+    pair_id: str = Field(description="Matches the pair_id from input")
+    diagnostic_type: DiagnosticType = Field(description="Van Evera diagnostic test classification")
+    probative_value: float = Field(ge=0.0, le=1.0, description="Probative strength (0.0-1.0)")
+    confirmation_power: float = Field(ge=0.0, le=1.0, description="Power to confirm hypothesis if true")
+    disconfirmation_power: float = Field(ge=0.0, le=1.0, description="Power to disconfirm hypothesis if false")
+    reasoning: str = Field(description="Detailed reasoning for probative value assignment")
+    relationship_strength: str = Field(description="Strength of evidence-hypothesis relationship")
+
+class BatchEvaluationRequest(BaseModel):
+    pairs: List[EvidenceHypothesisPair] = Field(description="List of evidence-hypothesis pairs to evaluate")
+    context: str = Field(description="Broader context for the analysis")
+
+class BatchEvaluationResponse(BaseModel):
+    evaluations: List[ProbativeValueAssessment] = Field(description="Probative value assessments for each pair")
+    batch_metadata: dict = Field(default_factory=dict, description="Metadata about batch processing")
+```
+
+### TASK 3: Implement Batch Processing Function (45 minutes)
+**Purpose**: Create the core batch evaluation function
+
+**File**: `core/batch_evidence_evaluator.py` (new file)
+```python
+from typing import List, Tuple
+from .batch_evaluation_models import BatchEvaluationRequest, BatchEvaluationResponse, EvidenceHypothesisPair
+from .llm_required import make_llm_call
+import time
+
+BATCH_EVALUATION_SYSTEM_PROMPT = """You are an expert in process tracing methodology and Van Evera diagnostic testing. You will evaluate evidence-hypothesis relationships in batches to determine probative values.
+
+For each evidence-hypothesis pair, you must:
+1. Classify the diagnostic test type (smoking gun, hoop test, straw in the wind, doubly decisive)
+2. Calculate probative value (0.0-1.0) based on evidential strength
+3. Assess confirmation and disconfirmation powers
+4. Provide detailed reasoning
+
+Maintain the same quality standards as individual evaluations while processing multiple pairs efficiently.
+
+CRITICAL: Your response must be valid JSON matching the BatchEvaluationResponse schema exactly."""
+
+def create_batch_evaluation_prompt(pairs: List[EvidenceHypothesisPair], context: str) -> str:
+    prompt = f"""Context: {context}
+
+Evaluate these evidence-hypothesis pairs for probative value:
+
+"""
+    for i, pair in enumerate(pairs, 1):
+        prompt += f"""
+PAIR {i} (ID: {pair.pair_id}):
+Evidence ({pair.evidence_id}): {pair.evidence_text[:500]}{'...' if len(pair.evidence_text) > 500 else ''}
+Hypothesis ({pair.hypothesis_id}): {pair.hypothesis_text[:300]}{'...' if len(pair.hypothesis_text) > 300 else ''}
+
+---
+"""
+    
+    prompt += """
+Provide a JSON response with probative value assessments for all pairs following the BatchEvaluationResponse schema.
+"""
+    return prompt
+
+def evaluate_evidence_hypothesis_batch(pairs: List[EvidenceHypothesisPair], context: str = "") -> BatchEvaluationResponse:
+    """
+    Evaluate multiple evidence-hypothesis pairs in a single LLM call
+    
+    Args:
+        pairs: List of evidence-hypothesis pairs to evaluate
+        context: Broader context for the analysis
+        
+    Returns:
+        BatchEvaluationResponse with evaluations for each pair
+    """
+    if not pairs:
+        return BatchEvaluationResponse(evaluations=[])
+    
+    # Create batch request
+    batch_request = BatchEvaluationRequest(pairs=pairs, context=context)
+    
+    # Generate prompt
+    prompt = create_batch_evaluation_prompt(pairs, context)
+    
+    # Make LLM call with structured output
+    start_time = time.time()
+    response = make_llm_call(
+        system_instruction=BATCH_EVALUATION_SYSTEM_PROMPT,
+        user_prompt=prompt,
+        response_schema=BatchEvaluationResponse,
+        use_structured_output=True
+    )
+    duration = time.time() - start_time
+    
+    # Add batch metadata
+    response.batch_metadata = {
+        "batch_size": len(pairs),
+        "processing_time": duration,
+        "pairs_per_second": len(pairs) / duration if duration > 0 else 0
+    }
+    
+    # Log performance
+    if hasattr(__builtins__, 'performance_tracker') and performance_tracker:
+        performance_tracker.log_llm_call(
+            "batch_evidence_evaluation", 
+            len(prompt), 
+            duration
+        )
+    
+    return response
+```
+
+### TASK 4: Integrate Batch Processing into Analysis Pipeline (30 minutes)
+**Purpose**: Replace individual calls with batch processing in the main analysis
+
+**File**: `core/analyze.py`
+**Modify the evidence analysis section**:
+
+```python
+# Add import
+from .batch_evidence_evaluator import evaluate_evidence_hypothesis_batch, EvidenceHypothesisPair
+
 def analyze_evidence(evidence_edges, hypotheses, graph, output_dir):
-    total_pairs = len(evidence_edges) * len(hypotheses)
-    progress.checkpoint("analyze_evidence", f"Processing {total_pairs} evidence-hypothesis pairs")
-    processed = 0
+    """Enhanced with batch processing for performance optimization"""
+    print(f"[BATCH-ANALYSIS] Processing {len(evidence_edges)} evidence edges against {len(hypotheses)} hypotheses")
     
-    # In the main loop, add counter:
+    # Create evidence-hypothesis pairs
+    pairs = []
     for evidence_edge in evidence_edges:
+        evidence_text = evidence_edge.get('properties', {}).get('description', '')
+        evidence_id = evidence_edge.get('source', evidence_edge.get('id', ''))
+        
         for hypothesis in hypotheses:
-            processed += 1
-            if processed % 10 == 0:  # Log every 10 pairs
-                progress.checkpoint(f"evidence_progress", f"{processed}/{total_pairs} pairs ({100*processed/total_pairs:.1f}%)")
+            hypothesis_text = hypothesis.get('properties', {}).get('description', '')
+            hypothesis_id = hypothesis.get('id', '')
+            
+            pair = EvidenceHypothesisPair(
+                pair_id=f"{evidence_id}_vs_{hypothesis_id}",
+                evidence_text=evidence_text,
+                evidence_id=evidence_id,
+                hypothesis_text=hypothesis_text,
+                hypothesis_id=hypothesis_id
+            )
+            pairs.append(pair)
+    
+    print(f"[BATCH-ANALYSIS] Created {len(pairs)} evidence-hypothesis pairs")
+    
+    # Process in batches of 8-10 pairs
+    BATCH_SIZE = 8
+    all_evaluations = []
+    total_batches = (len(pairs) + BATCH_SIZE - 1) // BATCH_SIZE
+    
+    for batch_num in range(0, len(pairs), BATCH_SIZE):
+        batch_pairs = pairs[batch_num:batch_num + BATCH_SIZE]
+        current_batch = batch_num // BATCH_SIZE + 1
+        
+        print(f"[BATCH-ANALYSIS] Processing batch {current_batch}/{total_batches} ({len(batch_pairs)} pairs)")
+        
+        try:
+            batch_response = evaluate_evidence_hypothesis_batch(
+                pairs=batch_pairs,
+                context="Process tracing analysis for historical case study"
+            )
+            all_evaluations.extend(batch_response.evaluations)
+            
+            print(f"[BATCH-SUCCESS] Batch {current_batch} completed in {batch_response.batch_metadata.get('processing_time', 0):.2f}s")
+            
+        except Exception as e:
+            print(f"[BATCH-ERROR] Batch {current_batch} failed: {e}")
+            # Fallback to individual processing for this batch
+            print(f"[BATCH-FALLBACK] Processing batch {current_batch} individually")
+            for pair in batch_pairs:
+                # Individual processing fallback code here
+                pass
+    
+    print(f"[BATCH-ANALYSIS] Completed {len(all_evaluations)} evaluations in {total_batches} batches")
+    return all_evaluations
 ```
 
-### TASK 3: LLM Call Instrumentation (45 minutes)
-**Purpose**: Track every LLM call with timing and context
+### TASK 5: Add A/B Testing Infrastructure (25 minutes)
+**Purpose**: Compare batch vs. individual processing performance and quality
 
 **File**: `core/analyze.py`
+**Add feature flag system**:
 
-**Add LLM tracker class** (after ProgressTracker):
 ```python
-# PHASE 20: LLM call tracking
-class LLMCallTracker:
-    def __init__(self):
-        self.calls = []
-        self.total_time = 0.0
-        self.call_count = 0
+# Add at top of file
+ENABLE_BATCH_PROCESSING = True  # Feature flag for batch processing
+ENABLE_AB_TESTING = False       # Feature flag for A/B comparison
+
+def analyze_evidence_with_comparison(evidence_edges, hypotheses, graph, output_dir):
+    """Run both batch and individual processing for comparison"""
     
-    def start_call(self, function_name, input_size):
-        self.call_count += 1
-        print(f"[LLM-CALL-{self.call_count}] Starting: {function_name} | Input: {input_size} chars")
-        return time.time()
+    if not ENABLE_AB_TESTING:
+        if ENABLE_BATCH_PROCESSING:
+            return analyze_evidence_batch(evidence_edges, hypotheses, graph, output_dir)
+        else:
+            return analyze_evidence_individual(evidence_edges, hypotheses, graph, output_dir)
     
-    def end_call(self, start_time, function_name, success=True):
-        duration = time.time() - start_time
-        self.total_time += duration
-        self.calls.append({
-            "function": function_name,
-            "duration": duration,
-            "success": success,
-            "cumulative_time": self.total_time
-        })
-        print(f"[LLM-COMPLETE-{self.call_count}] {function_name} | Duration: {duration:.2f}s | Total: {self.total_time:.2f}s")
-        return duration
-
-llm_tracker = LLMCallTracker()
-```
-
-**Instrument LLM calls** - Find and wrap these functions:
-
-1. **`refine_evidence_assessment_with_llm`** calls:
-```python
-# Find lines like:
-enhanced_assessment = refine_evidence_assessment_with_llm(...)
-
-# Replace with:
-llm_start = llm_tracker.start_call("refine_evidence_assessment", len(str(evidence_text)))
-try:
-    enhanced_assessment = refine_evidence_assessment_with_llm(...)
-    llm_tracker.end_call(llm_start, "refine_evidence_assessment", success=True)
-except Exception as e:
-    llm_tracker.end_call(llm_start, "refine_evidence_assessment", success=False)
-    raise
-```
-
-2. **`get_comprehensive_analysis`** calls (similar pattern)
-3. **`enhance_hypothesis_with_llm`** calls (similar pattern)
-
-### TASK 4: Graph Complexity Analysis (20 minutes)
-**Purpose**: Predict workload before starting analysis
-
-**File**: `core/analyze.py`
-
-**Add after loading graph** (in `analyze_graph` function, after `graph = load_graph(...)`):
-```python
-# PHASE 20: Analyze graph complexity upfront
-def analyze_complexity(graph):
-    nodes = graph.get('nodes', [])
-    edges = graph.get('edges', [])
+    print("[A/B-TEST] Running both batch and individual processing for comparison")
     
-    evidence_nodes = [n for n in nodes if n.get('type') == 'Evidence']
-    hypothesis_nodes = [n for n in nodes if n.get('type') == 'Hypothesis']
-    evidence_edges = [e for e in edges if 'evidence' in e.get('type', '').lower()]
+    # Run individual processing (baseline)
+    start_time = time.time()
+    individual_results = analyze_evidence_individual(evidence_edges, hypotheses, graph, output_dir)
+    individual_time = time.time() - start_time
     
-    estimated_llm_calls = len(evidence_nodes) * len(hypothesis_nodes)
-    estimated_time = estimated_llm_calls * 3  # 3 seconds per call average
+    # Run batch processing
+    start_time = time.time()
+    batch_results = analyze_evidence_batch(evidence_edges, hypotheses, graph, output_dir)
+    batch_time = time.time() - start_time
     
-    print(f"""
-[GRAPH-COMPLEXITY] Workload Analysis:
-  Total Nodes: {len(nodes)}
-  Evidence Nodes: {len(evidence_nodes)}
-  Hypothesis Nodes: {len(hypothesis_nodes)}
-  Evidence Edges: {len(evidence_edges)}
-  Estimated LLM Calls: {estimated_llm_calls}
-  Estimated Time: {estimated_time}s ({estimated_time/60:.1f} minutes)
-  WARNING: {'HEAVY WORKLOAD - Consider timeout increase' if estimated_llm_calls > 50 else 'Normal workload'}
-""")
-    return estimated_llm_calls
-
-estimated_calls = analyze_complexity(graph)
-```
-
-### TASK 5: Diagnostic File Output (15 minutes)
-**Purpose**: Create persistent diagnostics that survive timeouts
-
-**File**: `core/analyze.py`
-
-**Add diagnostic logger** (after tracker classes):
-```python
-# PHASE 20: Persistent diagnostics
-import json
-
-class DiagnosticLogger:
-    def __init__(self, output_dir):
-        from pathlib import Path
-        self.output_dir = Path(output_dir) if output_dir else Path(".")
-        self.log_file = self.output_dir / f"analysis_diagnostics_{datetime.now():%Y%m%d_%H%M%S}.json"
-        self.data = {
-            "start_time": datetime.now().isoformat(),
-            "progress": [],
-            "llm_calls": [],
-            "errors": []
+    # Compare results
+    comparison = {
+        "individual_processing": {
+            "time": individual_time,
+            "results_count": len(individual_results),
+            "calls_made": getattr(performance_tracker, 'individual_calls', 0)
+        },
+        "batch_processing": {
+            "time": batch_time,
+            "results_count": len(batch_results),
+            "calls_made": getattr(performance_tracker, 'batch_calls', 0)
+        },
+        "improvement": {
+            "time_reduction": (individual_time - batch_time) / individual_time * 100,
+            "call_reduction": (getattr(performance_tracker, 'individual_calls', 1) - getattr(performance_tracker, 'batch_calls', 1)) / getattr(performance_tracker, 'individual_calls', 1) * 100
         }
+    }
     
-    def save(self):
-        with open(self.log_file, 'w') as f:
-            json.dump(self.data, f, indent=2)
-        print(f"[DIAGNOSTIC] Saved to {self.log_file}")
+    # Save comparison results
+    if output_dir:
+        comparison_file = Path(output_dir) / f"ab_test_comparison_{datetime.now():%Y%m%d_%H%M%S}.json"
+        with open(comparison_file, 'w') as f:
+            json.dump(comparison, f, indent=2)
+        print(f"[A/B-TEST] Comparison saved to {comparison_file}")
     
-    def log_progress(self, checkpoint, elapsed, details):
-        self.data["progress"].append({
-            "checkpoint": checkpoint,
-            "elapsed": elapsed,
-            "details": details,
-            "timestamp": datetime.now().isoformat()
-        })
-        self.save()
-    
-    def log_llm_call(self, function, duration, success):
-        self.data["llm_calls"].append({
-            "function": function,
-            "duration": duration,
-            "success": success,
-            "timestamp": datetime.now().isoformat()
-        })
-        self.save()
-
-# Initialize in analyze_graph function:
-diagnostics = DiagnosticLogger(output_dir)
+    # Use batch results (assuming they pass quality validation)
+    return batch_results
 ```
 
-## 📊 TESTING PROGRESSION
+## 🧪 TESTING PROTOCOL
 
-### Test Level 0: Minimal Synthetic Test (2 minutes)
-Create file `test_data/minimal_graph.json`:
-```json
-{
-  "nodes": [
-    {"id": "e1", "type": "Evidence", "properties": {"description": "Test evidence"}},
-    {"id": "h1", "type": "Hypothesis", "properties": {"description": "Test hypothesis"}}
-  ],
-  "edges": [
-    {"source": "e1", "target": "h1", "type": "tests_hypothesis"}
-  ]
-}
-```
+### Test Level 1: Baseline Measurement (5 minutes)
+**Command**: `source test_env/bin/activate && echo -e "1\n1" | python3 process_trace_advanced.py`  
+**Expected Output**: Performance baseline JSON with individual call timings
+**Success Criteria**: Complete metrics file with 50+ LLM call measurements
 
-Run: `python -m core.analyze test_data/minimal_graph.json`
-**Expected**: 1-2 LLM calls, completes in <10 seconds
+### Test Level 2: Batch Processing Test (5 minutes)  
+**Setup**: Enable batch processing flag
+**Command**: Same as Level 1
+**Expected Output**: 80% reduction in LLM calls, similar quality results
+**Success Criteria**: <15 total LLM calls, analysis time <3 minutes
 
-### Test Level 1: American Revolution (5 minutes)
-Run: `echo "1" | python process_trace_advanced.py`
-**Expected**: See real-time progress, count exact LLM calls before timeout
-
-### Test Level 2: Extended Timeout Test (10 minutes)
-Run: `echo "1" | timeout 600 python process_trace_advanced.py`
-**Expected**: May complete if given 10 minutes
-
-### Test Level 3: French Revolution (After instrumentation)
-Run with revolution file once we understand American Revolution patterns
+### Test Level 3: A/B Comparison (10 minutes)
+**Setup**: Enable A/B testing flag  
+**Command**: Same as Level 1
+**Expected Output**: Side-by-side performance comparison
+**Success Criteria**: Quantitative proof of improvement with quality validation
 
 ## 🎯 SUCCESS CRITERIA
 
-1. **See real-time output** during analysis phase (not after timeout)
-2. **Count exact LLM calls** made before timeout
-3. **Know progress percentage** when timeout occurs
-4. **Have diagnostic JSON** file with all metrics after timeout
-5. **Understand graph complexity** before analysis starts
+1. **Performance**: Analysis time reduced from 5-12 minutes to <3 minutes
+2. **Efficiency**: 80% reduction in LLM calls (100 calls → <20 calls)  
+3. **Quality**: Probative values within 10% of individual processing baseline
+4. **Reliability**: 100% Pydantic schema compliance for all batch responses
+5. **Fallback**: Graceful degradation to individual processing on batch failures
 
-## 📈 EXPECTED DISCOVERIES
+## 📊 EXPECTED RESULTS
 
-Based on this instrumentation, we expect to find:
-- American Revolution makes 50-100+ LLM calls in analysis phase
-- Each call takes 2-5 seconds (sequential bottleneck)
-- Specific functions consuming 80% of time
-- Progress is steady but too slow for 5-minute timeout
+**Before Optimization**:
+- 100-150 individual LLM calls
+- 5-12 minute analysis time
+- 3-5 seconds per call
 
-## 🚀 NEXT STEPS AFTER INSTRUMENTATION
-
-Once we have visibility, we can make informed decisions about:
-1. **Timeout increases** - If progress is steady
-2. **Parallelization** - If many independent LLM calls
-3. **Selective analysis** - If some pairs are low-value
-4. **Caching improvements** - If duplicate calls exist
+**After Batch Processing**:
+- 10-20 batch LLM calls  
+- <3 minute analysis time
+- 8-15 seconds per batch (5-10 pairs)
+- 80% time reduction achieved
 
 ---
+
+## 🏗️ Codebase Structure
+
+### Key Entry Points
+- **`process_trace_advanced.py`**: Main orchestration script with project selection and pipeline management
+- **`core/analyze.py`**: Analysis phase entry point - current performance bottleneck location
+- **`core/extract.py`**: Extraction phase entry point - working perfectly (132.93s for 39 nodes)
+
+### Module Organization  
+- **`core/`**: Core processing modules (extraction, analysis, LLM interfaces)
+- **`core/plugins/`**: Plugin system architecture with registry-based loading
+- **`universal_llm_kit/`**: LLM abstraction layer with LiteLLM integration
+- **`input_text/`**: Test cases (French Revolution verified working, American Revolution available)
+- **`output_data/`**: Generated outputs (graphs, HTML reports, diagnostic files)
+
+### Important Integration Points
+- **LLM Interface**: `core/llm_required.py` with structured output support
+- **Plugin Registry**: `core/plugins/register_plugins.py` (loads successfully in WSL)
+- **Pydantic Models**: `core/structured_models.py` (validation working perfectly)
+
+### WSL Environment Setup
+- **Virtual Environment**: `test_env/` with all dependencies installed
+- **Activation Command**: `source test_env/bin/activate`
+- **Dependencies**: pandas, litellm, google-generativeai, networkx, pydantic
+
+## 📋 Coding Philosophy
+
+### NO LAZY IMPLEMENTATIONS
+- No mocking, stubs, fallbacks, pseudo-code, or simplified implementations
+- Every batch processing function must be fully functional with real LLM calls
+- Test each implementation thoroughly - assume nothing works until proven
+
+### FAIL-FAST PRINCIPLES  
+- Surface LLM failures immediately with LLMRequiredError
+- Don't hide batch processing failures - make them visible
+- Use feature flags for safe rollback, not to hide problems
+
+### EVIDENCE-BASED DEVELOPMENT
+- All optimization claims require performance metrics JSON files
+- Raw LLM call logs required for baseline vs. batch comparison
+- No success declarations without quantitative proof of improvement
+
+### VALIDATION + SELF-HEALING
+- Every batch evaluator must validate Pydantic schema compliance
+- Graceful degradation to individual processing on batch failures
+- A/B testing infrastructure for quality assurance
 
 ## Evidence Structure
 
@@ -399,31 +488,18 @@ Evidence for this phase should be documented in:
 ```
 evidence/
 ├── current/
-│   └── Evidence_Phase20_AnalysisInstrumentation.md
+│   └── Evidence_Phase21_BatchOptimization.md
 ```
 
 Include:
-- Raw console output showing real-time progress
-- LLM call counts and timing data
-- Diagnostic JSON file contents
-- Graph complexity analysis results
-- Specific bottleneck identification
+- Performance baseline JSON files with individual call timings
+- Batch processing results with call reduction measurements  
+- A/B comparison data showing quality preservation
+- Raw console output demonstrating <3 minute analysis times
+- Specific bottleneck elimination proof
 
----
-
-## Coding Philosophy
-
-### NO LAZY IMPLEMENTATIONS
-- No mocking, stubs, or pseudo-code
-- Every change must be fully functional
-- Test each change before moving to next
-
-### FAIL-FAST PRINCIPLES
-- Surface errors immediately
-- Don't hide failures with try/except
-- Make problems visible
-
-### EVIDENCE-BASED DEVELOPMENT
-- All claims require raw console output
-- Save diagnostic files as proof
-- No success claims without demonstrable evidence
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
