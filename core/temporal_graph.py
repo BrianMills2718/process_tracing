@@ -484,7 +484,6 @@ class TemporalGraph:
     
     def _find_matching_nodes(self, expression: TemporalExpression) -> List[str]:
         """Find nodes that might be associated with a temporal expression"""
-        # Simple keyword matching - could be enhanced with NLP
         matches = []
         
         for node_id, node in self.temporal_nodes.items():

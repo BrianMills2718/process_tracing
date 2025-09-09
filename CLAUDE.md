@@ -38,401 +38,267 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Analysis Phase Performance Optimization Required (Updated 2025-01-09)
+## 🎯 CURRENT STATUS: Phase 21 - LLM-First Policy Violation Remediation (Updated 2025-01-09)
 
-**System Status**: **EXTRACTION PIPELINE FULLY WORKING - ANALYSIS OPTIMIZATION NEEDED**  
-**Latest Achievement**: **WSL migration successful + 100-150 LLM call bottleneck identified**  
-**Current Priority**: **Implement batch processing optimization to reduce analysis time from 5-12 minutes to <3 minutes**
+**System Status**: **CRITICAL QUALITY VIOLATIONS IDENTIFIED - IMMEDIATE REMEDIATION REQUIRED**  
+**Latest Achievement**: **Phase 20 Complete - Comprehensive audit reveals 5+ LLM-First policy violations**  
+**Current Priority**: **Convert keyword-based logic to LLM semantic analysis (quality-critical)**
 
-**PIPELINE STATUS**:
-- ✅ **Extraction Phase**: **FULLY FUNCTIONAL** - French Revolution extracted in 132.93s (39 nodes, 31 edges)
-- ✅ **WSL Migration**: **COMPLETE** - All Windows hangs eliminated, system stable
-- ✅ **Analysis Phase**: **FUNCTIONAL BUT SLOW** - 100-150 sequential LLM calls = 5-12 minute runtime
-- 🎯 **Performance Target**: **<3 minutes analysis time with 80% call reduction**
+**VIOLATION AUDIT RESULTS**:
+- ❌ **Evidence Weighting**: Keyword matching for reliability/credibility assessment (`core/evidence_weighting.py:154-179`)
+- ❌ **Confidence Calculator**: Hardcoded thresholds instead of LLM-generated (`core/confidence_calculator.py`)
+- ❌ **Temporal Graph**: Rule-based node matching vs semantic analysis (`core/temporal_graph.py:487`)
+- ❌ **Multiple Files**: Hardcoded probative values violating LLM-First architecture
+- ✅ **WSL Migration**: Windows hangs resolved, analysis pipeline operational
 
-**OPTIMIZATION STRATEGY**:
-- **Primary Bottleneck**: Evidence-hypothesis pair evaluation (80% of analysis time)
-- **Solution**: Batch processing 5-10 pairs per LLM call (100 calls → 10-20 calls)
-- **Quality Requirement**: Maintain LLM-first architecture with structured outputs
-- **Risk Mitigation**: A/B testing and feature flags for rollback
+**IMMEDIATE IMPACT**: Current system uses **rule-based logic instead of semantic understanding**, directly violating CLAUDE.md LLM-First Architecture Policy and **reducing output quality**.
 
-## 📋 PHASE 21: LLM Call Batch Processing Optimization
+## 🏆 PHASE 21: LLM-First Policy Violation Remediation
 
-### OBJECTIVE: Reduce analysis time from 5-12 minutes to <3 minutes via intelligent batch processing
+### OBJECTIVES: Convert all keyword/rule-based logic to LLM semantic analysis
 
-**BACKGROUND**: WSL testing confirmed the system works but analysis phase makes 100-150 sequential LLM calls for evidence-hypothesis pair evaluation, creating a 5-12 minute bottleneck. Solution: batch 5-10 pairs per LLM call to achieve 80% call reduction.
+**CRITICAL VIOLATIONS TO FIX**:
+1. **`core/evidence_weighting.py:154-179`**: Evidence reliability/credibility keyword matching
+2. **`core/confidence_calculator.py`**: Hardcoded confidence thresholds  
+3. **`core/temporal_graph.py:487`**: Keyword-based node matching
+4. **Plugin system audit**: Additional rule-based implementations
 
-### TASK 1: Create Baseline Performance Metrics (20 minutes)
-**Purpose**: Establish quantitative baseline for optimization comparison
+**STRATEGIC APPROACH**: Systematic conversion with quality preservation testing
 
-**File**: `core/analyze.py`
-**Add at top after imports**:
+### TASK 1: Convert Evidence Reliability Assessment (45 minutes)
+
+**Target**: `core/evidence_weighting.py` function `_analyze_reliability_indicators()`
+
+**Current Violation** (lines 154-155):
 ```python
-import time
-import json
-from datetime import datetime
-from pathlib import Path
+positive_score = sum(1 for indicator in positive_indicators if indicator in combined_text)
+negative_score = sum(1 for indicator in negative_indicators if indicator in combined_text)
+```
 
-# PHASE 21: Performance measurement baseline
-class PerformanceTracker:
-    def __init__(self, output_dir=None):
-        self.start_time = time.time()
-        self.llm_calls = []
-        self.total_calls = 0
-        self.output_dir = Path(output_dir) if output_dir else Path(".")
-        self.metrics_file = self.output_dir / f"performance_baseline_{datetime.now():%Y%m%d_%H%M%S}.json"
+**Required Conversion**:
+```python
+def _analyze_reliability_indicators(self, reasoning: str, justification: str) -> float:
+    """Use LLM semantic analysis for evidence reliability assessment."""
+    from .plugins.van_evera_llm_interface import VanEveraLLMInterface
+    from .llm_required import LLMRequiredError
     
-    def log_llm_call(self, function_name, input_size, duration, success=True):
-        self.total_calls += 1
-        call_data = {
-            "call_number": self.total_calls,
-            "function": function_name,
-            "input_size": input_size,
-            "duration": duration,
-            "success": success,
-            "timestamp": datetime.now().isoformat(),
-            "elapsed_total": time.time() - self.start_time
-        }
-        self.llm_calls.append(call_data)
-        print(f"[LLM-BASELINE-{self.total_calls}] {function_name} | {duration:.2f}s | {input_size} chars | Total: {self.total_calls}")
+    try:
+        llm_interface = VanEveraLLMInterface()
         
-        # Save incrementally
-        self.save_metrics()
+        prompt = f"""
+Assess evidence reliability (0.0-1.0) based on these indicators:
+
+Reasoning: {reasoning}
+Justification: {justification}
+
+Consider semantic understanding of:
+- Verification status and documentation quality
+- Source consistency and corroboration
+- Multiple vs single source evidence
+- Professional vs amateur collection methods
+
+Return only numerical score 0.0-1.0 representing reliability.
+"""
+        
+        response = llm_interface.get_structured_response(prompt, target_schema="reliability_float")
+        return float(response.reliability_score)
+        
+    except Exception as e:
+        raise LLMRequiredError(f"Failed to assess evidence reliability with LLM: {e}")
+```
+
+**Validation Requirements**:
+1. **Unit test**: Compare LLM vs keyword results on test cases
+2. **Edge case test**: Cases where keywords fail but LLM succeeds
+3. **Integration test**: Full pipeline with converted function
+
+### TASK 2: Convert Source Credibility Assessment (45 minutes)
+
+**Target**: `core/evidence_weighting.py` function `_analyze_credibility_indicators()`
+
+**Current Violation** (lines 178-179):
+```python  
+high_score = sum(1 for indicator in high_credibility if indicator in combined_text)
+low_score = sum(1 for indicator in low_credibility if indicator in combined_text)
+```
+
+**Required Conversion**:
+```python
+def _analyze_credibility_indicators(self, reasoning: str, justification: str) -> float:
+    """Use LLM semantic analysis for source credibility assessment."""
+    from .plugins.van_evera_llm_interface import VanEveraLLMInterface
+    from .llm_required import LLMRequiredError
     
-    def save_metrics(self):
-        metrics = {
-            "baseline_run": True,
-            "start_time": datetime.fromtimestamp(self.start_time).isoformat(),
-            "total_runtime": time.time() - self.start_time,
-            "total_llm_calls": self.total_calls,
-            "average_call_time": sum(call["duration"] for call in self.llm_calls) / max(1, len(self.llm_calls)),
-            "calls": self.llm_calls
-        }
-        with open(self.metrics_file, 'w') as f:
-            json.dump(metrics, f, indent=2)
+    try:
+        llm_interface = VanEveraLLMInterface()
+        
+        prompt = f"""
+Assess source credibility (0.0-1.0) based on semantic analysis:
 
-# Initialize tracker globally
-performance_tracker = None
-```
+Reasoning: {reasoning}
+Justification: {justification}
 
-**Instrument existing LLM calls**:
-Find `refine_evidence_assessment_with_llm` calls and wrap them:
-```python
-# Before:
-enhanced_assessment = refine_evidence_assessment_with_llm(evidence_text, hypothesis_text, ...)
+Consider semantic understanding of:
+- Official vs unofficial source authority
+- Academic/expert vs amateur qualifications
+- Institutional vs individual source type
+- Bias indicators and conflict of interest
+- Publication and peer review status
 
-# After:
-start_time = time.time()
-enhanced_assessment = refine_evidence_assessment_with_llm(evidence_text, hypothesis_text, ...)
-if performance_tracker:
-    performance_tracker.log_llm_call("refine_evidence_assessment", len(evidence_text), time.time() - start_time)
-```
-
-**Initialize in main function**:
-```python
-def analyze_graph(graph_path, output_dir=None, ...):
-    global performance_tracker
-    performance_tracker = PerformanceTracker(output_dir)
-    # ... rest of function
-```
-
-### TASK 2: Design Batch Processing Schema (30 minutes)  
-**Purpose**: Create Pydantic models for batch evidence-hypothesis evaluation
-
-**File**: `core/batch_evaluation_models.py` (new file)
-```python
-from typing import List, Optional
-from pydantic import BaseModel, Field
-from enum import Enum
-
-class DiagnosticType(str, Enum):
-    SMOKING_GUN = "smoking_gun"
-    HOOP_TEST = "hoop_test" 
-    STRAW_IN_THE_WIND = "straw_in_the_wind"
-    DOUBLY_DECISIVE = "doubly_decisive"
-
-class EvidenceHypothesisPair(BaseModel):
-    pair_id: str = Field(description="Unique identifier for this evidence-hypothesis pair")
-    evidence_text: str = Field(description="Full text content of the evidence")
-    evidence_id: str = Field(description="Evidence node ID")
-    hypothesis_text: str = Field(description="Full text content of the hypothesis")  
-    hypothesis_id: str = Field(description="Hypothesis node ID")
-
-class ProbativeValueAssessment(BaseModel):
-    pair_id: str = Field(description="Matches the pair_id from input")
-    diagnostic_type: DiagnosticType = Field(description="Van Evera diagnostic test classification")
-    probative_value: float = Field(ge=0.0, le=1.0, description="Probative strength (0.0-1.0)")
-    confirmation_power: float = Field(ge=0.0, le=1.0, description="Power to confirm hypothesis if true")
-    disconfirmation_power: float = Field(ge=0.0, le=1.0, description="Power to disconfirm hypothesis if false")
-    reasoning: str = Field(description="Detailed reasoning for probative value assignment")
-    relationship_strength: str = Field(description="Strength of evidence-hypothesis relationship")
-
-class BatchEvaluationRequest(BaseModel):
-    pairs: List[EvidenceHypothesisPair] = Field(description="List of evidence-hypothesis pairs to evaluate")
-    context: str = Field(description="Broader context for the analysis")
-
-class BatchEvaluationResponse(BaseModel):
-    evaluations: List[ProbativeValueAssessment] = Field(description="Probative value assessments for each pair")
-    batch_metadata: dict = Field(default_factory=dict, description="Metadata about batch processing")
-```
-
-### TASK 3: Implement Batch Processing Function (45 minutes)
-**Purpose**: Create the core batch evaluation function
-
-**File**: `core/batch_evidence_evaluator.py` (new file)
-```python
-from typing import List, Tuple
-from .batch_evaluation_models import BatchEvaluationRequest, BatchEvaluationResponse, EvidenceHypothesisPair
-from .llm_required import make_llm_call
-import time
-
-BATCH_EVALUATION_SYSTEM_PROMPT = """You are an expert in process tracing methodology and Van Evera diagnostic testing. You will evaluate evidence-hypothesis relationships in batches to determine probative values.
-
-For each evidence-hypothesis pair, you must:
-1. Classify the diagnostic test type (smoking gun, hoop test, straw in the wind, doubly decisive)
-2. Calculate probative value (0.0-1.0) based on evidential strength
-3. Assess confirmation and disconfirmation powers
-4. Provide detailed reasoning
-
-Maintain the same quality standards as individual evaluations while processing multiple pairs efficiently.
-
-CRITICAL: Your response must be valid JSON matching the BatchEvaluationResponse schema exactly."""
-
-def create_batch_evaluation_prompt(pairs: List[EvidenceHypothesisPair], context: str) -> str:
-    prompt = f"""Context: {context}
-
-Evaluate these evidence-hypothesis pairs for probative value:
-
+Return only numerical score 0.0-1.0 representing credibility.
 """
-    for i, pair in enumerate(pairs, 1):
-        prompt += f"""
-PAIR {i} (ID: {pair.pair_id}):
-Evidence ({pair.evidence_id}): {pair.evidence_text[:500]}{'...' if len(pair.evidence_text) > 500 else ''}
-Hypothesis ({pair.hypothesis_id}): {pair.hypothesis_text[:300]}{'...' if len(pair.hypothesis_text) > 300 else ''}
+        
+        response = llm_interface.get_structured_response(prompt, target_schema="credibility_float")
+        return float(response.credibility_score)
+        
+    except Exception as e:
+        raise LLMRequiredError(f"Failed to assess source credibility with LLM: {e}")
+```
 
----
-"""
+### TASK 3: Remove Hardcoded Confidence Thresholds (30 minutes)
+
+**Target**: `core/confidence_calculator.py` fallback logic
+
+**Current Violation**: Default hardcoded thresholds (lines 37-47, 65-67)
+
+**Required Change**:
+1. **Remove all hardcoded threshold fallbacks**
+2. **Ensure LLM-generated thresholds are always used**
+3. **Raise LLMRequiredError if LLM threshold generation fails**
+
+**Implementation**:
+```python
+@classmethod
+def from_score(cls, score: float, thresholds=None) -> 'ConfidenceLevel':
+    """Get confidence level from numerical score with LLM-generated thresholds."""
+    if not thresholds:
+        raise LLMRequiredError("Confidence thresholds must be LLM-generated - no hardcoded fallbacks allowed")
     
-    prompt += """
-Provide a JSON response with probative value assessments for all pairs following the BatchEvaluationResponse schema.
-"""
-    return prompt
+    # Use only LLM-generated thresholds
+    if score >= thresholds.very_high_threshold:
+        return ConfidenceLevel.VERY_HIGH
+    elif score >= thresholds.high_threshold:
+        return ConfidenceLevel.HIGH
+    # ... etc - no fallback to hardcoded values
+```
 
-def evaluate_evidence_hypothesis_batch(pairs: List[EvidenceHypothesisPair], context: str = "") -> BatchEvaluationResponse:
+### TASK 4: Convert Temporal Node Matching (30 minutes)
+
+**Target**: `core/temporal_graph.py:487` keyword matching
+
+**Current Violation**:
+```python
+# Simple keyword matching - could be enhanced with NLP
+```
+
+**Required Conversion**: Already partially implemented with semantic analysis - ensure no keyword fallbacks remain.
+
+### TASK 5: Plugin System Audit (60 minutes)
+
+**Systematic search for additional violations**:
+
+```bash
+# Search for prohibited patterns
+grep -r "if.*in.*text" core/plugins/
+grep -r "keyword" core/plugins/  
+grep -r "hardcoded" core/plugins/
+grep -r "probative_value.*=" core/plugins/
+```
+
+**Document and fix any additional violations found**.
+
+## 🧪 TESTING STRATEGY
+
+### Test Level 1: Unit Testing (Per-Function)
+```python
+class TestLLMEvidenceWeighting:
+    def test_reliability_llm_vs_keywords(self):
+        """Compare LLM semantic analysis vs keyword matching"""
+        test_cases = [
+            # High quality cases
+            ("documented verified multiple sources", "official government report"),
+            # Edge cases where keywords fail
+            ("unreliable hearsay but actually peer-reviewed study", "academic institution"),
+            # Ambiguous cases requiring nuance
+            ("single anonymous source with detailed corroborating evidence", "expert analysis")
+        ]
+        
+        for reasoning, justification in test_cases:
+            llm_score = self.quantifier._analyze_reliability_indicators(reasoning, justification)
+            # Validate LLM provides nuanced assessment
+            assert 0.0 <= llm_score <= 1.0
+            # Add specific assertions about expected semantic understanding
+    
+    def test_llm_failure_handling(self):
+        """Ensure LLMRequiredError on LLM failures"""
+        # Mock LLM failure
+        with pytest.raises(LLMRequiredError):
+            self.quantifier._analyze_reliability_indicators("test", "test")
+```
+
+### Test Level 2: Integration Testing
+```python
+def test_end_to_end_evidence_assessment():
+    """Test full EvidenceAssessment → EvidenceWeights pipeline"""
+    # Use real EvidenceAssessment data
+    # Validate LLM conversions work in full pipeline
+    
+def test_american_revolution_regression():
+    """Compare output quality before/after LLM conversion"""
+    # Run analysis on American Revolution
+    # Compare evidence relevance scores
+    # Validate quality improvements in edge cases
+```
+
+### Test Level 3: Performance Testing
+```python
+def test_llm_call_count_increase():
+    """Measure additional LLM calls from conversion"""
+    # Count calls before/after conversion
+    # Document performance impact
+    
+def test_batching_opportunities():
+    """Identify opportunities for batch LLM assessments"""
+    # Multiple reliability assessments → single batch call
+```
+
+## 📊 SUCCESS CRITERIA
+
+1. **Zero keyword-based logic** in semantic analysis functions
+2. **Zero hardcoded probative values** or confidence thresholds  
+3. **All LLM failures** result in LLMRequiredError (fail-fast)
+4. **Quality improvements** demonstrated on test cases
+5. **Regression tests pass** on American Revolution
+6. **Performance impact** documented and acceptable
+
+## 🎯 BATCH OPTIMIZATION STRATEGY (Post-Remediation)
+
+After LLM-First compliance is achieved, implement user's batching insight:
+
+**Current**: 15 evidence × 8 hypotheses = **120 LLM calls** (individual pairs)
+**Target**: 8 hypotheses × 1 batch call = **8 LLM calls** (all evidence per hypothesis)
+
+**Implementation**:
+```python
+def assess_all_evidence_for_hypothesis(hypothesis, all_evidence_items):
+    """Single LLM call to assess all evidence against one hypothesis"""
+    prompt = f"""
+    Hypothesis: {hypothesis.description}
+    
+    Evidence Items:
+    {format_all_evidence_items(all_evidence_items)}
+    
+    For each evidence item, assess:
+    1. Relevance (0.0-1.0)
+    2. Support/contradict/neutral
+    3. Probative value (0.0-1.0)
+    4. Reasoning
+    
+    Return structured assessment for all evidence items.
     """
-    Evaluate multiple evidence-hypothesis pairs in a single LLM call
-    
-    Args:
-        pairs: List of evidence-hypothesis pairs to evaluate
-        context: Broader context for the analysis
-        
-    Returns:
-        BatchEvaluationResponse with evaluations for each pair
-    """
-    if not pairs:
-        return BatchEvaluationResponse(evaluations=[])
-    
-    # Create batch request
-    batch_request = BatchEvaluationRequest(pairs=pairs, context=context)
-    
-    # Generate prompt
-    prompt = create_batch_evaluation_prompt(pairs, context)
-    
-    # Make LLM call with structured output
-    start_time = time.time()
-    response = make_llm_call(
-        system_instruction=BATCH_EVALUATION_SYSTEM_PROMPT,
-        user_prompt=prompt,
-        response_schema=BatchEvaluationResponse,
-        use_structured_output=True
-    )
-    duration = time.time() - start_time
-    
-    # Add batch metadata
-    response.batch_metadata = {
-        "batch_size": len(pairs),
-        "processing_time": duration,
-        "pairs_per_second": len(pairs) / duration if duration > 0 else 0
-    }
-    
-    # Log performance
-    if hasattr(__builtins__, 'performance_tracker') and performance_tracker:
-        performance_tracker.log_llm_call(
-            "batch_evidence_evaluation", 
-            len(prompt), 
-            duration
-        )
-    
-    return response
 ```
 
-### TASK 4: Integrate Batch Processing into Analysis Pipeline (30 minutes)
-**Purpose**: Replace individual calls with batch processing in the main analysis
-
-**File**: `core/analyze.py`
-**Modify the evidence analysis section**:
-
-```python
-# Add import
-from .batch_evidence_evaluator import evaluate_evidence_hypothesis_batch, EvidenceHypothesisPair
-
-def analyze_evidence(evidence_edges, hypotheses, graph, output_dir):
-    """Enhanced with batch processing for performance optimization"""
-    print(f"[BATCH-ANALYSIS] Processing {len(evidence_edges)} evidence edges against {len(hypotheses)} hypotheses")
-    
-    # Create evidence-hypothesis pairs
-    pairs = []
-    for evidence_edge in evidence_edges:
-        evidence_text = evidence_edge.get('properties', {}).get('description', '')
-        evidence_id = evidence_edge.get('source', evidence_edge.get('id', ''))
-        
-        for hypothesis in hypotheses:
-            hypothesis_text = hypothesis.get('properties', {}).get('description', '')
-            hypothesis_id = hypothesis.get('id', '')
-            
-            pair = EvidenceHypothesisPair(
-                pair_id=f"{evidence_id}_vs_{hypothesis_id}",
-                evidence_text=evidence_text,
-                evidence_id=evidence_id,
-                hypothesis_text=hypothesis_text,
-                hypothesis_id=hypothesis_id
-            )
-            pairs.append(pair)
-    
-    print(f"[BATCH-ANALYSIS] Created {len(pairs)} evidence-hypothesis pairs")
-    
-    # Process in batches of 8-10 pairs
-    BATCH_SIZE = 8
-    all_evaluations = []
-    total_batches = (len(pairs) + BATCH_SIZE - 1) // BATCH_SIZE
-    
-    for batch_num in range(0, len(pairs), BATCH_SIZE):
-        batch_pairs = pairs[batch_num:batch_num + BATCH_SIZE]
-        current_batch = batch_num // BATCH_SIZE + 1
-        
-        print(f"[BATCH-ANALYSIS] Processing batch {current_batch}/{total_batches} ({len(batch_pairs)} pairs)")
-        
-        try:
-            batch_response = evaluate_evidence_hypothesis_batch(
-                pairs=batch_pairs,
-                context="Process tracing analysis for historical case study"
-            )
-            all_evaluations.extend(batch_response.evaluations)
-            
-            print(f"[BATCH-SUCCESS] Batch {current_batch} completed in {batch_response.batch_metadata.get('processing_time', 0):.2f}s")
-            
-        except Exception as e:
-            print(f"[BATCH-ERROR] Batch {current_batch} failed: {e}")
-            # Fallback to individual processing for this batch
-            print(f"[BATCH-FALLBACK] Processing batch {current_batch} individually")
-            for pair in batch_pairs:
-                # Individual processing fallback code here
-                pass
-    
-    print(f"[BATCH-ANALYSIS] Completed {len(all_evaluations)} evaluations in {total_batches} batches")
-    return all_evaluations
-```
-
-### TASK 5: Add A/B Testing Infrastructure (25 minutes)
-**Purpose**: Compare batch vs. individual processing performance and quality
-
-**File**: `core/analyze.py`
-**Add feature flag system**:
-
-```python
-# Add at top of file
-ENABLE_BATCH_PROCESSING = True  # Feature flag for batch processing
-ENABLE_AB_TESTING = False       # Feature flag for A/B comparison
-
-def analyze_evidence_with_comparison(evidence_edges, hypotheses, graph, output_dir):
-    """Run both batch and individual processing for comparison"""
-    
-    if not ENABLE_AB_TESTING:
-        if ENABLE_BATCH_PROCESSING:
-            return analyze_evidence_batch(evidence_edges, hypotheses, graph, output_dir)
-        else:
-            return analyze_evidence_individual(evidence_edges, hypotheses, graph, output_dir)
-    
-    print("[A/B-TEST] Running both batch and individual processing for comparison")
-    
-    # Run individual processing (baseline)
-    start_time = time.time()
-    individual_results = analyze_evidence_individual(evidence_edges, hypotheses, graph, output_dir)
-    individual_time = time.time() - start_time
-    
-    # Run batch processing
-    start_time = time.time()
-    batch_results = analyze_evidence_batch(evidence_edges, hypotheses, graph, output_dir)
-    batch_time = time.time() - start_time
-    
-    # Compare results
-    comparison = {
-        "individual_processing": {
-            "time": individual_time,
-            "results_count": len(individual_results),
-            "calls_made": getattr(performance_tracker, 'individual_calls', 0)
-        },
-        "batch_processing": {
-            "time": batch_time,
-            "results_count": len(batch_results),
-            "calls_made": getattr(performance_tracker, 'batch_calls', 0)
-        },
-        "improvement": {
-            "time_reduction": (individual_time - batch_time) / individual_time * 100,
-            "call_reduction": (getattr(performance_tracker, 'individual_calls', 1) - getattr(performance_tracker, 'batch_calls', 1)) / getattr(performance_tracker, 'individual_calls', 1) * 100
-        }
-    }
-    
-    # Save comparison results
-    if output_dir:
-        comparison_file = Path(output_dir) / f"ab_test_comparison_{datetime.now():%Y%m%d_%H%M%S}.json"
-        with open(comparison_file, 'w') as f:
-            json.dump(comparison, f, indent=2)
-        print(f"[A/B-TEST] Comparison saved to {comparison_file}")
-    
-    # Use batch results (assuming they pass quality validation)
-    return batch_results
-```
-
-## 🧪 TESTING PROTOCOL
-
-### Test Level 1: Baseline Measurement (5 minutes)
-**Command**: `source test_env/bin/activate && echo -e "1\n1" | python3 process_trace_advanced.py`  
-**Expected Output**: Performance baseline JSON with individual call timings
-**Success Criteria**: Complete metrics file with 50+ LLM call measurements
-
-### Test Level 2: Batch Processing Test (5 minutes)  
-**Setup**: Enable batch processing flag
-**Command**: Same as Level 1
-**Expected Output**: 80% reduction in LLM calls, similar quality results
-**Success Criteria**: <15 total LLM calls, analysis time <3 minutes
-
-### Test Level 3: A/B Comparison (10 minutes)
-**Setup**: Enable A/B testing flag  
-**Command**: Same as Level 1
-**Expected Output**: Side-by-side performance comparison
-**Success Criteria**: Quantitative proof of improvement with quality validation
-
-## 🎯 SUCCESS CRITERIA
-
-1. **Performance**: Analysis time reduced from 5-12 minutes to <3 minutes
-2. **Efficiency**: 80% reduction in LLM calls (100 calls → <20 calls)  
-3. **Quality**: Probative values within 10% of individual processing baseline
-4. **Reliability**: 100% Pydantic schema compliance for all batch responses
-5. **Fallback**: Graceful degradation to individual processing on batch failures
-
-## 📊 EXPECTED RESULTS
-
-**Before Optimization**:
-- 100-150 individual LLM calls
-- 5-12 minute analysis time
-- 3-5 seconds per call
-
-**After Batch Processing**:
-- 10-20 batch LLM calls  
-- <3 minute analysis time
-- 8-15 seconds per batch (5-10 pairs)
-- 80% time reduction achieved
+**Expected Impact**: 93% reduction in LLM calls (120 → 8), 5-12 minutes → <30 seconds
 
 ---
 
@@ -440,20 +306,19 @@ def analyze_evidence_with_comparison(evidence_edges, hypotheses, graph, output_d
 
 ### Key Entry Points
 - **`process_trace_advanced.py`**: Main orchestration script with project selection and pipeline management
-- **`core/analyze.py`**: Analysis phase entry point - current performance bottleneck location
+- **`core/analyze.py`**: Analysis phase entry point - contains violations requiring LLM conversion
 - **`core/extract.py`**: Extraction phase entry point - working perfectly (132.93s for 39 nodes)
 
-### Module Organization  
-- **`core/`**: Core processing modules (extraction, analysis, LLM interfaces)
-- **`core/plugins/`**: Plugin system architecture with registry-based loading
-- **`universal_llm_kit/`**: LLM abstraction layer with LiteLLM integration
-- **`input_text/`**: Test cases (French Revolution verified working, American Revolution available)
-- **`output_data/`**: Generated outputs (graphs, HTML reports, diagnostic files)
+### Critical Violation Locations  
+- **`core/evidence_weighting.py`**: Lines 154-179 keyword matching for reliability/credibility
+- **`core/confidence_calculator.py`**: Hardcoded threshold fallbacks throughout
+- **`core/temporal_graph.py`**: Line 487 keyword-based node matching
+- **`core/plugins/`**: Unknown additional violations requiring systematic audit
 
 ### Important Integration Points
-- **LLM Interface**: `core/llm_required.py` with structured output support
-- **Plugin Registry**: `core/plugins/register_plugins.py` (loads successfully in WSL)
-- **Pydantic Models**: `core/structured_models.py` (validation working perfectly)
+- **LLM Interface**: `core/plugins/van_evera_llm_interface.py` for semantic analysis
+- **LLM Error Handling**: `core/llm_required.py` with LLMRequiredError fail-fast behavior
+- **Structured Models**: `core/structured_models.py` for Pydantic validation
 
 ### WSL Environment Setup
 - **Virtual Environment**: `test_env/` with all dependencies installed
@@ -463,24 +328,21 @@ def analyze_evidence_with_comparison(evidence_edges, hypotheses, graph, output_d
 ## 📋 Coding Philosophy
 
 ### NO LAZY IMPLEMENTATIONS
-- No mocking, stubs, fallbacks, pseudo-code, or simplified implementations
-- Every batch processing function must be fully functional with real LLM calls
-- Test each implementation thoroughly - assume nothing works until proven
+- No mocking, stubs, or pseudo-code
+- Every LLM conversion must be fully functional
+- Test each conversion before moving to next
 
-### FAIL-FAST PRINCIPLES  
-- Surface LLM failures immediately with LLMRequiredError
-- Don't hide batch processing failures - make them visible
-- Use feature flags for safe rollback, not to hide problems
+### FAIL-FAST PRINCIPLES
+- All LLM failures must raise LLMRequiredError
+- No fallbacks to rule-based logic
+- Surface semantic analysis failures immediately
 
 ### EVIDENCE-BASED DEVELOPMENT
-- All optimization claims require performance metrics JSON files
-- Raw LLM call logs required for baseline vs. batch comparison
-- No success declarations without quantitative proof of improvement
+- All quality claims require test evidence
+- Compare semantic vs keyword results
+- Document improvements with examples
 
-### VALIDATION + SELF-HEALING
-- Every batch evaluator must validate Pydantic schema compliance
-- Graceful degradation to individual processing on batch failures
-- A/B testing infrastructure for quality assurance
+---
 
 ## Evidence Structure
 
@@ -488,15 +350,15 @@ Evidence for this phase should be documented in:
 ```
 evidence/
 ├── current/
-│   └── Evidence_Phase21_BatchOptimization.md
+│   └── Evidence_Phase21_LLMFirstRemediation.md
 ```
 
 Include:
-- Performance baseline JSON files with individual call timings
-- Batch processing results with call reduction measurements  
-- A/B comparison data showing quality preservation
-- Raw console output demonstrating <3 minute analysis times
-- Specific bottleneck elimination proof
+- Before/after code comparisons for each conversion
+- Unit test results showing LLM vs keyword differences
+- Integration test results on American Revolution
+- Performance impact measurements
+- Quality improvement demonstrations
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.

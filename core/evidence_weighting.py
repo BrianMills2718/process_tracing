@@ -10,7 +10,7 @@ import math
 from typing import Dict, List, Set, Tuple, Optional, Union
 from dataclasses import dataclass
 from enum import Enum
-from .bayesian_models import BayesianEvidence, EvidenceType
+from .plugins.bayesian_van_evera_engine import BayesianHypothesis, EvidenceType
 from .structured_models import EvidenceAssessment
 
 
@@ -138,52 +138,87 @@ class EvidenceStrengthQuantifier:
         )
     
     def _analyze_reliability_indicators(self, reasoning: str, justification: str) -> float:
-        """Analyze text for reliability indicators and return reliability weight."""
-        combined_text = (reasoning + " " + justification).lower()
+        """Use LLM semantic analysis for evidence reliability assessment."""
+        from .plugins.van_evera_llm_interface import VanEveraLLMInterface
+        from .llm_required import LLMRequiredError
         
-        positive_indicators = [
-            'verified', 'confirmed', 'documented', 'witnessed', 'recorded',
-            'consistent', 'corroborated', 'multiple sources', 'reliable'
-        ]
-        
-        negative_indicators = [
-            'unverified', 'unconfirmed', 'undocumented', 'hearsay', 'rumor',
-            'inconsistent', 'contradictory', 'single source', 'unreliable'
-        ]
-        
-        positive_score = sum(1 for indicator in positive_indicators if indicator in combined_text)
-        negative_score = sum(1 for indicator in negative_indicators if indicator in combined_text)
-        
-        # Base reliability of 0.7, adjusted by indicators
-        base_reliability = 0.7
-        net_score = positive_score - negative_score
-        adjustment = net_score * 0.1  # Each indicator worth 0.1
-        
-        return max(0.1, min(1.0, base_reliability + adjustment))
+        try:
+            llm_interface = VanEveraLLMInterface()
+            
+            prompt = f"""
+Assess evidence reliability (0.0-1.0) based on these indicators:
+
+Reasoning: {reasoning}
+Justification: {justification}
+
+Consider semantic understanding of:
+- Verification status and documentation quality
+- Source consistency and corroboration
+- Multiple vs single source evidence
+- Professional vs amateur collection methods
+
+Return only numerical score 0.0-1.0 representing reliability.
+"""
+            
+            response = llm_interface.get_structured_response(prompt, target_schema="reliability_float")
+            if hasattr(response, 'reliability_score'):
+                return float(response.reliability_score)
+            elif hasattr(response, 'score'):
+                return float(response.score)
+            else:
+                # Extract numerical value from response
+                import re
+                text_response = str(response)
+                numbers = re.findall(r'0?\.\d+|[01]\.0*', text_response)
+                if numbers:
+                    return min(1.0, max(0.0, float(numbers[0])))
+                else:
+                    raise ValueError("No numerical score found in LLM response")
+                    
+        except Exception as e:
+            raise LLMRequiredError(f"Failed to assess evidence reliability with LLM: {e}")
     
     def _analyze_credibility_indicators(self, reasoning: str, justification: str) -> float:
-        """Analyze text for source credibility indicators."""
-        combined_text = (reasoning + " " + justification).lower()
+        """Use LLM semantic analysis for source credibility assessment."""
+        from .plugins.van_evera_llm_interface import VanEveraLLMInterface
+        from .llm_required import LLMRequiredError
         
-        high_credibility = [
-            'official', 'government', 'academic', 'expert', 'authority',
-            'published', 'peer-reviewed', 'institutional'
-        ]
-        
-        low_credibility = [
-            'anonymous', 'unofficial', 'biased', 'partisan', 'interested party',
-            'unqualified', 'amateur', 'gossip'
-        ]
-        
-        high_score = sum(1 for indicator in high_credibility if indicator in combined_text)
-        low_score = sum(1 for indicator in low_credibility if indicator in combined_text)
-        
-        # Base credibility of 0.7, adjusted by indicators
-        base_credibility = 0.7
-        net_score = high_score - low_score
-        adjustment = net_score * 0.1
-        
-        return max(0.1, min(1.0, base_credibility + adjustment))
+        try:
+            llm_interface = VanEveraLLMInterface()
+            
+            prompt = f"""
+Assess source credibility (0.0-1.0) based on semantic analysis:
+
+Reasoning: {reasoning}
+Justification: {justification}
+
+Consider semantic understanding of:
+- Official vs unofficial source authority
+- Academic/expert vs amateur qualifications
+- Institutional vs individual source type
+- Bias indicators and conflict of interest
+- Publication and peer review status
+
+Return only numerical score 0.0-1.0 representing credibility.
+"""
+            
+            response = llm_interface.get_structured_response(prompt, target_schema="credibility_float")
+            if hasattr(response, 'credibility_score'):
+                return float(response.credibility_score)
+            elif hasattr(response, 'score'):
+                return float(response.score)
+            else:
+                # Extract numerical value from response
+                import re
+                text_response = str(response)
+                numbers = re.findall(r'0?\.\d+|[01]\.0*', text_response)
+                if numbers:
+                    return min(1.0, max(0.0, float(numbers[0])))
+                else:
+                    raise ValueError("No numerical score found in LLM response")
+                    
+        except Exception as e:
+            raise LLMRequiredError(f"Failed to assess source credibility with LLM: {e}")
     
     def _calculate_confidence_interval(self, combined_weight: float, 
                                      evidence_assessment: EvidenceAssessment) -> Tuple[float, float]:

@@ -48,25 +48,23 @@ class ConfidenceLevel(Enum):
     
     @classmethod
     def from_score(cls, score: float, thresholds=None) -> 'ConfidenceLevel':
-        """Get confidence level from numerical score with optional dynamic thresholds."""
-        # Use LLM-generated thresholds if available
-        if thresholds:
-            if score >= thresholds.very_high_threshold:
-                return cls.VERY_HIGH
-            elif score >= thresholds.high_threshold:
-                return cls.HIGH
-            elif score >= thresholds.moderate_threshold:
-                return cls.MODERATE
-            elif score >= thresholds.low_threshold:
-                return cls.LOW
-            else:
-                return cls.VERY_LOW
+        """Get confidence level from numerical score with LLM-generated thresholds."""
+        from .llm_required import LLMRequiredError
         
-        # Fallback to default thresholds
-        for level in cls:
-            if level.min_threshold <= score < level.max_threshold:
-                return level
-        return cls.VERY_HIGH if score >= 0.85 else cls.VERY_LOW
+        if not thresholds:
+            raise LLMRequiredError("Confidence thresholds must be LLM-generated - no hardcoded fallbacks allowed")
+        
+        # Use only LLM-generated thresholds
+        if score >= thresholds.very_high_threshold:
+            return cls.VERY_HIGH
+        elif score >= thresholds.high_threshold:
+            return cls.HIGH
+        elif score >= thresholds.moderate_threshold:
+            return cls.MODERATE
+        elif score >= thresholds.low_threshold:
+            return cls.LOW
+        else:
+            return cls.VERY_LOW
 
 
 @dataclass

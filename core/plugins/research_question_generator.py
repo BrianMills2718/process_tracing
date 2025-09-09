@@ -248,17 +248,46 @@ class ResearchQuestionGeneratorPlugin(ProcessTracingPlugin):
         all_text = " ".join([h.get('properties', {}).get('description', '').lower() 
                            for h in hypotheses])
         
-        # Score phenomena
-        phenomenon_scores = {}
-        for phenomenon, keywords in common_phenomena.items():
-            score = sum(all_text.count(keyword) for keyword in keywords)
-            if score > 0:
-                phenomenon_scores[phenomenon] = score
-        
-        if phenomenon_scores:
-            return max(phenomenon_scores.keys(), key=lambda p: phenomenon_scores[p])
-        else:
+        # Use LLM semantic analysis to identify phenomenon
+        try:
+            from core.semantic_analysis_service import get_semantic_service
+            semantic_service = get_semantic_service()
+            
+            phenomenon_prompt = f"""
+Identify the primary phenomenon described in these hypotheses:
+
+{all_text}
+
+Choose the most appropriate phenomenon from these categories based on semantic understanding:
+- revolution: Revolutionary movements and fundamental political change
+- resistance: Opposition, protest movements, and defiance of authority  
+- mobilization: Collective action, organization, and movement formation
+- change: Social, political, or institutional transformation
+- conflict: War, disputes, confrontations between groups
+- formation: Creation, emergence, establishment of new institutions/systems
+
+Return only the single word phenomenon category that best describes the content.
+"""
+            
+            # Use LLM to classify phenomenon semantically
+            assessment = semantic_service.assess_probative_value(
+                evidence_description=all_text,
+                hypothesis_description=phenomenon_prompt,
+                context="Phenomenon identification for research questions"
+            )
+            
+            # Extract phenomenon from LLM response
+            response_text = str(assessment).lower()
+            for phenomenon in common_phenomena.keys():
+                if phenomenon in response_text:
+                    return phenomenon
+            
+            # Fallback if no specific match
             return "the phenomenon under investigation"
+            
+        except Exception as e:
+            from ..llm_required import LLMRequiredError
+            raise LLMRequiredError(f"LLM required for phenomenon identification: {e}")
     
     def _assess_causal_complexity(self, text: str) -> bool:
         """Assess if the text has causal complexity using LLM"""

@@ -391,31 +391,28 @@ class AlternativeHypothesisGeneratorPlugin(ProcessTracingPlugin):
         relevant_evidence = []
         evidence_nodes = [n for n in graph_data['nodes'] if n.get('type') == 'Evidence']
         
-        # Extract relevance keywords from alternative hypothesis
-        evidence_requirements = alt_data['evidence_requirements']
-        description_keywords = alt_data['description'].lower().split()
-        prediction_text = ' '.join(alt_data['key_predictions']).lower()
+        # Use semantic analysis to identify relevant evidence instead of keywords
+        hypothesis_description = alt_data['description']
+        evidence_requirements = ' '.join(alt_data['evidence_requirements'])
+        key_predictions = ' '.join(alt_data['key_predictions'])
         
-        # Create comprehensive keyword set
-        all_keywords = set(evidence_requirements)
-        all_keywords.update([word for word in description_keywords if len(word) > 4])
-        all_keywords.update([word for word in prediction_text.split() if len(word) > 4])
+        # Create comprehensive hypothesis context for semantic comparison
+        full_hypothesis_context = f"{hypothesis_description}. Evidence requirements: {evidence_requirements}. Key predictions: {key_predictions}"
         
         for evidence_node in evidence_nodes:
-            evidence_desc = evidence_node.get('properties', {}).get('description', '').lower()
-            source_quote = evidence_node.get('properties', {}).get('source_text_quote', '').lower()
+            evidence_desc = evidence_node.get('properties', {}).get('description', '')
+            source_quote = evidence_node.get('properties', {}).get('source_text_quote', '')
             
             # Use semantic service for relevance assessment
             evidence_text = f"{evidence_desc} {source_quote}"
             
             try:
                 semantic_service = get_semantic_service()
-                # Use probative value assessment to determine relevance
-                # Create a hypothesis description from keywords for comparison
-                hypothesis_desc = ' '.join(all_keywords)
+                # Use probative value assessment to determine relevance with full semantic context
                 assessment = semantic_service.assess_probative_value(
                     evidence_description=evidence_text,
-                    hypothesis_description=hypothesis_desc
+                    hypothesis_description=full_hypothesis_context,
+                    context="Assessing evidence relevance to alternative hypothesis"
                 )
                 # Convert probative value to relevance score (scale 0-5)
                 relevance_score = assessment.probative_value * 5 if hasattr(assessment, 'probative_value') else 0
