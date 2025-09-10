@@ -230,7 +230,6 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
     import subprocess
     import json
     import sys
-    from datetime import datetime
     case_file_path = Path(case_file_path_str)
     output_dir_for_case = Path(output_dir_for_case_str)
     output_dir_for_case.mkdir(parents=True, exist_ok=True)
@@ -289,7 +288,7 @@ def execute_single_case_processing(case_file_path_str, output_dir_for_case_str, 
     from core.extract import parse_json, analyze_graph_connectivity, create_connectivity_repair_prompt, extract_connectivity_relationships
     
     # Generate timestamp and output path
-    now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     graph_json_path = output_dir_for_case / f"{project_name_str}_{now_str}_graph.json"
     
     try:
@@ -570,7 +569,7 @@ def attempt_inference_repair(graph_data: dict, disconnected_entities: list) -> l
     return inference_edges
     
     # Save raw output path for compatibility
-    now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     graph_json_path = output_dir_for_case / f"{project_name_str}_{now_str}_graph.json"
     
     try:

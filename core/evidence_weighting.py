@@ -10,16 +10,10 @@ import math
 from typing import Dict, List, Set, Tuple, Optional, Union
 from dataclasses import dataclass
 from enum import Enum
-from .plugins.bayesian_van_evera_engine import BayesianHypothesis, EvidenceType
+from .plugins.bayesian_van_evera_engine import BayesianHypothesis
+from .bayesian_models import BayesianEvidence, EvidenceType, IndependenceType
 from .structured_models import EvidenceAssessment
 
-
-class IndependenceType(Enum):
-    """Types of independence relationships between evidence pieces."""
-    INDEPENDENT = "independent"        # Statistically independent
-    DEPENDENT = "dependent"           # Statistically dependent  
-    CONDITIONALLY_INDEPENDENT = "conditionally_independent"  # Independent given hypothesis
-    REDUNDANT = "redundant"           # Essentially the same evidence
 
 
 @dataclass
@@ -140,13 +134,14 @@ class EvidenceStrengthQuantifier:
     def _analyze_reliability_indicators(self, reasoning: str, justification: str) -> float:
         """Use LLM semantic analysis for evidence reliability assessment."""
         from .plugins.van_evera_llm_interface import VanEveraLLMInterface
+        from .plugins.van_evera_llm_schemas import ComprehensiveEvidenceAnalysis
         from .llm_required import LLMRequiredError
         
         try:
             llm_interface = VanEveraLLMInterface()
             
             prompt = f"""
-Assess evidence reliability (0.0-1.0) based on these indicators:
+Assess evidence reliability based on these indicators:
 
 Reasoning: {reasoning}
 Justification: {justification}
@@ -157,23 +152,11 @@ Consider semantic understanding of:
 - Multiple vs single source evidence
 - Professional vs amateur collection methods
 
-Return only numerical score 0.0-1.0 representing reliability.
+Provide comprehensive evidence analysis including reliability assessment.
 """
             
-            response = llm_interface.get_structured_response(prompt, target_schema="reliability_float")
-            if hasattr(response, 'reliability_score'):
-                return float(response.reliability_score)
-            elif hasattr(response, 'score'):
-                return float(response.score)
-            else:
-                # Extract numerical value from response
-                import re
-                text_response = str(response)
-                numbers = re.findall(r'0?\.\d+|[01]\.0*', text_response)
-                if numbers:
-                    return min(1.0, max(0.0, float(numbers[0])))
-                else:
-                    raise ValueError("No numerical score found in LLM response")
+            response = llm_interface._get_structured_response(prompt, ComprehensiveEvidenceAnalysis)
+            return response.reliability_score
                     
         except Exception as e:
             raise LLMRequiredError(f"Failed to assess evidence reliability with LLM: {e}")
@@ -181,13 +164,14 @@ Return only numerical score 0.0-1.0 representing reliability.
     def _analyze_credibility_indicators(self, reasoning: str, justification: str) -> float:
         """Use LLM semantic analysis for source credibility assessment."""
         from .plugins.van_evera_llm_interface import VanEveraLLMInterface
+        from .plugins.van_evera_llm_schemas import ComprehensiveEvidenceAnalysis
         from .llm_required import LLMRequiredError
         
         try:
             llm_interface = VanEveraLLMInterface()
             
             prompt = f"""
-Assess source credibility (0.0-1.0) based on semantic analysis:
+Assess source credibility based on semantic analysis:
 
 Reasoning: {reasoning}
 Justification: {justification}
@@ -199,23 +183,13 @@ Consider semantic understanding of:
 - Bias indicators and conflict of interest
 - Publication and peer review status
 
-Return only numerical score 0.0-1.0 representing credibility.
+Provide comprehensive evidence analysis including credibility assessment.
 """
             
-            response = llm_interface.get_structured_response(prompt, target_schema="credibility_float")
-            if hasattr(response, 'credibility_score'):
-                return float(response.credibility_score)
-            elif hasattr(response, 'score'):
-                return float(response.score)
-            else:
-                # Extract numerical value from response
-                import re
-                text_response = str(response)
-                numbers = re.findall(r'0?\.\d+|[01]\.0*', text_response)
-                if numbers:
-                    return min(1.0, max(0.0, float(numbers[0])))
-                else:
-                    raise ValueError("No numerical score found in LLM response")
+            response = llm_interface._get_structured_response(prompt, ComprehensiveEvidenceAnalysis)
+            # Use evidence_quality as proxy for credibility since ComprehensiveEvidenceAnalysis doesn't have credibility_score
+            quality_mapping = {"high": 0.9, "medium": 0.6, "low": 0.3}
+            return quality_mapping.get(response.evidence_quality, 0.6)
                     
         except Exception as e:
             raise LLMRequiredError(f"Failed to assess source credibility with LLM: {e}")
@@ -265,67 +239,19 @@ Return only numerical score 0.0-1.0 representing credibility.
         if len(evidence_list) == 1:
             return evidence_list[0].get_adjusted_likelihood_ratio()
         
-        # Group evidence by independence relationships
-        independent_groups = self._group_evidence_by_independence(
-            evidence_list, independence_assumptions
-        )
+        # Use the implementation from EvidenceStrengthQuantifier in bayesian_models
+        from .bayesian_models import EvidenceStrengthQuantifier
+        quantifier = EvidenceStrengthQuantifier()
         
-        combined_ratio = 1.0
-        
-        for group in independent_groups:
-            if len(group) == 1:
-                # Single piece of evidence
-                group_ratio = group[0].get_adjusted_likelihood_ratio()
-            else:
-                # Multiple evidence pieces in this independence group
-                group_ratio = self._combine_dependent_evidence(group)
-            
-            # Multiply ratios for independent groups
-            combined_ratio *= group_ratio
-        
-        return combined_ratio
+        return quantifier.combine_multiple_evidence(evidence_list, independence_assumptions)
     
     def _group_evidence_by_independence(self, evidence_list: List[BayesianEvidence],
                                       independence_assumptions: Dict[str, IndependenceType]) -> List[List[BayesianEvidence]]:
         """Group evidence pieces by their independence relationships."""
-        # Create adjacency graph for dependence relationships
-        evidence_ids = [e.evidence_id for e in evidence_list]
-        dependent_pairs = set()
+        from .bayesian_models import EvidenceStrengthQuantifier
+        quantifier = EvidenceStrengthQuantifier()
         
-        for pair_key, independence_type in independence_assumptions.items():
-            if independence_type in [IndependenceType.DEPENDENT, IndependenceType.REDUNDANT]:
-                # Parse pair key (assuming format "id1-id2" or similar)
-                if '-' in pair_key:
-                    id1, id2 = pair_key.split('-', 1)
-                    if id1 in evidence_ids and id2 in evidence_ids:
-                        dependent_pairs.add((id1, id2))
-        
-        # Use union-find to group dependent evidence
-        groups = []
-        remaining_evidence = evidence_list.copy()
-        
-        while remaining_evidence:
-            current_group = [remaining_evidence.pop(0)]
-            current_ids = {current_group[0].evidence_id}
-            
-            # Find all evidence dependent on current group
-            changed = True
-            while changed:
-                changed = False
-                for i in range(len(remaining_evidence) - 1, -1, -1):
-                    evidence = remaining_evidence[i]
-                    # Check if this evidence is dependent on any in current group
-                    for current_id in current_ids:
-                        if ((evidence.evidence_id, current_id) in dependent_pairs or
-                            (current_id, evidence.evidence_id) in dependent_pairs):
-                            current_group.append(remaining_evidence.pop(i))
-                            current_ids.add(evidence.evidence_id)
-                            changed = True
-                            break
-            
-            groups.append(current_group)
-        
-        return groups
+        return quantifier._group_evidence_by_independence(evidence_list, independence_assumptions)
     
     def _combine_dependent_evidence(self, evidence_group: List[BayesianEvidence]) -> float:
         """
@@ -334,42 +260,10 @@ Return only numerical score 0.0-1.0 representing credibility.
         For dependent evidence, we can't simply multiply likelihood ratios.
         Instead, we use a conservative combination that accounts for dependence.
         """
-        if not evidence_group:
-            return 1.0
+        from .bayesian_models import EvidenceStrengthQuantifier
+        quantifier = EvidenceStrengthQuantifier()
         
-        if len(evidence_group) == 1:
-            return evidence_group[0].get_adjusted_likelihood_ratio()
-        
-        # Get all likelihood ratios
-        ratios = [e.get_adjusted_likelihood_ratio() for e in evidence_group]
-        
-        # Use geometric mean for conservative combination
-        # This is more conservative than multiplication but stronger than arithmetic mean
-        if any(r == float('inf') for r in ratios):
-            return float('inf')  # If any evidence is perfect, result is perfect
-        
-        # Issue #63 Fix: Use epsilon-based floating point comparison
-        from .float_utils import float_one
-        
-        # Filter out ratios that are effectively 1 (neutral evidence)
-        significant_ratios = [r for r in ratios if not float_one(r)]
-        
-        if not significant_ratios:
-            return 1.0  # All evidence is neutral
-        
-        # Use geometric mean with dampening factor to account for dependence
-        geometric_mean = math.pow(math.prod(significant_ratios), 1.0 / len(significant_ratios))
-        
-        # Apply dampening factor (reduces strength due to dependence)
-        dampening_factor = 1.0 / math.sqrt(len(evidence_group))
-        
-        # Combine geometric mean with dampening
-        if geometric_mean > 1.0:
-            combined_ratio = 1.0 + (geometric_mean - 1.0) * dampening_factor
-        else:
-            combined_ratio = 1.0 - (1.0 - geometric_mean) * dampening_factor
-        
-        return max(0.01, combined_ratio)
+        return quantifier._combine_dependent_evidence(evidence_group)
     
     def calculate_evidence_diversity(self, evidence_list: List[BayesianEvidence]) -> float:
         """
@@ -381,35 +275,10 @@ Return only numerical score 0.0-1.0 representing credibility.
         Returns:
             Diversity score (0.0-1.0)
         """
-        if not evidence_list:
-            return 0.0
+        from .bayesian_models import EvidenceStrengthQuantifier
+        quantifier = EvidenceStrengthQuantifier()
         
-        if len(evidence_list) == 1:
-            return 0.5  # Single piece has moderate diversity
-        
-        # Analyze diversity across multiple dimensions
-        evidence_types = set(e.evidence_type for e in evidence_list)
-        collection_methods = set(e.collection_method for e in evidence_list)
-        reliability_levels = [e.reliability for e in evidence_list]
-        
-        # Type diversity (more Van Evera types is better)
-        type_diversity = len(evidence_types) / len(EvidenceType)
-        
-        # Method diversity (more collection methods is better)
-        method_diversity = min(1.0, len(collection_methods) / 3.0)  # Cap at 3 methods
-        
-        # Reliability diversity (some spread in reliability indicates varied sources)
-        if len(set(reliability_levels)) > 1:
-            reliability_std = float(sum((r - sum(reliability_levels)/len(reliability_levels))**2 
-                                      for r in reliability_levels) / len(reliability_levels))**0.5
-            reliability_diversity = min(1.0, reliability_std * 2.0)  # Scale standard deviation
-        else:
-            reliability_diversity = 0.5  # All same reliability
-        
-        # Combine diversity measures
-        overall_diversity = (type_diversity + method_diversity + reliability_diversity) / 3.0
-        
-        return min(1.0, overall_diversity)
+        return quantifier.calculate_evidence_diversity(evidence_list)
     
     def get_evidence_strength_summary(self, evidence_weights: EvidenceWeights) -> Dict[str, Union[float, str]]:
         """

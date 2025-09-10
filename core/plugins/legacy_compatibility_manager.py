@@ -7,7 +7,7 @@ import json
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from .base import ProcessTracingPlugin, PluginValidationError
-from ..semantic_analysis_service import get_semantic_service
+# CIRCULAR IMPORT FIX: Move semantic_analysis_service import to function level
 from ..llm_required import LLMRequiredError
 
 
@@ -432,6 +432,8 @@ class LegacyCompatibilityManagerPlugin(ProcessTracingPlugin):
         
         # Use semantic service to assess theoretical sophistication and evidence language
         try:
+            # CIRCULAR IMPORT FIX: Import here to avoid module-level circular dependency
+            from ..semantic_analysis_service import get_semantic_service
             semantic_service = get_semantic_service()
             
             # Assess theoretical sophistication through semantic analysis
@@ -528,6 +530,8 @@ class LegacyCompatibilityManagerPlugin(ProcessTracingPlugin):
         
         # Use semantic service for domain classification
         try:
+            # CIRCULAR IMPORT FIX: Import here to avoid module-level circular dependency  
+            from ..semantic_analysis_service import get_semantic_service
             semantic_service = get_semantic_service()
             domain_result = semantic_service.classify_domain(all_hypothesis_text)
             domain = domain_result.primary_domain if hasattr(domain_result, 'primary_domain') else 'general'

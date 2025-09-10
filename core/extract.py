@@ -31,8 +31,8 @@ from core.ontology import NODE_TYPES, EDGE_TYPES, NODE_COLORS
 
 # Check if Google Generative AI package is installed
 try:
-    from google import genai
-    from google.genai import types
+    import google.generativeai as genai
+    from google.generativeai import types
     HAS_GEMINI = True
 except ImportError:
     HAS_GEMINI = False

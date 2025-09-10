@@ -159,15 +159,27 @@ llm_import_start = time.time()
 from core.llm_reporting_utils import generate_narrative_summary_with_llm
 print(f"[MODULE-DEBUG] llm_reporting_utils imported in {time.time() - llm_import_start:.1f}s")
 
-print("[MODULE-DEBUG] Importing enhance_mechanisms...")
-mech_import_start = time.time()
-from core.enhance_mechanisms import elaborate_mechanism_with_llm
-print(f"[MODULE-DEBUG] enhance_mechanisms imported in {time.time() - mech_import_start:.1f}s")
+print("[HANG-DEBUG] DISABLING plugin imports for hang debugging")
+print("[MODULE-DEBUG] Importing enhance_mechanisms... SKIPPED")
+# HANG DEBUG: Temporarily disable plugin imports
+# mech_import_start = time.time()
+# from core.enhance_mechanisms import elaborate_mechanism_with_llm
+# print(f"[MODULE-DEBUG] enhance_mechanisms imported in {time.time() - mech_import_start:.1f}s")
 
-print("[MODULE-DEBUG] Importing van_evera_workflow...")
-workflow_import_start = time.time()
-from core.plugins.van_evera_workflow import execute_van_evera_analysis
-print(f"[MODULE-DEBUG] van_evera_workflow imported in {time.time() - workflow_import_start:.1f}s")
+# Create dummy function to prevent NameError
+def elaborate_mechanism_with_llm(*args, **kwargs):
+    print("[HANG-DEBUG] elaborate_mechanism_with_llm called (dummy)")
+    return "Mechanism disabled for hang debugging"
+
+print("[MODULE-DEBUG] Importing van_evera_workflow... SKIPPED")
+# workflow_import_start = time.time()
+# from core.plugins.van_evera_workflow import execute_van_evera_analysis
+
+# Create dummy function to prevent NameError  
+def execute_van_evera_analysis(*args, **kwargs):
+    print("[HANG-DEBUG] execute_van_evera_analysis called (dummy)")
+    return {"van_evera_analysis": {"hypothesis_assessments": {}}}
+print("[MODULE-DEBUG] van_evera_workflow imported in 0.0s (skipped)")
 
 print(f"[MODULE-DEBUG] Starting function definitions section...")
 
@@ -709,8 +721,28 @@ def load_graph(json_file):
     
     Implements fail-fast principle - fails loud on missing file or invalid data.
     """
+    print(f"[LOAD-HANG-DEBUG] *** ENTERED load_graph function ***")
+    sys.stdout.flush()
+    os.system('echo "[SYSTEM] Entered load_graph function" >&2')
+    
+    print(f"[LOAD-HANG-DEBUG] *** About to call time.time() ***")
+    sys.stdout.flush()
     load_start = time.time()
-    progress.checkpoint("load_graph", f"Loading from {json_file}")
+    
+    print(f"[LOAD-HANG-DEBUG] *** About to call progress.checkpoint() ***")
+    sys.stdout.flush()
+    os.system('echo "[SYSTEM] About to call progress.checkpoint" >&2')
+    
+    # Test if it's really progress.checkpoint 
+    try:
+        print(f"[LOAD-HANG-DEBUG] *** Calling progress.checkpoint with timeout ***")
+        sys.stdout.flush()
+        progress.checkpoint("load_graph", f"Loading from {json_file}")
+        print(f"[LOAD-HANG-DEBUG] *** progress.checkpoint completed successfully ***")
+        sys.stdout.flush()
+    except Exception as e:
+        print(f"[LOAD-HANG-DEBUG] *** progress.checkpoint failed: {e} ***")
+        sys.stdout.flush()
     
     print(f"[LOAD-DEBUG] Starting load_graph({json_file})")
     
@@ -3319,35 +3351,168 @@ def generate_evidence_strength_chart(results):
 def main():
     print("[MAIN-DEBUG] 0.0 | main() function started")
     import sys
+    import threading
+    import gc
+    import os
+    sys.stdout.flush()
+    
+    # HANG DEBUGGING: Add comprehensive diagnostics
+    print(f"[HANG-DEBUG] Active threads: {threading.active_count()}")
+    print(f"[HANG-DEBUG] Thread list: {[t.name for t in threading.enumerate()]}")
+    print(f"[HANG-DEBUG] GC objects: {len(gc.get_objects())}")
+    print(f"[HANG-DEBUG] Process ID: {os.getpid()}")
     sys.stdout.flush()
     
     print("[MAIN-DEBUG] 0.05 | About to call parse_args()")
     sys.stdout.flush()
     args = parse_args()
     print("[MAIN-DEBUG] 0.1 | parse_args() completed")
+    
+    print(f"[HANG-DEBUG] After parse_args - Active threads: {threading.active_count()}")
+    print(f"[HANG-DEBUG] After parse_args - Thread list: {[t.name for t in threading.enumerate()]}")
     sys.stdout.flush()
     
+    print(f"[MAIN-DEBUG] 0.15 | About to check file: {args.json_file}")
+    sys.stdout.flush()
     if not os.path.isfile(args.json_file):
         logger.error(f"File not found: {args.json_file}"); sys.exit(1)
     
     print(f"[MAIN-DEBUG] 0.2 | File check passed: {args.json_file}")
+    sys.stdout.flush()
     
+    print("[MAIN-DEBUG] 0.25 | About to initialize diagnostic logger")
+    sys.stdout.flush()
     # PHASE 20: Initialize diagnostic logger
     global diagnostics
     output_dir = Path(args.json_file).parent if hasattr(args, 'json_file') else Path(".")
-    diagnostics = DiagnosticLogger(output_dir)
+    print(f"[MAIN-DEBUG] 0.26 | Output dir created: {output_dir}")
+    sys.stdout.flush()
+    
+    # HANG DEBUGGING: Add timeout for DiagnosticLogger creation
+    import signal
+    
+    def timeout_handler(signum, frame):
+        print("[HANG-DEBUG] TIMEOUT during DiagnosticLogger creation!")
+        print(f"[HANG-DEBUG] Current frame: {frame}")
+        print(f"[HANG-DEBUG] Active threads: {threading.active_count()}")
+        for t in threading.enumerate():
+            print(f"[HANG-DEBUG] Thread: {t.name}, alive: {t.is_alive()}")
+        raise Exception("DiagnosticLogger creation timeout")
+    
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(10)  # 10 second timeout
+    
+    try:
+        print("[HANG-DEBUG] About to create DiagnosticLogger with 10s timeout")
+        sys.stdout.flush()
+        diagnostics = DiagnosticLogger(output_dir)
+        signal.alarm(0)  # Cancel timeout
+        print("[HANG-DEBUG] DiagnosticLogger created successfully")
+        sys.stdout.flush()
+    except Exception as e:
+        signal.alarm(0)  # Cancel timeout
+        print(f"[HANG-DEBUG] DiagnosticLogger creation failed: {e}")
+        print("[HANG-DEBUG] Proceeding without diagnostics")
+        diagnostics = None
+        sys.stdout.flush()
     
     print("[MAIN-DEBUG] 0.3 | Diagnostic logger initialized")
+    sys.stdout.flush()
     
-    progress.checkpoint("main", f"Starting analysis of {os.path.basename(args.json_file)}")
+    print("[HANG-DEBUG] About to call progress checkpoint with timeout")
+    sys.stdout.flush()
     
-    print("[MAIN-DEBUG] 0.4 | Progress checkpoint reached")
+    # HANG DEBUGGING: Add timeout for progress checkpoint
+    def progress_timeout_handler(signum, frame):
+        print("[HANG-DEBUG] TIMEOUT during progress.checkpoint!")
+        print(f"[HANG-DEBUG] Progress object: {progress}")
+        print(f"[HANG-DEBUG] Progress checkpoints: {len(progress.checkpoints)}")
+        raise Exception("Progress checkpoint timeout")
     
-    logger.info(f"Analyzing data from {os.path.basename(args.json_file)}", extra={'operation': 'main_analysis', 'file': os.path.basename(args.json_file)})
-    print("[MAIN-DEBUG] 0.5 | Logger.info completed")
+    signal.signal(signal.SIGALRM, progress_timeout_handler)
+    signal.alarm(5)  # 5 second timeout
+    
     try:
-        print("[MAIN-DEBUG] 1.0 | Starting load_graph() call...")
+        print("[MAIN-DEBUG] 0.35 | About to call progress checkpoint")
+        sys.stdout.flush()
+        progress.checkpoint("main", f"Starting analysis of {os.path.basename(args.json_file)}")
+        signal.alarm(0)  # Cancel timeout
+        print("[MAIN-DEBUG] 0.4 | Progress checkpoint reached")
+        sys.stdout.flush()
+    except Exception as e:
+        signal.alarm(0)  # Cancel timeout
+        print(f"[HANG-DEBUG] Progress checkpoint failed: {e}")
+        sys.stdout.flush()
+    
+    print("[HANG-DEBUG] About to call logger.info with timeout")
+    sys.stdout.flush()
+    
+    # HANG DEBUGGING: Add timeout for logger.info
+    def logger_timeout_handler(signum, frame):
+        print("[HANG-DEBUG] TIMEOUT during logger.info!")
+        print(f"[HANG-DEBUG] Logger: {logger}")
+        print(f"[HANG-DEBUG] Logger handlers: {logger.handlers}")
+        print(f"[HANG-DEBUG] Logger level: {logger.level}")
+        raise Exception("Logger.info timeout")
+    
+    signal.signal(signal.SIGALRM, logger_timeout_handler)
+    signal.alarm(5)  # 5 second timeout
+    
+    try:
+        print("[MAIN-DEBUG] 0.45 | About to call logger.info")
+        sys.stdout.flush()
+        logger.info(f"Analyzing data from {os.path.basename(args.json_file)}", extra={'operation': 'main_analysis', 'file': os.path.basename(args.json_file)})
+        signal.alarm(0)  # Cancel timeout
+        print("[MAIN-DEBUG] 0.5 | Logger.info completed")
+        sys.stdout.flush()
+    except Exception as e:
+        signal.alarm(0)  # Cancel timeout
+        print(f"[HANG-DEBUG] Logger.info failed: {e}")
+        sys.stdout.flush()
+    
+    # HANG DEBUG: Add multiple checkpoint prints with forced output
+    print("[HANG-DEBUG] *** CRITICAL CHECKPOINT 1: After logger.info ***")
+    sys.stdout.flush()
+    os.system('echo "[SYSTEM] Checkpoint 1 reached" >&2')
+    
+    print("[HANG-DEBUG] *** CRITICAL CHECKPOINT 2: About to enter try block ***")
+    sys.stdout.flush()
+    os.system('echo "[SYSTEM] Checkpoint 2 reached" >&2')
+    
+    print("[HANG-DEBUG] *** CRITICAL CHECKPOINT 3: Entering try block now ***")
+    sys.stdout.flush()
+    os.system('echo "[SYSTEM] Checkpoint 3 reached" >&2')
+    
+    # HANG DEBUGGING: Add timeout for entire load_graph section
+    def load_graph_timeout_handler(signum, frame):
+        print("[HANG-DEBUG] TIMEOUT during load_graph section!")
+        print(f"[HANG-DEBUG] Current frame: {frame}")
+        print(f"[HANG-DEBUG] Frame filename: {frame.f_code.co_filename}")
+        print(f"[HANG-DEBUG] Frame line number: {frame.f_lineno}")
+        print(f"[HANG-DEBUG] Frame function: {frame.f_code.co_name}")
+        raise Exception("load_graph section timeout")
+    
+    signal.signal(signal.SIGALRM, load_graph_timeout_handler)
+    signal.alarm(15)  # 15 second timeout for this critical section
+    
+    try:
+        print("[HANG-DEBUG] *** INSIDE TRY BLOCK - CHECKPOINT 4 ***")
+        sys.stdout.flush()
+        os.system('echo "[SYSTEM] Inside try block" >&2')
+        
+        print("[HANG-DEBUG] *** About to call time.time() ***")
+        sys.stdout.flush()
         load_start_main = time.time()
+        
+        print("[HANG-DEBUG] *** time.time() completed, about to print debug message ***")
+        sys.stdout.flush()
+        
+        print("[MAIN-DEBUG] 1.0 | Starting load_graph() call...")
+        sys.stdout.flush()
+        os.system('echo "[SYSTEM] About to call load_graph" >&2')
+        
+        print("[HANG-DEBUG] *** About to call load_graph() function ***")
+        sys.stdout.flush()
         G, data = load_graph(args.json_file)
         print(f"[MAIN-DEBUG] 1.1 | load_graph() completed in {time.time() - load_start_main:.1f}s")
     except Exception as e:

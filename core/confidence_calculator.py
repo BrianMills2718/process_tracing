@@ -15,9 +15,9 @@ from enum import Enum
 from datetime import datetime
 import networkx as nx
 
-from .plugins.bayesian_van_evera_engine import (
-    BayesianHypothesis, BayesianEvidence, BayesianHypothesisSpace, 
-    BayesianProcessTracingModel, EvidenceType
+from .plugins.bayesian_van_evera_engine import BayesianHypothesis
+from .bayesian_models import (
+    BayesianEvidence, BayesianHypothesisSpace, BayesianProcessTracingModel, EvidenceType
 )
 from .evidence_weighting import EvidenceStrengthQuantifier, EvidenceWeights
 

@@ -6,8 +6,8 @@ Bridges semantic gap between historical evidence and academic alternative hypoth
 import json
 from typing import Dict, List, Any, Tuple
 from .base import ProcessTracingPlugin, PluginValidationError
-from ..semantic_analysis_service import get_semantic_service
 from ..llm_required import LLMRequiredError
+# CIRCULAR IMPORT FIX: Import get_semantic_service inside functions instead of module level
 
 
 class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
@@ -223,6 +223,8 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
         
         # Use semantic service for relevance assessment instead of keyword matching
         try:
+            # CIRCULAR IMPORT FIX: Import here to avoid module-level circular dependency
+            from ..semantic_analysis_service import get_semantic_service
             semantic_service = get_semantic_service()
             
             # Assess semantic relationship between evidence and hypothesis
