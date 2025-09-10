@@ -48,12 +48,9 @@ print(f"[IMPORT-DEBUG] {time.time() - start_time:.1f}s | AlternativeHypothesisGe
 # print(f"[IMPORT-DEBUG] {time.time() - start_time:.1f}s | AlternativeHypothesisGeneratorPlugin imported ({time.time() - import_start:.1f}s)")
 AlternativeHypothesisGeneratorPlugin = None  # Placeholder
 
-# CIRCULAR IMPORT FIX: Temporarily disable problematic plugin
-# import_start = time.time()
-# from .evidence_connector_enhancer import EvidenceConnectorEnhancerPlugin
-# print(f"[IMPORT-DEBUG] {time.time() - start_time:.1f}s | EvidenceConnectorEnhancerPlugin imported ({time.time() - import_start:.1f}s)")
-print(f"[IMPORT-DEBUG] {time.time() - start_time:.1f}s | EvidenceConnectorEnhancerPlugin DISABLED (circular import fix)")
-EvidenceConnectorEnhancerPlugin = None  # Placeholder
+import_start = time.time()
+from .evidence_connector_enhancer import EvidenceConnectorEnhancerPlugin
+print(f"[IMPORT-DEBUG] {time.time() - start_time:.1f}s | EvidenceConnectorEnhancerPlugin imported ({time.time() - import_start:.1f}s)")
 
 import_start = time.time()
 from .content_based_diagnostic_classifier import ContentBasedDiagnosticClassifierPlugin
@@ -102,7 +99,7 @@ def register_all_plugins():
         VanEveraTestingPlugin,
         DiagnosticRebalancerPlugin,
         # AlternativeHypothesisGeneratorPlugin,  # HANG FIX: Temporarily disabled
-        # EvidenceConnectorEnhancerPlugin,  # CIRCULAR IMPORT FIX: Temporarily disabled
+        EvidenceConnectorEnhancerPlugin,  # CIRCULAR IMPORT FIX: Re-enabled
         ContentBasedDiagnosticClassifierPlugin,
         ResearchQuestionGeneratorPlugin,
         PrimaryHypothesisIdentifierPlugin,

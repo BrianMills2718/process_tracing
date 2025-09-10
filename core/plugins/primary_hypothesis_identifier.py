@@ -6,7 +6,7 @@ Identifies and promotes the highest-evidence-supported hypothesis to Q_H1 status
 import json
 from typing import Dict, List, Any, Optional, Tuple
 from .base import ProcessTracingPlugin, PluginValidationError
-from ..semantic_analysis_service import get_semantic_service
+# CIRCULAR IMPORT FIX: Moved to function level - deferred import
 from ..llm_required import LLMRequiredError
 
 

@@ -11,7 +11,7 @@ import logging
 
 # Import LLM interface for semantic analysis
 from .van_evera_llm_interface import VanEveraLLMInterface
-from ..semantic_analysis_service import get_semantic_service
+# CIRCULAR IMPORT FIX: Moved to function level - deferred import
 from ..llm_required import LLMRequiredError
 
 logger = logging.getLogger(__name__)

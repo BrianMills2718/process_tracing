@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 import hashlib
 import json
 
-from core.plugins.van_evera_llm_interface import get_van_evera_llm, VanEveraLLMInterface
+# CIRCULAR IMPORT FIX: Moved to __init__ method - deferred import
 from core.llm_required import require_llm, LLMRequiredError
 from core.plugins.van_evera_llm_schemas import (
     HypothesisDomainClassification,
@@ -45,6 +45,9 @@ class SemanticAnalysisService:
         Args:
             cache_ttl_minutes: Cache time-to-live in minutes
         """
+        # CIRCULAR IMPORT FIX: Import here to avoid module-level circular dependency
+        from core.plugins.van_evera_llm_interface import get_van_evera_llm, VanEveraLLMInterface
+        
         # Ensure LLM is available - NO FALLBACKS
         self.llm_interface = require_llm()
         

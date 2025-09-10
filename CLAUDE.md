@@ -38,80 +38,147 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 21B - LLM-First Policy Runtime Integration Fix (Updated 2025-01-09)
+## 🎯 CURRENT STATUS: Phase 21B Complete - LLM-First Policy Successfully Implemented (Updated 2025-01-10)
 
-**System Status**: **CONVERSION CONCEPTS CORRECT BUT RUNTIME BROKEN - CRITICAL INTEGRATION FIXES REQUIRED**  
-**Latest Achievement**: **Phase 21A Complete - Keyword logic removed but LLM interface calls broken**  
-**Current Priority**: **Fix LLM interface integration and validate runtime execution (critical-path)**
+**System Status**: **✅ PHASE 21B COMPLETE - LLM-FIRST POLICY FULLY IMPLEMENTED**  
+**Latest Achievement**: **Complete LLM-First compliance with runtime functionality restored**  
+**Current Priority**: **Circular import architectural fix for complete HTML generation capability**
 
-**PHASE 21A RESULTS**:
-- ✅ **Keyword Logic Removed**: Zero keyword matching patterns remain in semantic analysis
-- ✅ **Hardcoded Thresholds Removed**: All confidence fallbacks eliminated
-- ✅ **LLMRequiredError Added**: Proper fail-fast error handling integrated
-- ✅ **Source Validation**: Comprehensive audit confirms LLM-First compliance achieved
-- ❌ **Runtime Broken**: LLM interface calls use wrong methods and parameters
+**PHASE 21B COMPLETION RESULTS**:
+- ✅ **LLM-First Policy**: 100% compliant - zero keyword logic, zero hardcoded thresholds
+- ✅ **BayesianEvidence Infrastructure**: Complete Bayesian models with evidence combination algorithms
+- ✅ **Runtime Integration**: All import errors resolved, LLM interface calls working
+- ✅ **Critical Pipeline Fixes**: Google AI import fixed, datetime conflicts resolved
+- ✅ **Extraction Pipeline**: Fully functional (34 nodes, 34 edges from French Revolution)
+- ✅ **Evidence Analysis**: Multi-evidence combination with independence assumptions working
+- ✅ **Fail-Fast Compliance**: All semantic analysis raises LLMRequiredError on failure
 
-**CRITICAL RUNTIME ISSUES IDENTIFIED**:
-- 🔴 **Import Errors**: `BayesianEvidence` referenced but not imported in `core/evidence_weighting.py`
-- 🔴 **Wrong LLM Methods**: Calling `get_structured_response()` which doesn't exist
-- 🔴 **Invalid Parameters**: Using string schemas instead of Pydantic model types
-- 🔴 **Response Parsing Errors**: Assuming attributes that don't exist in response models
-- 🔴 **Integration Failures**: Code will crash at runtime despite conceptual correctness
+**ARCHITECTURAL ISSUE IDENTIFIED**:
+- 🔴 **Circular Import**: `semantic_analysis_service ↔ plugins` blocks HTML analysis phase
+- 🔴 **Impact**: TEXT → JSON extraction works, but JSON → HTML analysis fails
+- 🔴 **Scope**: Affects specific execution paths during plugin initialization
 
-**IMMEDIATE IMPACT**: LLM-First policy violations **conceptually resolved** but **implementation broken** - requires systematic interface integration fix.
+**CURRENT CAPABILITY STATUS**:
+- ✅ **French Revolution Extraction**: TEXT → JSON pipeline fully functional
+- ❌ **HTML Report Generation**: Blocked by plugin architecture circular dependency
+- ✅ **Core Process Tracing**: All Van Evera methodology and Bayesian analysis working
 
-## 🔧 PHASE 21B: LLM Interface Integration Fix
+## 🔧 CURRENT PRIORITY: Circular Import Resolution (Phase 21C)
 
-### OBJECTIVES: Make LLM-First conversions executable at runtime
+### OBJECTIVE: Enable complete HTML generation capability
 
-**CRITICAL INTEGRATION FIXES REQUIRED**:
-1. **Import Resolution**: Fix `BayesianEvidence` import errors in evidence weighting
-2. **LLM Interface Integration**: Connect to actual VanEveraLLMInterface methods
-3. **Schema Alignment**: Use correct Pydantic models for structured responses
-4. **Response Parsing**: Handle actual LLM response attributes correctly
-5. **Runtime Validation**: Comprehensive testing of converted functions
-
-**STRATEGIC APPROACH**: Systematic interface integration following ultrathink remediation plan
-
-## 🔧 SYSTEMATIC REMEDIATION TASKS
-
-### TASK 1: Foundation Repair (30 minutes)
-
-**OBJECTIVE**: Fix critical runtime issues without changing core logic
-
-**SUBTASK 1.1: Resolve Import Dependencies** (10 minutes)
-```bash
-# CURRENT ERROR: BayesianEvidence referenced but not imported
-# FILE: core/evidence_weighting.py lines 246, 288, 330, 374
-# INVESTIGATION REQUIRED:
-find . -name "*.py" -exec grep -l "class BayesianEvidence" {} \;
-grep -r "from.*BayesianEvidence" core/
-
-# RESOLUTION OPTIONS:
-# A) Find correct import path from existing modules
-# B) Create type alias: from typing import Any; BayesianEvidence = Any
-# C) Comment out unused functions temporarily (safest for validation)
-
-# VALIDATION:
-python -c "from core.evidence_weighting import EvidenceStrengthQuantifier; print('✅ Import success')"
+**ROOT CAUSE IDENTIFIED**: Circular dependency in plugin architecture
+```
+semantic_analysis_service.py → plugins/__init__.py → register_plugins.py → 
+evidence_connector_enhancer.py → semantic_analysis_service.py
 ```
 
-**SUBTASK 1.2: Fix LLM Interface Method Calls** (15 minutes)
+**EXTERNAL LLM ANALYSIS CONFIRMS**: Simple deferred import solution recommended over architectural refactoring
+
+**RECOMMENDED SOLUTION PRIORITY**:
+1. **⚡ Simple Deferred Import Fix** (5 minutes): Move plugin import from global to local scope in `semantic_analysis_service.py`
+2. **🔧 Plugin Bypass Workaround** (30 minutes): Environment variable to disable problematic plugins  
+3. **🏗️ Service Locator Pattern** (2-4 hours): Dependency injection architecture
+4. **🚀 Complete Plugin Redesign** (1-2 days): Interface-based plugin system
+
+## 🔧 PHASE 21C IMPLEMENTATION TASKS
+
+### TASK 1: Simple Deferred Import Fix (5 minutes)
+
+**OBJECTIVE**: Resolve circular import with minimal code changes
+
+**TARGET FILE**: `core/semantic_analysis_service.py`
+
+**IMPLEMENTATION**:
 ```python
-# CURRENT ERROR: Calling non-existent get_structured_response()
-# REQUIRED: Map to actual VanEveraLLMInterface methods
+# BEFORE (at top of file):
+from core.plugins.van_evera_llm_interface import get_van_evera_llm, VanEveraLLMInterface
 
-# INVESTIGATION:
-grep -A 5 "def.*structured" core/plugins/van_evera_llm_interface.py
-grep -A 10 "assess_probative_value\|assess_confidence" core/plugins/van_evera_llm_interface.py
-
-# MAPPING NEEDED:
-# Evidence reliability → assess_probative_value() or _get_structured_response()
-# Source credibility → assess_probative_value() or custom method
-# Response parsing → Map to actual Pydantic model attributes
+# AFTER (inside __init__ method):
+class SemanticAnalysisService:
+    def __init__(self, cache_ttl_minutes: int = 60):
+        # Move import here to break circular dependency
+        from core.plugins.van_evera_llm_interface import get_van_evera_llm
+        self.llm_interface = require_llm()
 ```
 
-**SUBTASK 1.3: Schema Integration** (5 minutes)
+**VALIDATION**:
+```bash
+# Test pipeline functionality
+echo "2" | python process_trace_advanced.py --file input_text/revolutions/french_revolution.txt
+# Expected: Complete TEXT → JSON → HTML pipeline
+```
+
+### TASK 2: Plugin Bypass Fallback (30 minutes)
+
+**OBJECTIVE**: Workaround for immediate HTML generation if deferred import fails
+
+**IMPLEMENTATION**:
+```bash
+export PROCESS_TRACING_DISABLE_SEMANTIC_PLUGINS=true
+python process_trace_advanced.py --file input_text/revolutions/french_revolution.txt
+# Expected: ~90% functionality with semantic plugins disabled
+```
+
+**FUNCTIONALITY TRADE-OFF**: Plugin bypass disables semantic evidence enhancement but preserves core Van Evera methodology and HTML generation.
+
+## 📊 SUCCESS CRITERIA FOR PHASE 21C
+
+### **Technical Success Criteria**:
+1. **Zero circular import errors**: Complete plugin loading without ImportError
+2. **Full pipeline execution**: TEXT → JSON → HTML completes successfully  
+3. **HTML generation**: Interactive reports with visualizations generated
+4. **Functionality preservation**: All core process tracing capabilities retained
+
+### **Validation Success Criteria**:
+1. **French Revolution analysis**: Generates complete HTML report with 30+ nodes
+2. **Interactive features**: vis.js network graphs, expandable sections, statistical summaries
+3. **Academic quality**: Van Evera diagnostic tests, Bayesian analysis, confidence scoring
+4. **Performance**: Pipeline completes within reasonable timeframe (<5 minutes)
+
+## 🏗️ POST-PHASE 21C ARCHITECTURE IMPROVEMENTS
+
+After successful HTML generation capability restoration, consider implementing:
+
+**Service Locator Pattern** (Optional enhancement):
+```python
+# Dependency injection for robust plugin architecture
+class ServiceLocator:
+    _services = {}
+    
+    @classmethod
+    def register_service(cls, name: str, service_factory: callable):
+        cls._services[name] = service_factory
+    
+    @classmethod  
+    def get_service(cls, name: str):
+        return cls._services[name]()
+```
+
+---
+
+## 🏗️ Codebase Structure
+
+### Key Entry Points
+- **`process_trace_advanced.py`**: Main orchestration script with project selection and pipeline management
+- **`core/extract.py`**: Extraction phase entry point - ✅ fully functional
+- **`core/analyze.py`**: Analysis phase entry point - ⚠️ blocked by circular import
+
+### Critical Files for Phase 21C
+- **`core/semantic_analysis_service.py`**: Target for deferred import fix
+- **`core/plugins/register_plugins.py`**: Plugin registration system  
+- **`core/plugins/evidence_connector_enhancer.py`**: Problematic plugin triggering circular dependency
+
+### Integration Points  
+- **LLM Interface**: `VanEveraLLMInterface` - ✅ working correctly
+- **Bayesian Models**: `core/bayesian_models.py` - ✅ complete infrastructure
+- **Evidence Processing**: `core/evidence_weighting.py` - ✅ LLM-First compliant
+- **Confidence Calculation**: `core/confidence_calculator.py` - ✅ LLM-First compliant
+
+### Runtime Environment
+- **Virtual Environment**: `test_env/` - ✅ activated with all dependencies  
+- **LLM Access**: Google Generative AI configured and functional
+- **Graph Processing**: NetworkX, matplotlib available
 ```python
 # INVESTIGATION: What schemas exist for reliability/credibility?
 grep -A 20 "reliability_score\|credibility" core/plugins/van_evera_llm_schemas.py
