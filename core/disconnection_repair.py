@@ -9,6 +9,7 @@ import json
 from typing import Dict, List, Tuple, Optional
 from .connectivity_analysis import analyze_connectivity
 from .ontology import EDGE_TYPES
+from .ontology_manager import ontology_manager
 import os
 from datetime import datetime
 
@@ -707,7 +708,7 @@ ONTOLOGY CONSTRAINTS:
         if focus == "evidence_hypothesis":
             focus_prompt = f"""FOCUSED REPAIR MISSION: Evidence-Hypothesis Connections
 
-Priority: Connect isolated Evidence nodes to relevant Hypotheses using 'supports', 'refutes', or 'tests_hypothesis' relationships.
+Priority: Connect isolated Evidence nodes to relevant Hypotheses using appropriate evidence-hypothesis edge types.
 
 {base_context}
 
@@ -801,21 +802,29 @@ TASK: Based on the original text, identify missing relationships that should con
         valid_edges = []
         node_ids = {node['id'] for node in graph_data['nodes']}
         
-        # Valid edge type combinations
-        valid_combinations = {
-            ('Evidence', 'Hypothesis'): ['tests_hypothesis', 'supports', 'refutes', 'provides_evidence_for'],
-            ('Evidence', 'Causal_Mechanism'): ['tests_mechanism', 'supports', 'refutes'],
-            ('Evidence', 'Event'): ['confirms_occurrence', 'disproves_occurrence'],
-            ('Evidence', 'Alternative_Explanation'): ['tests_alternative', 'supports_alternative', 'refutes_alternative'],
-            ('Actor', 'Event'): ['initiates'],
-            ('Condition', 'Event'): ['enables', 'constrains'],
-            ('Condition', 'Causal_Mechanism'): ['enables', 'constrains'],
-            ('Condition', 'Hypothesis'): ['enables', 'constrains'],
-            ('Condition', 'Actor'): ['constrains'],
-            ('Event', 'Event'): ['causes'],
-            ('Event', 'Causal_Mechanism'): ['part_of_mechanism'],
-            ('Hypothesis', 'Causal_Mechanism'): ['explains_mechanism'],
-            ('Data_Source', 'Evidence'): ['weighs_evidence'],
+        # Build valid edge type combinations dynamically from ontology
+        valid_combinations = {}
+        for node_pair in [
+            ('Evidence', 'Hypothesis'),
+            ('Evidence', 'Causal_Mechanism'),
+            ('Evidence', 'Event'),
+            ('Evidence', 'Alternative_Explanation'),
+            ('Actor', 'Event'),
+            ('Condition', 'Event'),
+            ('Condition', 'Causal_Mechanism'),
+            ('Condition', 'Hypothesis'),
+            ('Condition', 'Actor'),
+            ('Event', 'Event'),
+            ('Event', 'Causal_Mechanism'),
+            ('Hypothesis', 'Causal_Mechanism'),
+            ('Data_Source', 'Evidence')
+        ]:
+            edge_types = ontology_manager.get_edge_types_for_relationship(node_pair[0], node_pair[1])
+            if edge_types:
+                valid_combinations[node_pair] = edge_types
+            # Handle legacy/alternative names that might not be in ontology yet
+            if node_pair == ('Evidence', 'Alternative_Explanation'):
+                valid_combinations[node_pair] = ['tests_alternative', 'supports_alternative', 'refutes_alternative'],
             ('Data_Source', 'Hypothesis'): ['weighs_evidence'],
             ('Data_Source', 'Causal_Mechanism'): ['weighs_evidence'],
         }

@@ -10,6 +10,7 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 
 from .base import ProcessTracingPlugin, PluginValidationError
+from ..ontology_manager import ontology_manager
 
 
 class TestResult(Enum):
@@ -494,7 +495,10 @@ class VanEveraTestingEngine:
                     edge_type = edge.get('type', '')
                     
                     # Simple relevance check - always include some evidence for testing
-                    if edge_type in ['supports', 'provides_evidence_for', 'evidence']:
+                    evidence_hypothesis_edges = ontology_manager.get_evidence_hypothesis_edges()
+                    supportive_edges = [e for e in evidence_hypothesis_edges if 'support' in e or 'provide' in e]
+                    
+                    if edge_type in supportive_edges or edge_type == 'evidence':
                         relevant_evidence.append(evidence_node['id'])
                     elif edge_type in ['refutes', 'contradicts']:
                         contradicting_evidence.append(evidence_node['id'])

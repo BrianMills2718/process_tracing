@@ -17,6 +17,7 @@ from typing import Generator, Dict, Any, Optional, List, Union
 from contextlib import contextmanager
 import threading
 from queue import Queue, Empty
+from .ontology_manager import ontology_manager
 
 
 class StreamingHTMLWriter:
@@ -634,7 +635,11 @@ class ProgressiveHTMLAnalysis:
                     'description': source_node.get('properties', {}).get('description', source_id)
                 }
                 
-                if edge_type in ['supports', 'provides_evidence_for']:
+                # Use OntologyManager to determine edge types dynamically
+                evidence_hypothesis_edges = ontology_manager.get_evidence_hypothesis_edges()
+                supportive_edges = [e for e in evidence_hypothesis_edges if 'support' in e or 'provide' in e]
+                
+                if edge_type in supportive_edges:
                     hypothesis_evidence[target_id]['supporting_evidence'].append(evidence_item)
                 elif edge_type in ['refutes']:
                     hypothesis_evidence[target_id]['refuting_evidence'].append(evidence_item)

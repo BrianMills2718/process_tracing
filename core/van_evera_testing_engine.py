@@ -12,6 +12,7 @@ import logging
 
 # Import LLM interface for semantic analysis - REQUIRED
 from .plugins.van_evera_llm_interface import get_van_evera_llm
+from .ontology_manager import ontology_manager
 
 logger = logging.getLogger(__name__)
 
@@ -263,7 +264,11 @@ class VanEveraTestingEngine:
                     # Use improved relevance scoring
                     if self._is_evidence_relevant_to_prediction(evidence_node, edge, prediction):
                         edge_type = edge.get('type', '')
-                        if edge_type in ['supports', 'provides_evidence_for', 'confirms']:
+                        # Use OntologyManager for dynamic edge type checking
+                        evidence_hypothesis_edges = ontology_manager.get_evidence_hypothesis_edges()
+                        supportive_edges = [e for e in evidence_hypothesis_edges if 'support' in e or 'provide' in e]
+                        
+                        if edge_type in supportive_edges or edge_type == 'confirms':
                             relevant_evidence.append(evidence_node['id'])
                         elif edge_type in ['refutes', 'contradicts', 'challenges', 'undermines']:
                             contradicting_evidence.append(evidence_node['id'])

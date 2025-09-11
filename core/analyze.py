@@ -42,6 +42,7 @@ print("[IMPORT-DEBUG] All libraries imported successfully")
 print("[IMPORT-DEBUG] Importing logging utilities...")
 try:
     from .logging_utils import log_structured_error, log_structured_info, create_analysis_context
+    from .ontology_manager import ontology_manager
     print("[IMPORT-DEBUG] Logging utilities imported successfully")
 except ImportError:
     print("[IMPORT-DEBUG] Logging utilities not available, using fallbacks")
@@ -1410,7 +1411,11 @@ def analyze_evidence(G):
                     logger.warning("LLM evidence enhancement failed", exc_info=True, extra={'evidence_id': evidence_id, 'hypothesis_id': v_hyp_id, 'error_category': 'llm_error'})
                 # --- End LLM Evidence Refinement Integration ---
                 balance_effect = 0.0
-                if edge_main_type in ['supports', 'provides_evidence']:
+                # Use OntologyManager to check edge types dynamically
+                evidence_hypothesis_edges = ontology_manager.get_evidence_hypothesis_edges()
+                supportive_edges = [e for e in evidence_hypothesis_edges if 'support' in e or 'provide' in e]
+                
+                if edge_main_type in supportive_edges:
                     hypothesis_results[v_hyp_id]['supporting_evidence'].append(ev_detail)
                     balance_effect = ev_detail['probative_value']
                 elif edge_main_type == 'refutes':
@@ -2893,7 +2898,11 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
                             'source_text_quote': 'Extracted from graph structure'
                         }
                         
-                        if edge_type in ['supports', 'provides_evidence_for']:
+                        # Use OntologyManager for dynamic edge type checking
+                        evidence_hypothesis_edges = ontology_manager.get_evidence_hypothesis_edges()
+                        supportive_edges = [e for e in evidence_hypothesis_edges if 'support' in e or 'provide' in e]
+                        
+                        if edge_type in supportive_edges:
                             hypothesis_evidence[target_id]['supporting_evidence'].append(evidence_item)
                         elif edge_type in ['refutes']:
                             hypothesis_evidence[target_id]['refuting_evidence'].append(evidence_item)
@@ -3117,7 +3126,11 @@ def format_html_analysis(results, data_unused, G, theoretical_insights=None, net
                         'description': source_node.get('properties', {}).get('description', source_id)
                     }
                     
-                    if edge_type in ['supports', 'provides_evidence_for']:
+                    # Use OntologyManager for dynamic edge type checking
+                    evidence_hypothesis_edges = ontology_manager.get_evidence_hypothesis_edges()
+                    supportive_edges = [e for e in evidence_hypothesis_edges if 'support' in e or 'provide' in e]
+                    
+                    if edge_type in supportive_edges:
                         evidence_analysis[target_id]['supporting_evidence'].append(evidence_item)
                     elif edge_type in ['refutes']:
                         evidence_analysis[target_id]['refuting_evidence'].append(evidence_item)

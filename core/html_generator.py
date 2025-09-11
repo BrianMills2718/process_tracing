@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 # Import required constants and utilities
 try:
     from core.ontology import NODE_TYPES as CORE_NODE_TYPES, NODE_COLORS
+    from core.ontology_manager import ontology_manager
     from .logging_utils import log_structured_error, log_structured_info, create_analysis_context
 except ImportError:
     # Fallbacks if imports not available
@@ -346,8 +347,12 @@ def analyze_evidence_strength(G, data):
         
         # Analyze evidence-hypothesis relationships
         evidence_hypothesis_links = []
+        # Get valid evidence-hypothesis edge types from ontology
+        evidence_hypothesis_edge_types = ontology_manager.get_evidence_hypothesis_edges()
+        evidence_hypothesis_edge_types.append('supports_hypothesis')  # Legacy support
+        
         for edge in data.get('edges', []):
-            if (edge.get('type') in ['supports_hypothesis', 'tests_hypothesis', 'provides_evidence_for'] and
+            if (edge.get('type') in evidence_hypothesis_edge_types and
                 any(h['id'] == edge.get('target_id') for h in hypothesis_nodes) and
                 any(e['id'] == edge.get('source_id') for e in evidence_nodes)):
                 evidence_hypothesis_links.append(edge)

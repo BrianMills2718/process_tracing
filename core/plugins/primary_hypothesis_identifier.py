@@ -8,6 +8,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from .base import ProcessTracingPlugin, PluginValidationError
 # CIRCULAR IMPORT FIX: Moved to function level - deferred import
 from ..llm_required import LLMRequiredError
+from ..ontology_manager import ontology_manager
 
 
 class PrimaryHypothesisIdentifierPlugin(ProcessTracingPlugin):
@@ -228,10 +229,11 @@ class PrimaryHypothesisIdentifierPlugin(ProcessTracingPlugin):
         hypothesis_id = hypothesis['id']
         
         # Find evidence supporting this hypothesis
+        evidence_hypothesis_edges = ontology_manager.get_evidence_hypothesis_edges()
         supporting_edges = [
             edge for edge in edges
             if edge.get('target_id') == hypothesis_id and 
-            edge.get('type') in ['supports', 'tests_hypothesis', 'provides_evidence_for']
+            edge.get('type') in evidence_hypothesis_edges
         ]
         
         if not supporting_edges:
