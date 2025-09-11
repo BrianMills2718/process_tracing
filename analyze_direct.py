@@ -25,30 +25,60 @@ def main():
     print("Bypassing problematic python -m core.analyze execution")
     print()
     
-    # Parse arguments (simplified)
+    # Parse arguments (enhanced for TEXT → JSON → HTML)
     parser = argparse.ArgumentParser(description='Direct process tracing analysis')
-    parser.add_argument('json_file', help='JSON graph file to analyze')
+    parser.add_argument('input_file', help='Input file (text for extraction or JSON for analysis)')
     parser.add_argument('--html', action='store_true', help='Generate HTML output')
     parser.add_argument('--output-dir', help='Output directory')
+    parser.add_argument('--extract-only', action='store_true', help='Only extract graph from text, skip HTML')
     
     args = parser.parse_args()
     
     # Validate input file
-    if not os.path.exists(args.json_file):
-        print(f"❌ ERROR: File not found: {args.json_file}")
+    if not os.path.exists(args.input_file):
+        print(f"❌ ERROR: File not found: {args.input_file}")
         sys.exit(1)
     
     # Set working directory  
     os.chdir('/home/brian/projects/process_tracing')
     
     try:
-        print(f"📁 Loading graph from: {args.json_file}")
+        # Detect input type: text or JSON
+        input_path = Path(args.input_file)
         
-        # Import and call load_graph (we know this works)
+        # Determine if input is text or JSON
+        is_json_file = False
+        try:
+            with open(args.input_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+                # Try to parse as JSON - if it works, it's JSON
+                import json
+                json.loads(content)
+                is_json_file = True
+                print(f"📁 Detected JSON input: {args.input_file}")
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            print(f"📄 Detected text input: {args.input_file}")
+        
+        json_file_path = None
+        
+        # Phase 1: Extract graph from text if needed
+        if not is_json_file:
+            print(f"🔄 EXTRACTION PHASE: Converting text to JSON graph...")
+            json_file_path = extract_graph_from_text(args.input_file, args.output_dir)
+            print(f"✅ Graph extracted to: {json_file_path}")
+            
+            if args.extract_only:
+                print(f"🎯 Extraction complete - stopping per --extract-only flag")
+                return
+        else:
+            json_file_path = args.input_file
+        
+        # Phase 2: Load graph for analysis (we know this works)
+        print(f"📁 Loading graph from: {json_file_path}")
         from core.analyze import load_graph
         start_time = time.time()
         
-        G, data = load_graph(args.json_file)
+        G, data = load_graph(json_file_path)
         load_duration = time.time() - start_time
         
         print(f"✅ Graph loaded successfully in {load_duration:.2f}s")
@@ -63,7 +93,7 @@ def main():
                 # Try to import the HTML generation functions that might work
                 from core.analyze import generate_html_report
                 
-                output_dir = args.output_dir or os.path.dirname(args.json_file)
+                output_dir = args.output_dir or os.path.dirname(json_file_path)
                 html_file = generate_html_report(G, data, output_dir)
                 
                 print(f"✅ HTML report generated: {html_file}")
@@ -73,8 +103,8 @@ def main():
                 print("   Creating basic HTML report...")
                 
                 # Create a basic HTML report manually
-                output_dir = args.output_dir or os.path.dirname(args.json_file)
-                html_file = create_basic_html_report(G, data, output_dir, args.json_file)
+                output_dir = args.output_dir or os.path.dirname(json_file_path)
+                html_file = create_basic_html_report(G, data, output_dir, json_file_path)
                 
                 print(f"✅ Basic HTML report generated: {html_file}")
             
@@ -211,6 +241,95 @@ def create_basic_html_report(G, data, output_dir, json_file):
         f.write(html_content)
     
     return str(html_filepath)
+
+def extract_graph_from_text(text_file_path, output_dir=None):
+    """Extract process tracing graph from text input using the extraction pipeline"""
+    
+    print(f"[EXTRACTION] Starting graph extraction from: {text_file_path}")
+    
+    # Set output directory
+    if not output_dir:
+        output_dir = "output_data/direct_extraction"
+    
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    
+    # Read input text
+    with open(text_file_path, 'r', encoding='utf-8') as f:
+        input_text = f.read()
+    
+    print(f"[EXTRACTION] Input text size: {len(input_text)} characters")
+    
+    try:
+        # Use the same working extraction approach from the main pipeline
+        from core.structured_extractor import StructuredProcessTracingExtractor
+        
+        print(f"[EXTRACTION] Creating StructuredProcessTracingExtractor...")
+        extractor = StructuredProcessTracingExtractor()
+        
+        print(f"[EXTRACTION] Calling extraction with {len(input_text)} characters...")
+        
+        # Use the same extraction method as the working pipeline
+        result = extractor.extract_graph(input_text, project_name="direct_extraction")
+        
+        print(f"[EXTRACTION] Extraction completed successfully")
+        
+        # Convert to dict format if needed (prefer model_dump over deprecated dict)
+        if hasattr(result, 'model_dump'):
+            graph_data = result.model_dump()
+        elif hasattr(result, 'dict'):
+            graph_data = result.dict()
+        else:
+            # Assume it's already a dict
+            graph_data = result
+        
+        import json
+        
+        # Generate output filename
+        timestamp = time.strftime('%Y%m%d_%H%M%S')
+        json_filename = f"direct_extraction_{timestamp}_graph.json"
+        json_filepath = output_path / json_filename
+        
+        # Extract just the graph portion for load_graph compatibility
+        if 'graph' in graph_data:
+            # StructuredExtractionResult format - extract just the graph
+            graph_only = graph_data['graph']
+        else:
+            # Direct graph format
+            graph_only = graph_data
+            
+        # Save the extracted graph with datetime handling
+        def json_serializer(obj):
+            """JSON serializer for objects not serializable by default json code"""
+            if hasattr(obj, 'isoformat'):
+                return obj.isoformat()
+            raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+            
+        with open(json_filepath, 'w', encoding='utf-8') as f:
+            json.dump(graph_only, f, indent=2, default=json_serializer)
+        
+        print(f"[EXTRACTION] Graph saved to: {json_filepath}")
+        
+        # Basic validation
+        if 'graph' in graph_data:
+            # StructuredExtractionResult format
+            graph_section = graph_data['graph']
+            nodes = graph_section.get('nodes', [])
+            edges = graph_section.get('edges', [])
+        else:
+            # Direct graph format
+            nodes = graph_data.get('nodes', [])
+            edges = graph_data.get('edges', [])
+        
+        print(f"[EXTRACTION] Extracted {len(nodes)} nodes, {len(edges)} edges")
+        
+        return str(json_filepath)
+        
+    except Exception as e:
+        print(f"❌ EXTRACTION FAILED: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 if __name__ == "__main__":
     main()
