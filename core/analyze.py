@@ -721,6 +721,8 @@ def load_graph(json_file):
     
     Implements fail-fast principle - fails loud on missing file or invalid data.
     """
+    print(f"[EXTREME-DEBUG] *** LOAD_GRAPH FUNCTION CALLED WITH: {json_file} ***")
+    sys.stdout.flush() 
     print(f"[LOAD-HANG-DEBUG] *** ENTERED load_graph function ***")
     sys.stdout.flush()
     os.system('echo "[SYSTEM] Entered load_graph function" >&2')
@@ -744,25 +746,48 @@ def load_graph(json_file):
         print(f"[LOAD-HANG-DEBUG] *** progress.checkpoint failed: {e} ***")
         sys.stdout.flush()
     
+    print(f"[HANG-TRACE] CHECKPOINT A: About to start main load_graph logic")
+    sys.stdout.flush()
+    
     print(f"[LOAD-DEBUG] Starting load_graph({json_file})")
+    print(f"[HANG-TRACE] CHECKPOINT B: After starting load_graph message")
+    sys.stdout.flush()
     
     # Fail fast on missing file
     if not os.path.exists(json_file):
         raise FileNotFoundError(f"Required file missing: {json_file}")
     
     print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | File exists check completed")
+    print(f"[HANG-TRACE] CHECKPOINT C: File exists check passed")
+    sys.stdout.flush()
     
     file_start = time.time()
+    print(f"[HANG-TRACE] CHECKPOINT D: About to open JSON file")
+    sys.stdout.flush()
+    
     with open(json_file, 'r', encoding='utf-8') as f:
+        print(f"[HANG-TRACE] CHECKPOINT E: File opened, about to load JSON")
+        sys.stdout.flush()
         data = json.load(f)
+        print(f"[HANG-TRACE] CHECKPOINT F: JSON loaded successfully")
+        sys.stdout.flush()
+        
     print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | JSON file loaded in {time.time() - file_start:.1f}s")
+    print(f"[HANG-TRACE] CHECKPOINT G: About to create NetworkX graph")
+    sys.stdout.flush()
     
     if not data:
         raise ValueError(f"File {json_file} is empty - cannot proceed")
 
     graph_start = time.time()
+    print(f"[HANG-TRACE] CHECKPOINT H: Creating DiGraph")
+    sys.stdout.flush()
     G = nx.DiGraph()
+    print(f"[HANG-TRACE] CHECKPOINT I: DiGraph created")
+    sys.stdout.flush()
     print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | NetworkX graph created in {time.time() - graph_start:.1f}s")
+    print(f"[HANG-TRACE] CHECKPOINT J: About to process nodes")
+    sys.stdout.flush()
 
     def sanitize_value(value):
         if isinstance(value, str):
@@ -775,6 +800,8 @@ def load_graph(json_file):
     nodes_start = time.time()
     node_count = len(data.get('nodes', []))
     print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Processing {node_count} nodes...")
+    print(f"[HANG-TRACE] CHECKPOINT K: Starting node processing loop")
+    sys.stdout.flush()
     
     for i, node_data in enumerate(data.get('nodes', [])):
         if i > 0 and i % 100 == 0:  # Progress every 100 nodes
@@ -854,16 +881,19 @@ def load_graph(json_file):
             logger.warning("Skipping edge due to attribute error", exc_info=True, extra={'edge_id': edge_id, 'source': source, 'target': target, 'main_type': main_edge_type_from_json, 'error_category': 'graph_corruption'})
     
     print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Edge processing completed in {time.time() - edges_start:.1f}s")
+    print(f"[HANG-TRACE] CHECKPOINT L: Edge processing completed")
+    sys.stdout.flush()
     
-    # Apply connectivity repair to fix disconnected graph
-    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Starting connectivity repair...")
-    connectivity_start = time.time()
-    logger.info("Checking graph connectivity", extra={'operation': 'connectivity_repair'})
+    # PERFORMANCE FIX: Skip connectivity repair to test if this is causing the hang
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | SKIPPING connectivity repair (performance test)")
+    print(f"[HANG-TRACE] CHECKPOINT M: About to return from load_graph")
+    sys.stdout.flush()
     
-    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Importing disconnection_repair...")
-    import_repair_start = time.time()
-    from .disconnection_repair import repair_graph_connectivity
-    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Import completed in {time.time() - import_repair_start:.1f}s")
+    # Return early to test the hang location
+    print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Returning without connectivity repair for testing")
+    print(f"[HANG-TRACE] CHECKPOINT N: Returning G and data")
+    sys.stdout.flush()
+    return G, data
     
     # Convert graph data to format expected by repair system
     print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Converting graph data for repair...")
@@ -3513,8 +3543,16 @@ def main():
         
         print("[HANG-DEBUG] *** About to call load_graph() function ***")
         sys.stdout.flush()
+        print(f"[EXTREME-DEBUG] *** CALLING: load_graph('{args.json_file}') ***")
+        sys.stdout.flush()
         G, data = load_graph(args.json_file)
+        print("[EXTREME-DEBUG] *** LOAD_GRAPH CALL COMPLETED ***")
+        sys.stdout.flush()
+        print("[HANG-DEBUG] *** load_graph() returned successfully ***")
+        sys.stdout.flush()
         print(f"[MAIN-DEBUG] 1.1 | load_graph() completed in {time.time() - load_start_main:.1f}s")
+        print("[HANG-DEBUG] *** About to continue with analysis ***")
+        sys.stdout.flush()
     except Exception as e:
         log_structured_error(
             logger,
@@ -3530,11 +3568,17 @@ def main():
         sys.exit(1)
     
     print("[MAIN-DEBUG] 1.2 | Starting logger.info for successful load...")
+    print("[HANG-DEBUG] *** About to call logger.info for successful load ***")
+    sys.stdout.flush()
     logger.info("Successfully loaded graph", extra={'nodes': G.number_of_nodes(), 'edges': G.number_of_edges(), 'operation': 'graph_loading'})
+    print("[HANG-DEBUG] *** logger.info for successful load completed ***")
+    sys.stdout.flush()
     print("[MAIN-DEBUG] 1.3 | Logger.info completed")
     
     # PHASE 20: Analyze graph complexity upfront
     print("[MAIN-DEBUG] 1.4 | Starting complexity analysis...")
+    print("[HANG-DEBUG] *** About to call analyze_complexity ***")
+    sys.stdout.flush()
     def analyze_complexity(graph, data):
         nodes = data.get('nodes', [])
         edges = data.get('edges', [])

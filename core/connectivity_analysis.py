@@ -209,6 +209,13 @@ class DisconnectionDetector:
     def _suggest_condition_connections(self, node: Dict, graph_data: Dict) -> List[Dict]:
         """Suggest connections for Condition nodes."""
         suggestions = []
+        
+        # PERFORMANCE FIX: Skip expensive LLM calls if too many nodes to avoid timeout
+        total_nodes = len(graph_data['nodes'])
+        if total_nodes > 30:
+            print(f"[PERFORMANCE] Skipping LLM-based condition connectivity analysis for {total_nodes} nodes to prevent timeout")
+            return []
+            
         description = node['description'].lower()
         
         # Find mechanisms and events that could be enabled/constrained
@@ -263,6 +270,13 @@ class DisconnectionDetector:
     def _suggest_actor_connections(self, node: Dict, graph_data: Dict) -> List[Dict]:
         """Suggest connections for Actor nodes."""
         suggestions = []
+        
+        # PERFORMANCE FIX: Skip expensive LLM calls if too many nodes to avoid timeout
+        total_nodes = len(graph_data['nodes'])
+        if total_nodes > 30:
+            print(f"[PERFORMANCE] Skipping LLM-based connectivity analysis for {total_nodes} nodes to prevent timeout")
+            return []
+            
         actor_name = node.get('name', '').lower()
         
         # Find events that this actor might initiate
@@ -297,6 +311,13 @@ class DisconnectionDetector:
     def _suggest_event_connections(self, node: Dict, graph_data: Dict) -> List[Dict]:
         """Suggest connections for Event nodes."""
         suggestions = []
+        
+        # PERFORMANCE FIX: Skip expensive LLM calls if too many nodes to avoid timeout  
+        total_nodes = len(graph_data['nodes'])
+        if total_nodes > 30:
+            print(f"[PERFORMANCE] Skipping LLM-based event connectivity analysis for {total_nodes} nodes to prevent timeout")
+            return []
+            
         event_desc = node['description'].lower()
         
         # Look for causal relationships
@@ -340,6 +361,13 @@ class DisconnectionDetector:
     def _suggest_evidence_connections(self, node: Dict, graph_data: Dict) -> List[Dict]:
         """Suggest connections for Evidence nodes."""
         suggestions = []
+        
+        # PERFORMANCE FIX: Skip expensive LLM calls if too many nodes to avoid timeout
+        total_nodes = len(graph_data['nodes'])
+        if total_nodes > 30:
+            print(f"[PERFORMANCE] Skipping LLM-based evidence connectivity analysis for {total_nodes} nodes to prevent timeout")
+            return []
+            
         evidence_desc = node['description'].lower()
         
         # Find hypotheses and events this evidence might support/refute
