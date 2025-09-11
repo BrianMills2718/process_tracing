@@ -61,10 +61,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### OBJECTIVE: Investigate current ontology architecture and document findings without making any changes
 
+⚠️ **CRITICAL: NO CODE MODIFICATIONS ALLOWED**  
+This is an **INVESTIGATION PHASE ONLY**. Do not edit any:
+- `config/ontology_config.json` (ontology definition)
+- `core/*.py` files (system code)
+- Any existing system files
+- **ONLY create documentation in evidence file**
+
 **CRITICAL INVESTIGATION QUESTION**:
 - **Architecture Question**: Is the ontology properly abstracted as dependency injection, or hardcoded throughout the system?
 - **Impact Assessment**: What would be required to improve ontology design for academic process tracing?
 - **Change Scope**: How many system components would be affected by ontology modifications?
+
+**INVESTIGATION PURPOSE**: Document findings to inform future ontology improvement decisions - **NOT to implement changes**.
 
 ## 🔧 INVESTIGATION TASKS
 
@@ -100,11 +109,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Assess coupling vs proper dependency injection
    - Document architectural strengths and weaknesses
 
-**EVIDENCE REQUIREMENTS**:
-- Complete list of ontology definition locations
-- Analysis of hardcoded vs dynamic ontology consumption
-- Assessment of system coupling to ontology structure
-- Architectural recommendations for improvement
+**EVIDENCE DOCUMENTATION**:
+- **CREATE**: `evidence/current/Evidence_Phase24A_OntologyInvestigation.md`
+- **DOCUMENT**: All command outputs with analysis in structured evidence file
+- **INCLUDE**: Complete list of ontology definition locations, hardcoded vs dynamic analysis
+- **PROVIDE**: Architectural recommendations for improvement
+
+⚠️ **REMINDER**: Investigation and documentation ONLY - no code changes
 
 ### TASK 2: Redundant Edge Type Analysis (45 minutes)
 
@@ -131,11 +142,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Evidence that `provides_evidence_for` hypothesis logically implies evidence weighting
    - Identify other redundant relationship patterns
 
-**EVIDENCE REQUIREMENTS**:
-- Complete ontology structure documentation
-- Analysis of all Evidence→Hypothesis edge types
-- Documentation of logical redundancies and dependencies
-- Academic process tracing requirement assessment
+**EVIDENCE DOCUMENTATION**:
+- **DOCUMENT IN**: `evidence/current/Evidence_Phase24A_OntologyInvestigation.md`
+- **INCLUDE**: Complete ontology structure analysis with command outputs
+- **ANALYZE**: All Evidence→Hypothesis edge types with logical redundancy assessment
+- **ASSESS**: Academic process tracing alignment with current ontology
+
+⚠️ **REMINDER**: Analysis and documentation ONLY - no ontology changes
 
 ### TASK 3: System Impact Assessment (45 minutes)
 
@@ -164,11 +177,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Migration requirements for existing data
    - Testing and validation requirements
 
-**EVIDENCE REQUIREMENTS**:
-- Complete list of ontology-dependent system components
-- Impact assessment for different ontology improvement approaches
-- Risk analysis for ontology modifications
-- Recommendations for implementation strategy
+**EVIDENCE DOCUMENTATION**:
+- **DOCUMENT IN**: `evidence/current/Evidence_Phase24A_OntologyInvestigation.md`
+- **LIST**: All ontology-dependent system components with command evidence
+- **ASSESS**: Impact of different ontology improvement approaches
+- **ANALYZE**: Risk assessment and implementation strategy recommendations
+
+⚠️ **REMINDER**: Impact analysis ONLY - no system modifications
 
 ### TASK 4: Academic Process Tracing Requirements (30 minutes)
 
@@ -192,11 +207,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Implementation of diagnostic test hierarchy
    - Research design integration requirements
 
-**EVIDENCE REQUIREMENTS**:
-- Assessment of current ontology vs academic standards
-- Documentation of missing academic process tracing features
-- Recommendations for academic-grade ontology improvements
-- Implementation priority analysis for academic compliance
+**EVIDENCE DOCUMENTATION**:
+- **DOCUMENT IN**: `evidence/current/Evidence_Phase24A_OntologyInvestigation.md`
+- **ASSESS**: Current ontology vs academic process tracing standards
+- **IDENTIFY**: Missing academic process tracing features
+- **RECOMMEND**: Academic-grade ontology improvements with priority analysis
+
+⚠️ **REMINDER**: Academic assessment ONLY - no ontology modifications
 
 ## 📊 INVESTIGATION SUCCESS CRITERIA
 
@@ -267,14 +284,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📁 Evidence Structure
 
+⚠️ **INVESTIGATION DOCUMENTATION REQUIREMENTS**
+
 Evidence for Phase 24A must be documented in:
 ```
 evidence/
 ├── current/
-│   └── Evidence_Phase24A_OntologyInvestigation.md    # Active development  
+│   └── Evidence_Phase24A_OntologyInvestigation.md    # CREATE THIS FILE
 ├── completed/
 │   └── Evidence_Phase23B_HTMLGeneration.md         # Archived
 ```
+
+**EVIDENCE FILE INSTRUCTIONS**:
+- **CREATE**: `evidence/current/Evidence_Phase24A_OntologyInvestigation.md` if it doesn't exist
+- **FORMAT**: Structured markdown with command outputs and analysis
+- **CONTENT**: All investigation findings with raw evidence
+- **PURPOSE**: Document findings for future ontology improvement decisions
 
 **REQUIRED EVIDENCE FOR PHASE 24A**:
 - Complete list of ontology definition locations and their relationships
