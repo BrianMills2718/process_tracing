@@ -38,214 +38,179 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 23B - HTML Generation Pipeline Restoration (Updated 2025-01-09)
+## 🎯 CURRENT STATUS: Phase 24A - Ontology Architecture Investigation (Updated 2025-01-11)
 
-**System Status**: **📊 DATA INTEGRITY RESOLVED - HTML GENERATION BROKEN**  
-**Latest Achievement**: **Phase 23A Complete - Zero data loss achieved in extraction pipeline**  
-**Current Priority**: **Restore rich HTML generation with network visualizations from working graph data**
+**System Status**: **🎉 HTML GENERATION RESTORED - ONTOLOGY ARCHITECTURE INVESTIGATION**  
+**Latest Achievement**: **Phase 23B Complete - Rich HTML generation pipeline with interactive network visualizations**  
+**Current Priority**: **Investigate ontology architecture to address redundant edge relationships discovered in network visualization**
 
-**PHASE 23A COMPLETION RESULTS**:
-- ✅ **Zero Data Loss**: NetworkX edge collapsing issue resolved (MultiDiGraph + unique keys)
-- ✅ **100% Data Integrity**: French Revolution (31 edges), American Revolution (39 edges), Westminster Debate (31 edges) - all preserve complete data
-- ✅ **Investigation Framework**: Raw LLM response capture, systematic debugging tools created
-- ✅ **Evidence Documentation**: Complete root cause analysis with reproducible validation
-- ❌ **HTML Generation**: Only basic tables generated, rich network visualizations missing
+**PHASE 23B COMPLETION RESULTS**:
+- ✅ **Rich HTML Generation**: Interactive vis.js network graphs with professional Bootstrap styling
+- ✅ **Van Evera Analytics**: Evidence-hypothesis analysis, causal chains, hypothesis support scoring
+- ✅ **Interactive Features**: Search, filtering, clickable nodes/edges with detailed information panels
+- ✅ **Complete Pipeline**: TEXT → JSON → Rich HTML working end-to-end without hanging issues
+- ✅ **Cross-Input Validation**: French Revolution (43 nodes/42 edges), American Revolution (40 nodes/38 edges), Westminster Debate (33 nodes/29 edges)
 
-**CURRENT HTML GENERATION PROBLEM**:
-- **Issue**: `from core.analyze import generate_html_report` fails due to hanging analysis module
-- **Impact**: Users get basic HTML tables instead of interactive network graphs and advanced analytics
-- **Root Cause**: HTML generation functions trapped in hanging `core.analyze` module
-- **User Impact**: No network visualizations, limited analytical insights, poor user experience
+**DISCOVERED ONTOLOGY ARCHITECTURE ISSUE**:
+- **Problem**: Network visualization reveals redundant edge relationships between Evidence and Hypothesis nodes
+- **Specific Case**: Single evidence node connected to hypothesis via 3 separate edges: `provides_evidence_for`, `updates_probability`, `weighs_evidence`
+- **Impact**: Logically redundant relationships - if evidence provides evidence for hypothesis, it automatically should update probability and contribute to weight
+- **Root Cause**: Ontology contains overlapping edge types without clear semantic distinctions or logical dependencies
 
-## 🔧 PHASE 23B: HTML Generation Pipeline Restoration
+## 🔧 PHASE 24A: Ontology Architecture Investigation
 
-### OBJECTIVE: Extract and restore rich HTML generation capabilities without fixing the hanging analysis issue
+### OBJECTIVE: Investigate current ontology architecture and document findings without making any changes
 
-**CRITICAL HTML GENERATION PROBLEM**:
-```
-🌐 Generating HTML report...
-⚠️  HTML generation functions not available    # ← Rich visualization lost
-   Creating basic HTML report...                # ← Fallback to tables only
-✅ Basic HTML report generated: [path]         # ← No network graphs
-```
+**CRITICAL INVESTIGATION QUESTION**:
+- **Architecture Question**: Is the ontology properly abstracted as dependency injection, or hardcoded throughout the system?
+- **Impact Assessment**: What would be required to improve ontology design for academic process tracing?
+- **Change Scope**: How many system components would be affected by ontology modifications?
 
-**AVAILABLE WORKING DATA**:
-- **Complete Graph Data**: NetworkX MultiDiGraph with 100% edge preservation
-- **JSON Structure**: All nodes, edges, properties, relationships intact
-- **Load Pipeline**: `G, data = load_graph(json_file)` works perfectly
-- **Missing Component**: Rich HTML generation with network visualizations
+## 🔧 INVESTIGATION TASKS
 
-## 🔧 HTML RESTORATION TASKS
+### TASK 1: Ontology Architecture Analysis (60 minutes)
 
-### TASK 1: HTML Function Extraction & Analysis (45 minutes)
+**OBJECTIVE**: Determine if ontology is properly abstracted or tightly coupled throughout system
 
-**OBJECTIVE**: Locate and extract HTML generation functions from hanging analysis module
-
-**IMPLEMENTATION STEPS**:
-1. **Locate HTML Generation Code**:
+**INVESTIGATION STEPS**:
+1. **Locate Ontology Definition Sources**:
    ```bash
-   # Find the generate_html_report function
-   grep -n "def generate_html_report" core/analyze.py
-   grep -A 50 "def generate_html_report" core/analyze.py
+   # Find primary ontology definition files
+   find . -name "*ontolog*" -type f
    
-   # Find all HTML-related functions
-   grep -n "html\|HTML" core/analyze.py
-   grep -A 10 "html\|HTML" core/analyze.py
+   # Identify configuration vs code definitions
+   find . -name "*.json" | xargs grep -l "edge_types\|node_types"
    ```
 
-2. **Identify Dependencies**:
+2. **Analyze Dynamic vs Hardcoded Usage**:
    ```bash
-   # Find what generate_html_report imports/uses
-   grep -B 20 "def generate_html_report" core/analyze.py
+   # Check for hardcoded edge type lists in code
+   grep -r "\[.*provides_evidence_for.*\]" --include="*.py" .
    
-   # Look for visualization libraries
-   grep "matplotlib\|plotly\|d3\|vis\|networkx.*draw" core/analyze.py
+   # Look for hardcoded string comparisons
+   grep -r "== ['\"]provides_evidence_for['\"]" --include="*.py" .
+   
+   # Verify if extractors import ontology dynamically
+   grep -A 10 -B 5 "import.*ontology" core/structured_extractor.py
    ```
 
-3. **Extract to Standalone Module**:
-   ```python
-   # Create core/html_generator.py with extracted functions
-   # Copy generate_html_report and all dependencies
-   # Test import without hanging analysis module
-   ```
+3. **Document Current Architecture**:
+   - Map all files that reference ontology
+   - Identify hardcoded vs dynamic ontology usage
+   - Assess coupling vs proper dependency injection
+   - Document architectural strengths and weaknesses
 
 **EVIDENCE REQUIREMENTS**:
-- Location of generate_html_report function in core/analyze.py
-- List of all dependencies and imports required
-- Successful extraction to standalone module
-- Import test without hanging issues
+- Complete list of ontology definition locations
+- Analysis of hardcoded vs dynamic ontology consumption
+- Assessment of system coupling to ontology structure
+- Architectural recommendations for improvement
 
-### TASK 2: Standalone HTML Generator Creation (60 minutes)
+### TASK 2: Redundant Edge Type Analysis (45 minutes)
 
-**OBJECTIVE**: Create working HTML generator that uses our perfect graph data
+**OBJECTIVE**: Document current ontological redundancies and their logical relationships
 
-**IMPLEMENTATION TARGETS**:
-1. **Core HTML Generator Module**:
-   ```python
-   # core/html_generator.py
-   def generate_process_tracing_html(G, data, output_dir):
-       # Network visualization (NetworkX + D3.js/vis.js)
-       # Node/edge statistics and tables
-       # Interactive features
-       # Professional styling
-       return html_file_path
-   ```
-
-2. **Integration with analyze_direct.py**:
-   ```python
-   # Replace the basic HTML fallback
-   from core.html_generator import generate_process_tracing_html
-   
-   html_file = generate_process_tracing_html(G, data, output_dir)
-   ```
-
-3. **Network Visualization Components**:
-   ```python
-   # Generate interactive network graph
-   def create_network_visualization(G):
-       # Use networkx layout algorithms
-       # Export to D3.js/vis.js format
-       # Include node/edge styling based on types
-   ```
-
-**EVIDENCE REQUIREMENTS**:
-- Working core/html_generator.py module
-- Successful integration test with analyze_direct.py
-- Generated HTML with network visualization
-- No hanging or import issues
-
-### TASK 3: Rich Analytics & Visualization Features (45 minutes)
-
-**OBJECTIVE**: Restore advanced analytics and interactive features for process tracing analysis
-
-**SYSTEMATIC IMPLEMENTATION**:
-1. **Network Analysis Features**:
-   ```python
-   # Add advanced NetworkX analytics
-   def analyze_graph_structure(G):
-       # Centrality measures (betweenness, closeness, eigenvector)
-       # Path analysis (shortest paths, connectivity)
-       # Community detection
-       # Node importance ranking
-   ```
-
-2. **Process Tracing Specific Analytics**:
-   ```python
-   # Van Evera methodology analytics
-   def analyze_evidence_strength(G, data):
-       # Evidence type distribution (hoop, smoking gun, etc.)
-       # Hypothesis support analysis
-       # Causal mechanism completeness
-   ```
-
-3. **Interactive HTML Features**:
-   ```python
-   # Enhanced user experience
-   def create_interactive_features():
-       # Clickable nodes/edges with detailed info
-       # Filtering by node/edge types
-       # Search functionality
-       # Export capabilities
-   ```
-
-**EVIDENCE REQUIREMENTS**:
-- Network analysis metrics calculated and displayed
-- Process tracing specific insights included
-- Interactive features working in browser
-- Professional styling and usability
-
-### TASK 4: Integration Testing & Validation (30 minutes)
-
-**OBJECTIVE**: Verify complete HTML generation pipeline works end-to-end
-
-**VALIDATION TESTING**:
-1. **Full Pipeline Test**:
+**INVESTIGATION STEPS**:
+1. **Extract Current Ontology Structure**:
    ```bash
-   # Test complete TEXT → JSON → HTML with rich output
-   python analyze_direct.py input_text/revolutions/french_revolution.txt --extract-only
-   python analyze_direct.py output_data/direct_extraction/[latest].json --html
+   # Read the authoritative ontology definition
+   cat config/ontology_config.json
    
-   # Verify rich HTML generated (not basic fallback)
+   # Focus on problematic edge relationships
+   grep -A 20 "provides_evidence_for\|updates_probability\|weighs_evidence" config/ontology_config.json
    ```
 
-2. **Cross-Input Validation**:
-   ```bash
-   # Test with different inputs
-   python analyze_direct.py input_text/american_revolution/american_revolution.txt --extract-only
-   python analyze_direct.py output_data/direct_extraction/[latest].json --html
-   
-   # Verify consistent rich HTML generation
-   ```
+2. **Analyze Domain/Range Overlaps**:
+   - Document all Evidence→Hypothesis edge types
+   - Identify logical redundancies and dependencies
+   - Map Van Evera diagnostic framework to current edge types
+   - Assess academic process tracing requirements
 
-3. **HTML Quality Assessment**:
-   ```python
-   # Verify HTML contains expected components
-   def validate_html_output(html_file):
-       # Check for network visualization elements
-       # Verify analytics tables present
-       # Confirm interactive features work
-       # Validate professional styling
-   ```
+3. **Document Logical Inconsistencies**:
+   - Evidence that `provides_evidence_for` hypothesis logically implies probability updating
+   - Evidence that `provides_evidence_for` hypothesis logically implies evidence weighting
+   - Identify other redundant relationship patterns
 
 **EVIDENCE REQUIREMENTS**:
-- Complete TEXT → JSON → HTML pipeline with rich output
-- Network visualizations generated for multiple inputs
-- Interactive features confirmed working
-- No fallback to basic HTML tables
+- Complete ontology structure documentation
+- Analysis of all Evidence→Hypothesis edge types
+- Documentation of logical redundancies and dependencies
+- Academic process tracing requirement assessment
 
-## 📊 SUCCESS CRITERIA
+### TASK 3: System Impact Assessment (45 minutes)
 
-### **Technical Success Criteria:**
-1. **HTML Functions Extracted**: generate_html_report successfully isolated from hanging module
-2. **Rich Visualization**: Interactive network graphs generated from perfect graph data
-3. **Analytics Restored**: Advanced NetworkX and process tracing analytics included
-4. **Integration Complete**: analyze_direct.py generates rich HTML without hanging issues
+**OBJECTIVE**: Document what system components would be affected by ontology improvements
 
-### **Functional Success Criteria:**
-1. **Network Visualizations**: Interactive node/edge graphs with professional styling
-2. **Advanced Analytics**: Centrality measures, path analysis, evidence strength assessment
-3. **User Experience**: Clickable elements, filtering, search, professional interface
-4. **Complete Pipeline**: TEXT → JSON → Rich HTML working end-to-end
+**INVESTIGATION STEPS**:
+1. **Identify Ontology Consumers**:
+   ```bash
+   # Find all files that import ontology
+   grep -r "from.*ontology import\|import.*ontology" --include="*.py" .
+   
+   # Find all references to specific edge types
+   grep -r "provides_evidence_for\|updates_probability\|weighs_evidence" --include="*.py" .
+   ```
+
+2. **Analyze Change Impact Scope**:
+   - LLM extraction pipeline dependencies
+   - Graph validation and loading components  
+   - HTML generation analytics dependencies
+   - Existing data file compatibility
+   - Test suite dependencies
+
+3. **Document Change Complexity**:
+   - Files requiring modification for ontology changes
+   - Risk assessment for different change approaches
+   - Migration requirements for existing data
+   - Testing and validation requirements
+
+**EVIDENCE REQUIREMENTS**:
+- Complete list of ontology-dependent system components
+- Impact assessment for different ontology improvement approaches
+- Risk analysis for ontology modifications
+- Recommendations for implementation strategy
+
+### TASK 4: Academic Process Tracing Requirements (30 minutes)
+
+**OBJECTIVE**: Document how current ontology aligns with academic process tracing standards
+
+**INVESTIGATION STEPS**:
+1. **Van Evera Framework Analysis**:
+   - Map current edge types to Van Evera diagnostic tests
+   - Identify missing academic process tracing components
+   - Assess hierarchical vs flat relationship modeling
+
+2. **Academic Standards Compliance**:
+   - George & Bennett methodological requirements
+   - Temporal sequence modeling capabilities
+   - Alternative hypothesis testing framework
+   - Mechanism decomposition support
+
+3. **Improvement Recommendations**:
+   - Academic-grade ontology design principles
+   - Elimination of logical redundancies
+   - Implementation of diagnostic test hierarchy
+   - Research design integration requirements
+
+**EVIDENCE REQUIREMENTS**:
+- Assessment of current ontology vs academic standards
+- Documentation of missing academic process tracing features
+- Recommendations for academic-grade ontology improvements
+- Implementation priority analysis for academic compliance
+
+## 📊 INVESTIGATION SUCCESS CRITERIA
+
+### **Documentation Success Criteria:**
+1. **Architecture Assessment**: Complete analysis of ontology coupling vs dependency injection
+2. **Redundancy Documentation**: Full analysis of logical redundancies in edge relationships
+3. **Impact Analysis**: Comprehensive assessment of change scope and complexity
+4. **Academic Alignment**: Documentation of current vs ideal process tracing ontology
+
+### **Evidence-Based Findings:**
+1. **System Architecture**: Clear documentation of hardcoded vs dynamic ontology usage
+2. **Change Complexity**: Evidence-based assessment of modification requirements
+3. **Academic Gap Analysis**: Documentation of ontology improvements needed for academic standards
+4. **Implementation Strategy**: Recommendations for ontology improvement approach
 
 ---
 
@@ -256,22 +221,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **`core/structured_extractor.py`**: LLM extraction (Phase 23A: enhanced with raw response capture)
 - **`core/analyze.py`**: Contains `load_graph()` (Phase 23A: fixed MultiDiGraph) + hanging `generate_html_report()`
 
-### Critical Files for Phase 23B Implementation
-- **`core/analyze.py`**: Target for HTML function extraction (contains `generate_html_report`)
-- **`analyze_direct.py`**: Integration point for new HTML generator (replace basic fallback)
-- **`core/html_generator.py`**: To be created - standalone HTML generation module
-- **`debug/`**: Contains raw LLM response files for investigation support
+### Critical Files for Phase 24A Investigation
+- **`config/ontology_config.json`**: Authoritative ontology definition (PRIMARY TARGET)
+- **`core/ontology.py`**: Ontology loading and interface module
+- **`core/structured_extractor.py`**: LLM extraction pipeline (ontology consumer)
+- **`core/html_generator.py`**: Van Evera analytics (ontology consumer)
+- **`analyze_direct.py`**: Graph loading and validation (ontology consumer)
 
-### Working Components (Phase 23A Complete)
-- **Graph Loading**: `G, data = load_graph(json_file)` works perfectly with 100% data integrity
-- **NetworkX Graph**: MultiDiGraph with unique edge keys, zero data loss
-- **JSON Structure**: Complete nodes/edges/properties preserved through entire pipeline
-- **Extraction Debug**: Raw LLM response capture and systematic analysis tools
+### Working Components (Phase 23B Complete)
+- **Rich HTML Generation**: `core/html_generator.py` with interactive vis.js network visualizations
+- **Van Evera Analytics**: Evidence-hypothesis analysis revealing ontology redundancies
+- **Complete Pipeline**: TEXT → JSON → Rich HTML working end-to-end
+- **Cross-Input Validation**: Multiple datasets tested with consistent results
 
 ### Runtime Environment
 - **Virtual Environment**: `test_env/` activated with `source test_env/bin/activate`
 - **Test Inputs**: Multiple validated inputs in `input_text/` (French Revolution, American Revolution, Westminster Debate)
-- **Output Structure**: `output_data/direct_extraction/` contains complete graph data ready for rich HTML generation
+- **Output Structure**: `output_data/direct_extraction/` contains rich HTML reports with network visualizations
 
 ---
 
@@ -288,9 +254,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Clear error reporting with actionable information
 
 ### EVIDENCE-BASED DEVELOPMENT
-- All investigation findings must be documented in `evidence/current/Evidence_Phase23A_DataIntegrity.md`
-- Raw logs and response files required for all claims
-- Timeline documentation of all processing steps
+- All investigation findings must be documented in `evidence/current/Evidence_Phase24A_OntologyInvestigation.md`
+- Raw command outputs and analysis results required for all claims
+- Systematic documentation of architectural findings
 
 ### SYSTEMATIC VALIDATION
 - Test each investigation step before proceeding to next
@@ -301,24 +267,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📁 Evidence Structure
 
-Evidence for Phase 23B must be documented in:
+Evidence for Phase 24A must be documented in:
 ```
 evidence/
 ├── current/
-│   └── Evidence_Phase23B_HTMLGeneration.md    # Active development  
+│   └── Evidence_Phase24A_OntologyInvestigation.md    # Active development  
 ├── completed/
-│   └── Evidence_Phase23A_DataIntegrity.md     # Archived
+│   └── Evidence_Phase23B_HTMLGeneration.md         # Archived
 ```
 
-**REQUIRED EVIDENCE FOR PHASE 23B**:
-- Location and extraction of generate_html_report function from core/analyze.py
-- Successful creation of core/html_generator.py without hanging imports
-- Network visualization generation with working graph data
-- Integration test results showing rich HTML output (not basic fallback)
-- Cross-input validation with multiple text sources
-- Interactive feature validation in browser
+**REQUIRED EVIDENCE FOR PHASE 24A**:
+- Complete list of ontology definition locations and their relationships
+- Analysis results showing hardcoded vs dynamic ontology usage patterns
+- Documentation of all Evidence→Hypothesis edge type redundancies
+- Impact assessment of files requiring modification for ontology changes
+- Academic process tracing standards comparison with current ontology
+- Recommendations for ontology architecture improvements
 
-**CRITICAL**: All HTML generation claims must be validated with actual generated files and browser testing evidence.
+**CRITICAL**: All architectural claims must be supported by actual command outputs and code analysis evidence.
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
