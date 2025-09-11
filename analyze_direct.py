@@ -88,18 +88,19 @@ def main():
         if args.html:
             print("🌐 Generating HTML report...")
             
-            # Import HTML generation functions (if they work directly)
+            # Import HTML generation functions from standalone module
             try:
-                # Try to import the HTML generation functions that might work
-                from core.analyze import generate_html_report
+                # Import from the standalone HTML generator module
+                from core.html_generator import generate_html_report
                 
                 output_dir = args.output_dir or os.path.dirname(json_file_path)
-                html_file = generate_html_report(G, data, output_dir)
+                html_file = generate_html_report(G, data, output_dir, json_file_path)
                 
-                print(f"✅ HTML report generated: {html_file}")
+                print(f"✅ Rich HTML report generated: {html_file}")
                 
-            except ImportError:
+            except ImportError as e:
                 print("⚠️  HTML generation functions not available")
+                print(f"   Import error: {e}")
                 print("   Creating basic HTML report...")
                 
                 # Create a basic HTML report manually
