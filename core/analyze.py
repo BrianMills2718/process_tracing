@@ -780,10 +780,10 @@ def load_graph(json_file):
         raise ValueError(f"File {json_file} is empty - cannot proceed")
 
     graph_start = time.time()
-    print(f"[HANG-TRACE] CHECKPOINT H: Creating DiGraph")
+    print(f"[HANG-TRACE] CHECKPOINT H: Creating MultiDiGraph (PHASE 23A FIX)")
     sys.stdout.flush()
-    G = nx.DiGraph()
-    print(f"[HANG-TRACE] CHECKPOINT I: DiGraph created")
+    G = nx.MultiDiGraph()  # PHASE 23A: Fix duplicate edge collapsing issue
+    print(f"[HANG-TRACE] CHECKPOINT I: MultiDiGraph created")
     sys.stdout.flush()
     print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | NetworkX graph created in {time.time() - graph_start:.1f}s")
     print(f"[HANG-TRACE] CHECKPOINT J: About to process nodes")
@@ -841,27 +841,52 @@ def load_graph(json_file):
     edge_count = len(data.get('edges', []))
     print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Processing {edge_count} edges...")
     
+    edges_processed = 0
+    edges_skipped = 0
+    edge_key_counter = {}  # PHASE 23A: Track key usage to ensure uniqueness
+    
     for i, edge_data in enumerate(data.get('edges', [])):
         if i > 0 and i % 100 == 0:  # Progress every 100 edges
             print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Processed {i}/{edge_count} edges")
         
         source = edge_data.get('source') or edge_data.get('source_id')
         target = edge_data.get('target') or edge_data.get('target_id')
-        edge_id = edge_data.get('id', f"{source}_to_{target}_{edge_data.get('type', 'edge')}")
+        
+        # PHASE 23A: Generate unique edge keys to prevent MultiDiGraph collapsing
+        base_edge_id = edge_data.get('id')
+        if not base_edge_id:
+            base_key = f"{source}_to_{target}_{edge_data.get('type', 'edge')}"
+            # Ensure uniqueness by adding counter
+            if base_key in edge_key_counter:
+                edge_key_counter[base_key] += 1
+                edge_id = f"{base_key}_{edge_key_counter[base_key]}"
+            else:
+                edge_key_counter[base_key] = 0
+                edge_id = base_key
+        else:
+            edge_id = base_edge_id
 
         if not source or not target :
+            print(f"[PHASE23A] SKIPPING EDGE: Missing source/target - {edge_data}")
             logger.warning("Skipping edge due to missing 'source' or 'target'", extra={'edge_data_keys': list(edge_data.keys()) if isinstance(edge_data, dict) else 'not_dict'})
+            edges_skipped += 1
             continue
         if not G.has_node(source):
+            print(f"[PHASE23A] SKIPPING EDGE: Source node '{source}' not in graph (edge: {edge_id})")
             logger.warning("Skipping edge because source node not in graph", extra={'edge_id': edge_id, 'source': source, 'graph_node_count': G.number_of_nodes()}) # Show only a few nodes if list is long
+            edges_skipped += 1
             continue
         if not G.has_node(target):
+            print(f"[PHASE23A] SKIPPING EDGE: Target node '{target}' not in graph (edge: {edge_id})")
             logger.warning("Skipping edge because target node not in graph", extra={'edge_id': edge_id, 'target': target, 'graph_node_count': G.number_of_nodes()})
+            edges_skipped += 1
             continue
             
         main_edge_type_from_json = edge_data.get('type')
         if not main_edge_type_from_json:
+            print(f"[PHASE23A] SKIPPING EDGE: Missing main type (edge: {edge_id})")
             logger.warning("Skipping edge due to missing main 'type'", extra={'edge_id': edge_id})
+            edges_skipped += 1
             continue
             
         # Fixed: Use flat structure instead of nested attr_props
@@ -877,9 +902,13 @@ def load_graph(json_file):
             edge_attributes['type'] = str(main_edge_type_from_json)  # Ensure main type is not overwritten
             
             G.add_edge(source, target, key=edge_id, **edge_attributes)
+            edges_processed += 1
         except Exception as e:
+            print(f"[PHASE23A] SKIPPING EDGE: Attribute error (edge: {edge_id}) - {str(e)}")
             logger.warning("Skipping edge due to attribute error", exc_info=True, extra={'edge_id': edge_id, 'source': source, 'target': target, 'main_type': main_edge_type_from_json, 'error_category': 'graph_corruption'})
+            edges_skipped += 1
     
+    print(f"[PHASE23A] EDGE PROCESSING SUMMARY: {edges_processed} processed, {edges_skipped} skipped (of {edge_count} total)")
     print(f"[LOAD-DEBUG] {time.time() - load_start:.1f}s | Edge processing completed in {time.time() - edges_start:.1f}s")
     print(f"[HANG-TRACE] CHECKPOINT L: Edge processing completed")
     sys.stdout.flush()

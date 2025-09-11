@@ -334,10 +334,73 @@ class StructuredProcessTracingExtractor:
             json_content = response.choices[0].message.content
             if json_content:
                 print(f"[DIAGNOSTIC] LLM returned {len(json_content)} characters of JSON")
+                
+                # PHASE 23A: CRITICAL - Save raw LLM response before any processing
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]  # Include milliseconds
+                raw_filepath = f"debug/raw_llm_response_{timestamp}.json"
+                
+                try:
+                    with open(raw_filepath, 'w', encoding='utf-8') as f:
+                        f.write(json_content)
+                    print(f"[DEBUG] Raw LLM response saved to: {raw_filepath}")
+                except Exception as save_error:
+                    print(f"[WARNING] Failed to save raw response: {save_error}")
+                
+                # PHASE 23A: Check raw response for missing nodes
+                try:
+                    import json
+                    raw_data = json.loads(json_content)
+                    raw_nodes = raw_data.get('nodes', [])
+                    raw_edges = raw_data.get('edges', [])
+                    raw_node_ids = {node.get('id', 'NO_ID') for node in raw_nodes}
+                    raw_edge_sources = {edge.get('source_id', 'NO_SOURCE') for edge in raw_edges}
+                    raw_edge_targets = {edge.get('target_id', 'NO_TARGET') for edge in raw_edges}
+                    
+                    print(f"[PHASE23A] RAW LLM RESPONSE: {len(raw_nodes)} nodes, {len(raw_edges)} edges")
+                    
+                    # Check for the specific missing node case
+                    has_evidence_flight = 'evidence_flight_to_varennes_1791' in raw_node_ids
+                    has_event_flight = 'event_flight_to_varennes_1791' in raw_node_ids
+                    print(f"[PHASE23A] evidence_flight_to_varennes_1791 in raw nodes: {has_evidence_flight}")
+                    print(f"[PHASE23A] event_flight_to_varennes_1791 in raw nodes: {has_event_flight}")
+                    
+                    # Check for orphaned edge references
+                    missing_sources = raw_edge_sources - raw_node_ids - {'NO_SOURCE'}
+                    missing_targets = raw_edge_targets - raw_node_ids - {'NO_TARGET'}
+                    if missing_sources or missing_targets:
+                        print(f"[PHASE23A] ORPHANED EDGE SOURCES: {missing_sources}")
+                        print(f"[PHASE23A] ORPHANED EDGE TARGETS: {missing_targets}")
+                    else:
+                        print(f"[PHASE23A] All edge references found in raw nodes - no orphans detected")
+                        
+                except json.JSONDecodeError as e:
+                    print(f"[PHASE23A] WARNING: Could not parse raw JSON for analysis: {e}")
+                
                 print(f"[DIAGNOSTIC] Starting JSON cleaning and validation...")
                 
                 # Clean and parse the JSON response
                 cleaned_response = self._clean_json_response(json_content)
+                
+                # PHASE 23A: Check cleaned response for node loss
+                try:
+                    cleaned_data = json.loads(cleaned_response)
+                    cleaned_nodes = cleaned_data.get('nodes', [])
+                    cleaned_edges = cleaned_data.get('edges', [])
+                    cleaned_node_ids = {node.get('id', 'NO_ID') for node in cleaned_nodes}
+                    
+                    print(f"[PHASE23A] CLEANED RESPONSE: {len(cleaned_nodes)} nodes, {len(cleaned_edges)} edges")
+                    
+                    # Check if cleaning removed any nodes
+                    if len(cleaned_nodes) != len(raw_nodes):
+                        print(f"[PHASE23A] WARNING: Cleaning removed {len(raw_nodes) - len(cleaned_nodes)} nodes!")
+                        lost_nodes = raw_node_ids - cleaned_node_ids
+                        print(f"[PHASE23A] NODES LOST IN CLEANING: {lost_nodes}")
+                    else:
+                        print(f"[PHASE23A] No nodes lost during cleaning phase")
+                        
+                except json.JSONDecodeError as e:
+                    print(f"[PHASE23A] WARNING: Could not parse cleaned JSON for comparison: {e}")
+                
                 print(f"[DIAGNOSTIC] JSON cleaned, starting Pydantic validation...")
                 
                 validation_start = time.time()
@@ -345,7 +408,23 @@ class StructuredProcessTracingExtractor:
                 validation_duration = time.time() - validation_start
                 
                 print(f"[DIAGNOSTIC] Pydantic validation completed in {validation_duration:.2f} seconds")
-                print(f"[DIAGNOSTIC] Graph extracted: {len(result.nodes)} nodes, {len(result.edges)} edges")
+                print(f"[PHASE23A] FINAL RESULT: {len(result.nodes)} nodes, {len(result.edges)} edges")
+                
+                # PHASE 23A: Check final result for node loss
+                final_node_ids = {node.id for node in result.nodes}
+                final_edge_sources = {edge.source_id for edge in result.edges}
+                final_edge_targets = {edge.target_id for edge in result.edges}
+                
+                print(f"[PHASE23A] evidence_flight_to_varennes_1791 in final nodes: {'evidence_flight_to_varennes_1791' in final_node_ids}")
+                
+                # Check for final orphaned edges
+                final_missing_sources = final_edge_sources - final_node_ids
+                final_missing_targets = final_edge_targets - final_node_ids
+                if final_missing_sources or final_missing_targets:
+                    print(f"[PHASE23A] FINAL ORPHANED EDGE SOURCES: {final_missing_sources}")
+                    print(f"[PHASE23A] FINAL ORPHANED EDGE TARGETS: {final_missing_targets}")
+                else:
+                    print(f"[PHASE23A] All final edges have valid node references")
                 
                 return result
             else:

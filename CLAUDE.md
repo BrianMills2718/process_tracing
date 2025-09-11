@@ -38,419 +38,264 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 22A - Complete TEXT → JSON → HTML Pipeline Integration (Updated 2025-09-10)
+## 🎯 CURRENT STATUS: Phase 23A - Data Integrity Investigation & Resolution (Updated 2025-01-09)
 
-**System Status**: **🔧 PHASE 22A IN PROGRESS - CORE FUNCTIONALITY PROVEN, INTEGRATION NEEDED**  
-**Latest Achievement**: **Systematic investigation identified root cause and created working HTML generation solution**  
-**Current Priority**: **Complete TEXT → JSON → HTML pipeline integration using direct entry point approach**
+**System Status**: **📊 FUNCTIONAL PIPELINE WITH DATA QUALITY ISSUES**  
+**Latest Achievement**: **Phase 22A Complete - Full TEXT → JSON → HTML pipeline operational**  
+**Current Priority**: **Investigate and resolve node/edge consistency issues in extraction pipeline**
 
-**SYSTEMATIC INVESTIGATION RESULTS**:
-- ✅ **Root Cause Identified**: Hang occurs in `python -m core.analyze` execution context, NOT in code logic
-- ✅ **Core Functions Validated**: load_graph(), HTML generation, post-load operations all work perfectly (0.00s execution)
-- ✅ **Comprehensive Testing**: 7 systematic tests confirm all functionality works when called directly
-- ✅ **Working HTML Generation**: Successfully created 3,890-byte HTML report from JSON data
-- ✅ **Alternative Entry Point**: analyze_direct.py bypasses problematic module execution context
+**PHASE 22A COMPLETION RESULTS**:
+- ✅ **Complete Pipeline**: TEXT → JSON → HTML fully functional
+- ✅ **Performance Validated**: French Revolution (52,160 chars) → 37 nodes, 34 edges → HTML (3min extraction, <1s analysis)
+- ✅ **Direct Entry Point**: Successfully bypasses hanging analysis module
+- ✅ **Professional HTML Output**: Statistics, tables, formatted reports generated
+- ❌ **Data Quality Issue**: 3/34 edges lost due to missing node references
 
-**CURRENT CAPABILITY STATUS**:
-- ✅ **JSON → HTML**: Working perfectly via direct entry point (0.00s execution)
-- ✅ **TEXT → JSON**: Extraction pipeline functional (separate testing confirmed)
-- ❌ **TEXT → JSON → HTML**: Integration between extraction and direct entry point not yet implemented
-- ✅ **Core Architecture**: All underlying functionality proven working
+**DATA INTEGRITY PROBLEM IDENTIFIED**:
+- **Issue**: LLM extraction creates edges referencing `evidence_flight_to_varennes_1791` that doesn't exist in nodes
+- **Impact**: 3 edges dropped during load_graph processing (34 → 29 loaded edges)  
+- **Root Cause**: Unknown - requires systematic investigation
+- **User Impact**: Incomplete relationship data in final HTML reports
 
-## 🔧 PHASE 22A: Complete TEXT → JSON → HTML Pipeline Integration
+## 🔧 PHASE 23A: Systematic Data Integrity Investigation
 
-### OBJECTIVE: Complete integration for full pipeline functionality using direct entry point approach
+### OBJECTIVE: Identify and resolve LLM extraction consistency issues through evidence-based investigation
 
-**TARGET USER REQUEST**: Enable full pipeline processing of `/home/brian/projects/process_tracing/input_text/revolutions/french_revolution.txt` to HTML output
-
-**CURRENT CHALLENGE**: Direct entry point (`analyze_direct.py`) handles JSON → HTML perfectly, but TEXT → JSON integration not yet implemented.
-
-**EVIDENCE-BASED SOLUTION STRATEGY**: Since systematic testing proved all individual components work perfectly, the solution is straightforward integration rather than complex architectural changes.
-
-## 🔧 PHASE 22A IMPLEMENTATION TASKS
-
-### TASK 1: Current State Validation (15 minutes)
-
-**OBJECTIVE**: Test current direct entry point against original user request and identify specific gaps
-
-**VALIDATION TESTS**:
-```bash
-# Test 1: What happens with text input? (Expected: FAIL - only handles JSON)
-python analyze_direct.py /home/brian/projects/process_tracing/input_text/revolutions/french_revolution.txt --html
-
-# Test 2: Confirm JSON → HTML still works (Expected: SUCCESS)
-python analyze_direct.py output_data/revolutions/revolutions_20250910_081813_graph.json --html
-
-# Test 3: Confirm extraction still works independently (Expected: SUCCESS)  
-echo "2" | python process_trace_advanced.py --extract-only
+**CRITICAL DATA QUALITY PROBLEM**:
+```
+[EXTRACTION] Graph extracted: 37 nodes, 34 edges
+[LOAD] Graph loaded successfully: 37 nodes, 29 edges  # ← 5 edges lost
+WARNING: Skipping edge because source node not in graph (3x warnings)
 ```
 
-**DOCUMENTATION REQUIREMENT**: Record exact error messages and identify missing functionality.
+**SPECIFIC CASE IDENTIFIED**:
+- **Missing Node**: `evidence_flight_to_varennes_1791` 
+- **Existing Similar**: `event_flight_to_varennes_1791` (exists)
+- **Lost Edges**: 3 edges with detailed properties and source quotes
+- **Pattern**: Evidence node missing but Event node exists
 
-### TASK 2: Extraction Integration Implementation (30 minutes)
+## 🔧 SYSTEMATIC INVESTIGATION TASKS
 
-**OBJECTIVE**: Add TEXT → JSON capability to direct entry point
+### TASK 1: Raw LLM Response Capture & Analysis (45 minutes)
 
-**TARGET FILE**: `analyze_direct.py`
+**OBJECTIVE**: Determine if issue occurs during LLM generation or post-processing
 
-**IMPLEMENTATION STRATEGY**:
+**IMPLEMENTATION STEPS**:
+1. **Modify StructuredProcessTracingExtractor** to capture raw LLM output:
+   ```python
+   # In core/structured_extractor.py - add logging before any processing
+   def extract_graph(self, text: str, project_name: str = "default") -> StructuredExtractionResult:
+       # Add raw response capture
+       raw_response = self._call_llm(text)  # Whatever the actual LLM call is
+       
+       # CRITICAL: Save raw response before any processing
+       raw_filepath = f"debug/raw_llm_response_{timestamp}.json"
+       with open(raw_filepath, 'w') as f:
+           f.write(raw_response)
+       print(f"[DEBUG] Raw LLM response saved to: {raw_filepath}")
+   ```
+
+2. **Compare raw vs processed output**:
+   ```bash
+   # Test extraction with debug logging
+   python analyze_direct.py input_text/revolutions/french_revolution.txt --extract-only
+   
+   # Analyze the raw response file
+   python -c "
+   import json
+   with open('debug/raw_llm_response_[timestamp].json') as f:
+       raw_data = json.load(f)
+   
+   # Check if evidence_flight_to_varennes_1791 exists in raw response
+   raw_nodes = {node['id'] for node in raw_data.get('nodes', [])}
+   print('Missing node in raw response:', 'evidence_flight_to_varennes_1791' not in raw_nodes)
+   "
+   ```
+
+3. **Map processing pipeline losses**:
+   - Document exactly where nodes disappear (if they do)
+   - Identify which processing step removes nodes
+   - Create timeline of data transformations
+
+**EVIDENCE REQUIREMENTS**:
+- Raw LLM response JSON file
+- Node count at each processing stage
+- Exact location where data loss occurs (if during processing)
+
+### TASK 2: Validation Pipeline Audit (30 minutes)
+
+**OBJECTIVE**: Examine all validation/cleaning steps for node filtering
+
+**INVESTIGATION TARGETS**:
+1. **Pydantic Model Validation**:
+   ```bash
+   # Examine validation rules
+   grep -r "evidence_" core/plugins/van_evera_llm_schemas.py
+   grep -A 10 -B 10 "class.*Node\|class.*Edge" core/plugins/van_evera_llm_schemas.py
+   ```
+
+2. **Processing Functions Audit**:
+   ```bash
+   # Find all functions that might filter/transform nodes
+   grep -r "filter\|remove\|skip" core/structured_extractor.py
+   grep -r "validation\|clean" core/structured_extractor.py
+   ```
+
+3. **JSON Cleaning Steps**:
+   ```bash
+   # Check if there are cleaning steps that might remove nodes
+   grep -A 5 -B 5 "clean.*json\|sanitize" core/structured_extractor.py
+   ```
+
+**EVIDENCE REQUIREMENTS**:
+- List of all validation rules that could affect nodes
+- Documentation of any filtering/cleaning logic
+- Confirmation of processing pipeline integrity
+
+### TASK 3: Reproducibility & Pattern Analysis (30 minutes)
+
+**OBJECTIVE**: Determine if issue is systematic or random
+
+**SYSTEMATIC TESTING**:
+1. **Multiple Runs Same Text**:
+   ```bash
+   # Run extraction 3 times on same input
+   for i in {1..3}; do
+       echo "Run $i:"
+       python analyze_direct.py input_text/revolutions/french_revolution.txt --extract-only
+       # Check if same nodes are missing
+   done
+   ```
+
+2. **Different Input Texts**:
+   ```bash
+   # Test with American Revolution text
+   python analyze_direct.py input_text/american_revolution/american_revolution.txt --extract-only
+   
+   # Check for similar missing evidence nodes pattern
+   ```
+
+3. **Pattern Analysis**:
+   ```python
+   # Create systematic analysis script
+   def analyze_node_edge_consistency(json_file):
+       # Load and check all node/edge references
+       # Return detailed mismatch report
+       # Pattern detection for missing evidence nodes
+   ```
+
+**EVIDENCE REQUIREMENTS**:
+- Consistency report across multiple runs
+- Pattern documentation (is it always evidence nodes?)
+- Scope assessment (how common is this issue?)
+
+### TASK 4: Root Cause Determination & Resolution Strategy (30 minutes)
+
+**OBJECTIVE**: Based on investigation results, determine fix strategy
+
+**DECISION TREE**:
+- **If issue is in raw LLM response**: Focus on prompt engineering fixes
+- **If issue is in processing**: Focus on validation/cleaning pipeline fixes  
+- **If issue is random**: Focus on consistency checking and retry mechanisms
+- **If issue is systematic**: Focus on structural validation improvements
+
+**RESOLUTION IMPLEMENTATION PLACEHOLDER**:
 ```python
-def main():
-    # Add text file detection
-    if args.json_file.endswith('.txt'):
-        print("📝 Text input detected - performing extraction...")
-        json_file = extract_text_to_json(args.json_file)
-        print(f"✅ Extraction completed: {json_file}")
-    else:
-        json_file = args.json_file
-        
-    # Existing JSON → HTML logic (known working)
-    G, data = load_graph(json_file)
-    if args.html:
-        html_file = generate_html_report(G, data)
-```
+# Based on investigation results, implement appropriate fix:
 
-**EXTRACTION FUNCTION OPTIONS**:
-1. **Import extraction functions directly** (preferred)
-2. **Call extraction as subprocess** (fallback if imports hang)
-3. **Copy minimal extraction logic** (last resort)
+# Option A: LLM Prompt Enhancement
+def enhance_extraction_prompt_for_consistency():
+    # Add explicit node/edge consistency requirements to prompt
+    pass
 
-### TASK 3: End-to-End Pipeline Testing (20 minutes)
+# Option B: Processing Pipeline Fix  
+def add_node_edge_validation():
+    # Add validation step that ensures all edge references have corresponding nodes
+    pass
 
-**OBJECTIVE**: Validate complete TEXT → JSON → HTML pipeline using direct entry point
-
-**CRITICAL TEST**:
-```bash
-# The original user request - this MUST work
-python analyze_direct.py /home/brian/projects/process_tracing/input_text/revolutions/french_revolution.txt --html
-# Expected: Complete HTML report generated successfully
-```
-
-**SUCCESS CRITERIA**:
-- [ ] French Revolution text loads without hanging
-- [ ] JSON extraction completes successfully  
-- [ ] HTML report generated with meaningful content
-- [ ] Total execution time under 5 minutes
-- [ ] No ImportError or circular dependency issues
-
-## 📊 SUCCESS CRITERIA FOR PHASE 22A
-
-### **Primary Success Criteria**:
-1. **User Request Fulfilled**: `python analyze_direct.py /home/brian/projects/process_tracing/input_text/revolutions/french_revolution.txt --html` generates working HTML report
-2. **Complete Pipeline**: TEXT → JSON → HTML integration working end-to-end
-3. **Performance**: Pipeline completes without hanging (target: <5 minutes)
-4. **Quality Output**: HTML report contains meaningful French Revolution analysis with node/edge statistics
-
-### **Technical Success Criteria**:
-1. **Text Input Handling**: Direct entry point detects and processes .txt files correctly
-2. **Extraction Integration**: TEXT → JSON conversion working within direct entry point
-3. **Error Handling**: Graceful failure messages for invalid inputs or extraction failures
-4. **Functionality Preservation**: JSON → HTML capability maintained (already proven working)
-
-## 🏗️ POST-PHASE 22A ENHANCEMENTS
-
-After successful TEXT → JSON → HTML integration, consider implementing:
-
-**HTML Feature Parity** (Optional enhancement):
-- Compare direct entry point HTML output with original system HTML features
-- Add advanced visualizations (vis.js network graphs) if needed
-- Integrate Van Evera diagnostic summaries and Bayesian confidence scoring
-
-**Root Cause Resolution** (Optional investigation):
-- Investigate and potentially fix the underlying `python -m core.analyze` hang
-- Determine if the hang can be resolved without workarounds
-
----
-
-## 🏗️ Codebase Structure
-
-### Key Entry Points
-- **`process_trace_advanced.py`**: Original orchestration script - ⚠️ hangs in `python -m core.analyze` execution
-- **`analyze_direct.py`**: **NEW** - Alternative entry point that bypasses hanging execution context - ✅ working for JSON → HTML
-- **`core/extract.py`**: Extraction phase entry point - ✅ fully functional
-- **`core/analyze.py`**: Contains load_graph() and HTML generation functions - ✅ functions work when called directly
-
-### Critical Files for Phase 22A
-- **`analyze_direct.py`**: Target for TEXT → JSON integration (needs text input detection and extraction calling)
-- **`test_deadlock_isolation.py`**: Systematic testing framework proving all components work when called directly
-- **`test_post_load_hang.py`**: Post-load operations testing confirming HTML generation logic is functional
-- **`core/plugins/register_plugins.py`**: Plugin registration system  
-- **`core/plugins/evidence_connector_enhancer.py`**: Problematic plugin triggering circular dependency
-
-### Integration Points  
-- **LLM Interface**: `VanEveraLLMInterface` - ✅ working correctly
-- **Bayesian Models**: `core/bayesian_models.py` - ✅ complete infrastructure
-- **Evidence Processing**: `core/evidence_weighting.py` - ✅ LLM-First compliant
-- **Confidence Calculation**: `core/confidence_calculator.py` - ✅ LLM-First compliant
-
-### Runtime Environment
-- **Virtual Environment**: `test_env/` - ✅ activated with all dependencies  
-- **LLM Access**: Google Generative AI configured and functional
-- **Graph Processing**: NetworkX, matplotlib available
-```python
-# INVESTIGATION: What schemas exist for reliability/credibility?
-grep -A 20 "reliability_score\|credibility" core/plugins/van_evera_llm_schemas.py
-grep -A 10 "class.*Assessment" core/plugins/van_evera_llm_schemas.py
-
-# REQUIRED: Map each use case to existing Pydantic models
-# ComprehensiveEvidenceAnalysis.reliability_score exists ✓
-```
-
-### TASK 2: LLM Interface Integration (45 minutes)
-
-**OBJECTIVE**: Connect to actual VanEveraLLMInterface methods correctly
-
-**SUBTASK 2.1: Evidence Reliability Integration** (15 minutes)
-```python
-# TARGET: _analyze_reliability_indicators() in evidence_weighting.py
-# REPLACE: get_structured_response(prompt, target_schema="reliability_float")
-# WITH: assess_probative_value() OR _get_structured_response(prompt, ComprehensiveEvidenceAnalysis)
-
-# IMPLEMENTATION TEMPLATE:
-def _analyze_reliability_indicators(self, reasoning: str, justification: str) -> float:
-    from .plugins.van_evera_llm_interface import VanEveraLLMInterface
-    from .llm_required import LLMRequiredError
-    
-    try:
-        llm_interface = VanEveraLLMInterface()
-        
-        # METHOD 1: Use existing assess_probative_value
-        response = llm_interface.assess_probative_value(
-            evidence_description=f"Reasoning: {reasoning}. Justification: {justification}",
-            hypothesis_description="Evidence reliability assessment context",
-            context="Assessing evidence reliability for Bayesian weighting"
-        )
-        return response.reliability_score  # ComprehensiveEvidenceAnalysis has this field
-        
-        # METHOD 2: If above fails, use _get_structured_response
-        # response = llm_interface._get_structured_response(prompt, ComprehensiveEvidenceAnalysis)
-        
-    except Exception as e:
-        raise LLMRequiredError(f"LLM required for reliability assessment: {e}")
-```
-
-**SUBTASK 2.2: Source Credibility Integration** (15 minutes)
-```python
-# Same pattern as reliability but may need different approach
-# ComprehensiveEvidenceAnalysis doesn't have credibility_score
-# May need to use probative_value or evidence_quality as proxy
-```
-
-**SUBTASK 2.3: Plugin Integration Fixes** (15 minutes)  
-```python
-# Research Question Generator - phenomenon classification
-# Use classify_hypothesis_domain() method that exists
-# Alternative Hypothesis Generator - use assess_probative_value()
-```
-
-### TASK 3: Comprehensive Testing Strategy (60 minutes)
-
-**OBJECTIVE**: Validate all conversions work at runtime
-
-**SUBTASK 3.1: Unit Testing** (20 minutes)
-```python
-# Create test_llm_integration_fixed.py
-def test_reliability_assessment_actual():
-    """Test reliability assessment with real LLM interface"""
-    quantifier = EvidenceStrengthQuantifier()
-    
-    # Test with actual reasoning/justification
-    score = quantifier._analyze_reliability_indicators(
-        "Multiple verified sources confirm timeline", 
-        "Academic peer-reviewed analysis with institutional backing"
-    )
-    
-    assert 0.0 <= score <= 1.0
-    print(f"✅ Reliability score: {score}")
-
-def test_import_resolution():
-    """Test all imports work"""
-    from core.evidence_weighting import EvidenceStrengthQuantifier
-    from core.confidence_calculator import ConfidenceLevel
-    print("✅ All imports successful")
-```
-
-**SUBTASK 3.2: Integration Testing** (20 minutes)
-```python
-def test_american_revolution_pipeline():
-    """Test extraction still works with fixes"""
-    # Run process_trace_advanced.py --extract-only
-    # Verify 31 nodes, 30 edges still produced
-    # Ensure no import/interface errors
-```
-
-**SUBTASK 3.3: Validation Framework** (20 minutes)
-```bash
-# Comprehensive compliance check
-grep -r "if.*in.*text" core/ | wc -l  # Should be 0
-grep -r "positive_indicators" core/ | wc -l  # Should be 0
-grep -r "get_structured_response" core/ | wc -l  # Should be 0
-python -c "from core.confidence_calculator import ConfidenceLevel; ConfidenceLevel.from_score(0.75)" # Should raise LLMRequiredError
-```
-
-### TASK 4: Runtime Validation (45 minutes)
-
-**OBJECTIVE**: Prove all conversions work in practice
-
-**SUBTASK 4.1: End-to-End Pipeline Test** (20 minutes)
-```bash
-# Test American Revolution extraction with fixes
-echo "1" | python process_trace_advanced.py --extract-only
-# Should complete without LLM interface errors
-
-# Monitor for specific error patterns:
-# - ImportError: BayesianEvidence
-# - AttributeError: get_structured_response  
-# - AttributeError: reliability_score/credibility_score
-```
-
-**SUBTASK 4.2: Evidence Processing Test** (15 minutes)
-```python
-def test_evidence_assessment_integration():
-    """Test EvidenceAssessment → EvidenceWeights pipeline"""
-    from core.evidence_weighting import EvidenceStrengthQuantifier
-    from core.structured_models import EvidenceAssessment
-    
-    # Create test evidence assessment
-    assessment = EvidenceAssessment(
-        evidence_id="test_evidence",
-        reasoning_for_type="Multiple verified sources document this event",
-        justification_for_likelihoods="Academic historians confirm timeline through primary sources",
-        suggested_numerical_probative_value=0.8
-    )
-    
-    quantifier = EvidenceStrengthQuantifier()
-    weights = quantifier.quantify_llm_assessment(assessment)
-    
-    print(f"✅ Evidence weights generated: {weights.combined_weight}")
-```
-
-**SUBTASK 4.3: Success Criteria Validation** (10 minutes)
-```bash
-# Final validation checklist
-echo "FINAL VALIDATION CHECKLIST:"
-echo "1. Zero keyword logic patterns:"
-grep -r "if.*in.*text" core/ || echo "✅ PASSED"
-
-echo "2. Zero hardcoded thresholds:"
-grep -r "Fallback to default" core/ || echo "✅ PASSED"
-
-echo "3. LLM interface integration:"
-python -c "
-from core.evidence_weighting import EvidenceStrengthQuantifier
-q = EvidenceStrengthQuantifier()
-# Test would call _analyze_reliability_indicators here
-print('✅ LLM interface accessible')
-"
-
-echo "4. American Revolution regression:"
-# Should have successfully extracted 31 nodes, 30 edges
-echo "✅ Pipeline functional (if previous test passed)"
+# Option C: Automatic Healing
+def create_missing_nodes_automatically():
+    # Generate missing evidence nodes based on edge requirements
+    pass
 ```
 
 ## 📊 SUCCESS CRITERIA
 
 ### **Technical Success Criteria:**
-1. **Zero Import Errors**: All modules import without `NameError` or `ImportError`
-2. **Zero Method Errors**: LLM interface calls use correct method names and parameters
-3. **Zero Response Errors**: LLM response parsing handles actual response attributes  
-4. **Runtime Execution**: All converted functions execute without crashes
+1. **Root Cause Identified**: Clear determination of where/why nodes disappear
+2. **Zero Data Loss**: All extracted edges successfully load into NetworkX graph
+3. **Validation Framework**: Systematic detection of node/edge inconsistencies
+4. **Reproducible Quality**: Multiple runs produce consistent, complete results
 
 ### **Functional Success Criteria:**
-1. **Zero keyword-based logic** in semantic analysis functions (already achieved ✅)
-2. **Zero hardcoded probative values** or confidence thresholds (already achieved ✅)
-3. **All LLM failures** result in LLMRequiredError (already achieved ✅)
-4. **LLM interface integration** works correctly at runtime
-
-### **Validation Success Criteria:**
-1. **American Revolution extraction** completes successfully (31 nodes, 30 edges)
-2. **Evidence processing pipeline** executes without LLM interface errors
-3. **Quality improvements** demonstrable through semantic vs. keyword comparison
-4. **Performance impact** measured and documented
-
-## 🎯 POST-COMPLETION OPTIMIZATION OPPORTUNITIES
-
-After successful runtime integration, consider implementing user's batching insight:
-
-**Current State**: Individual LLM calls for each evidence-reliability/credibility assessment  
-**Optimization Target**: Batch multiple assessments in single LLM calls  
-**Expected Impact**: Significant performance improvement while maintaining semantic quality
-
-**Implementation Strategy**:
-```python
-def assess_multiple_evidence_reliability(evidence_list):
-    """Single LLM call to assess reliability of multiple evidence items"""
-    # Batch processing for efficiency
-    # Maintain individual reliability scores
-    # Preserve semantic analysis quality
-```
+1. **Complete Edge Loading**: 34 extracted edges → 34 loaded edges (no loss)
+2. **Consistent Extraction**: Multiple runs produce equivalent graph structures
+3. **Quality Monitoring**: Automated detection and reporting of data integrity issues
+4. **User Experience**: Professional HTML reports with complete relationship data
 
 ---
 
 ## 🏗️ Codebase Structure
 
 ### Key Entry Points
-- **`process_trace_advanced.py`**: Main orchestration script with project selection and pipeline management
-- **`core/extract.py`**: Extraction phase entry point - working correctly (extraction successful)
-- **`core/analyze.py`**: Analysis phase entry point - times out but imports successfully
+- **`analyze_direct.py`**: Main TEXT → JSON → HTML pipeline (Phase 22A achievement)
+- **`core/structured_extractor.py`**: LLM extraction interface requiring investigation
+- **`core/plugins/van_evera_llm_schemas.py`**: Pydantic models for validation rules
 
-### Critical Files for Phase 21B
-- **`core/evidence_weighting.py`**: Contains broken LLM interface calls requiring fix (lines 142-179, 186-221)
-- **`core/confidence_calculator.py`**: Already fixed - requires LLM thresholds (✅ completed)
-- **`core/plugins/van_evera_llm_interface.py`**: Target interface with correct methods
-- **`core/plugins/van_evera_llm_schemas.py`**: Contains Pydantic models for structured responses
-
-### Critical Integration Points
-- **LLM Interface**: `VanEveraLLMInterface` class with methods like `assess_probative_value()`
-- **LLM Schemas**: `ComprehensiveEvidenceAnalysis` model has `reliability_score` field  
-- **Error Handling**: `core/llm_required.py` with `LLMRequiredError` (already integrated ✅)
+### Critical Files for Phase 23A Investigation
+- **`core/structured_extractor.py`**: Target for raw LLM response capture and processing audit
+- **Output location**: `output_data/direct_extraction/` contains problematic JSON files
+- **Debug location**: `debug/` directory for raw LLM response logging (to be created)
 
 ### Runtime Environment
 - **Virtual Environment**: `test_env/` activated with `source test_env/bin/activate`
-- **Dependencies**: All required packages installed and functional
-- **LLM Access**: Universal LLM kit configured for Gemini/GPT integration
+- **Test Input**: `/home/brian/projects/process_tracing/input_text/revolutions/french_revolution.txt`
+- **Working Pipeline**: `analyze_direct.py` fully functional for testing
+
+---
 
 ## 📋 Coding Philosophy
 
-### NO LAZY IMPLEMENTATIONS  
-- Every function must be fully executable at runtime
-- No placeholder code, mocking, or temporary stubs
-- Test imports and method calls before claiming success
+### NO LAZY IMPLEMENTATIONS
+- Every investigation step must produce concrete evidence files
+- No assumptions or speculation - only data-driven conclusions
+- Raw execution logs required for all claims
 
-### FAIL-FAST PRINCIPLES
-- All LLM failures must raise `LLMRequiredError` (already implemented ✅)
-- Surface import and interface errors immediately
-- No silent failures or degraded functionality
+### FAIL-FAST PRINCIPLES  
+- Surface data integrity issues immediately
+- No silent data loss tolerance
+- Clear error reporting with actionable information
 
 ### EVIDENCE-BASED DEVELOPMENT
-- All claims require raw execution evidence
-- Test actual LLM interface calls, not theoretical implementations
-- Document runtime behavior, not conceptual correctness
+- All investigation findings must be documented in `evidence/current/Evidence_Phase23A_DataIntegrity.md`
+- Raw logs and response files required for all claims
+- Timeline documentation of all processing steps
 
 ### SYSTEMATIC VALIDATION
-- Test each fix before proceeding to next
-- Validate imports work before testing interface calls
-- Prove pipeline compatibility after each change
+- Test each investigation step before proceeding to next
+- Validate raw response capture before analyzing processing pipeline
+- Prove reproducibility before implementing fixes
 
 ---
 
 ## 📁 Evidence Structure
 
-Evidence for Phase 21B must be documented in:
+Evidence for Phase 23A must be documented in:
 ```
 evidence/
 ├── current/
-│   └── Evidence_Phase21B_LLMIntegrationFix.md
+│   └── Evidence_Phase23A_DataIntegrity.md
 ```
 
 **REQUIRED EVIDENCE**:
-- Raw import test outputs (`python -c "from core.evidence_weighting import EvidenceStrengthQuantifier"`)
-- Actual LLM interface method signatures and available schemas
-- Runtime test results for each fixed function
-- American Revolution extraction logs confirming pipeline compatibility
-- Before/after performance measurements
+- Raw LLM response JSON files with timestamps
+- Node count tracking through all processing stages  
+- Reproducibility test results across multiple runs
+- Exact identification of data loss location in pipeline
+- Processing pipeline audit findings
+- Pattern analysis results (systematic vs random occurrence)
 
-**CRITICAL**: No success claims without demonstrable runtime execution evidence.
+**CRITICAL**: No resolution implementation without definitive root cause identification supported by raw evidence files.
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
