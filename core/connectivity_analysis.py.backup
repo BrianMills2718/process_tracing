@@ -9,24 +9,18 @@ import networkx as nx
 from typing import Dict, List, Tuple, Set
 from collections import defaultdict
 import json
-from .ontology_manager import ontology_manager
 
 
 class DisconnectionDetector:
     """Detects disconnected nodes and components in process tracing graphs."""
     
     def __init__(self):
-        # Use OntologyManager to get connection requirements dynamically
-        self.connection_requirements = self._build_connection_requirements()
-    
-    def _build_connection_requirements(self):
-        """Build connection requirements from ontology."""
-        return {
-            'Condition': ontology_manager.get_edges_by_domain('Condition'),
-            'Actor': ontology_manager.get_edges_by_domain('Actor'),
-            'Event': ontology_manager.get_edges_by_domain('Event'),
-            'Evidence': ontology_manager.get_edges_by_domain('Evidence'),
-            'Data_Source': ontology_manager.get_edges_by_domain('Data_Source')
+        self.connection_requirements = {
+            'Condition': ['enables', 'constrains'],
+            'Actor': ['initiates'],
+            'Event': ['causes', 'part_of_mechanism', 'confirms_occurrence'],
+            'Evidence': ['supports', 'refutes', 'tests_hypothesis'],
+            'Data_Source': ['provides_evidence']
         }
     
     def analyze_graph(self, graph_data: Dict) -> Dict:
@@ -379,18 +373,14 @@ class DisconnectionDetector:
         # Find hypotheses and events this evidence might support/refute
         for target_node in graph_data['nodes']:
             if target_node['type'] in ['Hypothesis', 'Event', 'Causal_Mechanism']:
-                # Get appropriate edge types for Evidence -> target relationships
-                possible_edges = ontology_manager.get_edge_types_for_relationship('Evidence', target_node['type'])
-                if possible_edges:
-                    # Use the first valid edge type (could be enhanced with logic to pick best one)
-                    edge_type = possible_edges[0]
-                    suggestions.append({
-                        'target_id': target_node['id'],
-                        'target_type': target_node['type'],
-                        'edge_type': edge_type,
-                        'reasoning': f"Evidence may {edge_type.replace('_', ' ')} {target_node['type'].lower()}",
-                        'confidence': 0.4
-                    })
+                # Suggest support relationships
+                suggestions.append({
+                    'target_id': target_node['id'],
+                    'target_type': target_node['type'],
+                    'edge_type': 'supports',
+                    'reasoning': f"Evidence may support {target_node['type'].lower()}",
+                    'confidence': 0.4
+                })
         
         return suggestions
 

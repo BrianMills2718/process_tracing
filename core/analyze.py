@@ -1184,7 +1184,10 @@ def calculate_mechanism_completeness_van_evera(G, mechanism_id, causes, effects)
             # Check if evidence tests this mechanism
             if G.has_edge(node_id, mechanism_id):
                 edge_data = G.get_edge_data(node_id, mechanism_id)
-                if edge_data and edge_data.get('type') in ['tests_mechanism', 'supports']:
+                # Use dynamic ontology to get Evidence->Mechanism edge types
+                mechanism_edge_types = ontology_manager.get_edge_types_for_relationship('Evidence', 'Causal_Mechanism')
+                supportive_types = ['tests_mechanism'] + [t for t in mechanism_edge_types if 'support' in t or 'test' in t]
+                if edge_data and edge_data.get('type') in supportive_types:
                     evidence_support += 10
     
     if evidence_support > 0:

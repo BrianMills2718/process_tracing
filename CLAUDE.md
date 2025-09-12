@@ -38,236 +38,235 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 25A Complete - Architectural Refactoring Successfully Implemented (Updated 2025-01-11)
+## 🎯 CURRENT STATUS: Phase 25C - Complete Systematic Migration (Updated 2025-01-11)
 
-**System Status**: **✅ REFACTORING COMPLETE - System Operational with Dynamic Ontology Lookups**  
-**Latest Achievement**: **Phase 25A Complete - OntologyManager abstraction layer implemented, all critical modules migrated**  
-**Next Priority**: **Ready for ontology consolidation or other improvements as needed**
+**System Status**: **🔧 SYSTEMATIC MIGRATION - COMPREHENSIVE CLEANUP REQUIRED**  
+**Latest Achievement**: **Phase 25B Partial Complete - OntologyManager + 3 critical files migrated**  
+**Current Priority**: **Complete systematic migration of remaining 25+ files with hardcoded edge type patterns**
 
-**PHASE 24A INVESTIGATION RESULTS**:
-- ✅ **Architecture Assessment**: Hybrid system with poor abstraction - 23 files have hardcoded edge type dependencies
-- ✅ **Redundancy Analysis**: 5 redundant Evidence→Hypothesis edge types violating Van Evera academic standards
-- ✅ **Impact Analysis**: High-risk system-wide changes affecting LLM extraction, graph loading, HTML generation
-- ✅ **Academic Gaps**: Missing temporal modeling, alternative hypothesis framework, unified evidence assessment
+**PHASE 25B RESULTS** (Evidence-validated 2025-01-11):
+- ✅ **OntologyManager Created**: Centralized dynamic ontology abstraction layer with 22 passing tests
+- ✅ **Infrastructure Complete**: Migration tools, test helpers, systematic tracking created
+- ✅ **Critical Files Started**: 3 core system files successfully migrated and validated
+- ⚠️ **Incomplete Migration**: 16 hardcoded patterns remain in core/, 109 patterns total across codebase
+- ⚠️ **Residual Cleanup**: "Previously migrated" files still contain hardcoded patterns requiring cleanup
 
-**EXECUTIVE DECISIONS** (User-approved):
-- **NO backwards compatibility required** - clean break approach
-- **Downtime acceptable** - aggressive refactoring permitted
-- **Migration approach**: Create migration tools for existing data files
-- **Testing strategy**: Comprehensive test coverage before deployment
+**DISCOVERED REALITY** (Double-check validation):
+- **Migration Status**: 11% complete (3 new files migrated, not 7+ as initially claimed)
+- **Core Files**: 16 hardcoded patterns remain in critical system components
+- **Total Patterns**: 109 hardcoded patterns across entire codebase (down from 120+)
+- **Architecture Success**: Dynamic ontology system works correctly, foundation established
 
-## ✅ PHASE 25A COMPLETE: Aggressive Architectural Refactoring
+## 🔧 PHASE 25C: Complete Systematic Migration
 
-### ACHIEVEMENTS: Successfully implemented architectural refactoring
+### OBJECTIVE: Migrate ALL remaining hardcoded edge type references (25+ files with 109 patterns)
 
-**COMPLETED DELIVERABLES**:
-- ✅ **OntologyManager abstraction layer** - Centralized ontology query system (core/ontology_manager.py)
-- ✅ **Module migration** - 8 critical modules migrated to dynamic lookups
-- ✅ **Data migration tool** - Comprehensive migration utility (tools/migrate_ontology.py)
-- ✅ **Test coverage** - 22 unit tests with 100% coverage for OntologyManager
-- ✅ **System validation** - End-to-end pipeline tested and operational
+⚠️ **CRITICAL CONTEXT**: 
+- **Phase 25B Foundation**: OntologyManager working, 3 files properly migrated, tools created
+- **Reality Check**: Previous claims of "100% critical files migrated" were inaccurate
+- **Current State**: 16 patterns in core/, 93 patterns in test/documentation files
+- **Migration Approach**: Evidence-based systematic cleanup with comprehensive validation
 
-## 🔧 IMPLEMENTATION TASKS
+## 📋 IMPLEMENTATION TASKS
 
-### TASK 1: Create OntologyManager Abstraction Layer (Priority 1)
+⚠️ **EVIDENCE-BASED APPROACH REQUIRED**: All work must be validated with grep commands and documented in evidence files.
 
-**OBJECTIVE**: Build centralized ontology query and validation system
+### PHASE 1: Comprehensive Audit (4 hours estimated)
 
-**IMPLEMENTATION STEPS**:
-
-1. **Create `core/ontology_manager.py`**:
-```python
-# core/ontology_manager.py
-from typing import List, Dict, Set, Optional, Tuple
-from core.ontology import NODE_TYPES, EDGE_TYPES
-
-class OntologyManager:
-    """Centralized ontology query and validation system."""
-    
-    def __init__(self):
-        self.node_types = NODE_TYPES
-        self.edge_types = EDGE_TYPES
-        self._build_lookup_tables()
-    
-    def _build_lookup_tables(self):
-        """Build efficient lookup tables for ontology queries."""
-        # Build domain/range lookup tables
-        self.edge_by_domain = {}
-        self.edge_by_range = {}
-        self.edge_by_pair = {}
-        
-        for edge_type, config in self.edge_types.items():
-            domains = config.get('domain', [])
-            ranges = config.get('range', [])
-            
-            for domain in domains:
-                if domain not in self.edge_by_domain:
-                    self.edge_by_domain[domain] = set()
-                self.edge_by_domain[domain].add(edge_type)
-                
-                for range_type in ranges:
-                    pair = (domain, range_type)
-                    if pair not in self.edge_by_pair:
-                        self.edge_by_pair[pair] = set()
-                    self.edge_by_pair[pair].add(edge_type)
-    
-    def get_edge_types_for_relationship(self, source_type: str, target_type: str) -> List[str]:
-        """Returns valid edge types for given node type pair."""
-        return list(self.edge_by_pair.get((source_type, target_type), []))
-    
-    def get_evidence_hypothesis_edges(self) -> List[str]:
-        """Returns all edge types that connect Evidence to Hypothesis."""
-        return self.get_edge_types_for_relationship('Evidence', 'Hypothesis')
-    
-    def get_van_evera_edges(self) -> List[str]:
-        """Returns edge types relevant to Van Evera diagnostic tests."""
-        # Currently returns Evidence→Hypothesis edges with diagnostic properties
-        van_evera_edges = []
-        for edge_type in self.get_evidence_hypothesis_edges():
-            properties = self.edge_types[edge_type].get('properties', {})
-            if 'diagnostic_type' in properties or 'probative_value' in properties:
-                van_evera_edges.append(edge_type)
-        return van_evera_edges
-    
-    def validate_edge(self, edge: dict) -> Tuple[bool, Optional[str]]:
-        """Validates edge against ontology constraints.
-        Returns (is_valid, error_message)."""
-        edge_type = edge.get('type')
-        if edge_type not in self.edge_types:
-            return False, f"Unknown edge type: {edge_type}"
-        
-        # Further validation logic here
-        return True, None
-    
-    def get_edge_properties(self, edge_type: str) -> dict:
-        """Returns required/optional properties for edge type."""
-        if edge_type not in self.edge_types:
-            return {}
-        return self.edge_types[edge_type].get('properties', {})
-
-# Global singleton instance
-ontology_manager = OntologyManager()
+**TASK 1A: Complete Pattern Discovery**
+```bash
+# Execute these commands to get current accurate state:
+grep -r "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" --include="*.py" . | grep -v test_env
+grep -r "edge.*type.*in \[" --include="*.py" .
+grep -r "edge\['type'\].*==" --include="*.py" .
 ```
 
-2. **Create comprehensive tests**:
+**TASK 1B: Categorize by Risk Level**
+- **P0 Critical**: Core execution path files (core/*.py main modules)
+- **P1 High**: Plugin system files (core/plugins/*.py)
+- **P2 Medium**: Test files that affect system validation
+- **P3 Low**: Documentation and example files
+
+**TASK 1C: Residual Cleanup Assessment**
+Files marked as "already migrated" but containing patterns:
+- `core/disconnection_repair.py`: 14 hardcoded patterns (semantic)
+- `core/van_evera_testing_engine.py`: 1 residual pattern
+- `core/analyze.py`: 1 residual pattern
+- `core/streaming_html.py`: 1 residual pattern
+
+**DELIVERABLE**: Updated `tools/migration_inventory.py` with accurate current state
+
+### PHASE 2: Residual Cleanup in "Migrated" Files (3 hours estimated)
+
+**OBJECTIVE**: Clean up hardcoded patterns remaining in files marked as "already migrated"
+
+**APPROACH**: These files likely contain semantic patterns that are appropriate vs actual hardcoded edge types that need migration.
+
+**TASK 2A: Analyze Residual Patterns**
+```bash
+# Check each "migrated" file for remaining patterns:
+grep -n "'supports'\|'tests_hypothesis'\|'provides_evidence_for'" core/disconnection_repair.py
+grep -n "'supports'\|'tests_hypothesis'\|'provides_evidence_for'" core/van_evera_testing_engine.py
+grep -n "'supports'\|'tests_hypothesis'\|'provides_evidence_for'" core/analyze.py
+grep -n "'supports'\|'tests_hypothesis'\|'provides_evidence_for'" core/streaming_html.py
+```
+
+**TASK 2B: Determine Action Needed**
+- **Semantic patterns**: Language processing logic (KEEP)
+- **Edge type logic**: Hardcoded edge type lists/checks (MIGRATE)
+- **Comments/strings**: Documentation references (KEEP)
+- **Test data**: Hardcoded test values (KEEP if test-specific)
+
+**TASK 2C: Apply Targeted Migrations**
+Only migrate actual hardcoded edge type logic, preserve appropriate semantic patterns.
+
+### PHASE 3: Systematic New File Migration (6 hours estimated)
+
+**OBJECTIVE**: Migrate files that have never been properly migrated to OntologyManager
+
+**COMPLETED INFRASTRUCTURE**: 
+- ✅ `tests/ontology_test_helpers.py` - Helper module for test files (created Phase 25B)
+- ✅ `tools/migration_inventory.py` - Systematic tracking (created Phase 25B)
+- ✅ Migration patterns established and tested
+
+**TASK 3A: Priority-Based Migration Sequence**
+1. **P0 Critical (Main Execution Path)**:
+   - Files that directly affect core system functionality
+   - Must be migrated first to ensure system stability
+
+2. **P1 High (Analysis Modules)**:
+   - Plugin system files
+   - Analysis and processing modules
+
+3. **P2 Medium (Test Files)**:
+   - Use `tests/ontology_test_helpers.py` for systematic migration
+   - Focus on tests that validate core functionality
+
+4. **P3 Low (Documentation)**:
+   - Example files and documentation
+   - Can be migrated incrementally
+
+**TASK 3B: Migration Execution Pattern**
+
+**FOR EACH FILE**:
+1. **Pre-Migration Validation**:
+```bash
+# Grep patterns in specific file
+grep -n "'supports'\|'tests_hypothesis'\|'provides_evidence_for'" FILENAME.py
+```
+
+2. **Apply Standard Migration Pattern**:
 ```python
-# tests/test_ontology_manager.py
-import pytest
+# Add import
 from core.ontology_manager import ontology_manager
 
-def test_get_evidence_hypothesis_edges():
-    edges = ontology_manager.get_evidence_hypothesis_edges()
-    assert 'tests_hypothesis' in edges
-    assert 'provides_evidence_for' in edges
-    
-def test_backwards_compatibility():
-    # Ensure old hardcoded lists match new dynamic queries
-    old_list = ['supports', 'provides_evidence_for']  # From codebase
-    new_edges = ontology_manager.get_evidence_hypothesis_edges()
-    for edge in old_list:
-        assert edge in new_edges, f"Lost edge type: {edge}"
-```
-
-**EVIDENCE DOCUMENTATION**:
-- **CREATE**: `evidence/current/Evidence_Phase25A_Refactoring.md`
-- **DOCUMENT**: Implementation progress with test results
-- **TRACK**: Each module migration with before/after comparisons
-
-### TASK 2: Migrate Low-Risk Modules First (Priority 2)
-
-**OBJECTIVE**: Replace hardcoded edge type lists in non-critical modules
-
-**MIGRATION ORDER** (Low → High Risk):
-1. Test files in `tests/` directory
-2. Plugin modules in `core/plugins/`
-3. Utility modules (`core/streaming_html.py`)
-4. Analysis modules (`core/van_evera_testing_engine.py`)
-
-**MIGRATION PATTERN**:
-```python
-# BEFORE (hardcoded)
-if edge_type in ['supports', 'provides_evidence_for']:
+# Replace hardcoded lists with dynamic calls
+# BEFORE:
+if edge_type in ['supports', 'tests_hypothesis']:
     process_edge()
 
-# AFTER (dynamic)
-from core.ontology_manager import ontology_manager
-
+# AFTER:
 if edge_type in ontology_manager.get_evidence_hypothesis_edges():
     process_edge()
 ```
 
-**VALIDATION STEPS**:
-1. Run existing tests after each migration
-2. Compare outputs before/after migration
-3. Document any behavioral changes
+3. **Post-Migration Validation**:
+```bash
+# Verify patterns eliminated
+grep -n "'supports'\|'tests_hypothesis'\|'provides_evidence_for'" FILENAME.py
+# Should return no matches (or only semantic patterns)
 
-### TASK 3: Migrate Critical Path Modules (Priority 3)
-
-**OBJECTIVE**: Replace hardcoded dependencies in critical system paths
-
-**CRITICAL MODULES**:
-1. `core/html_generator.py` - Visualization logic
-2. `core/disconnection_repair.py` - Graph repair system
-3. `core/structured_extractor.py` - LLM extraction pipeline
-4. `core/extract.py` - Core extraction logic
-5. `core/analyze.py` - Analysis pipeline
-
-**SPECIAL CONSIDERATIONS**:
-- Create parallel execution paths initially
-- Add extensive logging for debugging
-- Prepare rollback scripts if needed
-
-### TASK 4: Create Data Migration Tools (Priority 4)
-
-**OBJECTIVE**: Build tools to migrate existing JSON files if ontology changes
-
-**IMPLEMENTATION**:
-```python
-# tools/migrate_ontology.py
-import json
-import os
-from typing import Dict, Any
-
-def migrate_edge_types(graph_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Migrate edge types in graph data to new ontology."""
-    # Map old edge types to new consolidated types
-    edge_mapping = {
-        'provides_evidence_for': 'tests_hypothesis',
-        'updates_probability': 'tests_hypothesis',
-        'weighs_evidence': 'tests_hypothesis',
-        'supports': 'tests_hypothesis',
-        # Keep tests_hypothesis as is
-    }
-    
-    for edge in graph_data.get('edges', []):
-        old_type = edge.get('type')
-        if old_type in edge_mapping:
-            edge['type'] = edge_mapping[old_type]
-            edge['_original_type'] = old_type  # Preserve for reference
-    
-    return graph_data
-
-def migrate_directory(input_dir: str, output_dir: str):
-    """Migrate all JSON files in directory."""
-    for filename in os.listdir(input_dir):
-        if filename.endswith('.json'):
-            # Process each file
-            pass
+# Test functionality
+python -c "import MODULE; print('Migration successful')"
 ```
 
-## 📊 SUCCESS CRITERIA
+**TASK 3C: Batch Processing**
+Process files in priority order, validating each before proceeding to next.
+
+### PHASE 4: Comprehensive Testing Framework (4 hours estimated)
+
+**TASK 4A: Regression Test Suite**
+```bash
+# Core system functionality
+python -m pytest tests/test_ontology_manager.py -v
+
+# System integration test
+python analyze_direct.py input_text/revolutions/french_revolution.txt
+
+# Plugin system validation
+python -m pytest tests/plugins/ -v
+
+# Cross-domain testing
+python -m pytest tests/test_cross_domain.py -v
+```
+
+**TASK 4B: Performance Validation**
+```bash
+# Benchmark processing time before/after
+time python analyze_direct.py input_text/revolutions/french_revolution.txt
+# Compare with baseline from Phase 25B
+```
+
+**TASK 4C: Pattern Elimination Verification**
+```bash
+# Final verification - should return 0 matches
+grep -r "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" --include="*.py" . | grep -v test_env | grep -v "# semantic pattern" | wc -l
+```
+
+### PHASE 5: Final Validation & Documentation (2 hours estimated)
+
+**TASK 5A: System-Wide Validation**
+```bash
+# Complete system test across all inputs
+for input_file in input_text/*/*.txt; do
+    echo "Testing: $input_file"
+    python analyze_direct.py "$input_file"
+    if [ $? -ne 0 ]; then
+        echo "FAILED: $input_file"
+        exit 1
+    fi
+done
+```
+
+**TASK 5B: Final Evidence Documentation**
+Create `evidence/current/Evidence_Phase25C_Complete.md` with:
+- Total patterns eliminated (should be 109 → 0)
+- All files migrated with before/after comparisons
+- Complete test results
+- Performance impact analysis
+- Architecture improvements achieved
+
+## 📊 SUCCESS CRITERIA FOR PHASE 25C
 
 ### **Implementation Success Metrics:**
-1. **100% Test Coverage**: All new OntologyManager methods tested
-2. **Zero Hardcoded References**: All 23 files migrated to dynamic lookups
-3. **Performance Maintained**: No degradation >10% in processing speed
-4. **Migration Complete**: All existing JSON files can be migrated
+1. **Zero Hardcoded Patterns**: `grep` commands return 0 matches for edge type patterns
+2. **100% File Migration**: All 25+ identified files successfully migrated
+3. **System Functionality**: All test inputs process successfully
+4. **Performance Maintained**: <10% degradation from Phase 25B baseline
+5. **Test Coverage**: All existing tests pass, OntologyManager tests maintain 22/22
 
-### **Validation Requirements:**
-1. **Regression Tests**: All existing tests must pass
-2. **Output Comparison**: Outputs match pre-refactoring baselines
-3. **Performance Tests**: Benchmark comparisons documented
-4. **Integration Tests**: End-to-end pipeline validation
+### **Evidence Requirements:**
+1. **Before/After Grep Counts**: Document pattern reduction (109 → 0)
+2. **File-by-File Migration**: Every migration documented with test results
+3. **System Integration**: Full pipeline tests with multiple inputs
+4. **Performance Benchmarks**: Execution time comparisons
+
+### **Evidence Documentation Structure:**
+```
+evidence/current/
+├── Evidence_Phase25C_Audit.md           # Comprehensive audit results
+├── Evidence_Phase25C_ResidualCleanup.md # Cleanup of "migrated" files
+├── Evidence_Phase25C_SystematicMigration.md # New file migrations
+├── Evidence_Phase25C_Testing.md         # Comprehensive test results
+└── Evidence_Phase25C_Complete.md        # Final validation & summary
+```
+
+**REQUIRED EVIDENCE CONTENT**:
+- **Grep Results**: Raw output showing pattern counts before/after
+- **Migration Details**: Specific lines changed in each file
+- **Test Validation**: Command executed + raw output for each migration
+- **Performance Data**: Execution time comparisons
+- **Integration Tests**: Full pipeline results with multiple inputs
 
 ---
 
@@ -278,12 +277,12 @@ def migrate_directory(input_dir: str, output_dir: str):
 - **`core/structured_extractor.py`**: LLM extraction (Phase 23A: enhanced with raw response capture)
 - **`core/analyze.py`**: Contains `load_graph()` (Phase 23A: fixed MultiDiGraph) + hanging `generate_html_report()`
 
-### Critical Files for Phase 25A Refactoring
-- **`core/ontology_manager.py`**: NEW - Centralized ontology abstraction layer (CREATE THIS)
-- **`core/ontology.py`**: Existing ontology loader (will be wrapped by manager)
-- **23 files with hardcoded dependencies**: All require migration to dynamic lookups
-- **`config/ontology_config.json`**: Authoritative ontology definition (DO NOT MODIFY YET)
-- **`tools/migrate_ontology.py`**: NEW - Data migration tools (CREATE THIS)
+### Critical Files Status (Phase 25C)
+- **`core/ontology_manager.py`**: ✅ COMPLETE - 22 passing tests, fully functional
+- **`tests/ontology_test_helpers.py`**: ✅ COMPLETE - Centralized test migration helper
+- **`tools/migration_inventory.py`**: ✅ COMPLETE - Systematic migration tracking
+- **25+ files with hardcoded patterns**: ⚠️ REQUIRES MIGRATION - 109 patterns remaining
+- **`config/ontology_config.json`**: ✅ STABLE - Authoritative ontology definition
 
 ### Working Components (Phase 24A Investigation Complete)
 - **Rich HTML Generation**: `core/html_generator.py` with interactive vis.js network visualizations
@@ -311,9 +310,10 @@ def migrate_directory(input_dir: str, output_dir: str):
 - Clear error reporting with actionable information
 
 ### EVIDENCE-BASED DEVELOPMENT
-- All implementation progress must be documented in `evidence/current/Evidence_Phase25A_Refactoring.md`
-- Include test results and performance metrics
+- All implementation progress must be documented in `evidence/current/Evidence_Phase25C_*.md` files
+- Include raw grep results showing pattern elimination
 - Document each module migration with before/after analysis
+- Validate all claims with command-line evidence
 
 ### SYSTEMATIC VALIDATION
 - Run regression tests after each module migration
@@ -324,33 +324,80 @@ def migrate_directory(input_dir: str, output_dir: str):
 
 ## 📁 Evidence Structure
 
-⚠️ **REFACTORING DOCUMENTATION REQUIREMENTS**
+⚠️ **PHASE 25C DOCUMENTATION REQUIREMENTS**
 
-Evidence for Phase 25A must be documented in:
+Evidence for Phase 25C must be documented in:
 ```
 evidence/
 ├── current/
-│   └── Evidence_Phase25A_Refactoring.md           # CREATE THIS FILE
+│   ├── Evidence_Phase25C_Audit.md           # Complete audit & pattern discovery
+│   ├── Evidence_Phase25C_ResidualCleanup.md # "Migrated" file cleanup
+│   ├── Evidence_Phase25C_SystematicMigration.md # New file migrations
+│   ├── Evidence_Phase25C_Testing.md         # Comprehensive testing
+│   └── Evidence_Phase25C_Complete.md        # Final validation
 ├── completed/
-│   ├── Evidence_Phase24A_OntologyInvestigation.md # Archived
-│   └── Evidence_Phase23B_HTMLGeneration.md        # Archived
+│   ├── Evidence_Phase25B_ValidationResults.md # Archived - partial completion
+│   └── Evidence_Phase25A_Refactoring.md     # Archived
 ```
 
-**EVIDENCE FILE INSTRUCTIONS**:
-- **CREATE**: `evidence/current/Evidence_Phase25A_Refactoring.md`
-- **FORMAT**: Structured markdown with test results and metrics
-- **CONTENT**: Implementation progress, test outputs, performance benchmarks
-- **PURPOSE**: Track refactoring progress and validate no regressions
+**EVIDENCE FILE REQUIREMENTS**:
+- **RAW SEARCH RESULTS**: Include full grep outputs showing remaining hardcoded patterns
+- **MIGRATION LOGS**: Before/after code snippets for every file changed
+- **TEST OUTPUTS**: Complete test results after each migration
+- **VALIDATION**: Proof that hardcoded patterns are eliminated
 
-**REQUIRED EVIDENCE FOR PHASE 25A**:
-- OntologyManager implementation with test results
-- Module migration tracking (23 files total)
-- Before/after output comparisons for validation
-- Performance benchmarks showing no degradation
-- Regression test results after each migration
-- Data migration tool testing results
+**CRITICAL WARNINGS**:
+- ⚠️ **Do not claim 100% migration without grep validation**
+- ⚠️ **Test every migration immediately - assume nothing works**
+- ⚠️ **Include raw execution logs, not just success claims**
+- ⚠️ **Validate that system still processes test inputs correctly**
 
-**CRITICAL**: Every module migration must be validated with tests before proceeding.
+---
+
+## 🚨 IMMEDIATE NEXT STEPS FOR NEW LLM
+
+### STEP 1: Validate Current System State (FIRST PRIORITY)
+```bash
+cd /home/brian/projects/process_tracing
+source test_env/bin/activate
+
+# Verify OntologyManager functionality
+python -m pytest tests/test_ontology_manager.py -v
+# Expected: 22/22 tests passing
+
+# Verify system integration
+python analyze_direct.py input_text/revolutions/french_revolution.txt
+# Expected: Complete successfully without errors
+```
+
+### STEP 2: Execute Comprehensive Pattern Audit
+```bash
+# Get accurate current state - save ALL output to Evidence_Phase25C_Audit.md
+grep -r "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" --include="*.py" . | grep -v test_env
+# Expected: ~109 matches across 25+ files
+
+grep -r "'supports'\|'tests_hypothesis'\|'provides_evidence_for'" core/ --include="*.py" 
+# Expected: ~16 matches in core files
+```
+
+### STEP 3: Migration Execution Order
+1. **PHASE 1**: Audit & inventory (identify all 109 patterns)
+2. **PHASE 2**: Residual cleanup (fix "migrated" files with remaining patterns)
+3. **PHASE 3**: Systematic migration (process all unmigrated files by priority)
+4. **PHASE 4**: Comprehensive testing (validate all migrations)
+5. **PHASE 5**: Final validation (achieve 0 hardcoded patterns)
+
+### CURRENT INFRASTRUCTURE (Ready to Use):
+- ✅ **OntologyManager**: `core/ontology_manager.py` - 22 passing tests, fully functional
+- ✅ **Test Helpers**: `tests/ontology_test_helpers.py` - Migration support for test files
+- ✅ **Migration Tracking**: `tools/migration_inventory.py` - Systematic progress tracking
+- ✅ **System Validation**: Core pipeline processes inputs successfully
+
+### CRITICAL UNDERSTANDING:
+- **Previous claims of completion were inaccurate** - only 3 files properly migrated in Phase 25B
+- **"Migrated" files still contain patterns** - require residual cleanup analysis
+- **109 total patterns remain** - comprehensive migration still needed
+- **System works correctly** - OntologyManager architecture is sound and functional
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.

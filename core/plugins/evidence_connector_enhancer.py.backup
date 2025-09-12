@@ -7,7 +7,6 @@ import json
 from typing import Dict, List, Any, Tuple
 from .base import ProcessTracingPlugin, PluginValidationError
 from ..llm_required import LLMRequiredError
-from ..ontology_manager import ontology_manager
 # CIRCULAR IMPORT FIX: Import get_semantic_service inside functions instead of module level
 
 
@@ -367,17 +366,10 @@ class EvidenceConnectorEnhancerPlugin(ProcessTracingPlugin):
         # Calculate probative value based on relevance and diagnostic type
         probative_value = self._calculate_probative_value(diagnostic_type)
         
-        # Use OntologyManager to get appropriate edge type
-        evidence_hypothesis_edges = ontology_manager.get_evidence_hypothesis_edges()
-        supportive_edges = [e for e in evidence_hypothesis_edges if 'support' in e or 'provide' in e]
-        
-        # Default to first supportive edge, or tests_hypothesis if no supportive edges
-        edge_type = supportive_edges[0] if supportive_edges else 'tests_hypothesis'
-        
         return {
             'source_id': evidence_node['id'],
             'target_id': hypothesis_id,
-            'type': edge_type,
+            'type': 'supports',
             'properties': {
                 'diagnostic_type': diagnostic_type,
                 'probative_value': probative_value,

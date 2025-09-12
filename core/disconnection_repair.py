@@ -228,10 +228,17 @@ class ConnectionInferenceEngine:
                         )
                         
                         if assessment.probative_value > 0.6:
-                            edges.append(self._create_edge(node_id, target_id, 'supports',
+                            # Use dynamic edge selection for supportive relationships
+                            supportive_edges = [e for e in ontology_manager.get_evidence_hypothesis_edges() 
+                                              if 'support' in e or e == 'tests_hypothesis']
+                            edge_type = supportive_edges[0] if supportive_edges else 'tests_hypothesis'
+                            edges.append(self._create_edge(node_id, target_id, edge_type,
                                                          assessment.reasoning))
                         else:
-                            edges.append(self._create_edge(node_id, target_id, 'provides_evidence_for',
+                            # Use general evidence-hypothesis edge type
+                            evidence_edges = ontology_manager.get_evidence_hypothesis_edges()
+                            edge_type = evidence_edges[0] if evidence_edges else 'tests_hypothesis'
+                            edges.append(self._create_edge(node_id, target_id, edge_type,
                                                          "Evidence relates to hypothesis"))
             
             # Connect evidence to mechanisms
@@ -251,7 +258,10 @@ class ConnectionInferenceEngine:
                         edges.append(self._create_edge(node_id, target_id, 'tests_mechanism',
                                                      assessment.reasoning))
                     else:
-                        edges.append(self._create_edge(node_id, target_id, 'supports',
+                        # Use dynamic edge selection for mechanism relationships
+                        mechanism_edges = ontology_manager.get_edge_types_for_relationship('Evidence', 'Causal_Mechanism')
+                        edge_type = mechanism_edges[0] if mechanism_edges else 'tests_mechanism'
+                        edges.append(self._create_edge(node_id, target_id, edge_type,
                                                      "Evidence relates to mechanism"))
             
             # Connect evidence to events (confirms/disproves occurrence)
@@ -381,18 +391,26 @@ class ConnectionInferenceEngine:
         return compatibility_matrix.get(source_type, {}).get(target_type, 0.3)
     
     def _get_default_edge_type(self, source_type: str, target_type: str) -> str:
-        """Get default edge type for node type combination."""
-        edge_type_matrix = {
+        """Get default edge type for node type combination using dynamic ontology."""
+        # Try to get edge types from ontology first
+        edge_types = ontology_manager.get_edge_types_for_relationship(source_type, target_type)
+        
+        if edge_types:
+            # Return first available edge type from ontology
+            return edge_types[0]
+        
+        # Fallback matrix for combinations not yet in ontology
+        fallback_matrix = {
             'Evidence': {
-                'Hypothesis': 'provides_evidence_for',
-                'Causal_Mechanism': 'supports',
+                'Hypothesis': 'tests_hypothesis',  # Use modern edge type
+                'Causal_Mechanism': 'tests_mechanism',
                 'Event': 'confirms_occurrence',
                 'Alternative_Explanation': 'tests_alternative'
             },
             'Actor': {
                 'Event': 'initiates',
-                'Causal_Mechanism': 'provides_evidence_for',
-                'Hypothesis': 'provides_evidence_for'
+                'Causal_Mechanism': 'tests_mechanism',
+                'Hypothesis': 'tests_hypothesis'
             },
             'Condition': {
                 'Event': 'enables',
@@ -402,7 +420,7 @@ class ConnectionInferenceEngine:
             },
             'Event': {
                 'Causal_Mechanism': 'part_of_mechanism',
-                'Hypothesis': 'provides_evidence_for',
+                'Hypothesis': 'tests_hypothesis',
                 'Event': 'causes'
             },
             'Data_Source': {
@@ -412,7 +430,14 @@ class ConnectionInferenceEngine:
             }
         }
         
-        return edge_type_matrix.get(source_type, {}).get(target_type, 'provides_evidence_for')
+        # Get fallback edge type
+        fallback_edge = fallback_matrix.get(source_type, {}).get(target_type)
+        if fallback_edge:
+            return fallback_edge
+        
+        # Final fallback - use most common edge type from ontology
+        all_edges = ontology_manager.get_all_edge_types()
+        return all_edges[0] if all_edges else 'tests_hypothesis'
     
     def _infer_component_connections(self, component: Dict, graph_data: Dict) -> List[Dict]:
         """Infer connections to link small components to main graph."""
@@ -741,7 +766,7 @@ Output ONLY new edges connecting Evidence to Alternative_Explanations:"""
         elif focus == "data_sources":
             focus_prompt = f"""FOCUSED REPAIR MISSION: Data Source Connections
 
-Priority: Connect Data_Source nodes to their related Evidence using 'weighs_evidence' relationships.
+Priority: Connect Data_Source nodes to their related Evidence using appropriate weighing relationships.
 
 {base_context}
 
@@ -823,11 +848,12 @@ TASK: Based on the original text, identify missing relationships that should con
             if edge_types:
                 valid_combinations[node_pair] = edge_types
             # Handle legacy/alternative names that might not be in ontology yet
-            if node_pair == ('Evidence', 'Alternative_Explanation'):
-                valid_combinations[node_pair] = ['tests_alternative', 'supports_alternative', 'refutes_alternative'],
-            ('Data_Source', 'Hypothesis'): ['weighs_evidence'],
-            ('Data_Source', 'Causal_Mechanism'): ['weighs_evidence'],
-        }
+            if node_pair == ('Evidence', 'Alternative_Explanation') and node_pair not in valid_combinations:
+                valid_combinations[node_pair] = ['tests_alternative', 'supports_alternative', 'refutes_alternative']
+            elif node_pair == ('Data_Source', 'Hypothesis') and node_pair not in valid_combinations:
+                valid_combinations[node_pair] = ['weighs_evidence']
+            elif node_pair == ('Data_Source', 'Causal_Mechanism') and node_pair not in valid_combinations:
+                valid_combinations[node_pair] = ['weighs_evidence']
         
         # Create node type lookup
         node_types = {node['id']: node['type'] for node in graph_data['nodes']}

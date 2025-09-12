@@ -91,9 +91,11 @@ class VanEveraTestingEngine:
         target_is_hypothesis = (target_node and 
                                target_node.get('type') in ['Hypothesis', 'Alternative_Explanation'])
         
-        # Check for evidence relationship types
-        evidence_edge_types = ['provides_evidence_for', 'supports', 'refutes', 'contradicts', 
-                              'challenges', 'undermines', 'confirms']
+        # Check for evidence relationship types using dynamic ontology
+        evidence_edge_types = ontology_manager.get_evidence_hypothesis_edges()
+        # Add additional evidence evaluation types that might not be in basic ontology
+        additional_types = ['challenges', 'undermines', 'confirms']
+        evidence_edge_types.extend([t for t in additional_types if t not in evidence_edge_types])
         
         return (source_is_evidence and target_is_hypothesis and 
                 edge.get('type', '') in evidence_edge_types)
