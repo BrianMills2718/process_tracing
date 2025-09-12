@@ -48,9 +48,11 @@ def test_fixed_graph():
     
     # Test 4: Find evidence-hypothesis links
     print("\n4. EVIDENCE-HYPOTHESIS LINKS TEST:")
+    from core.ontology_manager import ontology_manager
+    evidence_hypothesis_edges = ontology_manager.get_evidence_hypothesis_edges()
     evidence_links = []
     for edge in data['edges']:
-        if edge['type'] in ['supports', 'refutes']:
+        if edge['type'] in evidence_hypothesis_edges:
             evidence_links.append({
                 'evidence': edge['source'],
                 'hypothesis': edge['target'],

@@ -79,7 +79,9 @@ def test_focused_extraction():
             print(f"\nNode type counts: {node_types}")
             
             # Check Evidence-Hypothesis connections
-            evidence_edges = [e for e in graph['edges'] if e['type'] in ['supports', 'refutes']]
+            from core.ontology_manager import ontology_manager
+            evidence_hypothesis_edges = ontology_manager.get_evidence_hypothesis_edges()
+            evidence_edges = [e for e in graph['edges'] if e['type'] in evidence_hypothesis_edges]
             print(f"Evidence-Hypothesis edges: {len(evidence_edges)}")
             for edge in evidence_edges:
                 print(f"  {edge['source']} -[{edge['type']}]-> {edge['target']}")
