@@ -86,12 +86,11 @@ class OntologyMigrator:
                     if 'properties' not in edge:
                         edge['properties'] = {}
                     if 'diagnostic_type' not in edge['properties']:
-                        # Infer diagnostic type based on original edge type using ontology
-                        edge_properties = ontology_manager.get_edge_properties(old_type)
-                        if edge_properties and 'diagnostic_type' in edge_properties:
-                            # Use default diagnostic_type from ontology for this edge type
-                            default_diagnostic = edge_properties['diagnostic_type'].get('default', 'general')
-                            edge['properties']['diagnostic_type'] = default_diagnostic
+                        # Infer diagnostic type based on original edge type
+                        if old_type == 'supports':
+                            edge['properties']['diagnostic_type'] = 'straw_in_wind'
+                        elif old_type == 'provides_evidence_for':
+                            edge['properties']['diagnostic_type'] = 'general'
                         else:
                             edge['properties']['diagnostic_type'] = 'general'
                     
