@@ -38,24 +38,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 25D - Complete Optional Migration (Updated 2025-01-11)
+## 🎯 CURRENT STATUS: Phase 25E - Systematic Hardcoded Edge Type Migration (Updated 2025-01-12)
 
-**System Status**: **✅ CRITICAL PATH COMPLETE - Optional Cleanup Remaining**  
-**Latest Achievement**: **Phase 25C Complete - Core system successfully migrated to dynamic ontology architecture**  
-**Current Priority**: **Complete remaining test/documentation file migrations (non-critical for system operation)**
+**System Status**: **✅ CORE FUNCTIONAL - Systematic Migration Required**  
+**Latest Achievement**: **Phase 25D Partial - 2 problematic patterns migrated, overconfident initial claims corrected**  
+**Current Priority**: **Complete systematic analysis and migration of remaining hardcoded edge type patterns**
 
-**PHASE 25C RESULTS** (Evidence-validated 2025-01-11):
-- ✅ **Critical Path Migration**: 3 core system files fully migrated to OntologyManager dynamic queries
-- ✅ **Architecture Transformation**: All inappropriate hardcoded edge type logic eliminated from critical execution path
-- ✅ **System Validation**: Full pipeline functional (TEXT→JSON→HTML) with comprehensive testing (22/22 OntologyManager tests)
-- ✅ **Pattern Cleanup**: Core patterns reduced 16 → 12 (100% of inappropriate hardcoded logic eliminated)
-- ✅ **Evidence Documentation**: Complete validation with before/after comparisons and system integration testing
+**PHASE 25D RESULTS** (Evidence-validated 2025-01-12):
+- ✅ **Systematic Analysis Initiated**: Comprehensive pattern discovery and classification methodology developed
+- ✅ **Problematic Patterns Migrated**: 2 hardcoded logic patterns converted to dynamic ontology queries
+- ✅ **Analysis Lessons**: Corrected overconfident initial claims through systematic verification
+- ✅ **System Health Maintained**: Complete pipeline functional with 22/22 OntologyManager tests passing
+- ⚠️ **Incomplete Coverage**: Spot-checking revealed need for comprehensive systematic analysis
 
-**ACCURATE STATUS ASSESSMENT** (Double-check validated):
-- **Core System**: All critical hardcoded edge type dependencies eliminated - system now ontology-first
-- **Remaining Work**: 104 patterns across 26 files (mostly appropriate test data, documentation, semantic processing)
-- **System Health**: Complete pipeline operational with no regressions, enhanced with dynamic ontology capabilities
-- **Architecture Foundation**: Robust dynamic ontology system ready for future ontology consolidation improvements
+**CURRENT STATUS ASSESSMENT** (Honest evaluation):
+- **Core System**: Robust dynamic ontology architecture operational (Phase 25C achievement preserved)
+- **Migration Progress**: ~95% complete based on partial analysis, but systematic verification required
+- **Remaining Work**: ~20+ patterns across 25 files require systematic classification and selective migration
+- **Quality Imperative**: Previous overconfident claims highlight need for rigorous systematic approach
 
 ---
 
@@ -67,220 +67,297 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **THE SOLUTION**: Replace hardcoded strings with dynamic queries to centralized OntologyManager.
 
+**CRITICAL DISTINCTION**: Not all patterns containing edge type strings should be migrated:
+- **PROBLEMATIC**: `if edge_type in ['supports', 'refutes']:` (hardcoded logic)
+- **APPROPRIATE**: `{'type': 'supports'}` (test data), `"supports"` (schema), `'supports'` (semantic patterns)
+
 **MIGRATION EXAMPLE**:
 ```python
-# BEFORE (Hardcoded)
+# BEFORE (Hardcoded Logic - PROBLEMATIC)
 if edge_type in ['supports', 'tests_hypothesis', 'provides_evidence_for']:
     process_evidence_hypothesis_relationship()
 
-# AFTER (Dynamic)  
+# AFTER (Dynamic Query - CORRECT)  
+from core.ontology_manager import ontology_manager
 if edge_type in ontology_manager.get_evidence_hypothesis_edges():
     process_evidence_hypothesis_relationship()
 ```
 
-**RESULT**: Ontology changes now automatically propagate throughout system without code modifications.
-
 ---
 
-## 🔧 PHASE 25D: Complete Optional Test & Documentation Migration
+## 🔧 PHASE 25E: Systematic Hardcoded Edge Type Pattern Migration
 
-### OBJECTIVE: Migrate remaining test and documentation files (23 files with ~90 patterns)
+### OBJECTIVE: Complete systematic analysis and migration of all hardcoded edge type patterns
 
-✅ **CRITICAL PATH COMPLETE**: 
-- **Core System**: All inappropriate hardcoded logic eliminated from critical execution path
-- **System Validation**: Full functionality maintained with comprehensive testing (no regressions)
-- **Architecture Foundation**: Robust OntologyManager integration providing dynamic ontology queries
-- **Pattern Status**: Only appropriate test data, documentation examples, and semantic processing patterns remain
+✅ **FOUNDATION ESTABLISHED**: 
+- **Core System**: Robust dynamic ontology architecture operational (Phase 25C)
+- **Partial Migration**: 2 problematic patterns successfully migrated (Phase 25D)
+- **Analysis Framework**: Systematic discovery and classification methodology developed
+- **System Health**: Complete functionality maintained throughout process
 
-⚠️ **REMAINING SCOPE**: Optional cleanup of test files and documentation for consistency (non-critical)
+⚠️ **CRITICAL IMPERATIVE**: Previous analysis revealed overconfident claims - systematic verification essential
 
 ---
 
 ## 📋 IMPLEMENTATION TASKS
 
-✅ **CRITICAL PATH COMPLETE**: Core system migration accomplished. Remaining work is optional consistency improvements.
+**CRITICAL REQUIREMENT**: Systematic approach mandatory after Phase 25D lessons learned. NO shortcuts or confidence without verification.
 
-### PHASE 1: Final Scope Assessment (2 hours estimated)
+### PHASE 1: COMPREHENSIVE PATTERN DISCOVERY (2-3 hours)
 
-**TASK 1A: Categorize Remaining Patterns**
+**TASK 1A: Multi-Strategy Pattern Discovery**
 ```bash
-# Current state: 104 patterns across 26 files
-find . -name "*.py" -exec grep -l "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" {} \; | grep -v test_env | sort
+# Execute comprehensive search using multiple strategies
+# Primary patterns
+grep -r "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" --include="*.py" . | grep -v test_env > patterns_primary.txt
 
-# For each file, classify patterns as:
-# - APPROPRIATE: Test data, documentation, semantic processing (DO NOT MIGRATE)
-# - PROBLEMATIC: Hardcoded logic requiring migration (MIGRATE)
+# Quoted variations
+grep -r '"supports"\|"tests_hypothesis"\|"provides_evidence_for"\|"updates_probability"\|"weighs_evidence"' --include="*.py" . | grep -v test_env > patterns_quoted.txt
+
+# Logic patterns (conditional/assignment)
+grep -r "== 'supports'\|in \[.*'supports.*'\]\|type.*'supports'" --include="*.py" . | grep -v test_env > patterns_logic.txt
+
+# Combine and deduplicate file list
+cat patterns_*.txt | cut -d: -f1 | sort -u > files_containing_patterns.txt
+
+echo "Files found: $(wc -l < files_containing_patterns.txt)"
+echo "Total pattern instances: $(cat patterns_*.txt | wc -l)"
 ```
 
-**KNOWN APPROPRIATE PATTERNS** (Do not migrate):
-- `tests/test_ontology_manager.py`: Test data validating OntologyManager functionality (34 patterns)
-- `tools/migrate_ontology.py`: Migration mapping data (8 patterns) 
-- `core/ontology_manager.py`: Documentation example in docstring (1 pattern)
-- `core/plugins/content_based_diagnostic_classifier.py`: Semantic language processing pattern (1 pattern)
-- `core/disconnection_repair.py`: Semantic patterns and dynamic system fallbacks (appropriate in migrated system)
-
-**TASK 1B: Create Accurate Migration Inventory**
-```python
-# Update tools/migration_inventory.py to focus only on truly problematic patterns
-# Exclude appropriate test data, documentation, and semantic processing patterns
-# Focus on files containing hardcoded logic that should use dynamic ontology queries
-```
-
-**DELIVERABLE**: `evidence/current/Evidence_Phase25D_FinalScope.md` with exact problematic patterns requiring migration
-
-### PHASE 2: Test File Migration (3 hours estimated)  
-
-**OBJECTIVE**: Migrate test files containing problematic hardcoded logic (not test data)
-
-**INFRASTRUCTURE READY**:
-- ✅ `tests/ontology_test_helpers.py`: Helper functions for systematic test file migrations
-- ✅ Migration patterns established and tested in Phase 25C
-- ✅ Validation framework operational with comprehensive testing
-
-**TASK 2A: Identify Test Logic vs Test Data**
+**TASK 1B: File-by-File Context Analysis**
 ```bash
-# Distinguish between:
-# - Test data: Hardcoded values used to test system functionality (KEEP)
-# - Test logic: Code that makes decisions based on hardcoded edge types (MIGRATE)
-
-# Example of test logic requiring migration:
-if edge_type in ['supports', 'tests_hypothesis']:  # This logic should be dynamic
-    validate_evidence_hypothesis_relationship()
+# For each file, document complete context
+while read -r file; do
+    echo "=== ANALYZING: $file ===" >> complete_analysis.md
+    echo "Pattern count: $(grep -c "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" "$file")" >> complete_analysis.md
+    echo "" >> complete_analysis.md
+    grep -n -B3 -A3 "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" "$file" >> complete_analysis.md
+    echo "" >> complete_analysis.md
+done < files_containing_patterns.txt
 ```
 
-**TARGET FILES** (Containing problematic test logic):
-- Test files where code logic depends on hardcoded edge type lists
-- Files where hardcoded checks affect test validation logic
-- Plugin test files with hardcoded edge type validation
+**DELIVERABLE**: `evidence/current/Evidence_Phase25E_Discovery.md` with complete pattern inventory and context analysis
 
-**TASK 2B: Systematic Migration with Test Helper**
-```python
-# Use ontology_test_helpers.py for consistent test migrations
-from tests.ontology_test_helpers import OntologyTestHelper
+### PHASE 2: SYSTEMATIC PATTERN CLASSIFICATION (3-4 hours)
 
-# BEFORE (in test logic)
-if edge_type in ['supports', 'tests_hypothesis']:
-    assert_evidence_relationship()
+**OBJECTIVE**: Classify every pattern instance using rigorous criteria - no assumptions allowed
 
-# AFTER (in test logic)  
-if edge_type in OntologyTestHelper.get_evidence_hypothesis_edges():
-    assert_evidence_relationship()
-```
+**CLASSIFICATION FRAMEWORK**:
 
-**TASK 2C: Validation After Each Migration**
+| Pattern Type | Criteria | Action | Example |
+|--------------|----------|--------|---------|
+| **TEST_DATA** | Creates graph/edge for testing | PRESERVE | `{'type': 'supports'}` |
+| **SCHEMA_CONFIG** | Defines valid values | PRESERVE | `"supports"` in enum |
+| **HARDCODED_LOGIC** | Code behavior depends on string | MIGRATE | `if edge_type == 'supports':` |
+| **DYNAMIC_FALLBACK** | Uses after dynamic query | PRESERVE | `edges[0] if edges else 'supports'` |
+| **DOCUMENTATION** | Comments/docstring examples | PRESERVE | `# Example: 'supports'` |
+| **TEMPLATE_DATA** | LLM extraction templates | PRESERVE | Template for LLM |
+| **VALIDATION_LOGIC** | Checks against hardcoded list | MIGRATE | `if type in ['supports']:` |
+
+**TASK 2A: Pattern-by-Pattern Classification**
 ```bash
-# Test functionality after each file migration
-python -m pytest MIGRATED_FILE.py -v  
-python -c "import MIGRATED_MODULE; print('Import successful')"
+# For each pattern instance, document:
+# 1. File location and line number
+# 2. Surrounding context (5 lines before/after)
+# 3. Classification using framework above
+# 4. Confidence level (HIGH/MEDIUM/LOW)
+# 5. Action required (PRESERVE/MIGRATE/REVIEW)
+
+# Create systematic classification log
+echo "# Pattern Classification Log" > pattern_classification.md
+echo "" >> pattern_classification.md
+
+# Process each pattern with full context documentation
 ```
 
-### PHASE 3: Documentation File Migration (2 hours estimated)
-
-**OBJECTIVE**: Update documentation files containing hardcoded examples that should demonstrate dynamic patterns
-
-**LOW IMPACT SCOPE**: Documentation files where hardcoded examples could mislead developers
-
-**TARGET FILES**:
-- `docs/testing/*.py`: Example files demonstrating hardcoded patterns (should show dynamic patterns)
-- Documentation where hardcoded examples don't reflect current architecture
-
-**TASK 3A: Documentation Pattern Updates**
-```python
-# Update examples to demonstrate current dynamic architecture
-# BEFORE (in documentation example):
-example_edges = ['supports', 'tests_hypothesis']  # Misleading hardcoded example
-
-# AFTER (in documentation example):
-from core.ontology_manager import ontology_manager
-example_edges = ontology_manager.get_evidence_hypothesis_edges()  # Shows current architecture
-```
-
-**TASK 3B: Selective Update Strategy**
-- Update examples that should demonstrate dynamic ontology usage
-- Preserve appropriate test data and semantic processing patterns  
-- Focus on files where hardcoded examples contradict current architecture
-
-### PHASE 4: Final Validation Framework (2 hours estimated)
-
-**TASK 4A: Comprehensive Pattern Analysis**
+**TASK 2B: High-Confidence vs Review-Required**
 ```bash
-# Verify remaining patterns are all appropriate
-grep -r "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" --include="*.py" . | grep -v test_env
+# Separate patterns into confidence buckets:
+# HIGH_CONFIDENCE_PRESERVE: Obvious test data, schema definitions
+# HIGH_CONFIDENCE_MIGRATE: Clear hardcoded logic patterns  
+# REQUIRES_REVIEW: Ambiguous cases needing deeper analysis
 
-# Cross-reference against approved appropriate patterns:
-# - Test data in test_ontology_manager.py (validates OntologyManager functionality)
-# - Migration tool data in migrate_ontology.py (migration mapping data)
-# - Documentation examples in ontology_manager.py (docstring examples)
-# - Semantic processing in content_based_diagnostic_classifier.py (language analysis)
-# - Dynamic system fallbacks in disconnection_repair.py (appropriate in migrated architecture)
+# Only proceed with HIGH_CONFIDENCE patterns initially
+```
+
+### PHASE 3: INCREMENTAL MIGRATION IMPLEMENTATION (2-4 hours)
+
+**OBJECTIVE**: Migrate HIGH_CONFIDENCE_MIGRATE patterns using systematic procedure
+
+**MIGRATION ORDER** (Risk-based approach):
+1. **LOW-RISK**: Documentation files (`docs/testing/*.py`)
+2. **MEDIUM-RISK**: Test logic files (test assertions)
+3. **HIGH-RISK**: Core system files (if any found)
+
+**TASK 3A: Systematic Migration Procedure**
+```bash
+# For each file requiring migration:
+file="path/to/file.py"
+
+# 1. Create backup
+cp "$file" "${file}.backup"
+
+# 2. Document current state
+grep -n "'supports'\|'tests_hypothesis'" "$file" > "${file}.before.txt"
+
+# 3. Perform migration (add import, replace logic)
+# Example migration pattern:
+# BEFORE: if edge_type in ['supports', 'refutes']:
+# AFTER: 
+#   from core.ontology_manager import ontology_manager
+#   evidence_hypothesis_edges = ontology_manager.get_evidence_hypothesis_edges()
+#   if edge_type in evidence_hypothesis_edges:
+
+# 4. Document changes
+grep -n "'supports'\|'tests_hypothesis'" "$file" > "${file}.after.txt"
+diff "${file}.before.txt" "${file}.after.txt" > "${file}.changes.txt"
+
+# 5. Validate import
+python -c "import $(echo $file | sed 's/\//./g' | sed 's/.py//'); print('✅ Import OK')" || echo "❌ Import FAILED"
+
+# 6. Run tests if applicable
+if [[ $file == tests/* ]]; then
+    python -m pytest "$file" -v
+fi
+```
+
+**TASK 3B: Migration Validation Requirements**
+```bash
+# After each migration, verify:
+# 1. File imports successfully
+# 2. No syntax errors introduced  
+# 3. Relevant tests still pass
+# 4. Pattern count reduced appropriately
+# 5. System integration maintained
+```
+
+### PHASE 4: COMPREHENSIVE SYSTEM VALIDATION (2-3 hours)
+
+**OBJECTIVE**: Rigorous validation at multiple levels to ensure migration quality
+
+**TASK 4A: File-Level Validation**
+```bash
+# After each migration, immediately verify:
+# 1. Import test
+python -c "import MODULE; print('✅ Import OK')" || echo "❌ Import FAILED"
+
+# 2. Syntax validation  
+python -m py_compile "$file" || echo "❌ Syntax ERROR"
+
+# 3. Individual tests (if test file)
+if [[ $file == tests/* ]]; then
+    python -m pytest "$file" -v
+fi
 ```
 
 **TASK 4B: System Integration Validation**
 ```bash
-# Ensure full system functionality maintained throughout optional cleanup
-python -m pytest tests/test_ontology_manager.py -v  # Should show 22/22 passing
-python analyze_direct.py input_text/revolutions/french_revolution.txt  # Should complete successfully
+# After every 3-5 migrations, verify system health:
+# 1. Core system test
+python -m pytest tests/test_ontology_manager.py -v  # Must show 22/22 passing
 
-# Multi-dataset validation
+# 2. Pipeline functionality test
+python analyze_direct.py input_text/revolutions/french_revolution.txt
+
+# 3. Multi-dataset validation
 for input_file in input_text/*/*.txt; do
     echo "Testing: $input_file"
-    python analyze_direct.py "$input_file"
-    [ $? -eq 0 ] || echo "FAILED: $input_file"
+    python analyze_direct.py "$input_file" > /dev/null 2>&1
+    [ $? -eq 0 ] && echo "✅ SUCCESS" || echo "❌ FAILED: $input_file"
 done
 
-# Performance validation - should show no significant degradation
-time python analyze_direct.py input_text/revolutions/french_revolution.txt
+# 4. Performance benchmark
+time python analyze_direct.py input_text/revolutions/french_revolution.txt > /dev/null 2>&1
 ```
 
-**TASK 4C: Migration Quality Assessment**
-- All migrated files import successfully without errors
-- No new test failures introduced by migrations
-- System functionality fully maintained
-- Pattern count matches expected appropriate patterns only
-
-### PHASE 5: Final Documentation (1 hour estimated)
-
-**TASK 5A: System Health Confirmation**
+**TASK 4C: Pattern Count Verification**
 ```bash
-# Comprehensive system validation across all test datasets
-for input_file in input_text/*/*.txt; do
-    echo "Processing: $input_file"  
-    python analyze_direct.py "$input_file"
-    [ $? -eq 0 ] && echo "✅ SUCCESS" || echo "❌ FAILED"
-done
-# Expected: All datasets process successfully with no regressions
+# Verify migration impact:
+echo "Patterns before migration: [document baseline]"
+grep -r "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" --include="*.py" . | grep -v test_env | wc -l
+echo "Patterns after migration: [should be reduced]"
+
+# Verify no hardcoded logic patterns remain:
+grep -r "if.*type.*in.*\[.*'supports'" --include="*.py" . | grep -v test_env
+# Should return only appropriate patterns
 ```
 
-**TASK 5B: Final Documentation Update**
-Create `evidence/current/Evidence_Phase25D_Complete.md` with:
-- **Final Pattern Analysis**: Classification of remaining patterns (appropriate vs eliminated)
-- **Migration Results**: Documentation of all migrations with validation results
-- **System Functionality**: Confirmation of continued full pipeline operation
-- **Architecture Summary**: Transformation from hardcoded → dynamic ontology system
-- **Future Maintenance**: Guidance for adding new edge types (should automatically propagate)
+### PHASE 5: COMPREHENSIVE EVIDENCE DOCUMENTATION (2-3 hours)
+
+**OBJECTIVE**: Document complete migration process with rigorous evidence
+
+**TASK 5A: Phase-by-Phase Evidence Documentation**
+```markdown
+# Required Evidence Files (all in evidence/current/):
+
+Evidence_Phase25E_Discovery.md
+- Complete pattern inventory with raw grep results
+- File-by-file context analysis  
+- Pattern count documentation with verification commands
+
+Evidence_Phase25E_Classification.md
+- Systematic classification of every pattern instance
+- Classification framework application with reasoning
+- High-confidence vs review-required separation
+
+Evidence_Phase25E_Migration.md
+- Each migration documented with before/after diffs
+- Import and test validation results
+- System integration testing results
+
+Evidence_Phase25E_Validation.md  
+- Comprehensive system validation across all levels
+- Performance benchmarks and regression testing
+- Final pattern count verification
+
+Evidence_Phase25E_Complete.md
+- Final honest assessment with lessons learned
+- Complete migration statistics with evidence
+- Future maintenance guidance
+```
+
+**TASK 5B: Evidence Quality Requirements**
+```bash
+# Each claim must be supported by:
+# 1. Raw command output (grep results, test results)
+# 2. Before/after comparisons where applicable
+# 3. System functionality validation commands
+# 4. Specific pattern counts and file locations  
+# 5. Error logs if any issues encountered
+
+# NO SUCCESS CLAIMS WITHOUT DEMONSTRABLE PROOF
+```
 
 ---
 
-## 📊 SUCCESS CRITERIA FOR PHASE 25D
+## 📊 SUCCESS CRITERIA FOR PHASE 25E
 
-### **Implementation Success Metrics:**
-1. **Pattern Classification Complete**: Clear documentation distinguishing appropriate vs problematic patterns
-2. **Problematic Logic Eliminated**: All remaining hardcoded edge type logic replaced with dynamic queries
-3. **System Functionality Maintained**: All test inputs continue to process successfully (no regressions)
-4. **Test Coverage Preserved**: All existing tests pass, no new test failures introduced
-5. **Migration Quality Validated**: All migrated files import correctly and function as expected
+### **Critical Success Requirements:**
+1. **Complete Systematic Analysis**: Every pattern instance classified with documented reasoning
+2. **Verified Pattern Classification**: No assumptions - every classification backed by context analysis
+3. **Surgical Migration Precision**: Only genuinely problematic patterns migrated
+4. **Zero Regressions**: All system functionality maintained throughout process
+5. **Rigorous Evidence Documentation**: Every claim supported by raw execution logs
 
-### **Evidence Requirements:**
-1. **Pattern Analysis**: Comprehensive classification of all 104 remaining patterns with justification
-2. **Migration Documentation**: Each migration validated with before/after testing
-3. **System Integration**: Continued full pipeline functionality across all test datasets  
-4. **Final Assessment**: Complete analysis of remaining patterns with clear rationale
+### **Quality Validation Metrics:**
+1. **Discovery Completeness**: Multi-strategy search captures all pattern variations
+2. **Classification Accuracy**: Clear criteria applied consistently to every instance
+3. **Migration Quality**: Each migration validated with import/test/integration verification
+4. **System Health**: 22/22 OntologyManager tests + multi-dataset pipeline validation
+5. **Evidence Quality**: Raw logs, before/after comparisons, specific pattern counts
 
-### **Quality Standards:**
-- **Evidence-Based**: All claims supported by grep validation and test results
-- **System-First**: Functionality preservation prioritized over pattern count reduction
-- **Surgical Precision**: Only migrate patterns that represent problematic hardcoded logic
-- **Architecture Consistency**: All migrations follow established OntologyManager patterns
+### **Failure Criteria (Immediate Stop and Reassess):**
+- **OntologyManager tests fail**: Core system integrity compromised
+- **Pipeline fails on known-good input**: Critical functionality broken
+- **More than 2 import errors**: Migration quality insufficient
+- **Classification confidence below 90%**: Analysis not systematic enough
+- **Performance degradation >20%**: Unacceptable system impact
+
+### **Quality Standards (Non-Negotiable):**
+- **Evidence-Based**: Every claim requires raw command output verification
+- **Systematic Coverage**: No spot-checking - complete analysis mandatory
+- **Honest Assessment**: Confidence levels must reflect actual verification depth
+- **Preservation Priority**: System functionality over pattern count reduction
 
 ---
 
@@ -342,107 +419,131 @@ Create `evidence/current/Evidence_Phase25D_Complete.md` with:
 
 ## 📁 Evidence Structure
 
-⚠️ **PHASE 25D DOCUMENTATION REQUIREMENTS**
+⚠️ **PHASE 25E DOCUMENTATION REQUIREMENTS**
 
-Evidence for Phase 25D must be documented in:
+Evidence for Phase 25E must be documented with COMPLETE SYSTEMATIC COVERAGE:
 ```
 evidence/
 ├── current/
-│   ├── Evidence_Phase25D_FinalScope.md      # Pattern classification and migration targets
-│   ├── Evidence_Phase25D_TestMigration.md   # Test file migration results
-│   ├── Evidence_Phase25D_DocMigration.md    # Documentation file updates
-│   ├── Evidence_Phase25D_Validation.md     # System validation results
-│   └── Evidence_Phase25D_Complete.md       # Final comprehensive assessment
+│   ├── Evidence_Phase25E_Discovery.md        # Complete pattern inventory & multi-strategy search
+│   ├── Evidence_Phase25E_Classification.md   # Systematic classification of EVERY pattern
+│   ├── Evidence_Phase25E_Migration.md        # Incremental migration with validation
+│   ├── Evidence_Phase25E_Validation.md       # Comprehensive system testing
+│   └── Evidence_Phase25E_Complete.md         # Honest final assessment
 ├── completed/
-│   ├── Evidence_Phase25C_Complete.md       # Archived - Critical path migration complete
-│   ├── Evidence_Phase25C_ResidualCleanup.md # Archived - Core file migrations
-│   └── Evidence_Phase25C_Audit.md          # Archived - Initial pattern discovery
+│   ├── Evidence_Phase25D_Complete.md         # Archived - Partial migration with lessons learned
+│   ├── Evidence_Phase25D_*.md                # Archived - Previous phase evidence
+│   └── Evidence_Phase25C_*.md                # Archived - Core system migration
 ```
 
-**EVIDENCE FILE REQUIREMENTS**:
-- **Pattern Classification**: Clear distinction between appropriate vs problematic patterns
-- **Raw Grep Results**: Before/after pattern counts with specific pattern analysis
-- **Migration Validation**: Import tests and functionality validation for each migrated file
-- **System Integration**: Full pipeline tests demonstrating continued functionality
-- **Justification Documentation**: Clear rationale for patterns left unmigrated (appropriate test data, etc.)
+**EVIDENCE FILE REQUIREMENTS** (Mandatory - No Exceptions):
+- **Complete Discovery Documentation**: Raw output from multi-strategy searches
+- **Systematic Classification**: EVERY pattern instance classified with full context
+- **Pattern-by-Pattern Analysis**: Context analysis (5 lines before/after) for each instance
+- **Migration Documentation**: Before/after diffs, import validation, test results
+- **System Health Validation**: Raw test output, pipeline validation, performance benchmarks
+- **Honest Assessment**: Confidence levels, limitations, areas requiring further review
 
-**CRITICAL GUIDANCE**:
-- ⚠️ **Distinguish appropriate vs problematic patterns** - Not all patterns need migration
-- ⚠️ **Preserve test data and semantic processing** - Only migrate hardcoded logic
-- ⚠️ **Validate every change with grep and testing** - Evidence-based development required  
-- ⚠️ **System functionality is paramount** - Maintain complete pipeline operation
+**CRITICAL REQUIREMENTS** (Learned from Phase 25D):
+- 🚨 **NO OVERCONFIDENT CLAIMS** - State confidence levels explicitly
+- 🚨 **SYSTEMATIC COVERAGE MANDATORY** - No spot-checking allowed
+- 🚨 **RAW EVIDENCE REQUIRED** - Every claim backed by command output
+- 🚨 **PRESERVE SYSTEM FUNCTION** - Continuous validation throughout process
+- 🚨 **DOCUMENT UNCERTAINTIES** - Acknowledge limitations and review-required items
 
 ---
 
 ## 🚨 IMMEDIATE NEXT STEPS FOR NEW LLM
 
-### STEP 1: Validate System Health (FIRST PRIORITY)
+### STEP 1: System Health Baseline Validation (MANDATORY FIRST STEP)
 ```bash
 cd /home/brian/projects/process_tracing
 source test_env/bin/activate
 
-# Verify core system remains fully functional after Phase 25C
+# 1. Core system validation
 python -m pytest tests/test_ontology_manager.py -v
-# Expected: 22/22 tests passing
+# REQUIREMENT: Must show 22/22 tests passing
 
-# Verify complete pipeline operation
+# 2. Pipeline functionality validation
 python analyze_direct.py input_text/revolutions/french_revolution.txt
-# Expected: Complete TEXT→JSON→HTML generation successfully
+# REQUIREMENT: Must complete TEXT→JSON→HTML successfully
 
-# Check system integration across multiple datasets
-for input in input_text/revolutions/*.txt; do
-    echo "Testing: $input"
-    python analyze_direct.py "$input" && echo "✅ SUCCESS" || echo "❌ FAILED"
+# 3. Multi-dataset system integration
+for input in input_text/*/*.txt; do
+    echo "Processing: $input"
+    python analyze_direct.py "$input" > /dev/null 2>&1 && echo "✅ SUCCESS" || echo "❌ FAILED"
 done
-# Expected: All test inputs process successfully with no regressions
+# REQUIREMENT: ALL inputs must process successfully
+
+# 4. Performance baseline
+time python analyze_direct.py input_text/revolutions/french_revolution.txt > /dev/null 2>&1
+# DOCUMENT: Record baseline performance for regression detection
 ```
 
-### STEP 2: Assess Remaining Migration Scope  
+### STEP 2: Execute PHASE 1 - Comprehensive Pattern Discovery (MANDATORY)
 ```bash
-# Current pattern count (should be ~104 patterns across 26 files)
-grep -r "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" --include="*.py" . | grep -v test_env | wc -l
+# SYSTEMATIC DISCOVERY - NO SHORTCUTS ALLOWED
 
-# Core patterns (should be ~12 patterns, all appropriate fallbacks/semantic/documentation)
-grep -r "'supports'\|'tests_hypothesis'\|'provides_evidence_for'" core/ --include="*.py" | wc -l
+# 1. Multi-strategy pattern search
+grep -r "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" --include="*.py" . | grep -v test_env > patterns_primary.txt
+grep -r '"supports"\|"tests_hypothesis"\|"provides_evidence_for"\|"updates_probability"\|"weighs_evidence"' --include="*.py" . | grep -v test_env > patterns_quoted.txt
+grep -r "== 'supports'\|in \[.*'supports.*'\]\|type.*'supports'" --include="*.py" . | grep -v test_env > patterns_logic.txt
 
-# List all files containing patterns for classification
-find . -name "*.py" -exec grep -l "'supports'\|'tests_hypothesis'\|'provides_evidence_for'\|'updates_probability'\|'weighs_evidence'" {} \; | grep -v test_env | sort
+# 2. Document comprehensive baseline
+cat patterns_*.txt | cut -d: -f1 | sort -u > files_containing_patterns.txt
+echo "Files found: $(wc -l < files_containing_patterns.txt)"
+echo "Total patterns: $(cat patterns_*.txt | wc -l)"
+
+# 3. Begin Evidence_Phase25E_Discovery.md documentation
+# REQUIREMENT: Document ALL findings with raw output
 ```
 
-### STEP 3: Pattern Classification Strategy
-1. **IDENTIFY APPROPRIATE PATTERNS**: 
-   - Test data validating OntologyManager functionality (test_ontology_manager.py)
-   - Migration tool mapping data (migrate_ontology.py)  
-   - Documentation examples (docstrings, comments)
-   - Semantic language processing (content_based_diagnostic_classifier.py)
-   - Dynamic system fallbacks (appropriate in migrated architecture)
+### STEP 3: Execute PHASE 2 - Systematic Pattern Classification (MANDATORY)
 
-2. **IDENTIFY PROBLEMATIC PATTERNS**: 
-   - Hardcoded logic where code behavior depends on specific edge type strings
-   - Validation loops checking against hardcoded edge type lists
-   - Assignment logic using hardcoded edge types
+**REQUIREMENTS**:
+1. **SYSTEMATIC APPROACH**: Use classification framework - NO assumptions allowed
+2. **COMPLETE COVERAGE**: Every pattern instance must be classified
+3. **EVIDENCE-BASED**: Every classification backed by context analysis
+4. **CONFIDENCE LEVELS**: Document HIGH/MEDIUM/LOW confidence for each classification
 
-3. **CREATE FOCUSED MIGRATION PLAN**: Target only patterns representing hardcoded logic requiring dynamic conversion
+**CLASSIFICATION WORKFLOW**:
+```bash
+# For each file containing patterns:
+while read -r file; do
+    echo "=== ANALYZING: $file ===" >> classification_analysis.md
+    echo "Pattern count: $(grep -c "'supports'\|'tests_hypothesis'" "$file")" >> classification_analysis.md
+    echo "Context analysis:" >> classification_analysis.md
+    grep -n -B3 -A3 "'supports'\|'tests_hypothesis'" "$file" >> classification_analysis.md
+    echo "Classification: [TO BE DETERMINED]" >> classification_analysis.md
+    echo "" >> classification_analysis.md
+done < files_containing_patterns.txt
 
-4. **VALIDATE SYSTEM CONTINUOUSLY**: Ensure complete functionality maintained throughout optional cleanup process
+# REQUIREMENT: Complete Evidence_Phase25E_Classification.md
+```
 
-### CURRENT INFRASTRUCTURE (Fully Operational):
-- ✅ **Core System Architecture**: Complete migration to dynamic ontology queries (critical path complete)
-- ✅ **OntologyManager**: Fully functional with 22/22 passing tests - handles all dynamic ontology operations
-- ✅ **Migration Tools**: `tests/ontology_test_helpers.py` ready for systematic test file migrations
-- ✅ **System Validation**: Complete pipeline operational with no regressions across multiple test datasets
-- ✅ **Architecture Foundation**: Robust dynamic ontology system ready for future ontology improvements
+### PHASE 25E REQUIREMENTS (Based on Phase 25D Lessons):
+- 🚨 **SYSTEMATIC APPROACH MANDATORY**: No spot-checking - complete analysis required
+- 🚨 **EVIDENCE-BASED CLAIMS ONLY**: Every assertion backed by raw command output
+- 🚨 **HONEST CONFIDENCE LEVELS**: State limitations and uncertainties explicitly
+- 🚨 **PRESERVE SYSTEM HEALTH**: Continuous validation throughout migration process
+- 🚨 **RIGOROUS DOCUMENTATION**: Complete evidence files for every phase
 
-### CRITICAL UNDERSTANDING:
-- **✅ Core system migration COMPLETE**: All inappropriate hardcoded edge type logic eliminated from critical execution path
-- **✅ System fully operational**: Complete TEXT→JSON→HTML pipeline with enhanced dynamic ontology capabilities
-- **⚠️ Remaining work is OPTIONAL**: Test file and documentation cleanup for consistency (non-critical)
-- **✅ Architecture transformation successful**: System now ontology-first with centralized dynamic queries
-- **✅ Future-ready foundation**: Ontology changes automatically propagate without code modifications
+### CURRENT INFRASTRUCTURE STATUS:
+- ✅ **Core System**: Robust dynamic ontology architecture operational (Phase 25C achievement)
+- ✅ **OntologyManager**: 22/22 tests passing - centralized dynamic query system
+- ✅ **Pipeline**: Complete TEXT→JSON→HTML functionality across all test datasets
+- ⚠️ **Migration Status**: Partial completion (2 patterns migrated in Phase 25D)
+- 📝 **Analysis Quality**: Previous overconfident claims corrected - systematic approach required
+
+### CRITICAL LESSONS FROM PHASE 25D:
+- **Overconfidence Risk**: Initial "99% accuracy" claims were incorrect
+- **Spot-Checking Insufficient**: Missed patterns due to incomplete systematic analysis
+- **Verification Essential**: Claims must be backed by complete systematic verification
+- **System Priority**: Maintain functionality while achieving migration precision
 
 ---
 
-**PHASE 25D FOCUS**: Complete optional test and documentation file cleanup while maintaining the fully functional dynamic ontology architecture achieved in Phase 25C.
+**PHASE 25E MISSION**: Complete systematic hardcoded edge type migration with rigorous evidence-based approach, learning from Phase 25D analysis failures.
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
