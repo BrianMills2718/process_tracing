@@ -38,24 +38,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🎯 CURRENT STATUS: Phase 26A - Aggressive Ontology Resilience Testing (Updated 2025-01-12)
+## 🎯 CURRENT STATUS: Phase 26B - Pipeline Hang Investigation & Fail-Fast Implementation (Updated 2025-01-12)
 
-**System Status**: **✅ EXCELLENT - Ontology Resilience Validation Required**  
-**Latest Achievement**: **Phase 25E Complete - Comprehensive systematic analysis completed successfully**  
-**Current Priority**: **Validate system resilience to ontology changes through aggressive end-to-end testing**
+**System Status**: **⚠️ CRITICAL ISSUE IDENTIFIED - Pipeline Hanging After Ontology Changes**  
+**Latest Achievement**: **Phase 26A Complete - Core ontology resilience validated, pipeline brittleness discovered**  
+**Current Priority**: **Systematic investigation of pipeline hanging and fail-fast implementation**
 
-**PHASE 25E COMPLETE RESULTS** (Evidence-validated 2025-01-12):
-- ✅ **Complete Systematic Analysis**: All 24 files and 97 hardcoded edge type patterns analyzed
-- ✅ **Excellent System State Discovered**: Zero hardcoded logic violations requiring migration
-- ✅ **High-Quality Codebase Validated**: 97% of patterns are appropriate (test data, configuration, documentation)
-- ✅ **Dynamic Architecture Confirmed**: All critical systems properly using ontology_manager queries
-- ✅ **System Health Maintained**: 22/22 OntologyManager tests passing throughout analysis
-- ✅ **Evidence-Based Assessment**: All claims supported by systematic pattern classification
+**PHASE 26A COMPLETE RESULTS** (Evidence-validated 2025-01-12):
+- ✅ **Excellent Core Resilience**: OntologyManager shows perfect fail-fast behavior (9/22 test failures with clear errors)
+- ✅ **Dynamic Architecture Success**: System handles ontology additions gracefully (22/22 tests pass)  
+- ✅ **Rollback Safety**: Commit 75a0f77 established as fallback point
+- ❌ **Critical Pipeline Hang**: End-to-end pipeline hangs after LLM extraction phase with ANY ontology changes
+- ❌ **Hang Persistence**: Issue persists even after ontology restoration, suggesting state corruption
 
-**CURRENT CHALLENGE** (Identified through analysis):
-- **Ontology Resilience Untested**: System uses dynamic queries but resilience to ontology changes unvalidated
-- **End-to-End Impact Unknown**: Need to validate full TEXT → JSON → HTML pipeline with ontology modifications
-- **Fail-Fast Behavior Unverified**: Error handling when ontology changes break assumptions needs testing
+**CURRENT CRITICAL ISSUE** (Blocking ontology resilience validation):
+- **Pipeline Brittleness**: Hangs indefinitely after successful LLM extraction (161.07s, 37 nodes, 37 edges)
+- **No Fail-Fast at Pipeline Level**: Should detect ontology issues and fail immediately with clear messages
+- **State Corruption Suspected**: Hang persists even after ontology restoration
+- **End-to-End Validation Blocked**: Cannot complete aggressive resilience testing
 
 ---
 
@@ -85,223 +85,310 @@ if edge_type in ontology_manager.get_evidence_hypothesis_edges():
 
 ---
 
-## 🔧 PHASE 25E: Systematic Hardcoded Edge Type Pattern Migration
+## 🔧 PHASE 26B: Pipeline Hang Investigation & Fail-Fast Implementation
 
-### OBJECTIVE: Complete systematic analysis and migration of all hardcoded edge type patterns
+### OBJECTIVE: Systematic investigation of pipeline hanging and implementation of robust fail-fast architecture
 
 ✅ **FOUNDATION ESTABLISHED**: 
-- **Core System**: Robust dynamic ontology architecture operational (Phase 25C)
-- **Partial Migration**: 2 problematic patterns successfully migrated (Phase 25D)
-- **Analysis Framework**: Systematic discovery and classification methodology developed
-- **System Health**: Complete functionality maintained throughout process
+- **Core Resilience Validated**: OntologyManager provides excellent fail-fast behavior with clear error messages
+- **Dynamic Architecture Confirmed**: System handles ontology evolution gracefully at core level
+- **Systematic Testing Approach**: 5-phase methodical plan developed for hang investigation
+- **Safety Measures**: Rollback commit (75a0f77) established for aggressive testing
 
-⚠️ **CRITICAL IMPERATIVE**: Previous analysis revealed overconfident claims - systematic verification essential
+⚠️ **CRITICAL IMPERATIVE**: Pipeline hanging blocks complete ontology resilience validation - must be resolved systematically
 
 ---
 
-## 📋 PHASE 26A: AGGRESSIVE ONTOLOGY RESILIENCE TESTING
+## 📋 PHASE 26B: PIPELINE HANG INVESTIGATION & FAIL-FAST IMPLEMENTATION
 
-**CRITICAL REQUIREMENT**: Validate system can handle arbitrary ontology changes with fail-fast error handling or graceful adaptation.
+**CRITICAL REQUIREMENT**: Systematic investigation mandatory to resolve pipeline hanging. NO shortcuts - must identify root cause systematically.
 
-### 🚨 TASK 1: BASELINE VALIDATION & COMMIT SAFETY (30 minutes)
-*Establish rollback point and validate current end-to-end functionality*
+### 🔍 TASK 1: HANG LOCATION ISOLATION (3-4 hours)
+*Pinpoint exact hang location in pipeline using systematic debugging*
 
-**OBJECTIVE**: Create safety checkpoint and establish baseline end-to-end behavior
+**OBJECTIVE**: Identify exactly where in the pipeline the hang occurs
 
 ```bash
-# 1. Commit current state for rollback safety
-git add -A && git commit -m "Pre-ontology-resilience baseline - Phase 26A start"
+# CRITICAL: Phase 26A discovered pipeline hangs after successful LLM extraction
+# Pattern: ✅ LLM extraction (161.07s, 37 nodes, 37 edges) → ❌ HANG in analysis phase
 
-# 2. Validate current system works end-to-end (establish baseline)
 cd /home/brian/projects/process_tracing
 source test_env/bin/activate
 
-# Core system health check
-python -m pytest tests/test_ontology_manager.py -v  # Must be 22/22
+# 1. Test each pipeline stage independently
+echo "=== COMPONENT ISOLATION TESTING ===" > evidence/hang_investigation.md
 
-# End-to-end pipeline test with actual input text
-python analyze_direct.py input_text/revolutions/french_revolution.txt
-# Note: May hit LLM validation issues - document current behavior
+# Test extraction-only (bypass analysis)
+python -c "
+from core.structured_extractor import StructuredProcessTracingExtractor
+extractor = StructuredProcessTracingExtractor()
+print('✅ Extraction import OK')
+" 2>&1 | tee -a evidence/hang_investigation.md
 
-# Test multiple inputs if possible
-for input_file in input_text/*/*.txt; do
-    echo "Testing: $input_file"
-    python analyze_direct.py "$input_file" || echo "Failed: $input_file"
-done
+# Test graph loading (bypass analysis) 
+python -c "
+import json
+from core.analyze import load_graph
+print('✅ Load_graph import OK')
+" 2>&1 | tee -a evidence/hang_investigation.md
+
+# Test core imports
+python -c "
+from core.analyze import *
+print('✅ Core.analyze imports OK')
+" 2>&1 | tee -a evidence/hang_investigation.md
+
+# 2. Incremental debug checkpoints
+timeout 60 python analyze_direct.py input_text/revolutions/french_revolution.txt --debug-checkpoints 2>&1 | tee -a evidence/hang_investigation.md
+
+# 3. Minimal graph testing
+echo '{"nodes": [{"id": "test", "type": "Evidence"}], "edges": []}' > minimal_test.json
+python -c "
+from core.analyze import load_graph
+G, data = load_graph('minimal_test.json')
+print(f'✅ Minimal graph loaded: {len(G.nodes)} nodes, {len(G.edges)} edges')
+" 2>&1 | tee -a evidence/hang_investigation.md
 ```
 
-**DELIVERABLE**: Rollback commit + documented baseline end-to-end behavior
+**DELIVERABLE**: `evidence/current/Evidence_Phase26B_HangLocation.md` with exact hang location identified
 
-### 🔥 TASK 2: AGGRESSIVE ONTOLOGY STRESS TESTING (3-4 hours)
-*Systematically break ontology to find brittleness through end-to-end testing*
+### 🧪 TASK 2: COMPONENT-BY-COMPONENT RESILIENCE TESTING (4-5 hours)
+*Test each system component with modified ontologies to identify brittle components*
 
-**OBJECTIVE**: Discover what breaks when ontology changes through realistic end-to-end scenarios
+**OBJECTIVE**: Identify which specific components cause hanging or fail to adapt
 
 ```bash
-# Backup current ontology
+# CRITICAL: Phase 26A showed OntologyManager excellent (fail-fast), pipeline hangs
+# Focus: Find which component between extraction and final output causes hanging
+
+echo "=== COMPONENT RESILIENCE TESTING ===" > evidence/component_testing.md
+
+# 1. Test each critical component individually
+# Van Evera Analysis
+python -c "
+from core.plugins.van_evera_testing_engine import VanEveraTesting
+engine = VanEveraTesting()
+print('✅ Van Evera engine created')
+" 2>&1 | tee -a evidence/component_testing.md
+
+# Plugin System
+python -c "
+import os
+plugin_files = [f for f in os.listdir('core/plugins/') if f.endswith('.py') and not f.startswith('__')]
+for plugin_file in plugin_files[:3]:  # Test first 3 plugins
+    try:
+        module_name = f'core.plugins.{plugin_file[:-3]}'
+        __import__(module_name)
+        print(f'✅ Plugin {plugin_file} imported')
+    except Exception as e:
+        print(f'❌ Plugin {plugin_file} failed: {e}')
+" 2>&1 | tee -a evidence/component_testing.md
+
+# Enhancement Components  
+python -c "
+try:
+    from core.enhance_evidence import *
+    print('✅ enhance_evidence imported')
+except Exception as e:
+    print(f'❌ enhance_evidence failed: {e}')
+    
+try:
+    from core.enhance_mechanisms import *
+    print('✅ enhance_mechanisms imported')
+except Exception as e:
+    print(f'❌ enhance_mechanisms failed: {e}')
+" 2>&1 | tee -a evidence/component_testing.md
+
+# 2. Test components with ontology modifications
 cp config/ontology_config.json config/ontology_config.json.backup
 
-# Test 2.1: Remove Critical Edge Type ('supports')
-echo "=== REMOVING 'supports' EDGE TYPE ===" > evidence/ontology_stress_tests.md
-# [Edit ontology to remove 'supports']
-python analyze_direct.py input_text/revolutions/french_revolution.txt 2>&1 | tee -a evidence/ontology_stress_tests.md
-# Document: Does it fail fast? Silent failure? Graceful adaptation?
+# Add test edge type and retest components
+echo "=== TESTING WITH MODIFIED ONTOLOGY ===" >> evidence/component_testing.md
+# [Add new edge type to ontology]
+# Retest all components above with modified ontology
 
-# Restore ontology between tests
-cp config/ontology_config.json.backup config/ontology_config.json
-
-# Test 2.2: Rename Edge Type ('tests_hypothesis' → 'validates_hypothesis')
-echo "=== RENAMING 'tests_hypothesis' → 'validates_hypothesis' ===" >> evidence/ontology_stress_tests.md
-# [Edit ontology to rename edge type]
-python analyze_direct.py input_text/revolutions/french_revolution.txt 2>&1 | tee -a evidence/ontology_stress_tests.md
-
-# Test 2.3: Add New Edge Type ('challenges_hypothesis')
-echo "=== ADDING 'challenges_hypothesis' EDGE TYPE ===" >> evidence/ontology_stress_tests.md
-# [Edit ontology to add new edge type]
-python analyze_direct.py input_text/revolutions/french_revolution.txt 2>&1 | tee -a evidence/ontology_stress_tests.md
-
-# Test 2.4: Remove Entire Relationship Category (Evidence→Hypothesis)
-echo "=== REMOVING Evidence→Hypothesis RELATIONSHIPS ===" >> evidence/ontology_stress_tests.md
-# [Edit ontology to remove relationship category]
-python analyze_direct.py input_text/revolutions/french_revolution.txt 2>&1 | tee -a evidence/ontology_stress_tests.md
-
-# Always restore baseline after each test
-cp config/ontology_config.json.backup config/ontology_config.json
+# 3. Create systematic component failure matrix
+echo "Component | Original Ontology | Modified Ontology | Notes" >> evidence/component_testing.md
+echo "---------|-------------------|-------------------|-------" >> evidence/component_testing.md
 ```
 
-**DELIVERABLE**: Complete stress test log with all failure modes documented
+**DELIVERABLE**: `evidence/current/Evidence_Phase26B_ComponentTesting.md` with component resilience matrix
 
-### 🔧 TASK 3: BRITTLENESS ELIMINATION (4-6 hours)
-*Fix every system that breaks inappropriately - implement fail-fast behavior*
+### 🛠️ TASK 3: STATE MANAGEMENT & CORRUPTION INVESTIGATION (2-3 hours)
+*Identify state corruption issues from ontology modifications*
 
-**OBJECTIVE**: Convert brittle failures into appropriate fail-fast behavior or graceful adaptation
+**OBJECTIVE**: Determine if hanging is caused by cached state or module corruption
 
 ```bash
-# For each failure discovered in Task 2:
-# 1. Trace failure to specific code location
-# 2. Determine if failure is appropriate (should fail-fast) or inappropriate (should adapt)
-# 3. Fix inappropriate failures:
-#    - Convert hardcoded references → dynamic ontology queries
-#    - Add explicit error handling with clear messages
-#    - Remove silent fallbacks that hide problems
-# 4. Enhance appropriate failures:
-#    - Make error messages clearer and more actionable
-#    - Fail faster and louder
-#    - Point to ontology configuration issues
+# CRITICAL: Phase 26A hang persists even after ontology restoration
+# Hypothesis: State corruption from ontology modifications
 
-# Testing loop for each fix:
-fix_and_test() {
-  local description=$1
-  
-  echo "=== FIXING: $description ===" >> evidence/fixes_log.md
-  
-  # [Implement specific fix]
-  
-  # Validate fix with original failing ontology
-  python analyze_direct.py input_text/revolutions/french_revolution.txt 2>&1 | tee -a evidence/fixes_log.md
-  
-  # Validate fix doesn't break baseline
-  cp config/ontology_config.json.backup config/ontology_config.json
-  python analyze_direct.py input_text/revolutions/french_revolution.txt 2>&1 | tee -a evidence/fixes_log.md
-  
-  # Validate core system health maintained
-  python -m pytest tests/test_ontology_manager.py -v | tee -a evidence/fixes_log.md
-}
+echo "=== STATE CORRUPTION INVESTIGATION ===" > evidence/state_investigation.md
+
+# 1. Fresh process vs reused process testing
+python3 -c "
+import sys
+sys.path.insert(0, '.')
+from core.ontology_manager import ontology_manager
+print('Fresh process edge count:', len(ontology_manager.get_all_edge_types()))
+" 2>&1 | tee -a evidence/state_investigation.md
+
+# 2. Module import caching investigation
+python3 -c "
+import importlib
+import core.ontology_manager
+initial_edges = len(core.ontology_manager.ontology_manager.get_all_edge_types())
+print(f'Initial edge count: {initial_edges}')
+
+# Simulate ontology reload
+core.ontology_manager = importlib.reload(core.ontology_manager)
+new_edges = len(core.ontology_manager.ontology_manager.get_all_edge_types())
+print(f'After reload: {new_edges}')
+print(f'State preserved: {initial_edges == new_edges}')
+" 2>&1 | tee -a evidence/state_investigation.md
+
+# 3. Singleton and caching pattern detection
+echo "=== CACHING PATTERN DETECTION ===" >> evidence/state_investigation.md
+grep -r "class.*:" --include="*.py" core/ | grep -E "(Singleton|__new__|_instance)" >> evidence/state_investigation.md
+grep -r "global.*ontology" --include="*.py" . >> evidence/state_investigation.md
+grep -r "_cache.*ontology" --include="*.py" . >> evidence/state_investigation.md
+grep -r "functools.lru_cache" --include="*.py" core/ >> evidence/state_investigation.md
+
+# 4. Fresh virtual environment test
+echo "=== FRESH ENVIRONMENT TEST ===" >> evidence/state_investigation.md
+echo "Deactivating current environment and creating fresh test environment..."
+# deactivate; rm -rf test_env_fresh; python -m venv test_env_fresh; source test_env_fresh/bin/activate
+# Test in completely fresh environment
 ```
 
-**DELIVERABLE**: All brittleness eliminated with fail-fast or graceful adaptation
+**DELIVERABLE**: `evidence/current/Evidence_Phase26B_StateCorruption.md` with state management analysis
 
-### 🏆 TASK 4: ONTOLOGY EVOLUTION VALIDATION (2-3 hours)
-*Validate system handles realistic ontology changes gracefully*
+### ⚡ TASK 4: FAIL-FAST ARCHITECTURE IMPLEMENTATION (5-6 hours)
+*Implement robust fail-fast validation throughout pipeline*
 
-**OBJECTIVE**: Confirm system works across multiple ontology configurations
+**OBJECTIVE**: Transform pipeline hanging into clear fail-fast errors
 
 ```bash
-# Create realistic ontology evolution scenarios
-# Scenario 1: Enhanced edge types (add properties, new relationships)
-echo "=== ONTOLOGY EVOLUTION SCENARIO 1: Enhanced Types ===" > evidence/evolution_tests.md
-# [Create enhanced ontology with additional edge properties]
-python analyze_direct.py input_text/revolutions/french_revolution.txt 2>&1 | tee -a evidence/evolution_tests.md
-python analyze_direct.py input_text/american_revolution/american_revolution.txt 2>&1 | tee -a evidence/evolution_tests.md
+# Based on findings from Tasks 1-3, implement fail-fast validation
 
-# Scenario 2: Simplified ontology (remove unused types, streamline)  
-echo "=== ONTOLOGY EVOLUTION SCENARIO 2: Simplified Types ===" >> evidence/evolution_tests.md
-# [Create simplified ontology]
-python analyze_direct.py input_text/revolutions/french_revolution.txt 2>&1 | tee -a evidence/evolution_tests.md
+echo "=== FAIL-FAST IMPLEMENTATION ===" > evidence/fail_fast_implementation.md
 
-# Scenario 3: Domain-specific ontology (specialized for political analysis)
-echo "=== ONTOLOGY EVOLUTION SCENARIO 3: Domain-Specific ===" >> evidence/evolution_tests.md
-# [Create domain-specific ontology]
-python analyze_direct.py input_text/revolutions/french_revolution.txt 2>&1 | tee -a evidence/evolution_tests.md
+# 1. Pipeline entry validation in analyze_direct.py
+echo "Adding ontology validation at pipeline entry point..." >> evidence/fail_fast_implementation.md
 
-# Validate all scenarios work or fail appropriately
-for input_file in input_text/*/*.txt; do
-    echo "Multi-input validation: $input_file" >> evidence/evolution_tests.md
-    python analyze_direct.py "$input_file" 2>&1 | head -20 >> evidence/evolution_tests.md
-done
+# Add to analyze_direct.py:
+# def validate_system_ontology():
+#     try:
+#         from core.ontology_manager import ontology_manager
+#         required_edges = ['tests_hypothesis', 'supports', 'provides_evidence_for']
+#         missing = [e for e in required_edges if e not in ontology_manager.get_all_edge_types()]
+#         if missing:
+#             raise ValueError(f"❌ ONTOLOGY VALIDATION FAILED: Missing critical edge types: {missing}")
+#         print(f"✅ Ontology validation passed: {len(ontology_manager.get_all_edge_types())} edge types")
+#     except Exception as e:
+#         print(f"❌ ONTOLOGY VALIDATION FAILED: {e}")
+#         sys.exit(1)
 
-# Restore baseline ontology
-cp config/ontology_config.json.backup config/ontology_config.json
+# 2. Component-level fail-fast validation
+echo "Adding component-level validation..." >> evidence/fail_fast_implementation.md
+
+# Van Evera Analysis validation
+# def validate_van_evera_ontology_compatibility():
+#     required_edges = ['tests_hypothesis', 'supports', 'provides_evidence_for']
+#     available_edges = ontology_manager.get_evidence_hypothesis_edges()
+#     missing = [e for e in required_edges if e not in available_edges]
+#     if missing:
+#         raise ComponentValidationError(f"❌ Van Evera requires edge types: {missing}")
+
+# 3. Graceful degradation for non-critical components
+echo "Implementing graceful degradation..." >> evidence/fail_fast_implementation.md
+
+# Test each implementation:
+python analyze_direct.py input_text/revolutions/french_revolution.txt 2>&1 | tee -a evidence/fail_fast_implementation.md
 ```
 
-**DELIVERABLE**: Validated ontology-resilient system across multiple realistic configurations
+**DELIVERABLE**: `evidence/current/Evidence_Phase26B_FailFast.md` with fail-fast implementation results
 
-### 📋 TASK 5: EVIDENCE-BASED ASSESSMENT (1-2 hours)
-*Document actual ontology resilience achieved with evidence*
+### 📊 TASK 5: END-TO-END RESILIENCE VALIDATION (3-4 hours)
+*Comprehensive validation across ontology modification scenarios with fail-fast behavior*
 
-**OBJECTIVE**: Provide honest assessment of ontology resilience with supporting evidence
+**OBJECTIVE**: Validate complete pipeline resilience after implementing fail-fast architecture
 
 ```bash
-# Create comprehensive evidence package
-EVIDENCE_DIR="evidence/current/Evidence_Phase26A_OntologyResilience_$(date +%Y%m%d)"
+# Final comprehensive testing after implementing fail-fast from Task 4
+
+EVIDENCE_DIR="evidence/current/Evidence_Phase26B_Complete_$(date +%Y%m%d)"
 mkdir -p $EVIDENCE_DIR
 
-# Copy all test results and logs
-cp evidence/ontology_stress_tests.md $EVIDENCE_DIR/
-cp evidence/fixes_log.md $EVIDENCE_DIR/
-cp evidence/evolution_tests.md $EVIDENCE_DIR/
+echo "=== COMPREHENSIVE RESILIENCE VALIDATION ===" > $EVIDENCE_DIR/comprehensive_validation.md
 
-# Document final system state
+# 1. Systematic ontology stress testing with new fail-fast behavior
+for edge in "supports" "tests_hypothesis" "provides_evidence_for"; do
+    echo "=== Testing removal of $edge ===" >> $EVIDENCE_DIR/comprehensive_validation.md
+    cp config/ontology_config.json config/ontology_config.json.backup
+    
+    # Remove edge type from ontology (edit ontology_config.json)
+    # Test pipeline behavior (should fail fast with clear message, NOT hang)
+    timeout 60 python analyze_direct.py input_text/revolutions/french_revolution.txt 2>&1 >> $EVIDENCE_DIR/comprehensive_validation.md
+    
+    # Restore ontology
+    cp config/ontology_config.json.backup config/ontology_config.json
+done
+
+# 2. Recovery validation testing  
+echo "=== RECOVERY TESTING ===" >> $EVIDENCE_DIR/comprehensive_validation.md
+# Change ontology → test behavior → restore ontology → test recovery
+# Validate no state corruption accumulates
+
+# 3. Multi-input validation
+echo "=== MULTI-INPUT VALIDATION ===" >> $EVIDENCE_DIR/comprehensive_validation.md
+for input in input_text/*/*.txt; do
+    echo "Testing resilience with: $input" >> $EVIDENCE_DIR/comprehensive_validation.md
+    timeout 60 python analyze_direct.py "$input" 2>&1 >> $EVIDENCE_DIR/comprehensive_validation.md || echo "Pipeline completed (success or fail-fast)" >> $EVIDENCE_DIR/comprehensive_validation.md
+done
+
+# 4. Document final system state
 python -m pytest tests/test_ontology_manager.py -v > $EVIDENCE_DIR/final_system_health.txt
 python analyze_direct.py input_text/revolutions/french_revolution.txt > $EVIDENCE_DIR/final_pipeline_test.txt 2>&1
 
-# Create honest assessment:
-# - What ontology changes are now supported
-# - What changes cause appropriate failures  
-# - What changes cause inappropriate failures (remaining work)
-# - System limitations and recommended usage patterns
+# Copy all investigation logs
+cp evidence/hang_investigation.md $EVIDENCE_DIR/ 2>/dev/null || true
+cp evidence/component_testing.md $EVIDENCE_DIR/ 2>/dev/null || true 
+cp evidence/state_investigation.md $EVIDENCE_DIR/ 2>/dev/null || true
+cp evidence/fail_fast_implementation.md $EVIDENCE_DIR/ 2>/dev/null || true
 ```
 
 **CRITICAL SUCCESS CRITERIA**:
-✅ **End-to-End Resilience**: Can modify ontology without breaking TEXT→JSON→HTML pipeline  
-✅ **Fail-Fast Behavior**: Clear errors when ontology changes break assumptions  
-✅ **Graceful Adaptation**: System adapts to compatible ontology changes  
-✅ **Multi-Input Consistency**: Behavior consistent across different input texts  
-✅ **Evidence-Based Claims**: All resilience claims supported by test results
+✅ **Hang Elimination**: Pipeline never hangs - either completes or fails fast with clear errors  
+✅ **Root Cause Identified**: Exact cause of hanging documented with evidence  
+✅ **Fail-Fast Implementation**: Clear, actionable error messages for ontology issues  
+✅ **State Corruption Resolved**: No persistence of corrupted state between runs  
+✅ **Component Resilience**: Each component handles ontology changes appropriately
 
 ---
 
 ## ⚠️ CRITICAL SUCCESS FACTORS
 
-### **Methodology Requirements (Learning from Overconfidence)**:
-1. **NO SHORTCUTS**: Every file gets complete analysis, no sampling or extrapolation
-2. **CONSISTENT MEASUREMENT**: Use identical grep patterns and methodology throughout
-3. **EVIDENCE FIRST**: Claims only after verifiable command execution, not speculation
-4. **SYSTEMATIC TESTING**: Validation at every step prevents accumulating issues
-5. **HONEST CONFIDENCE**: State limitations explicitly, acknowledge areas of uncertainty
+### **Methodology Requirements (Learning from Phase 26A)**:
+1. **NO SHORTCUTS**: Systematic investigation mandatory - must identify exact hang location
+2. **COMPONENT-BY-COMPONENT**: Test each system component individually to isolate failures
+3. **EVIDENCE FIRST**: All hang analysis backed by timeout tests and stack traces
+4. **FAIL-FAST IMPLEMENTATION**: Convert hangs to clear error messages with actionable guidance
+5. **STATE CORRUPTION PREVENTION**: Eliminate cached state issues causing persistent problems
 
 ### **Quality Gates**:
-- **Pattern Analysis**: >90% of patterns classified with HIGH or MEDIUM confidence
-- **Migration Quality**: 100% of migrations validated with import + functionality tests
-- **System Integration**: Zero regressions in core system functionality  
-- **Evidence Traceability**: 100% of claims traceable to raw command output
-- **Methodology Consistency**: Same measurement approach for baseline and final verification
+- **Hang Location Identified**: Exact pipeline component causing hang must be found
+- **Component Resilience**: Each component tested with ontology modifications
+- **Fail-Fast Validation**: All ontology issues produce clear, immediate error messages
+- **No Hanging Behavior**: System always terminates with definitive result (success or clear failure)
+- **Recovery Capability**: System recovers properly from ontology issues without state corruption
 
 ### **Failure Response Protocol**:
-- **Any import failure**: Immediately restore from backup, analyze issue
-- **Test regression**: Stop migration, identify root cause, fix before continuing
-- **System integration failure**: Full rollback to last known good state
-- **Performance degradation >20%**: Investigate and optimize before continuing
+- **Hanging continues**: Escalate to deeper debugging with stack traces and memory analysis
+- **Component fails inappropriately**: Implement fail-fast validation or graceful degradation
+- **State corruption detected**: Clear all caches and implement fresh state loading
+- **Performance degradation**: Profile and optimize, but functionality takes priority over performance
+- **Any timeout in testing**: Document exact timeout location and implement proper error handling
 
 **ESTIMATED TIME**: 15-20 hours of systematic work over 3-4 focused sessions
 
@@ -314,21 +401,20 @@ python analyze_direct.py input_text/revolutions/french_revolution.txt > $EVIDENC
 - **`core/structured_extractor.py`**: LLM extraction with Pydantic validation
 - **`core/analyze.py`**: Graph loading and analysis orchestration (✅ migrated to dynamic ontology)
 
-### Critical Files Status (Phase 25E Partial)
-- **`core/ontology_manager.py`**: ✅ COMPLETE - 22 passing tests, centralized dynamic ontology queries
-- **`tools/migrate_ontology.py`**: ✅ MIGRATED (Phase 25E) - Dynamic ontology-based diagnostic type inference
-- **`tests/ontology_test_helpers.py`**: ✅ MIGRATED (Phase 25E) - Pattern-based hypothesis testing edge selection
-- **`core/disconnection_repair.py`**: ✅ MIGRATED (Phase 25D) - Dynamic ontology-based connection inference
-- **`core/van_evera_testing_engine.py`**: ✅ MIGRATED (Phase 25D) - Dynamic evidence-hypothesis edge detection
-- **`core/analyze.py`**: ✅ MIGRATED (Phase 25D) - Dynamic Evidence→Mechanism relationship analysis
-- **`config/ontology_config.json`**: ✅ STABLE - Authoritative ontology definition
-- **~31 remaining files**: ⚠️ REQUIRE SYSTEMATIC ANALYSIS - Classification needed for all patterns
+### Critical Files Status (Phase 26A Complete)
+- **`core/ontology_manager.py`**: ✅ EXCELLENT - 22 passing tests, perfect fail-fast behavior for ontology changes
+- **`config/ontology_config.json`**: ✅ STABLE - Authoritative ontology definition, handles additions gracefully
+- **`analyze_direct.py`**: ❌ PIPELINE HANG - Hangs after LLM extraction phase with ontology changes
+- **`core/analyze.py`**: ❌ SUSPECT - Graph loading/analysis phase appears to be hang location
+- **`core/structured_extractor.py`**: ✅ WORKING - LLM extraction completes successfully even with modified ontology
+- **`core/plugins/`**: ⚠️ UNKNOWN - Plugin system resilience to ontology changes untested
+- **`core/enhance_*`**: ⚠️ UNKNOWN - Enhancement components resilience untested
 
-### Working Components (Fully Functional)
-- **Rich HTML Generation**: Complete TEXT → JSON → HTML pipeline with interactive visualizations
-- **Van Evera Analytics**: Evidence-hypothesis analysis using dynamic ontology queries
-- **OntologyManager Integration**: Centralized dynamic edge type queries throughout critical system
-- **Cross-Input Validation**: Multiple datasets tested with consistent results (no regressions)
+### System Status (Phase 26A Findings)
+- **Core Resilience**: ✅ EXCELLENT - OntologyManager provides perfect fail-fast behavior
+- **Dynamic Architecture**: ✅ SUCCESS - System handles ontology additions gracefully (22/22 tests pass)  
+- **Pipeline Resilience**: ❌ CRITICAL ISSUE - End-to-end pipeline hangs after LLM extraction
+- **State Management**: ❌ CORRUPTION SUSPECTED - Hangs persist even after ontology restoration
 
 ### Runtime Environment
 - **Virtual Environment**: `test_env/` activated with `source test_env/bin/activate`
@@ -350,10 +436,10 @@ python analyze_direct.py input_text/revolutions/french_revolution.txt > $EVIDENC
 - Clear error reporting with actionable information
 
 ### EVIDENCE-BASED DEVELOPMENT
-- All implementation progress must be documented in `evidence/current/Evidence_Phase25E_*.md` files
-- Include raw grep results showing pattern classification and elimination
-- Document each migration with before/after testing validation
-- Validate all claims with command-line evidence
+- All implementation progress must be documented in `evidence/current/Evidence_Phase26B_*.md` files
+- Include raw timeout test results, component testing logs, and stack traces
+- Document each fail-fast implementation with before/after behavior validation
+- Validate all claims with command-line evidence and systematic debugging logs
 
 ### SYSTEMATIC VALIDATION
 - Distinguish appropriate patterns (test data, documentation, semantic processing) from problematic patterns (hardcoded logic)
@@ -370,47 +456,57 @@ python analyze_direct.py input_text/revolutions/french_revolution.txt > $EVIDENC
 ```
 evidence/
 ├── current/
-│   └── Evidence_Phase25E_[TaskName].md     # Current phase only
+│   ├── Evidence_Phase26B_HangLocation.md       # Task 1: Hang isolation investigation
+│   ├── Evidence_Phase26B_ComponentTesting.md   # Task 2: Component resilience testing
+│   ├── Evidence_Phase26B_StateCorruption.md    # Task 3: State corruption investigation
+│   ├── Evidence_Phase26B_FailFast.md          # Task 4: Fail-fast implementation
+│   └── Evidence_Phase26B_Complete.md          # Task 5: Final validation results
 ├── completed/  
-│   └── Evidence_Phase25E_Complete.md       # Phase 25E partial work (archived)
+│   └── Evidence_Phase26A_Complete.md          # Phase 26A results (archived)
 ```
 
 **CRITICAL REQUIREMENTS**:
-- Evidence files must contain ONLY current phase work (no historical contradictions)
-- Raw execution logs required for all claims
-- No success declarations without demonstrable proof
-- Archive completed phases to avoid chronological confusion
+- Evidence files must contain systematic debugging approach with timeout tests
+- Raw execution logs, stack traces, and component testing results required
+- Exact hang location must be identified with demonstrable evidence
+- Document all fail-fast implementations with before/after behavior validation
 
 ---
 
 ## 🚨 IMMEDIATE NEXT STEPS FOR NEW LLM
 
-### MANDATORY FIRST STEP: System Health Validation
+### MANDATORY FIRST STEP: Pipeline Hang Validation
 ```bash
 cd /home/brian/projects/process_tracing
 source test_env/bin/activate
 
-# Validate core system (must show 22/22 tests passing)
+# 1. Validate core system is still healthy (must show 22/22 tests passing)
 python -m pytest tests/test_ontology_manager.py -v
 
-# Record baseline state
+# 2. CRITICAL: Attempt to reproduce pipeline hang issue
+echo "Testing if pipeline hang issue persists..."
+timeout 60 python analyze_direct.py input_text/revolutions/french_revolution.txt
+# Expected result: Either completes successfully OR times out (indicating hang persists)
+
+# 3. Document current system state
 python -c "
 from core.ontology_manager import ontology_manager
-from tests.ontology_test_helpers import OntologyTestHelper
-print('✅ System health validated - proceed with systematic analysis')
+print(f'✅ OntologyManager healthy: {len(ontology_manager.get_all_edge_types())} edge types')
+print('🔍 Ready to begin systematic hang investigation')
 "
 ```
 
-### NEXT: Execute Systematic Phase 25E Tasks 1-5
-Follow the 5 tasks above (🔍 TASK 1 through 📝 TASK 5) with complete systematic coverage.
+### NEXT: Execute Systematic Phase 26B Tasks 1-5
+Follow the 5 tasks above (🔍 TASK 1 through 📊 TASK 5) with systematic hang investigation approach.
 
-**CRITICAL REMINDERS FROM LESSONS LEARNED**:
-- 🚨 **NO SHORTCUTS**: Complete analysis of every file and pattern required
-- 🚨 **EVIDENCE-BASED**: Every claim backed by raw command output
-- 🚨 **HONEST ASSESSMENT**: State confidence levels and limitations explicitly
-- 🚨 **SYSTEMATIC COVERAGE**: No spot-checking or extrapolation allowed
+**CRITICAL REMINDERS FROM Phase 26A LESSONS LEARNED**:
+- 🚨 **SYSTEMATIC HANG INVESTIGATION**: Must identify exact hang location, no assumptions allowed
+- 🚨 **COMPONENT-BY-COMPONENT TESTING**: Test each system component individually with ontology changes  
+- 🚨 **TIMEOUT-BASED VALIDATION**: Use timeouts to catch hangs, never wait indefinitely
+- 🚨 **FAIL-FAST IMPLEMENTATION**: Convert all hangs to clear, actionable error messages
+- 🚨 **STATE CORRUPTION AWARENESS**: Investigate module caching and singleton patterns causing persistent issues
 
-**CURRENT STATUS**: Phase 25E Partial - High-quality targeted fixes completed, systematic analysis of remaining ~31 files required.
+**CURRENT STATUS**: Phase 26B Ready - Pipeline hang investigation required to resolve critical brittleness blocking ontology resilience validation.
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
