@@ -298,7 +298,15 @@ class StructuredProcessTracingExtractor:
     def _extract_with_structured_output(self, prompt: str) -> ProcessTracingGraph:
         """Use LiteLLM structured output with Pydantic schema - fail fast if it doesn't work"""
         import time
+        import signal
+        
+        def timeout_handler(signum, frame):
+            raise TimeoutError("❌ FAIL-FAST: LLM extraction timed out after 5 minutes")
+        
         try:
+            # Set aggressive 5-minute timeout using signal (fail-safe)
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(300)  # 5 minutes in seconds
             # PHASE 19B: Add diagnostic instrumentation for hang detection
             prompt_size_kb = len(prompt) / 1024
             print(f"[DIAGNOSTIC] Starting LiteLLM call with prompt size: {prompt_size_kb:.1f}KB")
@@ -426,11 +434,15 @@ class StructuredProcessTracingExtractor:
                 else:
                     print(f"[PHASE23A] All final edges have valid node references")
                 
+                # Clear timeout signal
+                signal.alarm(0)
                 return result
             else:
                 raise ValueError("No content returned from LiteLLM")
                 
         except Exception as e:
+            # Clear timeout signal in all cases
+            signal.alarm(0)
             call_duration = time.time() - call_start_time if 'call_start_time' in locals() else -1
             print(f"[ERROR] LiteLLM structured output failed after {call_duration:.2f} seconds: {str(e)}")
             print(f"[ERROR] Exception type: {type(e).__name__}")
