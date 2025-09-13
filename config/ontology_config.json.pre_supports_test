@@ -1,0 +1,311 @@
+{
+  "node_types": {
+    "Event": {
+      "properties": {
+        "description": {"type": "string", "required": true},
+        "timestamp": {"type": "datetime", "required": false},
+        "location": {"type": "string", "required": false},
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "type": {"type": "string", "allowed_values": ["triggering", "intermediate", "outcome", "unspecified"], "required": false},
+        "date": {"type": "string", "required": false},
+        "start_date": {"type": "string", "required": false},
+        "end_date": {"type": "string", "required": false},
+        "is_point_in_time": {"type": "boolean", "required": false}
+      },
+      "plural_name": "Events"
+    },
+    "Causal_Mechanism": {
+      "properties": {
+        "description": {"type": "string", "required": true},
+        "confidence": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "status": {"type": "string", "allowed_values": ["hypothetical", "supported", "refuted", "unspecified"], "required": false},
+        "level_of_detail": {"type": "string", "required": false}
+      },
+      "plural_name": "Causal Mechanisms"
+    },
+    "Hypothesis": {
+      "properties": {
+        "description": {"type": "string", "description": "A detailed description of the hypothesis, which should be a specific, testable statement or conjecture about a causal relationship or the operation of a Causal Mechanism.", "required": true},
+        "prior_probability": {"type": "float", "description": "The estimated probability of this hypothesis being true BEFORE considering the evidence from this text (value between 0.0 and 1.0). Optional.", "min": 0.0, "max": 1.0, "required": false},
+        "posterior_probability": {"type": "float", "description": "The estimated probability of this hypothesis being true AFTER considering the evidence. (This would typically be calculated by an analysis step). Optional.", "min": 0.0, "max": 1.0, "required": false},
+        "status": {"type": "string", "description": "The current assessment status of the hypothesis (e.g., 'active', 'supported', 'partially_supported', 'refuted', 'undetermined'). Optional.", "allowed_values": ["active", "supported", "partially_supported", "refuted", "undetermined"], "required": false},
+        "hypothesis_type": {"type": "string", "description": "Academic classification: primary hypothesis (H1) or alternative hypothesis (H2, H3, etc.)", "allowed_values": ["primary", "alternative"], "required": false},
+        "ranking_score": {"type": "float", "description": "Evidence-based ranking score calculated from Van Evera diagnostic test results (0.0-1.0)", "min": 0.0, "max": 1.0, "required": false},
+        "research_question_id": {"type": "string", "description": "ID of the associated research question this hypothesis addresses", "required": false}
+      },
+      "plural_name": "Hypotheses"
+    },
+    "Evidence": {
+      "properties": {
+        "description": {"type": "string", "required": true},
+        "type": {"type": "string", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "bayesian", "general"], "required": true},
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "source": {"type": "string", "required": false},
+        "credibility": {"type": "float", "min": 0.0, "max": 1.0, "required": false}
+      },
+      "plural_name": "Evidence"
+    },
+    "Condition": {
+      "properties": {
+        "description": {"type": "string", "required": true},
+        "type": {"type": "string", "allowed_values": ["background", "enabling", "constraining", "scope"], "required": false},
+        "necessity": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "temporal_scope": {"type": "string", "required": false},
+        "spatial_scope": {"type": "string", "required": false},
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false}
+      },
+      "plural_name": "Conditions"
+    },
+    "Actor": {
+      "properties": {
+        "name": {"type": "string", "required": true},
+        "role": {"type": "string", "required": false},
+        "intentions": {"type": "string", "required": false},
+        "beliefs": {"type": "string", "required": false},
+        "constraints": {"type": "string", "required": false},
+        "capabilities": {"type": "string", "required": false},
+        "credibility": {"type": "float", "min": 0.0, "max": 1.0, "required": false}
+      },
+      "plural_name": "Actors"
+    },
+    "Inference_Rule": {
+      "properties": {
+        "description": {"type": "string", "required": true},
+        "type": {"type": "string", "allowed_values": ["bayesian_updating", "abductive", "deductive", "inductive", "heuristic", "general"], "required": true}
+      },
+      "plural_name": "Inference Rules"
+    },
+    "Inferential_Test": {
+      "properties": {
+        "description": {"type": "string", "required": true},
+        "type": {"type": "string", "allowed_values": ["hoop", "smoking_gun", "doubly_decisive", "bayesian", "general"], "required": true},
+        "conditions": {"type": "string", "required": false}
+      },
+      "plural_name": "Inferential Tests"
+    },
+    "Research_Question": {
+      "properties": {
+        "description": {"type": "string", "description": "The primary research question guiding the process tracing analysis", "required": true},
+        "domain": {"type": "string", "description": "Research domain (e.g., political, historical, social)", "required": false},
+        "scope": {"type": "string", "description": "Temporal or geographical scope of the question", "required": false},
+        "importance": {"type": "string", "description": "Academic or policy importance of the question", "required": false}
+      },
+      "plural_name": "Research Questions"
+    },
+    "Data_Source": {
+      "properties": {
+        "type": {"type": "string", "allowed_values": ["interview", "document", "observation", "artifact", "general"], "required": true},
+        "credibility": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "bias_risk": {"type": "float", "min": 0.0, "max": 1.0, "required": false}
+      },
+      "plural_name": "Data Sources"
+    }
+  },
+  "edge_types": {
+    "causes": {
+      "domain": ["Event"],
+      "range": ["Event"],
+      "properties": {
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "mechanism_id": {"type": "string", "required": false},
+        "type": {"type": "string", "allowed_values": ["direct", "indirect"], "required": false}
+      },
+      "label": "causes"
+    },
+    "part_of_mechanism": {
+      "domain": ["Event"],
+      "range": ["Causal_Mechanism"],
+      "properties": {
+        "role": {"type": "string", "required": false}
+      },
+      "label": "part of mechanism"
+    },
+    "tests_hypothesis": {
+      "domain": ["Evidence", "Event"],
+      "range": ["Hypothesis"],
+      "properties": {
+        "inferential_test_id": {"type": "string", "required": false},
+        "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "test_result": {"type": "string", "allowed_values": ["passed", "failed", "ambiguous"], "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
+      },
+      "label": "tests hypothesis"
+    },
+    "tests_mechanism": {
+      "domain": ["Evidence", "Event"],
+      "range": ["Causal_Mechanism"],
+      "properties": {
+        "inferential_test_id": {"type": "string", "required": false},
+        "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "test_result": {"type": "string", "allowed_values": ["passed", "failed", "ambiguous"], "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
+      },
+      "label": "tests mechanism"
+    },
+    "enables": {
+      "domain": ["Condition"],
+      "range": ["Event", "Causal_Mechanism", "Hypothesis"],
+      "properties": {
+        "necessity": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "type": {"type": "string", "required": false}
+      },
+      "label": "enables"
+    },
+    "constrains": {
+      "domain": ["Condition"],
+      "range": ["Event", "Causal_Mechanism", "Actor"],
+      "properties": {
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "type": {"type": "string", "required": false}
+      },
+      "label": "constrains"
+    },
+    "provides_evidence": {
+      "domain": ["Data_Source"],
+      "range": ["Evidence"],
+      "properties": {
+        "credibility": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "bias_risk": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false}
+      },
+      "label": "provides evidence"
+    },
+    "initiates": {
+      "domain": ["Actor"],
+      "range": ["Event"],
+      "properties": {
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "intention": {"type": "string", "required": false},
+        "agency": {"type": "string", "required": false}
+      },
+      "label": "initiates"
+    },
+    "infers": {
+      "domain": ["Evidence", "Event", "Inference_Rule"],
+      "range": ["Hypothesis", "Causal_Mechanism"],
+      "properties": {
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "logic_type": {"type": "string", "required": false}
+      },
+      "label": "infers"
+    },
+    "updates_probability": {
+      "domain": ["Evidence"],
+      "range": ["Hypothesis"],
+      "properties": {
+        "prior_probability": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "posterior_probability": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "Bayes_factor": {"type": "float", "min": 0.0, "required": false}
+      },
+      "label": "updates probability"
+    },
+    "contradicts": {
+      "domain": ["Evidence"],
+      "range": ["Evidence"],
+      "properties": {
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false},
+        "reason": {"type": "string", "required": false}
+      },
+      "label": "contradicts"
+    },
+    "supports": {
+      "domain": ["Evidence", "Event"],
+      "range": ["Hypothesis", "Event", "Causal_Mechanism", "Actor"],
+      "properties": {
+        "label": {"type": "string", "description": "Defaults to 'supports'. Optional.", "required": false},
+        "description": {"type": "string", "description": "Explanation of how the evidence/event supports the target. Optional.", "required": false},
+        "probative_value": {"type": "float", "description": "A numerical assessment of how strongly this supports the target (0.0 to 1.0, where 0.0 is no support, 1.0 is maximum support). Optional.", "min": 0.0, "max": 1.0, "required": false},
+        "source_text_quote": {"type": "string", "description": "The exact quote or specific textual reference from the input that substantiates this supportive link. Optional.", "required": false},
+        "certainty": {"type": "float", "description": "Confidence level in this supportive link (0.0 to 1.0). Optional.", "min": 0.0, "max": 1.0, "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type when evidence supports target.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false},
+        "target_type": {"type": "string", "description": "What aspect is being supported.", "allowed_values": ["event_occurrence", "causal_relationship", "mechanism_operation", "general"], "required": false}
+      },
+      "label": "supports"
+    },
+    "refutes": {
+      "domain": ["Evidence", "Event"],
+      "range": ["Hypothesis", "Event", "Causal_Mechanism"],
+      "properties": {
+        "label": {"type": "string", "description": "Defaults to 'refutes'. Optional.", "required": false},
+        "description": {"type": "string", "description": "Explanation of how the evidence/event refutes the target. Optional.", "required": false},
+        "probative_value": {"type": "float", "description": "A numerical assessment of how strongly this refutes the target (0.0 to 1.0, where 0.0 is no refutation, 1.0 is maximum refutation). Optional.", "min": 0.0, "max": 1.0, "required": false},
+        "source_text_quote": {"type": "string", "description": "The exact quote or specific textual reference from the input that substantiates this refuting link. Optional.", "required": false},
+        "certainty": {"type": "float", "description": "Confidence level in this refuting link (0.0 to 1.0). Optional.", "min": 0.0, "max": 1.0, "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type when evidence refutes target.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false},
+        "target_type": {"type": "string", "description": "What aspect is being refuted.", "allowed_values": ["event_occurrence", "causal_relationship", "mechanism_operation", "general"], "required": false}
+      },
+      "label": "refutes"
+    },
+    "explains_mechanism": {
+      "domain": ["Hypothesis"],
+      "range": ["Causal_Mechanism"],
+      "properties": {
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "Confidence that this hypothesis correctly pertains to this mechanism."},
+        "type_of_claim": {"type": "string", "allowed_values": ["existence", "operation", "significance", "component_role", "operational_details", "unspecified"], "required": false, "description": "Describes what aspect of the mechanism the hypothesis is claiming."}
+      },
+      "label": "explains mechanism"
+    },
+    "confirms_occurrence": {
+      "domain": ["Evidence"],
+      "range": ["Event"],
+      "properties": {
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "Confidence that the evidence confirms the event occurred."},
+        "source_text_quote": {"type": "string", "description": "Exact quote from source that confirms event occurrence.", "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type for event confirmation.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
+      },
+      "label": "confirms occurrence"
+    },
+    "disproves_occurrence": {
+      "domain": ["Evidence"],
+      "range": ["Event"],
+      "properties": {
+        "certainty": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "Confidence that the evidence disproves the event occurred."},
+        "source_text_quote": {"type": "string", "description": "Exact quote from source that disproves event occurrence.", "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type for event disproof.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
+      },
+      "label": "disproves occurrence"
+    },
+    "provides_evidence_for": {
+      "domain": ["Event", "Evidence"],
+      "range": ["Hypothesis", "Causal_Mechanism", "Actor"],
+      "properties": {
+        "probative_value": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "How strongly the event serves as evidence."},
+        "reasoning": {"type": "string", "description": "Explanation of how the event provides evidence.", "required": false},
+        "diagnostic_type": {"type": "string", "description": "Van Evera diagnostic test type when event serves as evidence.", "allowed_values": ["hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"], "required": false}
+      },
+      "label": "provides evidence for"
+    },
+    "weighs_evidence": {
+      "domain": ["Evidence"],
+      "range": ["Evidence", "Hypothesis", "Causal_Mechanism"],
+      "properties": {
+        "comparison_strength": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "Relative strength of source evidence compared to target evidence."},
+        "comparison_type": {"type": "string", "description": "Type of evidence comparison.", "allowed_values": ["stronger_than", "weaker_than", "equivalent_to", "complements", "contradicts"], "required": false},
+        "reasoning": {"type": "string", "description": "Explanation of why one evidence weighs more than another.", "required": false}
+      },
+      "label": "weighs evidence"
+    },
+    "addresses_research_question": {
+      "domain": ["Hypothesis"],
+      "range": ["Research_Question"],
+      "properties": {
+        "relevance": {"type": "float", "min": 0.0, "max": 1.0, "required": false, "description": "How directly the hypothesis addresses the research question."},
+        "approach": {"type": "string", "description": "How the hypothesis approaches answering the research question.", "required": false}
+      },
+      "label": "addresses research question"
+    }
+  },
+  "node_colors": {
+    "Event": "#66b3ff",
+    "Causal_Mechanism": "#99ff99",
+    "Hypothesis": "#ffcc00",
+    "Evidence": "#ff6666",
+    "Condition": "#ccccff",
+    "Actor": "#ff99cc",
+    "Inference_Rule": "#cc99ff",
+    "Inferential_Test": "#ffb366",
+    "Research_Question": "#8b5a3c",
+    "Data_Source": "#c2c2f0"
+  }
+} 
