@@ -17,10 +17,13 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, '/home/brian/projects/process_tracing')
 
-def validate_system_ontology():
+def validate_system_ontology(evolution_mode=False):
     """
     FAIL-FAST: Validate ontology and system health at pipeline entry
     Prevents hanging by catching configuration issues early
+    
+    Args:
+        evolution_mode (bool): If True, allows ontology changes with warnings instead of failing
     """
     try:
         from core.ontology_manager import ontology_manager
@@ -30,9 +33,16 @@ def validate_system_ontology():
         missing = [e for e in required_edges if e not in ontology_manager.get_all_edge_types()]
         
         if missing:
-            raise ValueError(f"❌ ONTOLOGY VALIDATION FAILED: Missing critical edge types: {missing}")
+            if evolution_mode:
+                print(f"⚠️  EVOLUTION MODE: Missing critical edge types: {missing}")
+                print(f"🧬 Proceeding with ontology evolution - system may have reduced functionality")
+                print(f"💡 To disable this warning, ensure all critical edge types exist in ontology")
+            else:
+                raise ValueError(f"❌ ONTOLOGY VALIDATION FAILED: Missing critical edge types: {missing}")
         
         print(f"✅ Ontology validation passed: {len(ontology_manager.get_all_edge_types())} edge types")
+        if evolution_mode:
+            print(f"🧬 Evolution mode active - ontology changes permitted")
         
         # Test LiteLLM imports early
         import litellm
@@ -54,20 +64,22 @@ def main():
     print("Bypassing problematic python -m core.analyze execution")
     print()
     
-    # FAIL-FAST: Validate system before proceeding
-    print("🔍 VALIDATING SYSTEM CONFIGURATION...")
-    validate_system_ontology()
-    print("✅ System validation complete - proceeding with analysis")
-    print()
-    
-    # Parse arguments (enhanced for TEXT → JSON → HTML)
+    # Parse arguments first to get evolution mode flag
     parser = argparse.ArgumentParser(description='Direct process tracing analysis')
     parser.add_argument('input_file', help='Input file (text for extraction or JSON for analysis)')
     parser.add_argument('--html', action='store_true', help='Generate HTML output')
     parser.add_argument('--output-dir', help='Output directory')
     parser.add_argument('--extract-only', action='store_true', help='Only extract graph from text, skip HTML')
+    parser.add_argument('--evolution-mode', action='store_true', help='Enable evolution mode to allow ontology changes with warnings instead of errors')
     
     args = parser.parse_args()
+    
+    # FAIL-FAST: Validate system before proceeding
+    print("🔍 VALIDATING SYSTEM CONFIGURATION...")
+    validate_system_ontology(evolution_mode=args.evolution_mode)
+    print("✅ System validation complete - proceeding with analysis")
+    print()
+    
     
     # Validate input file
     if not os.path.exists(args.input_file):
