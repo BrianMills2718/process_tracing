@@ -17,32 +17,31 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, '/home/brian/projects/process_tracing')
 
-def validate_system_ontology(evolution_mode=False):
+def validate_system_ontology(validation_mode='strict'):
     """
     FAIL-FAST: Validate ontology and system health at pipeline entry
     Prevents hanging by catching configuration issues early
     
     Args:
-        evolution_mode (bool): If True, allows ontology changes with warnings instead of failing
+        validation_mode (str): 'strict' (all requirements), 'minimal' (critical only), 'schema-only' (JSON only)
     """
     try:
         from core.ontology_manager import ontology_manager
+        from core.dynamic_ontology_validator import DynamicOntologyValidator
         
-        # Check critical edge types exist
-        required_edges = ['tests_hypothesis', 'supports', 'provides_evidence_for']
-        missing = [e for e in required_edges if e not in ontology_manager.get_all_edge_types()]
+        # Use dynamic validation instead of hardcoded requirements
+        validator = DynamicOntologyValidator(ontology_manager)
+        result = validator.validate(validation_mode)
         
-        if missing:
-            if evolution_mode:
-                print(f"⚠️  EVOLUTION MODE: Missing critical edge types: {missing}")
-                print(f"🧬 Proceeding with ontology evolution - system may have reduced functionality")
-                print(f"💡 To disable this warning, ensure all critical edge types exist in ontology")
+        if result.success:
+            print(f"✅ Ontology validation passed: {len(ontology_manager.get_all_edge_types())} edge types")
+            print(f"🎯 Validation mode: {validation_mode}")
+        else:
+            print(result.summary())
+            if not result.is_usable():
+                raise ValueError(f"❌ ONTOLOGY VALIDATION FAILED: System cannot operate with current ontology")
             else:
-                raise ValueError(f"❌ ONTOLOGY VALIDATION FAILED: Missing critical edge types: {missing}")
-        
-        print(f"✅ Ontology validation passed: {len(ontology_manager.get_all_edge_types())} edge types")
-        if evolution_mode:
-            print(f"🧬 Evolution mode active - ontology changes permitted")
+                print("⚠️  ONTOLOGY WARNINGS: System can operate but with reduced functionality")
         
         # Test LiteLLM imports early
         import litellm
@@ -70,13 +69,13 @@ def main():
     parser.add_argument('--html', action='store_true', help='Generate HTML output')
     parser.add_argument('--output-dir', help='Output directory')
     parser.add_argument('--extract-only', action='store_true', help='Only extract graph from text, skip HTML')
-    parser.add_argument('--evolution-mode', action='store_true', help='Enable evolution mode to allow ontology changes with warnings instead of errors')
+    parser.add_argument('--validation-mode', choices=['strict', 'minimal', 'schema-only'], default='strict', help='Validation mode: strict (all requirements), minimal (critical only), schema-only (JSON structure only)')
     
     args = parser.parse_args()
     
     # FAIL-FAST: Validate system before proceeding
     print("🔍 VALIDATING SYSTEM CONFIGURATION...")
-    validate_system_ontology(evolution_mode=args.evolution_mode)
+    validate_system_ontology(validation_mode=args.validation_mode)
     print("✅ System validation complete - proceeding with analysis")
     print()
     
