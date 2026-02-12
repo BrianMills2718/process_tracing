@@ -21,18 +21,23 @@ GOOD: "Why did the Directory collapse into Napoleon's coup rather than evolving 
 
 Pick the outcome that the text's evidence best allows you to adjudicate. The hypotheses must ALL explain THIS SAME outcome via different causal paths.
 
-## Rule 2: DIVERGENT hypotheses answering the SAME question
+## Rule 2: HYPOTHESES AS COMPETING "DECISIVE FACTOR" CLAIMS
+
+Each hypothesis must claim: "Factor X was the DECISIVE cause — without X, the outcome would NOT have occurred, even if other contributing factors were present."
+
+This means hypotheses must be in TENSION with each other. If H1 is correct (structural forces were decisive), then H2 (individual agency was decisive) must be WRONG — because H1 claims the outcome would have happened regardless of individual choices. Conversely, if H2 is right, then individuals' choices were necessary and the structural conditions alone were insufficient.
 
 Every hypothesis must:
+- Claim to be the NECESSARY and/or SUFFICIENT cause of the specific outcome
 - Explain the SAME specific outcome (from the research question)
 - Propose a DIFFERENT causal mechanism
 - Make predictions that CONTRADICT at least one other hypothesis's predictions
 
-If H1 and H2 would predict the same evidence, they are not competing hypotheses—combine them or sharpen the distinction.
+If H1 and H2 can both be fully true without contradiction, they are not competing hypotheses — combine them into one or reframe them as competing claims about which factor was decisive.
 
 ## Rule 3: Decompose compound explanations
 
-If the text says "A + B + C caused X," test A, B, and C as separate hypotheses. Which one did the most causal work? That's what process tracing is for.
+If the text says "A + B + C caused X," test A, B, and C as separate hypotheses. Which one did the DECISIVE causal work — the one without which X would not have happened? That's what process tracing is for.
 
 ## Rule 4: DISTINGUISHABILITY CHECK
 
@@ -40,7 +45,10 @@ For each PAIR of hypotheses, you must be able to name at least THREE pieces of e
 
 Each hypothesis's `observable_predictions` must include at least 3 predictions that explicitly name a rival hypothesis they contradict. For example: "If H1 is true but H3 is false, we would expect to see X" or "Unlike H2, this hypothesis predicts Y."
 
-Common trap: Two hypotheses that both involve the same key actor (e.g., Napoleon) are probably not distinct. The distinction must be in the CAUSAL MECHANISM, not the personnel.
+Common traps to AVOID:
+- Two hypotheses that both involve the same key actor (e.g., Napoleon) are probably not distinct. The distinction must be in the CAUSAL MECHANISM, not the personnel.
+- **CHAIN HYPOTHESES**: If H1 is a precondition for H2, or H2 is the ideological framing of H1's material cause, they are NOT rivals — they are steps in the SAME causal story. Example: "salutary neglect created autonomy expectations" (precondition) + "new taxes triggered resistance" (trigger) + "constitutional principles mobilized opposition" (framing) are THREE FACETS OF ONE EXPLANATION, not three competing hypotheses. MERGE them into one and find genuinely different causal mechanisms.
+- **Test**: If all three hypotheses could be TRUE simultaneously without contradiction, they are not rivals. Real rivals are in tension: if elite conspiracy drove the outcome, then popular mobilization did NOT; if structural forces were sufficient, then individual agency was NOT necessary.
 
 ## Rule 5: NO TAUTOLOGICAL HYPOTHESES
 
@@ -56,6 +64,22 @@ The fix: replace the label ("instability") with the specific MECHANISM (purges �
 Do NOT create a hypothesis that directly quotes or closely paraphrases an interpretive evidence item. If the text says "Historian X argues that A caused B," you may NOT use "A caused B" as a hypothesis — because then evaluating that evidence against that hypothesis is circular (the evidence IS the hypothesis).
 
 Instead, decompose the historian's claim into a testable mechanism: What specific observable predictions does "A caused B" make that differ from alternative explanations?
+
+## Rule 7: MUTUAL EXCLUSION SELF-CHECK
+
+Before finalizing your hypotheses, apply this test to EVERY pair:
+
+"If H_A is the decisive cause, does that make H_B unnecessary or wrong?"
+
+- If YES for at least one direction → they are genuine rivals. Keep both.
+- If NO in both directions (both can be fully true and decisive simultaneously) → they are NOT rivals. MERGE or reframe.
+
+Examples of genuine rivalry:
+- "Structural economic forces made revolution inevitable" vs. "Without Samuel Adams's organizing, grievances would have dissipated" — if structural forces were sufficient, Adams was unnecessary; if Adams was necessary, structural forces alone were insufficient.
+- "Popular mobilization from below drove the revolution" vs. "Elite manipulation from above manufactured consent for revolution" — these make opposite predictions about where initiative originated.
+
+Examples of FAKE rivalry (fail the mutual exclusion test):
+- "British taxes angered colonists" vs. "Colonists had an ideology of liberty" vs. "Radical leaders organized resistance" — all three can be simultaneously true. They are three links in one causal chain: taxes provided the grievance, ideology framed it, leaders organized it. MERGE into one hypothesis.
 
 ## Instructions
 

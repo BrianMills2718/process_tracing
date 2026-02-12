@@ -43,8 +43,14 @@ Category 3 — COMPLICATING FACTS: Qualifications, counter-trends, surprising no
 Category 4 — HISTORIOGRAPHICAL CLAIMS (max 5 items): Where the text attributes an interpretation to a historian or scholarly tradition. Set `evidence_type` to "interpretive". WARNING: These are scholarly arguments, NOT empirical facts. They represent what historians think, not what happened.
 - Where the text says "Historian X argues that..."
 - Where the text attributes claims to specific scholars or traditions
+- Hedged claims: "some argue," "scholars believe," "it has been suggested," "one interpretation is" — these are ALL interpretive, even without naming a specific historian
+- Characterizations of actors' MOTIVATIONS or GOALS (e.g., "Parliament intended to assert authority") are interpretive unless the text cites direct evidence of that intent (e.g., a letter, speech, or vote record)
 
 You MUST include items from ALL four categories. If the text says "X happened, but Y qualified it," extract BOTH X and Y as separate evidence items.
+
+## CRITICAL: Source fidelity
+
+Every evidence item's `source_text` MUST be a direct quote or close paraphrase from the input text. Do NOT invent, hallucinate, or import evidence from your general knowledge. If a fact is not stated in the text below, it does not exist for purposes of this analysis. Extract ONLY what the text actually says.
 
 For EVERY evidence item, set `approximate_date` if the text provides temporal information (e.g., "1788", "1793-06", "1799-11"). Leave null only if no date can be inferred.
 
