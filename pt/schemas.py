@@ -165,6 +165,15 @@ class HypothesisVerdict(BaseModel):
     key_evidence_for: list[str] = Field(description="Evidence IDs that support this hypothesis")
     key_evidence_against: list[str] = Field(description="Evidence IDs that weigh against this hypothesis")
     reasoning: str
+    steelman: str = Field(
+        description="The STRONGEST possible case for this hypothesis, even if it was eliminated. "
+        "What would a passionate advocate argue? What evidence supports it most?"
+    )
+    posterior_robustness: str = Field(
+        default="robust",
+        description="'robust' if the posterior is driven by a few decisive tests, "
+        "'fragile' if driven by accumulation of many small effects that could individually go either way"
+    )
 
 
 class SynthesisResult(BaseModel):

@@ -21,19 +21,19 @@ GOOD: "Why did the Directory collapse into Napoleon's coup rather than evolving 
 
 Pick the outcome that the text's evidence best allows you to adjudicate. The hypotheses must ALL explain THIS SAME outcome via different causal paths.
 
-## Rule 2: HYPOTHESES AS COMPETING "DECISIVE FACTOR" CLAIMS
+## Rule 2: HYPOTHESES MUST MAKE OPPOSITE PREDICTIONS
+
+The defining feature of genuine rivalry: two hypotheses must make **opposite predictions about the same observable evidence**. If H1 predicts we should see X, then H2 must predict we should see NOT-X (or Y instead of X). If both hypotheses predict the same evidence, they are not rivals — they are either the same hypothesis with different labels, or complementary parts of one explanation.
 
 Each hypothesis must claim: "Factor X was the DECISIVE cause — without X, the outcome would NOT have occurred, even if other contributing factors were present."
-
-This means hypotheses must be in TENSION with each other. If H1 is correct (structural forces were decisive), then H2 (individual agency was decisive) must be WRONG — because H1 claims the outcome would have happened regardless of individual choices. Conversely, if H2 is right, then individuals' choices were necessary and the structural conditions alone were insufficient.
 
 Every hypothesis must:
 - Claim to be the NECESSARY and/or SUFFICIENT cause of the specific outcome
 - Explain the SAME specific outcome (from the research question)
 - Propose a DIFFERENT causal mechanism
-- Make predictions that CONTRADICT at least one other hypothesis's predictions
+- Make predictions that **CONTRADICT** at least one other hypothesis's predictions on specific, observable evidence
 
-If H1 and H2 can both be fully true without contradiction, they are not competing hypotheses — combine them into one or reframe them as competing claims about which factor was decisive.
+**Complementary factors are NOT rivals.** If A is a precondition, B is a trigger, and C is a framing device, they are three components of one explanation. Merge them. Genuine rivals disagree about the causal mechanism itself — they predict different sequences, different actors as primary movers, different evidence patterns.
 
 ## Rule 3: Decompose compound explanations
 
@@ -46,9 +46,9 @@ For each PAIR of hypotheses, you must be able to name at least THREE pieces of e
 Each hypothesis's `observable_predictions` must include at least 3 predictions that explicitly name a rival hypothesis they contradict. For example: "If H1 is true but H3 is false, we would expect to see X" or "Unlike H2, this hypothesis predicts Y."
 
 Common traps to AVOID:
-- Two hypotheses that both involve the same key actor (e.g., Napoleon) are probably not distinct. The distinction must be in the CAUSAL MECHANISM, not the personnel.
-- **CHAIN HYPOTHESES**: If H1 is a precondition for H2, or H2 is the ideological framing of H1's material cause, they are NOT rivals — they are steps in the SAME causal story. Example: "salutary neglect created autonomy expectations" (precondition) + "new taxes triggered resistance" (trigger) + "constitutional principles mobilized opposition" (framing) are THREE FACETS OF ONE EXPLANATION, not three competing hypotheses. MERGE them into one and find genuinely different causal mechanisms.
-- **Test**: If all three hypotheses could be TRUE simultaneously without contradiction, they are not rivals. Real rivals are in tension: if elite conspiracy drove the outcome, then popular mobilization did NOT; if structural forces were sufficient, then individual agency was NOT necessary.
+- Two hypotheses that both involve the same key actor are probably not distinct. The distinction must be in the CAUSAL MECHANISM, not the personnel.
+- **CHAIN HYPOTHESES**: If H1 is a precondition for H2, or H2 is the ideological framing of H1's material cause, they are NOT rivals — they are steps in the SAME causal story. A precondition + a trigger + a framing device = ONE explanation, not three. MERGE and find genuinely different causal mechanisms.
+- **Simultaneous truth test**: If all hypotheses could be TRUE simultaneously without contradiction, they are not rivals.
 
 ## Rule 5: NO TAUTOLOGICAL HYPOTHESES
 
@@ -74,12 +74,7 @@ Before finalizing your hypotheses, apply this test to EVERY pair:
 - If YES for at least one direction → they are genuine rivals. Keep both.
 - If NO in both directions (both can be fully true and decisive simultaneously) → they are NOT rivals. MERGE or reframe.
 
-Examples of genuine rivalry:
-- "Structural economic forces made revolution inevitable" vs. "Without Samuel Adams's organizing, grievances would have dissipated" — if structural forces were sufficient, Adams was unnecessary; if Adams was necessary, structural forces alone were insufficient.
-- "Popular mobilization from below drove the revolution" vs. "Elite manipulation from above manufactured consent for revolution" — these make opposite predictions about where initiative originated.
-
-Examples of FAKE rivalry (fail the mutual exclusion test):
-- "British taxes angered colonists" vs. "Colonists had an ideology of liberty" vs. "Radical leaders organized resistance" — all three can be simultaneously true. They are three links in one causal chain: taxes provided the grievance, ideology framed it, leaders organized it. MERGE into one hypothesis.
+The acid test: for each pair, identify at least one piece of observable evidence where H_A predicts one thing and H_B predicts the opposite. If you cannot, they are not rivals.
 
 ## Instructions
 

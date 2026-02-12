@@ -27,6 +27,8 @@ For each hypothesis:
 - `key_evidence_for`: Evidence IDs where LR > 1 (supports this hypothesis)
 - `key_evidence_against`: Evidence IDs where LR < 1 (weighs against this hypothesis). EVERY hypothesis should have SOME evidence against it unless the case is overwhelming.
 - `reasoning`: 2-3 sentences on why this verdict follows from the specific tests that passed/failed
+- `steelman`: **MANDATORY for ALL hypotheses, especially eliminated ones.** Write 3-5 sentences presenting the STRONGEST possible case for this hypothesis, as if you were its most passionate advocate. What is the best evidence? What reasoning makes it plausible? Even if the posterior is 0.001, a fair analysis shows the reader why a reasonable person might believe this hypothesis. If you cannot steelman a hypothesis, the hypothesis space is poorly designed.
+- `posterior_robustness`: Set to "robust" if the posterior was driven by a few decisive diagnostic tests (smoking guns, hoop failures). Set to "fragile" if the posterior was driven by accumulation of many small LR effects from borderline-relevant evidence — because those small effects could easily go the other way. A hypothesis eliminated by one decisive test is robustly eliminated; a hypothesis eliminated by 30 items each contributing LR=0.8 is fragile.
 
 ### 2. Comparative analysis
 A substantial paragraph (8-12 sentences) comparing hypotheses:
