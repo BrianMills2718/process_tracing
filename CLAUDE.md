@@ -64,18 +64,20 @@ Options: `--model <litellm-model-id>` to override the default model.
 | `pt/report.py` | HTML report generation | No |
 | `pt/cli.py` | CLI entry point | No |
 
-### Key Design Decisions (v5c)
+### Key Design Decisions (v5d)
 
-- **Decisive-factor framing**: Each hypothesis claims to be the decisive cause — the factor without which the outcome would NOT have happened. Hypotheses must be in genuine tension (mutual exclusion self-check, Rule 7).
 - **LR cap at 20.0**: Prevents single evidence items from dominating. `LR_CAP = 20.0`, `LR_FLOOR = 0.05`.
 - **Relevance gating**: Evidence with `relevance < 0.4` is forced to `LR = 1.0` (uninformative). Above 0.4, soft discount via `lr = exp(relevance * log(capped_lr))`.
 - **Relevance = min(temporal, causal-domain)**: Not just "how recent" but "how on-topic for this hypothesis."
 - **Anti-circularity**: Hypotheses cannot be derived from interpretive evidence. Circular evidence gets `relevance = 0.1`.
 - **Anti-tautology**: Hypotheses must specify causal mechanisms, not describe outcomes.
-- **Anti-chain**: Complementary facets of one explanation (precondition + trigger + framing) must be merged, not treated as rivals.
+- **Opposite predictions**: Genuine rivals must make opposite predictions about the same observable evidence. Complementary factors (precondition + trigger + framing) must be merged.
+- **Mutual exclusion self-check**: "If H_A is decisive, does that make H_B unnecessary or wrong?" If no → merge.
 - **Mandatory agency hypothesis**: At least one hypothesis must name specific individuals making deliberate choices.
 - **Source fidelity**: Every evidence item must quote or closely paraphrase the input text. No hallucinated evidence.
 - **Pairwise discrimination**: Each hypothesis pair must have 3+ evidence items where LRs diverge by 2x+.
+- **Steelman verdicts**: Every hypothesis gets a mandatory steelman case, even if eliminated — ensures fair analysis.
+- **Posterior robustness**: Each verdict flagged "robust" (driven by decisive tests) or "fragile" (driven by many small LR effects).
 
 ### Prompt Quality Notes
 
