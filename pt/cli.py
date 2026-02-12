@@ -16,6 +16,7 @@ def main() -> None:
     parser.add_argument("--output-dir", "-o", default=None, help="Output directory (default: output/<basename>)")
     parser.add_argument("--json-only", action="store_true", help="Output JSON only, skip HTML report")
     parser.add_argument("--model", "-m", default=None, help="LLM model override (default: PT_MODEL env or gemini-2.5-flash)")
+    parser.add_argument("--review", action="store_true", help="Pause after hypothesis generation for human review")
     args = parser.parse_args()
 
     if not os.path.isfile(args.input):
@@ -39,7 +40,7 @@ def main() -> None:
     from pt.pipeline import run_pipeline
     from pt.report import generate_report
 
-    result = run_pipeline(text, model=args.model)
+    result = run_pipeline(text, model=args.model, review=args.review, output_dir=output_dir)
 
     # Write JSON
     json_path = os.path.join(output_dir, "result.json")

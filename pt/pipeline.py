@@ -2,14 +2,54 @@
 
 from __future__ import annotations
 
+import json
+import os
 import time
+from typing import Callable
 
 from pt.bayesian import run_bayesian_update
 from pt.pass_extract import run_extract
 from pt.pass_hypothesize import run_hypothesize
 from pt.pass_synthesize import run_synthesize
 from pt.pass_test import run_test
-from pt.schemas import ProcessTracingResult
+from pt.schemas import HypothesisSpace, ProcessTracingResult
+
+
+def _default_review(hypothesis_space: HypothesisSpace, output_dir: str | None) -> HypothesisSpace:
+    """Interactive hypothesis review: display hypotheses, let user edit JSON."""
+    print("\n" + "=" * 60)
+    print("HYPOTHESIS REVIEW CHECKPOINT")
+    print("=" * 60)
+    print(f"\nResearch question: {hypothesis_space.research_question}\n")
+
+    for h in hypothesis_space.hypotheses:
+        print(f"  {h.id}: [{h.source}] {h.description}")
+        print(f"       Mechanism: {h.causal_mechanism}")
+        print(f"       Predictions: {len(h.observable_predictions)}")
+        print()
+
+    # Write hypotheses JSON for editing
+    hyp_path = os.path.join(output_dir, "hypotheses.json") if output_dir else "hypotheses.json"
+    with open(hyp_path, "w", encoding="utf-8") as f:
+        json.dump(hypothesis_space.model_dump(), f, indent=2)
+    print(f"Hypotheses written to: {hyp_path}")
+    print("Edit the file to merge/split/modify hypotheses, then press Enter.")
+    print("Or press Enter without editing to continue as-is.")
+    print("=" * 60)
+
+    input("\nPress Enter to continue...")
+
+    # Reload (user may have edited)
+    with open(hyp_path, "r", encoding="utf-8") as f:
+        edited = json.load(f)
+    edited_space = HypothesisSpace.model_validate(edited)
+
+    if len(edited_space.hypotheses) != len(hypothesis_space.hypotheses):
+        print(f"  Hypotheses changed: {len(hypothesis_space.hypotheses)} → {len(edited_space.hypotheses)}")
+    else:
+        print("  Hypotheses unchanged.")
+
+    return edited_space
 
 
 def run_pipeline(
@@ -17,10 +57,18 @@ def run_pipeline(
     *,
     model: str | None = None,
     verbose: bool = True,
+    review: bool = False,
+    review_fn: Callable[[HypothesisSpace, str | None], HypothesisSpace] | None = None,
+    output_dir: str | None = None,
 ) -> ProcessTracingResult:
     """Run the full process tracing pipeline.
 
-    Pass 1: Extract → Pass 2: Hypothesize → Pass 3: Test → Bayes → Pass 4: Synthesize
+    Pass 1: Extract → Pass 2: Hypothesize → [Review] → Pass 3: Test → Bayes → Pass 4: Synthesize
+
+    Args:
+        review: If True, pause after hypothesis generation for user review.
+        review_fn: Custom review function. Defaults to interactive CLI review.
+        output_dir: Directory for writing review files.
     """
     t0 = time.time()
 
@@ -37,6 +85,11 @@ def run_pipeline(
     if verbose:
         print(f"  {len(hypothesis_space.hypotheses)} hypotheses "
               f"(text + rivals), research question: {hypothesis_space.research_question[:80]}...")
+
+    # Optional human review checkpoint
+    if review:
+        fn = review_fn or _default_review
+        hypothesis_space = fn(hypothesis_space, output_dir)
 
     if verbose:
         print(f"Pass 3/4: Diagnostic testing ({len(hypothesis_space.hypotheses)} hypotheses)...")

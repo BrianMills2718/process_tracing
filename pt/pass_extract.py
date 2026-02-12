@@ -52,6 +52,16 @@ You MUST include items from ALL four categories. If the text says "X happened, b
 
 Every evidence item's `source_text` MUST be a direct quote or close paraphrase from the input text. Do NOT invent, hallucinate, or import evidence from your general knowledge. If a fact is not stated in the text below, it does not exist for purposes of this analysis. Extract ONLY what the text actually says.
 
+## CRITICAL: Multi-speaker and debate texts
+
+If the text is a debate, panel discussion, interview, or any format with multiple speakers who disagree:
+
+1. **Identify speakers as actors.** Each speaker with a distinct perspective should be an actor.
+2. **Attribute claims to speakers.** In each evidence item's `description`, note which speaker makes the claim (e.g., "Speaker A asserts that...").
+3. **Disputed facts are INTERPRETIVE, not empirical.** When Speaker A claims X and Speaker B disputes X or asserts the opposite, BOTH claims are `evidence_type: "interpretive"` — they represent competing assessments, not established facts. Only facts that both/all speakers accept or that are stated as undisputed background should be `evidence_type: "empirical"`.
+4. **Points of agreement are valuable.** When speakers with opposing positions agree on a factual claim, that convergence is stronger evidence than either speaker's uncontested claims. Flag these in the description.
+5. **Do NOT privilege one speaker over another.** A debate has no narrative authority — extract the strongest claims from ALL sides equally.
+
 For EVERY evidence item, set `approximate_date` if the text provides temporal information (e.g., "1788", "1793-06", "1799-11"). Leave null only if no date can be inferred.
 
 Each evidence item needs `source_text`: a direct quote (1-2 sentences). Keep `description` to 1 sentence.
