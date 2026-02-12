@@ -1,0 +1,78 @@
+"""Pass 1: Extract causal graph from text."""
+
+from __future__ import annotations
+
+from pt.llm import call_llm
+from pt.schemas import ExtractionResult
+
+
+PROMPT = """\
+You are performing the EXTRACTION phase of Van Evera process tracing.
+
+Your job is to extract a COMPREHENSIVE and HONEST evidence base. Process tracing depends on evidence that can DISCRIMINATE between competing explanations—including evidence that complicates or undermines the text's dominant narrative.
+
+## What to extract
+
+**Actors** (5-10): Key people, groups, institutions.
+
+**Events** (10-20): Significant occurrences. Include dates and locations.
+
+**Mechanisms** (5-10): Causal processes connecting events.
+
+**Evidence** (30-50): This is the most important part. You MUST extract:
+
+Category 1 — EMPIRICAL FACTS (25-40 items): Events, actions, dates, numbers directly from the text. These are things that happened. Set `evidence_type` to "empirical".
+- Key facts the text uses to build its causal arguments
+- Specific numbers: population figures, vote counts, turnout percentages, financial amounts
+- Temporal data: dates, durations, sequences
+- Comparisons the text makes between cases or periods
+- Facts that undermine simple narratives (e.g., economy improving while political crisis deepens)
+
+Category 2 — AGENCY & DECISION EVIDENCE (min 8 items): Specific decisions by named individuals, behind-the-scenes maneuvering, strategic calculations. The who-did-what-and-why. Set `evidence_type` to "empirical".
+- Named individuals making specific choices (e.g., "Sieyès recruited Bonaparte for the coup")
+- Strategic calculations and political maneuvering
+- Meetings, negotiations, conspiracies, alliances
+- Moments where individual action shaped the outcome
+- CRITICAL: For the OUTCOME PERIOD specifically, extract institutional constraints (what rules or structures shaped what was possible), coalition-building (who allied with whom and why), and precedent events (earlier episodes that established the pattern for the final outcome). These mechanism-level details are essential for discriminating between hypotheses about WHY the outcome took the specific form it did.
+
+Category 3 — COMPLICATING FACTS: Qualifications, counter-trends, surprising non-occurrences. Set `evidence_type` to "empirical".
+- Qualifications, caveats, or comparisons (e.g., "X was not as bad as Y")
+- Surprising non-occurrences or absences
+- Cases where expected consequences did NOT follow
+
+Category 4 — HISTORIOGRAPHICAL CLAIMS (max 5 items): Where the text attributes an interpretation to a historian or scholarly tradition. Set `evidence_type` to "interpretive". WARNING: These are scholarly arguments, NOT empirical facts. They represent what historians think, not what happened.
+- Where the text says "Historian X argues that..."
+- Where the text attributes claims to specific scholars or traditions
+
+You MUST include items from ALL four categories. If the text says "X happened, but Y qualified it," extract BOTH X and Y as separate evidence items.
+
+For EVERY evidence item, set `approximate_date` if the text provides temporal information (e.g., "1788", "1793-06", "1799-11"). Leave null only if no date can be inferred.
+
+Each evidence item needs `source_text`: a direct quote (1-2 sentences). Keep `description` to 1 sentence.
+
+**Hypotheses in text** (3-6): Causal claims the author makes or implies. Include `source_text`.
+
+**Causal edges** (15-30): Directed relationships.
+
+**Summary**: 2-3 sentences on the text's main causal argument.
+
+## Rules
+- Short IDs (e.g., `evi_debt_low_vs_britain`, `evi_economy_stabilized_1799`).
+- 1-sentence descriptions.
+- Do NOT assign diagnostic types or probative values.
+- Actively search for facts that a lazy reader would skip over but that an analyst would notice as important qualifications or counterevidence.
+
+## Text to analyze
+
+{text}
+"""
+
+
+def run_extract(text: str, *, model: str | None = None) -> ExtractionResult:
+    """Extract causal graph from text."""
+    kwargs = {"model": model} if model else {}
+    return call_llm(
+        PROMPT.format(text=text),
+        ExtractionResult,
+        **kwargs,
+    )
