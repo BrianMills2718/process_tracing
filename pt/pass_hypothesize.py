@@ -21,6 +21,8 @@ GOOD: "Why did the Directory collapse into Napoleon's coup rather than evolving 
 
 Pick the outcome that the text's evidence best allows you to adjudicate. The hypotheses must ALL explain THIS SAME outcome via different causal paths.
 
+**CRITICAL for debate/multi-speaker texts**: If the text is a debate or discussion between speakers who disagree, your research question must be NEUTRAL — it must not adopt one speaker's framing. Frame the question around the OUTCOME or SITUATION that both speakers are trying to explain, not around one speaker's conclusion about it. BAD: "Why has Side A failed?" (adopts Side B's premise). GOOD: "Why has the conflict persisted without resolution?" (neutral framing that both sides' arguments can address).
+
 ## Rule 2: HYPOTHESES MUST MAKE OPPOSITE PREDICTIONS
 
 The defining feature of genuine rivalry: two hypotheses must make **opposite predictions about the same observable evidence**. If H1 predicts we should see X, then H2 must predict we should see NOT-X (or Y instead of X). If both hypotheses predict the same evidence, they are not rivals — they are either the same hypothesis with different labels, or complementary parts of one explanation.
@@ -78,9 +80,9 @@ The acid test: for each pair, identify at least one piece of observable evidence
 
 ## Instructions
 
-1. **Research question**: One specific causal question about one outcome.
+1. **Research question**: One specific causal question about one outcome. If the text is a debate, the question must be neutral — do NOT adopt one speaker's framing over another's.
 
-2. **Text hypotheses** (2-3): Distinct causal claims from the text. Each is a SINGLE factor, not a laundry list. Set `source` to "text".
+2. **Text hypotheses** (2-3): Distinct causal claims from the text. Each is a SINGLE factor, not a laundry list. Set `source` to "text". In a debate, draw hypotheses from BOTH sides — do not derive all text hypotheses from one speaker.
 
 3. **Rival hypotheses** (2-3): Genuinely different explanations. Each should predict evidence the text hypotheses would NOT predict. Consider:
    - Structural vs. agency explanations

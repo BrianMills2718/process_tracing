@@ -56,6 +56,12 @@ Rule E — NO CIRCULAR EVIDENCE:
 - Evidence marked as `evidence_type: "interpretive"` (historian arguments, scholarly claims) gets max LR = 5.0. These are scholarly opinions, not smoking guns.
 - Only direct empirical evidence (actions, decisions, measurable outcomes) can have LR > 10.
 
+Rule F — SPEAKER-ATTRIBUTED EVIDENCE (for debate/multi-speaker texts):
+- When evidence items are attributed to specific speakers, evaluate the FACTUAL CONTENT of the claim, not who said it. A fact is equally informative regardless of which speaker states it.
+- Do NOT systematically favor one speaker's evidence over another's. If Speaker A provides 20 items supporting H1 and Speaker B provides 10 items supporting H2, this does NOT mean H1 is twice as likely — it means Speaker A talked more about that topic.
+- Points where opposing speakers AGREE on a factual claim are STRONGER evidence than uncontested claims by one speaker.
+- A speaker's ASSESSMENT or PREDICTION (e.g., "I think they're losing") is interpretive and gets max LR = 5.0, even if it's attributed to an expert.
+
 ## Calibration: LR = p_e_given_h / p_e_given_not_h
 - LR > 10: very strong for H (ONLY for direct empirical evidence) | LR 3–10: moderate | LR 1–3: weak
 - LR ≈ 1: uninformative
