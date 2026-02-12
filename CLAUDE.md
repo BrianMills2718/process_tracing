@@ -64,7 +64,7 @@ Options: `--model <litellm-model-id>` to override the default model.
 | `pt/report.py` | HTML report generation | No |
 | `pt/cli.py` | CLI entry point | No |
 
-### Key Design Decisions (v5d)
+### Key Design Decisions (v5f)
 
 - **LR cap at 20.0**: Prevents single evidence items from dominating. `LR_CAP = 20.0`, `LR_FLOOR = 0.05`.
 - **Relevance gating**: Evidence with `relevance < 0.4` is forced to `LR = 1.0` (uninformative). Above 0.4, soft discount via `lr = exp(relevance * log(capped_lr))`.
@@ -78,6 +78,9 @@ Options: `--model <litellm-model-id>` to override the default model.
 - **Pairwise discrimination**: Each hypothesis pair must have 3+ evidence items where LRs diverge by 2x+.
 - **Steelman verdicts**: Every hypothesis gets a mandatory steelman case, even if eliminated — ensures fair analysis.
 - **Posterior robustness**: Each verdict flagged "robust" (driven by decisive tests) or "fragile" (driven by many small LR effects).
+- **Multi-speaker awareness**: Debate/discussion texts get speaker-attributed evidence, disputed facts classified as interpretive, neutral research questions, and Rule F preventing systematic speaker favoritism in testing.
+- **Retry logic**: Up to 3 retries with exponential backoff (jittered, capped 30s) for transient LLM failures (JSON parse, rate limits, timeouts).
+- **Review checkpoint**: `--review` flag pauses after hypothesis generation for human review/editing before expensive testing pass.
 
 ### Prompt Quality Notes
 
