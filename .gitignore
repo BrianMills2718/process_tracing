@@ -38,6 +38,7 @@ Thumbs.db
 # Project specific
 output_data/*
 !output_data/.gitkeep
+output/
 debug_*.txt
 debug_*.json
 *.log
@@ -70,7 +71,6 @@ nul
 # Testing
 .coverage
 htmlcov/
-tests/
 test_fixtures/
 
 # Legacy/Archive directories (keep local, don't push)
