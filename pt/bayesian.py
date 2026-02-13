@@ -171,67 +171,67 @@ def _run_sensitivity(
     posteriors: list[HypothesisPosterior],
     uniform_prior: float,
 ) -> list[SensitivityEntry]:
-    """Perturb the most influential LRs and measure posterior stability."""
-    # Collect all (hypothesis_index, evidence_index, |log_lr|) for ranking
-    all_drivers: list[tuple[int, int, float]] = []
-    for h_idx, ht in enumerate(testing.hypothesis_tests):
-        for e_idx, ev_eval in enumerate(ht.evidence_evaluations):
-            lr = _compute_lr(ev_eval)
-            log_lr = abs(math.log(lr)) if lr > 0 else 0
-            if log_lr > 0.01:  # skip uninformative
-                all_drivers.append((h_idx, e_idx, log_lr))
+    """Perturb the most influential LRs per hypothesis and measure posterior stability.
 
-    # Sort by influence, take top N
-    all_drivers.sort(key=lambda x: x[2], reverse=True)
-    top_n = all_drivers[:TOP_DRIVERS_COUNT]
+    For each hypothesis, find its top-N most influential evidence items (by |log(LR)|),
+    then perturb those ±50% on the log-LR scale. Report how the normalized posterior
+    changes and whether the ranking is affected.
+    """
+    n_hyp = len(testing.hypothesis_tests)
+    if n_hyp == 0:
+        return []
 
-    if not top_n:
-        return [
-            SensitivityEntry(
-                hypothesis_id=p.hypothesis_id,
-                baseline_posterior=p.final_posterior,
-                posterior_low=p.final_posterior,
-                posterior_high=p.final_posterior,
-                rank_stable=True,
-            )
-            for p in posteriors
-        ]
+    # Precompute all effective LRs: lrs[h_idx][e_idx]
+    all_lrs: list[list[float]] = []
+    for ht in testing.hypothesis_tests:
+        all_lrs.append([_compute_lr(ev) for ev in ht.evidence_evaluations])
 
-    # For each hypothesis, compute posterior under two scenarios:
-    # 1. All top drivers perturbed to HELP this hypothesis (log_lr * 1.5 if for, * 0.5 if against)
-    # 2. All top drivers perturbed to HURT this hypothesis (log_lr * 0.5 if for, * 1.5 if against)
-    baseline_ranking = [p.hypothesis_id for p in sorted(posteriors, key=lambda p: p.final_posterior, reverse=True)]
+    # For each hypothesis, find its top drivers (per-hypothesis, not global)
+    per_hyp_top: list[set[int]] = []
+    for h_idx, lrs in enumerate(all_lrs):
+        scored = [(abs(math.log(lr)) if lr > 0 else 0, e_idx) for e_idx, lr in enumerate(lrs)]
+        scored.sort(reverse=True)
+        top_indices = {e_idx for _, e_idx in scored[:TOP_DRIVERS_COUNT] if _ > 0.01}
+        per_hyp_top.append(top_indices)
+
+    baseline_ranking = [p.hypothesis_id for p in sorted(
+        posteriors, key=lambda p: p.final_posterior, reverse=True
+    )]
 
     entries: list[SensitivityEntry] = []
-    for target_p in posteriors:
-        target_idx = next(i for i, ht in enumerate(testing.hypothesis_tests) if ht.hypothesis_id == target_p.hypothesis_id)
+    for target_idx, target_p in enumerate(posteriors):
+        # Collect which evidence indices to perturb: this hypothesis's top drivers
+        # PLUS top drivers of immediate rivals (adjacent in ranking)
+        perturb_set: set[tuple[int, int]] = set()
+        for e_idx in per_hyp_top[target_idx]:
+            perturb_set.add((target_idx, e_idx))
 
-        best_posteriors: dict[str, float] = {}
-        worst_posteriors: dict[str, float] = {}
+        # Also perturb rivals' top drivers that affect target
+        for h_idx in range(n_hyp):
+            if h_idx != target_idx:
+                for e_idx in per_hyp_top[h_idx]:
+                    perturb_set.add((h_idx, e_idx))
+
+        # Compute best/worst posteriors for ALL hypotheses under perturbation
+        best_raw: dict[str, float] = {}
+        worst_raw: dict[str, float] = {}
 
         for h_idx, ht in enumerate(testing.hypothesis_tests):
-            # Build LR list with perturbations
             best_lrs: list[float] = []
             worst_lrs: list[float] = []
 
-            for e_idx, ev_eval in enumerate(ht.evidence_evaluations):
-                lr = _compute_lr(ev_eval)
+            for e_idx, lr in enumerate(all_lrs[h_idx]):
                 log_lr = math.log(lr) if lr > 0 else 0.0
 
-                # Check if this is a top driver
-                is_top = any(hi == h_idx and ei == e_idx for hi, ei, _ in top_n)
-
-                if is_top and abs(log_lr) > 0.01:
-                    # "Favorable" means this LR direction helps the target hypothesis
+                if (h_idx, e_idx) in perturb_set and abs(log_lr) > 0.01:
+                    # "Favorable" = this LR direction helps the target hypothesis
                     favorable = (h_idx == target_idx and log_lr >= 0) or (
                         h_idx != target_idx and log_lr < 0
                     )
                     if favorable:
-                        # Best: amplify favorable LR, worst: dampen it
                         best_lrs.append(math.exp(log_lr * (1 + PERTURB_FACTOR)))
                         worst_lrs.append(math.exp(log_lr * (1 - PERTURB_FACTOR)))
                     else:
-                        # Best: dampen unfavorable LR, worst: amplify it
                         best_lrs.append(math.exp(log_lr * (1 - PERTURB_FACTOR)))
                         worst_lrs.append(math.exp(log_lr * (1 + PERTURB_FACTOR)))
                 else:
@@ -239,20 +239,18 @@ def _run_sensitivity(
                     worst_lrs.append(lr)
 
             h_id = ht.hypothesis_id
-            best_posteriors[h_id] = _posterior_from_lrs(uniform_prior, best_lrs)
-            worst_posteriors[h_id] = _posterior_from_lrs(uniform_prior, worst_lrs)
+            best_raw[h_id] = _posterior_from_lrs(uniform_prior, best_lrs)
+            worst_raw[h_id] = _posterior_from_lrs(uniform_prior, worst_lrs)
 
         # Normalize
-        best_total = sum(best_posteriors.values())
-        worst_total = sum(worst_posteriors.values())
-        if best_total > 0:
-            best_posteriors = {k: _clamp(v / best_total) for k, v in best_posteriors.items()}
-        if worst_total > 0:
-            worst_posteriors = {k: _clamp(v / worst_total) for k, v in worst_posteriors.items()}
+        best_total = sum(best_raw.values())
+        worst_total = sum(worst_raw.values())
+        best_norm = {k: _clamp(v / best_total) for k, v in best_raw.items()} if best_total > 0 else best_raw
+        worst_norm = {k: _clamp(v / worst_total) for k, v in worst_raw.items()} if worst_total > 0 else worst_raw
 
         target_id = target_p.hypothesis_id
-        best_rank = sorted(best_posteriors, key=lambda k: best_posteriors[k], reverse=True)
-        worst_rank = sorted(worst_posteriors, key=lambda k: worst_posteriors[k], reverse=True)
+        best_rank = sorted(best_norm, key=lambda k: best_norm[k], reverse=True)
+        worst_rank = sorted(worst_norm, key=lambda k: worst_norm[k], reverse=True)
 
         baseline_pos = baseline_ranking.index(target_id)
         best_pos = best_rank.index(target_id)
@@ -261,8 +259,8 @@ def _run_sensitivity(
         entries.append(SensitivityEntry(
             hypothesis_id=target_id,
             baseline_posterior=target_p.final_posterior,
-            posterior_low=round(worst_posteriors.get(target_id, target_p.final_posterior), 6),
-            posterior_high=round(best_posteriors.get(target_id, target_p.final_posterior), 6),
+            posterior_low=round(worst_norm.get(target_id, target_p.final_posterior), 6),
+            posterior_high=round(best_norm.get(target_id, target_p.final_posterior), 6),
             rank_stable=(best_pos == baseline_pos and worst_pos == baseline_pos),
         ))
 
