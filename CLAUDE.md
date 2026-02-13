@@ -85,12 +85,52 @@ Options: `--model <litellm-model-id>` to override the default model.
 
 ### Known Gaps vs. PhD-Level Analysis
 
-**Partially fixable via prompts (diminishing returns):**
 1. **Complementary hypotheses as rivals** — Every run has ≥1 pair that the synthesis admits are "two sides of the same coin." The mutual exclusion rules help but don't fully solve it. Best mitigation: `--review` checkpoint.
 2. **No hypotheses from theoretical frameworks** — Generated hypotheses anchor on what the text says rather than bringing external analytical frameworks (offense-defense theory, selectorate theory, path dependence). The LLM has this knowledge but the prompt doesn't elicit it.
 3. **Debate genre still partially mishandled** — Speaker assessments sometimes coded empirical. Cross-speaker agreement not weighted more heavily in practice.
 4. **Absence-of-evidence not evaluated** — Pipeline only tests evidence that IS present, not evidence that a hypothesis predicts SHOULD be present but isn't (hoop test failures from missing evidence).
 5. **Synthesis is summary, not analysis** — Tends toward restating Bayesian results in prose rather than generating original analytical insights.
+
+---
+
+## Competitive Landscape (surveyed Feb 2026)
+
+**No existing tool does the full loop: text in → extraction → hypotheses → diagnostic tests → Bayesian posteriors → sensitivity → synthesis.** That end-to-end pipeline is our unique position.
+
+### Direct competitors (same problem space)
+
+| Tool | What it does | What it lacks vs. us |
+|------|-------------|---------------------|
+| **CausalQueries** (R, Humphreys) | Formal Bayesian process tracing with DAGs. Mathematically rigorous, d-separation aware. | No text input, no LLM, no automation. Analyst must manually specify model structure and data. It's a calculator, not an analyst. |
+| **ACH tools** (Burton, Open-Synthesis, ArkhamMirror) | CIA-style consistency matrices. ArkhamMirror adds LLM "devil's advocate." | No Bayesian math — consistency counting only. No diagnostic test classification. No extraction pipeline — human provides hypotheses and evidence. |
+| **LLM SATs** (Roberts, SANS) | Streamlit apps using GPT-4 for ACH, Starbursting, Key Assumptions Checks. | Single-pass LLM, no pipeline. Proof-of-concept, no Bayesian updating or sensitivity. |
+
+### Adjacent tools (LLM + causal inference, but not from text)
+
+| Tool | What it does | What it lacks vs. us |
+|------|-------------|---------------------|
+| **PyWhy-LLM** (DoWhy ecosystem) | LLM suggests confounders, validates causal assumptions for structured data. | Operates on structured data, not text. No Van Evera, no process tracing. |
+| **LLM-argumentation** (DAMO-NLP-SG, ACL 2024) | Benchmarks LLMs on argument mining tasks. | Benchmark, not a tool. Evaluates capabilities, doesn't build a pipeline. |
+
+### Adjacent tools (LLM + qualitative research)
+
+| Tool | What it does | What it lacks vs. us |
+|------|-------------|---------------------|
+| **LLMCode** (Hämäläinen) | LLM-assisted qualitative coding with IoU/Hausdorff alignment metrics. Published. | Coding, not causal inference. No hypotheses, no Bayesian updating. |
+| **DeTAILS** | LLM-assisted thematic analysis with researcher agency preserved. | Thematic analysis, not causal reasoning. |
+
+### Our unique value = three things no one else combines
+
+1. **Text-in, analysis-out** — no manual model specification required
+2. **Methodologically grounded** — Van Evera's process tracing (hoop/smoking gun/doubly decisive), not ad-hoc LLM reasoning
+3. **Quantified uncertainty** — Bayesian posteriors with sensitivity ranges and mechanical robustness, not just "the LLM thinks X"
+
+### Strategic opportunities (not yet implemented)
+
+- **Theory injection** — accept user-provided theoretical frameworks to generate theory-derived hypotheses (not just text-derived). No existing tool does this.
+- **Multi-document analysis** — compare causal claims across multiple texts on the same topic. Qualitative coding tools don't do causal inference; causal tools don't handle multiple texts.
+- **CausalQueries bridge** — export extracted causal graphs in a format CausalQueries can import, bridging automated extraction and formal Bayesian methods.
+- **Absence-of-evidence** — evaluate what a hypothesis predicts SHOULD be present but isn't. Unique to Van Evera's methodology, not implemented anywhere.
 
 ### Prompt Quality Notes
 
