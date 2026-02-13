@@ -17,6 +17,7 @@ def main() -> None:
     parser.add_argument("--json-only", action="store_true", help="Output JSON only, skip HTML report")
     parser.add_argument("--model", "-m", default=None, help="LLM model override (default: PT_MODEL env or gemini-2.5-flash)")
     parser.add_argument("--review", action="store_true", help="Pause after hypothesis generation for human review")
+    parser.add_argument("--theories", default=None, help="Path to text file with theoretical frameworks for hypothesis generation")
     args = parser.parse_args()
 
     if not os.path.isfile(args.input):
@@ -40,7 +41,20 @@ def main() -> None:
     from pt.pipeline import run_pipeline
     from pt.report import generate_report
 
-    result = run_pipeline(text, model=args.model, review=args.review, output_dir=output_dir)
+    # Load theories file if provided
+    theories = None
+    if args.theories:
+        if not os.path.isfile(args.theories):
+            print(f"Error: theories file not found: {args.theories}", file=sys.stderr)
+            sys.exit(1)
+        with open(args.theories, "r", encoding="utf-8") as f:
+            theories = f.read().strip()
+        if not theories:
+            print("Error: theories file is empty", file=sys.stderr)
+            sys.exit(1)
+        print(f"Theories: {args.theories} ({len(theories)} chars)")
+
+    result = run_pipeline(text, model=args.model, review=args.review, output_dir=output_dir, theories=theories)
 
     # Write JSON
     json_path = os.path.join(output_dir, "result.json")

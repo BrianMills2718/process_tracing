@@ -93,7 +93,11 @@ The acid test: for each pair, identify at least one piece of observable evidence
 
    MANDATORY: At least one hypothesis (text or generated) must be an AGENCY hypothesis — specific named individuals making deliberate choices that caused the outcome. Not "the military became important" but "Person X recruited Person Y and executed Plan Z." If the text names an architect of the outcome, that person's deliberate actions must be a hypothesis.
 
-4. For EACH hypothesis (5-6 total):
+4. **Theory-derived hypotheses**: In addition to hypotheses derived from the text and generated rivals, generate at least one hypothesis grounded in a relevant theoretical framework from the social sciences (political science, sociology, economics, international relations, etc.). Use your knowledge of established theories — path dependence, selectorate theory, collective action problems, institutional decay, principal-agent problems, offense-defense balance, etc. — to generate a hypothesis that the text's authors may not have considered. Set `source` to "generated". This hypothesis must still follow all the rules above (opposite predictions, non-tautological, distinguishable). If a user-provided theoretical framework is included below, you MUST generate at least one hypothesis from EACH provided framework.
+
+{theories_block}
+
+5. For EACH hypothesis (5-7 total):
    - `theoretical_basis`: 1-2 sentences
    - `causal_mechanism`: Specific step-by-step chain (1-2 sentences)
    - `observable_predictions`: 4-6 predictions that DISTINGUISH this from others:
@@ -109,11 +113,34 @@ Use IDs: h1, h2... and pred_h1_01, pred_h1_02...
 """
 
 
-def run_hypothesize(extraction: ExtractionResult, *, model: str | None = None) -> HypothesisSpace:
-    """Build hypothesis space from extraction results."""
+def run_hypothesize(
+    extraction: ExtractionResult,
+    *,
+    model: str | None = None,
+    theories: str | None = None,
+) -> HypothesisSpace:
+    """Build hypothesis space from extraction results.
+
+    Args:
+        theories: Optional plain-text description of theoretical frameworks
+            to use as seeds for theory-derived hypotheses.
+    """
+    if theories:
+        theories_block = (
+            "## User-provided theoretical frameworks\n\n"
+            "Generate at least one hypothesis from EACH of the following frameworks. "
+            "These are provided by the analyst and take priority.\n\n"
+            f"{theories}"
+        )
+    else:
+        theories_block = ""
+
     kwargs = {"model": model} if model else {}
     return call_llm(
-        PROMPT.format(extraction_json=json.dumps(extraction.model_dump(), indent=2)),
+        PROMPT.format(
+            extraction_json=json.dumps(extraction.model_dump(), indent=2),
+            theories_block=theories_block,
+        ),
         HypothesisSpace,
         **kwargs,
     )

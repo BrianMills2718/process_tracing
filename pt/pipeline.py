@@ -60,6 +60,7 @@ def run_pipeline(
     review: bool = False,
     review_fn: Callable[[HypothesisSpace, str | None], HypothesisSpace] | None = None,
     output_dir: str | None = None,
+    theories: str | None = None,
 ) -> ProcessTracingResult:
     """Run the full process tracing pipeline.
 
@@ -69,6 +70,7 @@ def run_pipeline(
         review: If True, pause after hypothesis generation for user review.
         review_fn: Custom review function. Defaults to interactive CLI review.
         output_dir: Directory for writing review files.
+        theories: Optional plain-text theoretical frameworks for hypothesis generation.
     """
     t0 = time.time()
 
@@ -80,8 +82,9 @@ def run_pipeline(
               f"{len(extraction.hypotheses_in_text)} hypotheses")
 
     if verbose:
-        print("Pass 2/4: Building hypothesis space...")
-    hypothesis_space = run_hypothesize(extraction, model=model)
+        extra = " (with user theories)" if theories else ""
+        print(f"Pass 2/4: Building hypothesis space{extra}...")
+    hypothesis_space = run_hypothesize(extraction, model=model, theories=theories)
     if verbose:
         print(f"  {len(hypothesis_space.hypotheses)} hypotheses "
               f"(text + rivals), research question: {hypothesis_space.research_question[:80]}...")
