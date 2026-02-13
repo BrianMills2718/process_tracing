@@ -45,7 +45,11 @@ python -m pt input_text/revolutions/french_revolution.txt --output-dir output/fr
 
 Output: `result.json` (full structured data) + `report.html` (Bootstrap + vis.js network graph).
 
-Options: `--model <litellm-model-id>` to override the default model.
+Options:
+- `--model <litellm-model-id>` — override the default model
+- `--theories <path>` — inject theoretical frameworks for hypothesis generation (see Theory Injection below)
+- `--review` — pause after hypothesis generation for human review/editing
+- `--json-only` — skip HTML report generation
 
 ---
 
@@ -64,7 +68,7 @@ Options: `--model <litellm-model-id>` to override the default model.
 | `pt/report.py` | HTML report generation | No |
 | `pt/cli.py` | CLI entry point | No |
 
-### Key Design Decisions (v5g)
+### Key Design Decisions (v5h)
 
 - **LR cap at 20.0**: Prevents single evidence items from dominating. `LR_CAP = 20.0`, `LR_FLOOR = 0.05`.
 - **Relevance gating**: Evidence with `relevance < 0.4` is forced to `LR = 1.0` (uninformative). Above 0.4, soft discount via `lr = exp(relevance * log(capped_lr))`.
@@ -82,14 +86,14 @@ Options: `--model <litellm-model-id>` to override the default model.
 - **Multi-speaker awareness**: Debate/discussion texts get speaker-attributed evidence, disputed facts classified as interpretive, neutral research questions, and Rule F preventing systematic speaker favoritism in testing.
 - **Retry logic**: Up to 3 retries with exponential backoff (jittered, capped 30s) for transient LLM failures (JSON parse, rate limits, timeouts).
 - **Review checkpoint**: `--review` flag pauses after hypothesis generation for human review/editing before expensive testing pass.
+- **Theory injection**: By default, the hypothesis pass generates at least one theory-derived hypothesis from the LLM's intrinsic knowledge of social science frameworks. Optional `--theories <file>` injects user-provided frameworks; the LLM must generate at least one hypothesis per framework. Example theory file: `input_text/theories/legitimacy_vacuum.txt`.
 
 ### Known Gaps vs. PhD-Level Analysis
 
 1. **Complementary hypotheses as rivals** — Every run has ≥1 pair that the synthesis admits are "two sides of the same coin." The mutual exclusion rules help but don't fully solve it. Best mitigation: `--review` checkpoint.
-2. **No hypotheses from theoretical frameworks** — Generated hypotheses anchor on what the text says rather than bringing external analytical frameworks (offense-defense theory, selectorate theory, path dependence). The LLM has this knowledge but the prompt doesn't elicit it.
-3. **Debate genre still partially mishandled** — Speaker assessments sometimes coded empirical. Cross-speaker agreement not weighted more heavily in practice.
-4. **Absence-of-evidence not evaluated** — Pipeline only tests evidence that IS present, not evidence that a hypothesis predicts SHOULD be present but isn't (hoop test failures from missing evidence).
-5. **Synthesis is summary, not analysis** — Tends toward restating Bayesian results in prose rather than generating original analytical insights.
+2. **Debate genre still partially mishandled** — Speaker assessments sometimes coded empirical. Cross-speaker agreement not weighted more heavily in practice.
+3. **Absence-of-evidence not evaluated** — Pipeline only tests evidence that IS present, not evidence that a hypothesis predicts SHOULD be present but isn't (hoop test failures from missing evidence).
+4. **Synthesis is summary, not analysis** — Tends toward restating Bayesian results in prose rather than generating original analytical insights.
 
 ---
 
@@ -127,7 +131,6 @@ Options: `--model <litellm-model-id>` to override the default model.
 
 ### Strategic opportunities (not yet implemented)
 
-- **Theory injection** — accept user-provided theoretical frameworks to generate theory-derived hypotheses (not just text-derived). No existing tool does this.
 - **Multi-document analysis** — compare causal claims across multiple texts on the same topic. Qualitative coding tools don't do causal inference; causal tools don't handle multiple texts.
 - **CausalQueries bridge** — export extracted causal graphs in a format CausalQueries can import, bridging automated extraction and formal Bayesian methods.
 - **Absence-of-evidence** — evaluate what a hypothesis predicts SHOULD be present but isn't. Unique to Van Evera's methodology, not implemented anywhere.
