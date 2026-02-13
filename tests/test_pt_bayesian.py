@@ -10,12 +10,15 @@ from pt.bayesian import (
     LR_CAP,
     LR_FLOOR,
     _clamp,
+    _compute_robustness,
     _odds,
     _prob,
+    _top_drivers,
     run_bayesian_update,
 )
 from pt.schemas import (
     EvidenceEvaluation,
+    EvidenceUpdate,
     HypothesisTestResult,
     TestingResult,
 )
@@ -371,3 +374,155 @@ class TestRelevanceDiscountMath:
         result = run_bayesian_update(testing)
         h1_post = next(p for p in result.posteriors if p.hypothesis_id == "h1")
         assert h1_post.updates[0].likelihood_ratio == pytest.approx(0.5, abs=0.01)
+
+
+# ── Robustness computation ─────────────────────────────────────────
+
+
+class TestRobustness:
+    def _make_update(self, lr: float, eid: str = "e1") -> EvidenceUpdate:
+        return EvidenceUpdate(
+            evidence_id=eid, likelihood_ratio=lr, prior=0.5, posterior=0.5
+        )
+
+    def test_robust_few_decisive(self):
+        """A few decisive LRs (>5 or <0.2) should be 'robust'."""
+        updates = [
+            self._make_update(10.0, "e1"),
+            self._make_update(0.1, "e2"),
+            self._make_update(8.0, "e3"),
+            self._make_update(0.15, "e4"),
+        ]
+        assert _compute_robustness(updates) == "robust"
+
+    def test_fragile_many_weak(self):
+        """Many weak LRs (0.5-2.0) should be 'fragile'."""
+        updates = [self._make_update(0.8, f"e{i}") for i in range(15)]
+        assert _compute_robustness(updates) == "fragile"
+
+    def test_unknown_empty(self):
+        assert _compute_robustness([]) == "unknown"
+
+    def test_unknown_all_uninformative(self):
+        """LR=1.0 items contribute nothing."""
+        updates = [self._make_update(1.0, f"e{i}") for i in range(10)]
+        assert _compute_robustness(updates) == "unknown"
+
+    def test_moderate_mixed(self):
+        """Mix of decisive and weak should be 'moderate'."""
+        updates = [
+            self._make_update(6.0, "e1"),
+            self._make_update(1.2, "e2"),
+            self._make_update(0.9, "e3"),
+            self._make_update(1.1, "e4"),
+            self._make_update(0.85, "e5"),
+        ]
+        result = _compute_robustness(updates)
+        assert result in ("moderate", "robust")  # depends on exact thresholds
+
+    def test_robustness_populated_in_result(self):
+        """run_bayesian_update should populate robustness field."""
+        testing = _make_testing(
+            ("h1", [_make_eval(p_e_given_h=0.95, p_e_given_not_h=0.05)]),
+            ("h2", [_make_eval(p_e_given_h=0.05, p_e_given_not_h=0.95)]),
+        )
+        result = run_bayesian_update(testing)
+        for p in result.posteriors:
+            assert p.robustness in ("robust", "fragile", "moderate", "unknown")
+
+
+# ── Top drivers ────────────────────────────────────────────────────
+
+
+class TestTopDrivers:
+    def test_returns_most_influential(self):
+        updates = [
+            EvidenceUpdate(evidence_id="e1", likelihood_ratio=1.0, prior=0.5, posterior=0.5),
+            EvidenceUpdate(evidence_id="e2", likelihood_ratio=10.0, prior=0.5, posterior=0.9),
+            EvidenceUpdate(evidence_id="e3", likelihood_ratio=0.1, prior=0.5, posterior=0.1),
+            EvidenceUpdate(evidence_id="e4", likelihood_ratio=2.0, prior=0.5, posterior=0.7),
+        ]
+        drivers = _top_drivers(updates, n=2)
+        # e2 (LR=10, |log|=2.30) and e3 (LR=0.1, |log|=2.30) are most influential
+        assert set(drivers) == {"e2", "e3"}
+
+    def test_top_drivers_populated_in_result(self):
+        testing = _make_testing(
+            ("h1", [
+                _make_eval(evidence_id="e1", p_e_given_h=0.95, p_e_given_not_h=0.05),
+                _make_eval(evidence_id="e2", p_e_given_h=0.5, p_e_given_not_h=0.5),
+            ]),
+            ("h2", []),
+        )
+        result = run_bayesian_update(testing)
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert "e1" in h1.top_drivers
+
+
+# ── Sensitivity analysis ──────────────────────────────────────────
+
+
+class TestSensitivity:
+    def test_sensitivity_populated(self):
+        """Result should include sensitivity entries for each hypothesis."""
+        testing = _make_testing(
+            ("h1", [_make_eval(p_e_given_h=0.9, p_e_given_not_h=0.1)]),
+            ("h2", [_make_eval(p_e_given_h=0.1, p_e_given_not_h=0.9)]),
+        )
+        result = run_bayesian_update(testing)
+        assert len(result.sensitivity) == 2
+        for s in result.sensitivity:
+            assert s.posterior_low <= s.baseline_posterior <= s.posterior_high
+
+    def test_sensitivity_with_uninformative_evidence(self):
+        """Uninformative evidence should produce no perturbation range."""
+        testing = _make_testing(
+            ("h1", [_make_eval(p_e_given_h=0.5, p_e_given_not_h=0.5)]),
+            ("h2", [_make_eval(p_e_given_h=0.5, p_e_given_not_h=0.5)]),
+        )
+        result = run_bayesian_update(testing)
+        for s in result.sensitivity:
+            assert s.posterior_low == pytest.approx(s.posterior_high, abs=0.01)
+            assert s.rank_stable is True
+
+    def test_sensitivity_range_wider_with_decisive_evidence(self):
+        """Decisive evidence should produce wider perturbation range."""
+        # Strong evidence
+        strong = _make_testing(
+            ("h1", [_make_eval(p_e_given_h=0.95, p_e_given_not_h=0.05)]),
+            ("h2", [_make_eval(p_e_given_h=0.05, p_e_given_not_h=0.95)]),
+        )
+        # Weak evidence
+        weak = _make_testing(
+            ("h1", [_make_eval(p_e_given_h=0.55, p_e_given_not_h=0.45)]),
+            ("h2", [_make_eval(p_e_given_h=0.45, p_e_given_not_h=0.55)]),
+        )
+        strong_result = run_bayesian_update(strong)
+        weak_result = run_bayesian_update(weak)
+
+        strong_range = strong_result.sensitivity[0].posterior_high - strong_result.sensitivity[0].posterior_low
+        weak_range = weak_result.sensitivity[0].posterior_high - weak_result.sensitivity[0].posterior_low
+        assert strong_range > weak_range
+
+    def test_empty_testing_no_sensitivity(self):
+        testing = TestingResult(hypothesis_tests=[])
+        result = run_bayesian_update(testing)
+        assert result.sensitivity == []
+
+    def test_rank_stability_flag(self):
+        """When one hypothesis dominates, rank should be stable."""
+        testing = _make_testing(
+            ("h1", [
+                _make_eval(evidence_id="e1", p_e_given_h=0.95, p_e_given_not_h=0.05),
+                _make_eval(evidence_id="e2", p_e_given_h=0.90, p_e_given_not_h=0.10),
+                _make_eval(evidence_id="e3", p_e_given_h=0.85, p_e_given_not_h=0.15),
+            ]),
+            ("h2", [
+                _make_eval(evidence_id="e1", p_e_given_h=0.05, p_e_given_not_h=0.95),
+                _make_eval(evidence_id="e2", p_e_given_h=0.10, p_e_given_not_h=0.90),
+                _make_eval(evidence_id="e3", p_e_given_h=0.15, p_e_given_not_h=0.85),
+            ]),
+        )
+        result = run_bayesian_update(testing)
+        h1_sens = next(s for s in result.sensitivity if s.hypothesis_id == "h1")
+        assert h1_sens.rank_stable is True

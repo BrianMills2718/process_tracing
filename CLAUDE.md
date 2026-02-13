@@ -82,6 +82,19 @@ Options: `--model <litellm-model-id>` to override the default model.
 - **Retry logic**: Up to 3 retries with exponential backoff (jittered, capped 30s) for transient LLM failures (JSON parse, rate limits, timeouts).
 - **Review checkpoint**: `--review` flag pauses after hypothesis generation for human review/editing before expensive testing pass.
 
+### Known Gaps vs. PhD-Level Analysis (v5f)
+
+**Fixable via code (pure math in bayesian.py):**
+1. **No sensitivity analysis** — Pipeline produces point-estimate posteriors with no indication of how stable the ranking is under perturbation of uncertain LR assignments. Fix: perturb top-N most extreme LRs by ±50%, report posterior ranges.
+2. **LLM-guessed robustness is unreliable** — Synthesis pass guesses "robust"/"fragile" but often marks everything "robust". Fix: compute mechanically from LR distribution (few decisive LRs = robust, many small LRs = fragile).
+
+**Partially fixable via prompts (diminishing returns):**
+3. **Complementary hypotheses as rivals** — Every run has ≥1 pair that the synthesis admits are "two sides of the same coin." The mutual exclusion rules help but don't fully solve it. Best mitigation: `--review` checkpoint.
+4. **No hypotheses from theoretical frameworks** — Generated hypotheses anchor on what the text says rather than bringing external analytical frameworks (offense-defense theory, selectorate theory, path dependence). The LLM has this knowledge but the prompt doesn't elicit it.
+5. **Debate genre still partially mishandled** — Speaker assessments sometimes coded empirical. Cross-speaker agreement not weighted more heavily in practice.
+6. **Absence-of-evidence not evaluated** — Pipeline only tests evidence that IS present, not evidence that a hypothesis predicts SHOULD be present but isn't (hoop test failures from missing evidence).
+7. **Synthesis is summary, not analysis** — Tends toward restating Bayesian results in prose rather than generating original analytical insights.
+
 ### Prompt Quality Notes
 
 The prompts in `pass_test.py` and `pass_hypothesize.py` are the most critical for output quality. They encode Van Evera's methodology and the anti-bias rules that prevent:

@@ -150,11 +150,32 @@ class HypothesisPosterior(BaseModel):
     prior: float
     updates: list[EvidenceUpdate]
     final_posterior: float
+    robustness: str = Field(
+        default="unknown",
+        description="Mechanically computed: 'robust' if posterior driven by few decisive LRs, "
+        "'fragile' if driven by many small LRs"
+    )
+    top_drivers: list[str] = Field(
+        default_factory=list,
+        description="Evidence IDs of the top 3 most influential LR updates (|log(LR)| largest)"
+    )
+
+
+class SensitivityEntry(BaseModel):
+    hypothesis_id: str
+    baseline_posterior: float
+    posterior_low: float = Field(description="Posterior when top drivers are perturbed against this hypothesis")
+    posterior_high: float = Field(description="Posterior when top drivers are perturbed for this hypothesis")
+    rank_stable: bool = Field(description="True if this hypothesis keeps its rank across all perturbations")
 
 
 class BayesianResult(BaseModel):
     posteriors: list[HypothesisPosterior]
     ranking: list[str] = Field(description="Hypothesis IDs ordered by final posterior, highest first")
+    sensitivity: list[SensitivityEntry] = Field(
+        default_factory=list,
+        description="How posteriors change when the most influential LRs are perturbed ±50%"
+    )
 
 
 # ── Pass 4: Synthesis ───────────────────────────────────────────────
