@@ -178,6 +178,23 @@ class BayesianResult(BaseModel):
     )
 
 
+# ── Pass 3b: Absence-of-Evidence ───────────────────────────────────
+
+class AbsenceEvaluation(BaseModel):
+    hypothesis_id: str
+    prediction_id: str
+    missing_evidence: str = Field(description="What predicted evidence is absent from the text")
+    reasoning: str = Field(description="Why absence is informative given the text's scope")
+    severity: str = Field(description="'damaging', 'notable', or 'minor'")
+    would_be_extractable: bool = Field(
+        description="Would this evidence appear in a text of this scope if it existed?"
+    )
+
+
+class AbsenceResult(BaseModel):
+    evaluations: list[AbsenceEvaluation] = []
+
+
 # ── Pass 4: Synthesis ───────────────────────────────────────────────
 
 class HypothesisVerdict(BaseModel):
@@ -213,5 +230,6 @@ class ProcessTracingResult(BaseModel):
     extraction: ExtractionResult
     hypothesis_space: HypothesisSpace
     testing: TestingResult
+    absence: AbsenceResult = Field(default_factory=AbsenceResult)
     bayesian: BayesianResult
     synthesis: SynthesisResult

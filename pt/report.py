@@ -240,6 +240,37 @@ def generate_report(result: ProcessTracingResult) -> str:
       <div class="card-body">{''.join(trail_items)}</div>
     </div>"""
 
+    # --- Section 5b: Absence-of-Evidence Findings ---
+    absence_rows = []
+    if result.absence and result.absence.evaluations:
+        for ae in result.absence.evaluations:
+            sev_colors = {"damaging": "#dc3545", "notable": "#f0ad4e", "minor": "#6c757d"}
+            sev_color = sev_colors.get(ae.severity, "#6c757d")
+            extractable = "Yes" if ae.would_be_extractable else "No"
+            absence_rows.append(f"""
+            <tr>
+              <td>{_esc(ae.hypothesis_id)}</td>
+              <td>{_esc(ae.prediction_id)}</td>
+              <td>{_esc(ae.missing_evidence)}</td>
+              <td><span style="color:{sev_color};font-weight:bold">{_esc(ae.severity.title())}</span></td>
+              <td>{extractable}</td>
+              <td><small>{_esc(ae.reasoning[:150])}</small></td>
+            </tr>""")
+
+    absence_section = ""
+    if absence_rows:
+        absence_section = f"""
+    <div class="card mb-4">
+      <div class="card-header"><h4 class="mb-0">Absence-of-Evidence Findings</h4></div>
+      <div class="card-body table-responsive">
+        <p class="text-muted">Evidence that hypotheses predict should exist but was not found in the text. These findings inform the synthesis qualitatively but do not affect Bayesian posteriors.</p>
+        <table class="table table-sm table-bordered">
+          <thead><tr><th>Hypothesis</th><th>Prediction</th><th>Missing Evidence</th><th>Severity</th><th>Extractable?</th><th>Reasoning</th></tr></thead>
+          <tbody>{''.join(absence_rows)}</tbody>
+        </table>
+      </div>
+    </div>"""
+
     # --- Section 6: Analytical Narrative ---
     narrative_paras = result.synthesis.analytical_narrative.split("\n\n")
     narrative_html = "".join(f"<p>{_esc(p.strip())}</p>" for p in narrative_paras if p.strip())
@@ -292,6 +323,7 @@ def generate_report(result: ProcessTracingResult) -> str:
   {comparison_table}
   {test_matrix}
   {bayesian_trail}
+  {absence_section}
   {narrative_section}
   {limitations_section}
 </div>

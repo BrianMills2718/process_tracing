@@ -6,6 +6,7 @@ import json
 
 from pt.llm import call_llm
 from pt.schemas import (
+    AbsenceResult,
     BayesianResult,
     ExtractionResult,
     HypothesisSpace,
@@ -46,12 +47,13 @@ A substantial paragraph (8-12 sentences) comparing hypotheses:
 - Reference specific likelihood ratios and what they mean
 - Address counterarguments: why might the top-ranked hypothesis still be wrong?
 - Discuss SENSITIVITY: the Bayesian results include a sensitivity analysis showing how posteriors change when the most influential LRs are perturbed ±50%. Report which hypotheses have stable rankings and which could swap positions. If a hypothesis's posterior ranges from X to Y under perturbation, say so — this tells the reader how much to trust the point estimates.
+- Discuss ABSENCE OF EVIDENCE: The absence-of-evidence findings identify predictions where hypotheses expected evidence that the text does not contain. Dedicate at least 2-3 sentences to this. Which hypotheses are weakened by missing evidence? If the top-ranked hypothesis has a "damaging" absence finding, explicitly address whether this changes your confidence. Frame these as "the dog that didn't bark" — what SHOULD we see if hypothesis X is correct, and why don't we see it?
 - End with what the analysis actually tells us about causation, not just correlation
 
-### 4. Limitations
+### 5. Limitations
 Be specific: what evidence was missing? What couldn't be distinguished? Where were probability estimates most uncertain?
 
-### 5. Suggested further tests
+### 6. Suggested further tests
 Specific evidence that would most change the ranking. Focus on tests that would DISCRIMINATE between the top 2-3 hypotheses.
 
 ## Data
@@ -67,6 +69,9 @@ Specific evidence that would most change the ranking. Focus on tests that would 
 
 ### Bayesian posteriors
 {bayesian_json}
+
+### Absence-of-evidence findings
+{absence_json}
 """
 
 
@@ -75,17 +80,20 @@ def run_synthesize(
     hypothesis_space: HypothesisSpace,
     testing: TestingResult,
     bayesian: BayesianResult,
+    absence: AbsenceResult | None = None,
     *,
     model: str | None = None,
 ) -> SynthesisResult:
     """Generate final synthesis from all pipeline results."""
     kwargs = {"model": model} if model else {}
+    absence_data = absence if absence else AbsenceResult()
     return call_llm(
         PROMPT.format(
             extraction_json=json.dumps(extraction.model_dump(), indent=2),
             hypotheses_json=json.dumps(hypothesis_space.model_dump(), indent=2),
             testing_json=json.dumps(testing.model_dump(), indent=2),
             bayesian_json=json.dumps(bayesian.model_dump(), indent=2),
+            absence_json=json.dumps(absence_data.model_dump(), indent=2),
         ),
         SynthesisResult,
         **kwargs,

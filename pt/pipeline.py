@@ -8,6 +8,7 @@ import time
 from typing import Callable
 
 from pt.bayesian import run_bayesian_update
+from pt.pass_absence import run_absence
 from pt.pass_extract import run_extract
 from pt.pass_hypothesize import run_hypothesize
 from pt.pass_synthesize import run_synthesize
@@ -102,6 +103,14 @@ def run_pipeline(
         print(f"  {total_evals} evidence evaluations across all hypotheses")
 
     if verbose:
+        print("Pass 3b: Evaluating absence of evidence...")
+    absence = run_absence(extraction, hypothesis_space, testing, model=model)
+    if verbose:
+        n_abs = len(absence.evaluations)
+        n_damaging = sum(1 for a in absence.evaluations if a.severity == "damaging")
+        print(f"  {n_abs} absence findings ({n_damaging} damaging)")
+
+    if verbose:
         print("Bayesian updating...")
     bayesian = run_bayesian_update(testing)
     if verbose:
@@ -113,7 +122,7 @@ def run_pipeline(
 
     if verbose:
         print("Pass 4/4: Synthesizing analysis...")
-    synthesis = run_synthesize(extraction, hypothesis_space, testing, bayesian, model=model)
+    synthesis = run_synthesize(extraction, hypothesis_space, testing, bayesian, absence, model=model)
     if verbose:
         print(f"  Narrative: {len(synthesis.analytical_narrative)} chars")
 
@@ -125,6 +134,7 @@ def run_pipeline(
         extraction=extraction,
         hypothesis_space=hypothesis_space,
         testing=testing,
+        absence=absence,
         bayesian=bayesian,
         synthesis=synthesis,
     )
