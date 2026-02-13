@@ -64,7 +64,7 @@ Options: `--model <litellm-model-id>` to override the default model.
 | `pt/report.py` | HTML report generation | No |
 | `pt/cli.py` | CLI entry point | No |
 
-### Key Design Decisions (v5f)
+### Key Design Decisions (v5g)
 
 - **LR cap at 20.0**: Prevents single evidence items from dominating. `LR_CAP = 20.0`, `LR_FLOOR = 0.05`.
 - **Relevance gating**: Evidence with `relevance < 0.4` is forced to `LR = 1.0` (uninformative). Above 0.4, soft discount via `lr = exp(relevance * log(capped_lr))`.
@@ -77,23 +77,20 @@ Options: `--model <litellm-model-id>` to override the default model.
 - **Source fidelity**: Every evidence item must quote or closely paraphrase the input text. No hallucinated evidence.
 - **Pairwise discrimination**: Each hypothesis pair must have 3+ evidence items where LRs diverge by 2x+.
 - **Steelman verdicts**: Every hypothesis gets a mandatory steelman case, even if eliminated — ensures fair analysis.
-- **Posterior robustness**: Each verdict flagged "robust" (driven by decisive tests) or "fragile" (driven by many small LR effects).
+- **Mechanical robustness**: Each hypothesis's posterior is mechanically classified as "robust" (driven by few decisive LRs with |log(LR)| > 1.6), "fragile" (driven by many weak LRs with |log(LR)| < 0.7), or "moderate". No LLM judgment involved.
+- **Sensitivity analysis**: Per-hypothesis perturbation of top-N most influential LRs (plus rivals' top drivers) by ±50% on log-LR scale. Reports posterior ranges and rank stability under perturbation.
 - **Multi-speaker awareness**: Debate/discussion texts get speaker-attributed evidence, disputed facts classified as interpretive, neutral research questions, and Rule F preventing systematic speaker favoritism in testing.
 - **Retry logic**: Up to 3 retries with exponential backoff (jittered, capped 30s) for transient LLM failures (JSON parse, rate limits, timeouts).
 - **Review checkpoint**: `--review` flag pauses after hypothesis generation for human review/editing before expensive testing pass.
 
-### Known Gaps vs. PhD-Level Analysis (v5f)
-
-**Fixable via code (pure math in bayesian.py):**
-1. **No sensitivity analysis** — Pipeline produces point-estimate posteriors with no indication of how stable the ranking is under perturbation of uncertain LR assignments. Fix: perturb top-N most extreme LRs by ±50%, report posterior ranges.
-2. **LLM-guessed robustness is unreliable** — Synthesis pass guesses "robust"/"fragile" but often marks everything "robust". Fix: compute mechanically from LR distribution (few decisive LRs = robust, many small LRs = fragile).
+### Known Gaps vs. PhD-Level Analysis
 
 **Partially fixable via prompts (diminishing returns):**
-3. **Complementary hypotheses as rivals** — Every run has ≥1 pair that the synthesis admits are "two sides of the same coin." The mutual exclusion rules help but don't fully solve it. Best mitigation: `--review` checkpoint.
-4. **No hypotheses from theoretical frameworks** — Generated hypotheses anchor on what the text says rather than bringing external analytical frameworks (offense-defense theory, selectorate theory, path dependence). The LLM has this knowledge but the prompt doesn't elicit it.
-5. **Debate genre still partially mishandled** — Speaker assessments sometimes coded empirical. Cross-speaker agreement not weighted more heavily in practice.
-6. **Absence-of-evidence not evaluated** — Pipeline only tests evidence that IS present, not evidence that a hypothesis predicts SHOULD be present but isn't (hoop test failures from missing evidence).
-7. **Synthesis is summary, not analysis** — Tends toward restating Bayesian results in prose rather than generating original analytical insights.
+1. **Complementary hypotheses as rivals** — Every run has ≥1 pair that the synthesis admits are "two sides of the same coin." The mutual exclusion rules help but don't fully solve it. Best mitigation: `--review` checkpoint.
+2. **No hypotheses from theoretical frameworks** — Generated hypotheses anchor on what the text says rather than bringing external analytical frameworks (offense-defense theory, selectorate theory, path dependence). The LLM has this knowledge but the prompt doesn't elicit it.
+3. **Debate genre still partially mishandled** — Speaker assessments sometimes coded empirical. Cross-speaker agreement not weighted more heavily in practice.
+4. **Absence-of-evidence not evaluated** — Pipeline only tests evidence that IS present, not evidence that a hypothesis predicts SHOULD be present but isn't (hoop test failures from missing evidence).
+5. **Synthesis is summary, not analysis** — Tends toward restating Bayesian results in prose rather than generating original analytical insights.
 
 ### Prompt Quality Notes
 
