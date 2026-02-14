@@ -37,6 +37,7 @@ Given a text, the pipeline:
 3b. **Absence** evaluates what predicted evidence is missing from the text (failed hoop tests)
 4. **Updates** posteriors via Bayesian math in odds space
 5. **Synthesizes** a written analytical narrative with verdicts (informed by absence findings)
+6. **Refines** (optional) re-reads source text with full context, applies delta, re-runs passes 3-5
 
 ### Running the Pipeline
 
@@ -49,8 +50,10 @@ Output: `result.json` (full structured data) + `report.html` (Bootstrap + vis.js
 Options:
 - `--model <litellm-model-id>` — override the default model
 - `--theories <path>` — inject theoretical frameworks for hypothesis generation (see Theory Injection below)
-- `--review` — pause after hypothesis generation for human review/editing
+- `--review` — pause after hypothesis generation (and after refinement) for human review/editing
 - `--json-only` — skip HTML report generation
+- `--refine` — run analytical refinement after initial pipeline, then re-run passes 3+
+- `--from-result <path>` — load existing result.json, skip passes 1-2, implies `--refine`
 
 ---
 
@@ -66,6 +69,8 @@ Options:
 | `pt/pass_absence.py` | Pass 3b: Absence-of-evidence evaluation (all hypotheses, single call) | Yes |
 | `pt/bayesian.py` | Pass 3.5: Bayesian updating (pure math, no LLM) | No |
 | `pt/pass_synthesize.py` | Pass 4: Written synthesis prompt | Yes |
+| `pt/pass_refine.py` | Pass 5: Analytical refinement (second reading) | Yes |
+| `pt/apply_refinement.py` | Apply refinement delta to extraction + hypotheses | No |
 | `pt/pipeline.py` | Orchestrator — runs passes sequentially | No |
 | `pt/report.py` | HTML report generation | No |
 | `pt/cli.py` | CLI entry point | No |
@@ -90,6 +95,7 @@ Options:
 - **Review checkpoint**: `--review` flag pauses after hypothesis generation for human review/editing before expensive testing pass.
 - **Theory injection**: By default, the hypothesis pass generates at least one theory-derived hypothesis from the LLM's intrinsic knowledge of social science frameworks. Optional `--theories <file>` injects user-provided frameworks; the LLM must generate at least one hypothesis per framework. Example theory file: `input_text/theories/legitimacy_vacuum.txt`.
 - **Absence-of-evidence**: After testing, a single LLM call evaluates all hypotheses for missing predicted evidence (failed hoop tests). Findings are qualitative only — they feed into synthesis narrative but NOT into Bayesian updating, avoiding speculative LR assignments for absent evidence. Each finding rated "damaging", "notable", or "minor" with reasoning about whether the text would contain this evidence if it existed.
+- **Analytical refinement (second reading)**: `--refine` flag triggers a re-read of the source text after the full pipeline completes. The refinement pass receives source text + condensed first-pass results (~33K tokens), produces a structured delta (new evidence, reinterpretations, spurious removals, hypothesis refinements, missing mechanisms), then re-runs passes 3+ with the updated data. New evidence uses `evi_ref_` prefix. `--from-result <path>` loads an existing result.json to skip passes 1-2. `merge_suggestion` refinements are advisory only (not auto-applied). The `--review` flag adds a checkpoint after the refinement LLM call. Costs ~7 additional LLM calls (~3-5 min).
 
 ### Known Gaps vs. PhD-Level Analysis
 
@@ -137,6 +143,7 @@ Options:
 - **Multi-document analysis** — compare causal claims across multiple texts on the same topic. Qualitative coding tools don't do causal inference; causal tools don't handle multiple texts.
 - **CausalQueries bridge** — export extracted causal graphs in a format CausalQueries can import, bridging automated extraction and formal Bayesian methods.
 - ~~**Absence-of-evidence**~~ IMPLEMENTED — Pass 3b evaluates missing predicted evidence (qualitative, synthesis only).
+- ~~**Analytical refinement pass (second reading)**~~ IMPLEMENTED — `--refine` flag triggers second reading after initial pipeline. `--from-result` loads existing result.json. See Key Design Decisions.
 
 ### Prompt Quality Notes
 

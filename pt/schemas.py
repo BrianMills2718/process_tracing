@@ -195,6 +195,64 @@ class AbsenceResult(BaseModel):
     evaluations: list[AbsenceEvaluation] = []
 
 
+# ── Pass 5: Refinement (Second Reading) ────────────────────────────
+
+class NewEvidence(BaseModel):
+    id: str = Field(description="Must use 'evi_ref_' prefix to distinguish from original extraction")
+    description: str
+    source_text: str = Field(description="Direct quote from input text")
+    evidence_type: str = Field(default="empirical", description="'empirical' or 'interpretive'")
+    approximate_date: Optional[str] = None
+    rationale: str = Field(description="Why missed initially, why it matters now")
+
+
+class ReinterpretedEvidence(BaseModel):
+    evidence_id: str
+    original_type: str
+    new_type: str
+    reinterpretation: str
+    updated_description: Optional[str] = None
+
+
+class NewCausalEdge(BaseModel):
+    source_id: str
+    target_id: str
+    relationship: str
+    source_text_support: str = Field(description="Quote from input text")
+
+
+class SpuriousExtraction(BaseModel):
+    item_id: str = Field(description="Evidence ID or 'source_id->target_id' for edges")
+    item_type: str = Field(description="'evidence' or 'causal_edge'")
+    reason: str
+
+
+class HypothesisRefinement(BaseModel):
+    hypothesis_id: str
+    refinement_type: str = Field(
+        description="'sharpen_mechanism', 'add_prediction', 'reframe', or 'merge_suggestion'"
+    )
+    description: str
+    updated_causal_mechanism: Optional[str] = None
+    new_predictions: list[Prediction] = []
+
+
+class MissingMechanism(BaseModel):
+    description: str
+    source_text_support: str
+    relevant_hypotheses: list[str]
+
+
+class RefinementResult(BaseModel):
+    new_evidence: list[NewEvidence] = []
+    reinterpreted_evidence: list[ReinterpretedEvidence] = []
+    new_causal_edges: list[NewCausalEdge] = []
+    spurious_extractions: list[SpuriousExtraction] = []
+    hypothesis_refinements: list[HypothesisRefinement] = []
+    missing_mechanisms: list[MissingMechanism] = []
+    analyst_notes: str = Field(description="Free-text analytical notes from the refinement pass")
+
+
 # ── Pass 4: Synthesis ───────────────────────────────────────────────
 
 class HypothesisVerdict(BaseModel):
@@ -230,6 +288,8 @@ class ProcessTracingResult(BaseModel):
     extraction: ExtractionResult
     hypothesis_space: HypothesisSpace
     testing: TestingResult
-    absence: AbsenceResult = Field(default_factory=AbsenceResult)
+    absence: AbsenceResult
     bayesian: BayesianResult
     synthesis: SynthesisResult
+    refinement: Optional[RefinementResult] = None
+    is_refined: bool = False

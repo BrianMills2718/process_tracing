@@ -80,20 +80,19 @@ def run_synthesize(
     hypothesis_space: HypothesisSpace,
     testing: TestingResult,
     bayesian: BayesianResult,
-    absence: AbsenceResult | None = None,
+    absence: AbsenceResult,
     *,
     model: str | None = None,
 ) -> SynthesisResult:
     """Generate final synthesis from all pipeline results."""
     kwargs = {"model": model} if model else {}
-    absence_data = absence if absence else AbsenceResult()
     return call_llm(
         PROMPT.format(
             extraction_json=json.dumps(extraction.model_dump(), indent=2),
             hypotheses_json=json.dumps(hypothesis_space.model_dump(), indent=2),
             testing_json=json.dumps(testing.model_dump(), indent=2),
             bayesian_json=json.dumps(bayesian.model_dump(), indent=2),
-            absence_json=json.dumps(absence_data.model_dump(), indent=2),
+            absence_json=json.dumps(absence.model_dump(), indent=2),
         ),
         SynthesisResult,
         **kwargs,

@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from pt.schemas import (
+    AbsenceResult,
     BayesianResult,
     Evidence,
     EvidenceEvaluation,
@@ -136,6 +137,7 @@ class TestProcessTracingResult:
                 hypotheses=[],
             ),
             testing=TestingResult(hypothesis_tests=[]),
+            absence=AbsenceResult(evaluations=[]),
             bayesian=BayesianResult(posteriors=[], ranking=[]),
             synthesis=SynthesisResult(
                 verdicts=[],
