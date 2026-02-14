@@ -1,0 +1,113 @@
+name: skocpol_social_revolution
+description: >
+  Theda Skocpol's structural theory of social revolutions.
+  States and Social Revolutions (1979) argues that revolutions result from
+  the conjunction of state fiscal/military crisis, elite defection from the
+  regime, and autonomous popular mobilization — not from ideology or
+  vanguard leadership alone. External pressure (war, geopolitical competition)
+  creates the opening; institutional weakness determines whether the old
+  regime can absorb or deflect the crisis.
+
+outcome_variable: revolution
+
+variables:
+  - name: fiscal_crisis
+    description: >
+      State faces severe fiscal strain — inability to fund military,
+      administration, or debt service. Tax system inadequate or collapsing.
+    description_zero: >
+      State finances are stable or manageable; no acute revenue crisis.
+    observable_indicators:
+      - Government bankruptcy or inability to pay soldiers/officials
+      - Emergency taxation or forced loans
+      - Debt default or near-default
+      - Currency debasement or hyperinflation
+
+  - name: elite_defection
+    description: >
+      Significant faction of the ruling elite (nobility, military officers,
+      senior bureaucrats, wealthy bourgeoisie) withdraws support from the
+      regime or actively opposes it.
+    description_zero: >
+      Elite remain broadly loyal to the regime; no major splits.
+    observable_indicators:
+      - Elite-led assemblies or councils demanding reform
+      - Military officers refusing orders or joining opposition
+      - Wealthy elites funding revolutionary movements
+      - Noble/elite participation in revolutionary governance
+
+  - name: popular_mobilization
+    description: >
+      Autonomous mass mobilization — peasant revolts, urban uprisings,
+      worker strikes — not controlled by elites or the state.
+    description_zero: >
+      No significant autonomous popular uprising; protests are small,
+      localized, or elite-directed.
+    observable_indicators:
+      - Large-scale peasant land seizures or rural revolts
+      - Urban crowd actions (bread riots, storming of buildings)
+      - General strikes or mass demonstrations
+      - Formation of popular militias or committees
+
+  - name: external_pressure
+    description: >
+      Geopolitical or military pressure from foreign powers — war,
+      invasion threat, colonial exploitation, or economic sanctions
+      that weakens the state.
+    description_zero: >
+      No significant external military or geopolitical threat to the state.
+    observable_indicators:
+      - Ongoing or recent war draining state resources
+      - Military defeat or humiliation
+      - Foreign occupation or colonial control
+      - Economic pressure from foreign powers
+
+  - name: institutional_weakness
+    description: >
+      State institutions (bureaucracy, military, judiciary) are rigid,
+      corrupt, or incapable of reform — cannot absorb demands or
+      adapt to crisis.
+    description_zero: >
+      State institutions are flexible, reformist, or capable of
+      managing the crisis through adaptation.
+    observable_indicators:
+      - Failed reform attempts
+      - Corruption scandals undermining legitimacy
+      - Bureaucratic paralysis during crisis
+      - Military fragmentation or inability to maintain order
+
+  - name: revolution
+    description: >
+      A social revolution occurs — fundamental transformation of state
+      structure AND class relations, not merely a change of government
+      (coup) or political reform.
+    description_zero: >
+      No revolution; the regime survives through reform, repression,
+      or the crisis passes without fundamental transformation.
+    observable_indicators:
+      - Old regime overthrown (not just reshuffled)
+      - New state institutions created
+      - Major redistribution of property or class power
+      - New constitution or fundamental legal transformation
+
+edges:
+  - parent: external_pressure
+    child: fiscal_crisis
+  - parent: fiscal_crisis
+    child: elite_defection
+  - parent: fiscal_crisis
+    child: institutional_weakness
+  - parent: elite_defection
+    child: revolution
+  - parent: popular_mobilization
+    child: revolution
+  - parent: institutional_weakness
+    child: revolution
+  - parent: external_pressure
+    child: institutional_weakness
+
+restrictions:
+  - "revolution[elite_defection=1] > revolution[elite_defection=0]"
+  - "revolution[popular_mobilization=1] > revolution[popular_mobilization=0]"
+
+confounds: []
