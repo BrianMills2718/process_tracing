@@ -55,6 +55,34 @@ Options:
 - `--refine` — run analytical refinement after initial pipeline, then re-run passes 3+
 - `--from-result <path>` — load existing result.json, skip passes 1-2, implies `--refine`
 
+### Multi-Document Cross-Case Analysis
+
+```bash
+# Theory-driven: researcher provides the causal model
+python -m pt.multi input_text/revolutions/*.txt \
+    --causal-model models/skocpol_revolution.yaml \
+    -o output/revolutions_cross
+
+# Data-driven: LLM proposes model, researcher reviews
+python -m pt.multi input_text/revolutions/*.txt \
+    -o output/revolutions_cross --review
+
+# Skip CausalQueries (just binarize)
+python -m pt.multi input_text/revolutions/*.txt \
+    --causal-model models/skocpol.yaml --skip-cq \
+    -o output/revolutions_cross
+```
+
+Output: `multi_result.json` + `multi_report.html` (Bootstrap + vis.js DAG + binarization matrix).
+
+Options:
+- `--causal-model <path>` — YAML causal model (theory-driven). Without it, LLM proposes one (data-driven).
+- `--skip-cq` — skip CausalQueries R bridge (just binarize, useful when R not installed)
+- `--review` — pause at checkpoints (model proposal, hypothesis generation)
+- Other options same as single-text pipeline (`--model`, `--theories`, `--json-only`)
+
+**Dependencies**: R + CausalQueries package only needed for causal estimation. Pipeline works without R through binarization.
+
 ---
 
 ## Active Codebase: `pt/`
@@ -74,6 +102,15 @@ Options:
 | `pt/pipeline.py` | Orchestrator — runs passes sequentially | No |
 | `pt/report.py` | HTML report generation | No |
 | `pt/cli.py` | CLI entry point | No |
+| `pt/schemas_multi.py` | Pydantic models for cross-case analysis | No |
+| `pt/pass_binarize.py` | Map extraction → binary variables (per case) | Yes |
+| `pt/pass_propose_model.py` | Data-driven: propose causal model from N extractions | Yes |
+| `pt/multi_pipeline.py` | Multi-doc orchestrator with caching | No |
+| `pt/cli_multi.py` | CLI entry point for `python -m pt.multi` | No |
+| `pt/cq_bridge.py` | Python side of CausalQueries R bridge (subprocess + JSON) | No |
+| `pt/report_multi.py` | Cross-case HTML report | No |
+| `scripts/cq_runner.R` | R side of CQ bridge (~100 lines) | No |
+| `models/skocpol_revolution.yaml` | Example theory-driven causal model (Skocpol) | No |
 
 ### Key Design Decisions (v5h)
 
@@ -103,6 +140,7 @@ Options:
 2. **Debate genre still partially mishandled** — Speaker assessments sometimes coded empirical. Cross-speaker agreement not weighted more heavily in practice.
 3. ~~**Absence-of-evidence not evaluated**~~ FIXED — Pass 3b evaluates missing predicted evidence qualitatively (synthesis only, not Bayesian). Each finding includes severity, reasoning, and whether the text would contain the evidence if it existed.
 4. **Synthesis is summary, not analysis** — Tends toward restating Bayesian results in prose rather than generating original analytical insights.
+5. **Skocpol theory-driven validation needs better case selection** — Running 6 successful revolutions against Skocpol's model produces all 1s (every variable present in every case). CausalQueries needs variation to estimate effects. Requires: (a) negative cases where revolution didn't happen (e.g., Prussian Reform Era, Meiji Japan, failed 1848 revolutions), and (b) positive cases where not all Skocpol conditions were present (e.g., revolutions driven by ideology rather than fiscal crisis). Current revolution corpus is useful for the data-driven workflow but insufficient for theory-driven CQ estimation with Skocpol.
 
 ---
 
@@ -140,8 +178,8 @@ Options:
 
 ### Strategic opportunities (not yet implemented)
 
-- **Multi-document analysis** — compare causal claims across multiple texts on the same topic. Qualitative coding tools don't do causal inference; causal tools don't handle multiple texts.
-- **CausalQueries bridge** — export extracted causal graphs in a format CausalQueries can import, bridging automated extraction and formal Bayesian methods.
+- ~~**Multi-document analysis**~~ IMPLEMENTED — `python -m pt.multi` runs N texts, binarizes against a causal model (theory-driven or data-driven), bridges to CausalQueries for cross-case Bayesian estimation. See Multi-Document section above.
+- ~~**CausalQueries bridge**~~ IMPLEMENTED — `pt/cq_bridge.py` + `scripts/cq_runner.R` communicate via subprocess + JSON. Requires R + CausalQueries package; graceful degradation without R.
 - ~~**Absence-of-evidence**~~ IMPLEMENTED — Pass 3b evaluates missing predicted evidence (qualitative, synthesis only).
 - ~~**Analytical refinement pass (second reading)**~~ IMPLEMENTED — `--refine` flag triggers second reading after initial pipeline. `--from-result` loads existing result.json. See Key Design Decisions.
 
