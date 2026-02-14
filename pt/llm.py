@@ -88,7 +88,7 @@ def call_llm(
 
         t0 = time.time()
         try:
-            response = litellm.completion(
+            kwargs: dict = dict(
                 model=model,
                 messages=[
                     {"role": "system", "content": system},
@@ -99,6 +99,10 @@ def call_llm(
                 temperature=temperature,
                 timeout=600,
             )
+            # Disable reasoning for thinking models — we need output tokens, not CoT
+            if "gemini-3" in model or "gemini-4" in model:
+                kwargs["thinking"] = {"type": "enabled", "budget_tokens": 0}
+            response = litellm.completion(**kwargs)
         except Exception as e:
             last_error = e
             if _is_retryable(e) and attempt < MAX_RETRIES:
@@ -107,6 +111,7 @@ def call_llm(
             raise LLMError(f"LLM call failed: {e}") from e
 
         elapsed = time.time() - t0
+        resp_model = getattr(response, "model", "unknown")
         content = response.choices[0].message.content
         if not content:
             last_error = LLMError("LLM returned empty response")
@@ -117,7 +122,7 @@ def call_llm(
 
         # Check for truncation (finish_reason != 'stop')
         finish_reason = response.choices[0].finish_reason
-        print(f"  LLM call: {elapsed:.1f}s, {len(content)} chars, finish={finish_reason}")
+        print(f"  LLM call: {elapsed:.1f}s, {len(content)} chars, finish={finish_reason}, model={resp_model}")
 
         if finish_reason == "length":
             raise LLMError(
