@@ -33,9 +33,14 @@ prefix (e.g., `evi_ref_01`). Focus on evidence that would discriminate between t
 hypotheses or address fragile posteriors.
 
 ### 2. Reinterpreted Evidence
-Evidence items whose significance changed in light of the full analysis. E.g., evidence \
-initially coded as empirical that is actually interpretive (or vice versa), or evidence \
-whose description doesn't capture its real significance for hypothesis discrimination.
+Evidence items whose TYPE or DESCRIPTION should change in light of the full analysis. \
+Each reinterpretation must produce a concrete change: either `new_type` differs from \
+`original_type`, or `updated_description` is provided, or both. Do NOT use this for \
+evidence whose diagnostic power shifted but whose type and description are still accurate — \
+that's just normal Bayesian updating. Examples of genuine reinterpretations:
+- Evidence coded as empirical that is actually interpretive (a historian's argument, not a fact)
+- Evidence whose description misses its real significance for hypothesis discrimination
+- Evidence type-coded as interpretive that contains verifiable empirical claims
 
 ### 3. New Causal Edges
 Relationships the extraction missed but that the evidence pattern suggests exist. Must quote \
