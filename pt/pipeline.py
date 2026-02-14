@@ -168,6 +168,16 @@ def run_pipeline(
     """
     t0 = time.time()
 
+    # Input validation — catch garbage/trivial input before burning 9+ LLM calls
+    if from_result is None:
+        word_count = len(text.split())
+        if word_count < 300:
+            raise ValueError(
+                f"Input text too short ({word_count} words). "
+                f"Process tracing requires at least 300 words of substantive text "
+                f"to extract meaningful evidence and hypotheses."
+            )
+
     if from_result is not None:
         refine = True
         extraction = from_result.extraction

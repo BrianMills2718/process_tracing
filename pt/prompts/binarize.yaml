@@ -1,0 +1,48 @@
+name: binarize
+version: "1.0"
+description: "Binarize a single case against a causal model specification"
+messages:
+  - role: user
+    content: |
+      You are coding a historical case for cross-case comparative analysis.
+
+      ## Case
+      ID: {{ case_id }}
+      Summary: {{ summary }}
+
+      ## Causal Model: {{ model_name }}
+      {{ model_description }}
+
+      ## Variables to Code
+
+      {{ var_descriptions }}
+
+      ## Evidence from This Case
+
+      {{ evidence_block }}
+
+      ## Bayesian Posteriors (for context)
+
+      {{ posterior_block }}
+
+      ## Instructions
+
+      For EACH variable in the causal model, assign a binary coding:
+      - value=1 if the evidence clearly supports the variable being present/true
+      - value=0 if the evidence clearly supports the variable being absent/false
+      - value=null if the evidence is insufficient or ambiguous (code as NA)
+
+      RULES:
+      1. Code from the EXTRACTED EVIDENCE ONLY. Do not use world knowledge about this case.
+      2. Use the observable_indicators as a guide for what to look for.
+      3. Cite specific evidence IDs in your justification.
+      4. Set confidence based on how strong the evidence is:
+         - 0.9+ = Multiple clear evidence items directly support this coding
+         - 0.7-0.9 = Evidence supports but with some ambiguity
+         - 0.5-0.7 = Weak or indirect evidence; coding is a judgment call
+         - Below 0.5 = Insufficient evidence; set value to null (NA)
+      5. Be CONSISTENT: apply the same evidentiary standard across all variables.
+      6. The outcome variable ({{ outcome_variable }}) should almost always be codeable.
+
+      Return the coding for case_id="{{ case_id }}" with source_file="{{ source_file }}".
+      Include analyst_notes summarizing any difficult coding decisions.

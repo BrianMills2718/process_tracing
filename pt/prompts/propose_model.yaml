@@ -1,0 +1,36 @@
+name: propose_model
+version: "1.0"
+description: "Propose a causal model from N extraction results (data-driven workflow)"
+messages:
+  - role: user
+    content: |
+      You are designing a causal model for cross-case comparative analysis.
+
+      You have extraction results from {{ num_cases }} cases:
+
+      {{ cases_text }}
+
+      ## Task
+
+      Propose a causal model (directed acyclic graph) that captures the common causal structure across these cases. The model will be used with CausalQueries (an R package for Bayesian causal inference with binary data).
+
+      ## Constraints
+
+      1. ALL variables must be BINARY (0/1). Define what 1 means and what 0 means.
+      2. Maximum 10 variables (CausalQueries has exponential complexity).
+      3. Include exactly ONE outcome variable.
+      4. The DAG must be ACYCLIC.
+      5. Variable names must be valid R identifiers (lowercase, underscores, no spaces).
+      6. Variables must be GENERAL — applicable across all {{ num_cases }} cases, not specific to any single case.
+      7. Include observable_indicators for each variable — concrete things a coder should look for in texts.
+
+      ## Guidelines
+
+      - Derive variables from the ACTUAL mechanisms and causal edges extracted from these cases.
+      - Do NOT just reproduce a standard theoretical framework (e.g., Skocpol). Ground the model in what the texts actually say.
+      - Prefer fewer, more clearly defined variables over many vague ones.
+      - The DAG should represent theoretically meaningful causal pathways, not just correlations.
+      - Include both proximate causes (triggers) and structural/background conditions.
+      - If you see a common mediating mechanism across cases, include it as a variable.
+
+      Return a CausalModelSpec with a descriptive name and description explaining the theoretical logic.

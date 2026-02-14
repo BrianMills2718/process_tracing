@@ -5,9 +5,15 @@ One LLM call per case. Maps extraction results to binary variable codings.
 
 from __future__ import annotations
 
+from pathlib import Path
+
+from llm_client import render_prompt
+
 from pt.llm import DEFAULT_MODEL, call_llm
 from pt.schemas import BayesianResult, ExtractionResult
 from pt.schemas_multi import CaseBinarization, CausalModelSpec, VariableCoding
+
+PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 
 class _BinarizationResponse(CaseBinarization):
@@ -59,53 +65,23 @@ def binarize_case(
         posterior_lines.append(f"  {hp.hypothesis_id}: posterior={hp.final_posterior:.3f} ({hp.robustness})")
     posterior_block = "\n".join(posterior_lines)
 
-    prompt = f"""You are coding a historical case for cross-case comparative analysis.
-
-## Case
-ID: {case_id}
-Summary: {extraction.summary}
-
-## Causal Model: {causal_model.name}
-{causal_model.description}
-
-## Variables to Code
-
-{var_block}
-
-## Evidence from This Case
-
-{evidence_block}
-
-## Bayesian Posteriors (for context)
-
-{posterior_block}
-
-## Instructions
-
-For EACH variable in the causal model, assign a binary coding:
-- value=1 if the evidence clearly supports the variable being present/true
-- value=0 if the evidence clearly supports the variable being absent/false
-- value=null if the evidence is insufficient or ambiguous (code as NA)
-
-RULES:
-1. Code from the EXTRACTED EVIDENCE ONLY. Do not use world knowledge about this case.
-2. Use the observable_indicators as a guide for what to look for.
-3. Cite specific evidence IDs in your justification.
-4. Set confidence based on how strong the evidence is:
-   - 0.9+ = Multiple clear evidence items directly support this coding
-   - 0.7-0.9 = Evidence supports but with some ambiguity
-   - 0.5-0.7 = Weak or indirect evidence; coding is a judgment call
-   - Below 0.5 = Insufficient evidence; set value to null (NA)
-5. Be CONSISTENT: apply the same evidentiary standard across all variables.
-6. The outcome variable ({causal_model.outcome_variable}) should almost always be codeable.
-
-Return the coding for case_id="{case_id}" with source_file="{source_file}".
-Include analyst_notes summarizing any difficult coding decisions."""
+    messages = render_prompt(
+        PROMPTS_DIR / "binarize.yaml",
+        case_id=case_id,
+        summary=extraction.summary,
+        model_name=causal_model.name,
+        model_description=causal_model.description,
+        var_descriptions=var_block,
+        evidence_block=evidence_block,
+        posterior_block=posterior_block,
+        outcome_variable=causal_model.outcome_variable,
+        source_file=source_file,
+    )
 
     kwargs: dict = {}
     if model is not None:
         kwargs["model"] = model
-    result = call_llm(prompt, _BinarizationResponse, **kwargs)
+    result = call_llm(messages[0]["content"], _BinarizationResponse, **kwargs)
 
     # Validate: every model variable must be coded
     coded_vars = {c.variable_name for c in result.codings}

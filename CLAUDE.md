@@ -91,12 +91,13 @@ Options:
 |------|---------|------|
 | `pt/schemas.py` | Pydantic models for all pipeline data | No |
 | `pt/llm.py` | LiteLLM abstraction, structured output parsing | Yes |
-| `pt/pass_extract.py` | Pass 1: Evidence extraction prompt | Yes |
-| `pt/pass_hypothesize.py` | Pass 2: Hypothesis generation prompt | Yes |
-| `pt/pass_test.py` | Pass 3: Diagnostic testing prompt (one call per hypothesis) | Yes |
+| `pt/prompts/*.yaml` | YAML/Jinja2 prompt templates (loaded via `llm_client.render_prompt()`) | — |
+| `pt/pass_extract.py` | Pass 1: Evidence extraction | Yes |
+| `pt/pass_hypothesize.py` | Pass 2: Hypothesis generation | Yes |
+| `pt/pass_test.py` | Pass 3: Diagnostic testing (one call per hypothesis) | Yes |
 | `pt/pass_absence.py` | Pass 3b: Absence-of-evidence evaluation (all hypotheses, single call) | Yes |
 | `pt/bayesian.py` | Pass 3.5: Bayesian updating (pure math, no LLM) | No |
-| `pt/pass_synthesize.py` | Pass 4: Written synthesis prompt | Yes |
+| `pt/pass_synthesize.py` | Pass 4: Written synthesis | Yes |
 | `pt/pass_refine.py` | Pass 5: Analytical refinement (second reading) | Yes |
 | `pt/apply_refinement.py` | Apply refinement delta to extraction + hypotheses | No |
 | `pt/pipeline.py` | Orchestrator — runs passes sequentially | No |

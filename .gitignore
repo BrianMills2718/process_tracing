@@ -77,4 +77,5 @@ test_fixtures/
 # Legacy/Archive directories (keep local, don't push)
 archive/
 remediation/
-prompts/
+# Legacy root prompts/ only — pt/prompts/ is active (YAML/Jinja2 templates)
+/prompts/
