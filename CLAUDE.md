@@ -186,7 +186,7 @@ Options:
 
 ### Prompt Quality Notes
 
-The prompts in `pass_test.py` and `pass_hypothesize.py` are the most critical for output quality. They encode Van Evera's methodology and the anti-bias rules that prevent:
+The prompts in `pt/prompts/pass3_test.yaml` and `pt/prompts/pass2_hypothesize.yaml` are the most critical for output quality. They encode Van Evera's methodology and the anti-bias rules that prevent:
 - Compound bias (many slightly-anti LRs crushing narrowly-correct hypotheses)
 - Circular reasoning (hypothesis derived from interpretive evidence)
 - Tautological hypotheses (descriptions masquerading as explanations)
