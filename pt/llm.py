@@ -30,15 +30,14 @@ def call_llm(
     *,
     model: str = DEFAULT_MODEL,
     temperature: float = 0.3,
-    max_tokens: int = 65536,
     system: str = "You are an expert political scientist and historian performing Van Evera process tracing analysis. Respond with valid JSON matching the requested schema exactly. Keep your JSON output concise—use brief descriptions, not lengthy prose.",
 ) -> T:
     """Call LLM and parse response into a Pydantic model.
 
     Delegates retry on transient errors (rate limits, timeouts, empty responses),
-    thinking model detection, and truncation handling to llm_client.
-    This wrapper adds: message building, schema injection, fence stripping,
-    Pydantic validation with retry, and pipeline-specific logging.
+    thinking model detection, max token defaulting, and truncation handling to
+    llm_client. This wrapper adds: message building, schema injection, fence
+    stripping, Pydantic validation with retry, and pipeline-specific logging.
     """
     schema_json = json.dumps(response_model.model_json_schema(), indent=2)
     full_prompt = f"{prompt}\n\nRespond with JSON matching this schema:\n{schema_json}"
@@ -60,7 +59,6 @@ def call_llm(
                 timeout=600,
                 num_retries=3,
                 temperature=temperature,
-                max_completion_tokens=max_tokens,
                 response_format={"type": "json_object"},
             )
         except Exception as e:
