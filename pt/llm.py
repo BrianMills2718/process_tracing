@@ -7,11 +7,17 @@ import os
 import time
 from typing import TypeVar
 
+from pathlib import Path
+
 from dotenv import load_dotenv
 from llm_client import call_llm as _call_llm_raw, strip_fences
 from pydantic import BaseModel
 
-load_dotenv()
+# Load API keys from shared secrets, then project .env for overrides
+_secrets = Path.home() / ".secrets" / "api_keys.env"
+if _secrets.exists():
+    load_dotenv(_secrets)
+load_dotenv(override=True)
 
 T = TypeVar("T", bound=BaseModel)
 

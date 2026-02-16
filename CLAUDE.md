@@ -196,17 +196,9 @@ Changes to these prompts should be validated by running the pipeline on a text a
 
 ---
 
-## Legacy Codebase: `core/`
+## Legacy Codebase (Removed 2026-02-15)
 
-The `core/` directory (~25K lines) is an older graph-based architecture with ontology management, dynamic validation, and plugin systems. It is **not actively developed** — the `pt/` pipeline replaced it. Key components:
-
-- `core/ontology_manager.py` — Centralized ontology queries
-- `core/dynamic_ontology_validator.py` — Functional validation
-- `core/structured_extractor.py` — LLM extraction
-- `analyze_direct.py` — Old pipeline entry point
-- `config/ontology_config.json` — Ontology definition
-
-Root-level `debug_*.py`, `test_*.py`, and `verify_*.py` scripts are debugging artifacts from `core/` development.
+The old `core/` graph-based architecture, `universal_llm_kit/`, `tools/`, and all root-level debug scripts (`test_*.py`, `verify_*.py`) have been removed. They imported a non-existent `core/` module. The `tests/` directory was pruned to only files testing active `pt/` code. Historical investigation docs remain in `evidence/`.
 
 ---
 

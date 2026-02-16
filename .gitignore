@@ -21,10 +21,10 @@ wheels/
 *.egg
 
 # Virtual Environment
+.venv/
 venv/
 ENV/
 env/
-test_env/
 
 # IDE
 .idea/
