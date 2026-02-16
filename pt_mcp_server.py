@@ -101,7 +101,7 @@ def run_process_trace(
 
 
 @mcp.tool()
-def get_trace_results(output_dir: str) -> str:
+def get_process_trace_status(output_dir: str) -> str:
     """Read saved process tracing results from a previous run.
 
     Args:
