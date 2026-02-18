@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from uuid import uuid4
 
 from llm_client import render_prompt
 
@@ -90,8 +91,11 @@ def run_refine(
     synthesis: SynthesisResult,
     *,
     model: str | None = None,
+    trace_id: str | None = None,
 ) -> RefinementResult:
     """Re-read source text with full first-pass context, return structured delta."""
+    if trace_id is None:
+        trace_id = uuid4().hex[:8]
     kwargs = {"model": model} if model else {}
 
     bayesian_summary = _build_bayesian_summary(bayesian, hypothesis_space, extraction)
@@ -108,5 +112,7 @@ def run_refine(
     return call_llm(
         messages[0]["content"],
         RefinementResult,
+        task="process_tracing.refine",
+        trace_id=trace_id,
         **kwargs,
     )

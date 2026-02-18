@@ -5,6 +5,7 @@ Single LLM call examines all extractions and proposes a CausalModelSpec.
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 from llm_client import render_prompt
@@ -20,6 +21,7 @@ def propose_causal_model(
     extractions: dict[str, ExtractionResult],
     *,
     model: str | None = None,
+    trace_id: str | None = None,
 ) -> CausalModelSpec:
     """Propose a causal model from multiple case extractions.
 
@@ -57,10 +59,18 @@ def propose_causal_model(
         cases_text=cases_text,
     )
 
+    if trace_id is None:
+        trace_id = hashlib.sha256(",".join(sorted(extractions.keys())).encode()).hexdigest()[:8]
     kwargs: dict = {}
     if model is not None:
         kwargs["model"] = model
-    result = call_llm(messages[0]["content"], CausalModelSpec, **kwargs)
+    result = call_llm(
+        messages[0]["content"],
+        CausalModelSpec,
+        task="process_tracing.propose_model",
+        trace_id=trace_id,
+        **kwargs,
+    )
 
     # Validate
     errors = result.validate_dag()

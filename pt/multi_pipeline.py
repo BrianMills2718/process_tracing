@@ -10,6 +10,7 @@ import json
 import os
 import time
 from typing import Optional
+from uuid import uuid4
 
 from pt.schemas import ProcessTracingResult
 from pt.schemas_multi import (
@@ -215,6 +216,7 @@ def run_multi_pipeline(
         skip_cq: Skip CausalQueries R bridge.
     """
     t0 = time.time()
+    trace_id = uuid4().hex[:8]
     workflow = "theory_driven" if causal_model else "data_driven"
 
     # ── Step 1: Run single-text pipeline on each case ──────────────
@@ -250,7 +252,7 @@ def run_multi_pipeline(
         from pt.pass_propose_model import propose_causal_model
 
         extractions = {cid: r.extraction for cid, r in case_data.items()}
-        causal_model = propose_causal_model(extractions, model=model)
+        causal_model = propose_causal_model(extractions, model=model, trace_id=trace_id)
 
         # Write proposed model for review
         yaml_path = os.path.join(output_dir, "proposed_model.yaml")
@@ -277,6 +279,7 @@ def run_multi_pipeline(
             bayesian=result.bayesian,
             causal_model=causal_model,
             model=model,
+            trace_id=trace_id,
         )
         binarizations.append(binarization)
 

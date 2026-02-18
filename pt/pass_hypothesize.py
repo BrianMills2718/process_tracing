@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from uuid import uuid4
 
 from llm_client import render_prompt
 
@@ -18,6 +19,7 @@ def run_hypothesize(
     *,
     model: str | None = None,
     theories: str | None = None,
+    trace_id: str | None = None,
 ) -> HypothesisSpace:
     """Build hypothesis space from extraction results.
 
@@ -35,6 +37,8 @@ def run_hypothesize(
     else:
         theories_block = ""
 
+    if trace_id is None:
+        trace_id = uuid4().hex[:8]
     messages = render_prompt(
         PROMPTS_DIR / "pass2_hypothesize.yaml",
         extraction_json=json.dumps(extraction.model_dump(), indent=2),
@@ -44,5 +48,7 @@ def run_hypothesize(
     return call_llm(
         messages[0]["content"],
         HypothesisSpace,
+        task="process_tracing.hypothesize",
+        trace_id=trace_id,
         **kwargs,
     )

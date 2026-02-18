@@ -6,6 +6,7 @@ import json
 import os
 import time
 from typing import Callable
+from uuid import uuid4
 
 from pt.apply_refinement import apply_refinement
 from pt.bayesian import run_bayesian_update
@@ -103,20 +104,21 @@ def _run_passes_3_plus(
     model: str | None = None,
     verbose: bool = True,
     pass_label: str = "",
+    trace_id: str | None = None,
 ) -> tuple:
     """Run passes 3, 3b, Bayesian, and 4. Returns (testing, absence, bayesian, synthesis)."""
     prefix = f"{pass_label} " if pass_label else ""
 
     if verbose:
         print(f"{prefix}Pass 3: Diagnostic testing ({len(hypothesis_space.hypotheses)} hypotheses)...")
-    testing = run_test(extraction, hypothesis_space, model=model)
+    testing = run_test(extraction, hypothesis_space, model=model, trace_id=trace_id)
     if verbose:
         total_evals = sum(len(ht.evidence_evaluations) for ht in testing.hypothesis_tests)
         print(f"  {total_evals} evidence evaluations across all hypotheses")
 
     if verbose:
         print(f"{prefix}Pass 3b: Evaluating absence of evidence...")
-    absence = run_absence(extraction, hypothesis_space, testing, model=model)
+    absence = run_absence(extraction, hypothesis_space, testing, model=model, trace_id=trace_id)
     if verbose:
         n_abs = len(absence.evaluations)
         n_damaging = sum(1 for a in absence.evaluations if a.severity == "damaging")
@@ -134,7 +136,7 @@ def _run_passes_3_plus(
 
     if verbose:
         print(f"{prefix}Pass 4: Synthesizing analysis...")
-    synthesis = run_synthesize(extraction, hypothesis_space, testing, bayesian, absence, model=model)
+    synthesis = run_synthesize(extraction, hypothesis_space, testing, bayesian, absence, model=model, trace_id=trace_id)
     if verbose:
         print(f"  Narrative: {len(synthesis.analytical_narrative)} chars")
 
@@ -152,6 +154,7 @@ def run_pipeline(
     theories: str | None = None,
     refine: bool = False,
     from_result: ProcessTracingResult | None = None,
+    trace_id: str | None = None,
 ) -> ProcessTracingResult:
     """Run the full process tracing pipeline.
 
@@ -167,6 +170,8 @@ def run_pipeline(
         from_result: Load extraction + hypothesis_space from existing result, skip passes 1-2. Implies refine.
     """
     t0 = time.time()
+    if trace_id is None:
+        trace_id = uuid4().hex[:8]
 
     # Input validation — catch garbage/trivial input before burning 9+ LLM calls
     if from_result is None:
@@ -188,7 +193,7 @@ def run_pipeline(
     else:
         if verbose:
             print("Pass 1/4: Extracting causal graph...")
-        extraction = run_extract(text, model=model)
+        extraction = run_extract(text, model=model, trace_id=trace_id)
         if verbose:
             print(f"  Extracted {len(extraction.events)} events, {len(extraction.evidence)} evidence, "
                   f"{len(extraction.hypotheses_in_text)} hypotheses")
@@ -196,7 +201,7 @@ def run_pipeline(
         if verbose:
             extra = " (with user theories)" if theories else ""
             print(f"Pass 2/4: Building hypothesis space{extra}...")
-        hypothesis_space = run_hypothesize(extraction, model=model, theories=theories)
+        hypothesis_space = run_hypothesize(extraction, model=model, theories=theories, trace_id=trace_id)
         if verbose:
             print(f"  {len(hypothesis_space.hypotheses)} hypotheses "
                   f"(text + rivals), research question: {hypothesis_space.research_question[:80]}...")
@@ -208,7 +213,7 @@ def run_pipeline(
 
     # Run passes 3-4 (initial)
     testing, absence, bayesian, synthesis = _run_passes_3_plus(
-        extraction, hypothesis_space, text, model=model, verbose=verbose,
+        extraction, hypothesis_space, text, model=model, verbose=verbose, trace_id=trace_id,
     )
 
     refinement_result = None
@@ -217,7 +222,7 @@ def run_pipeline(
         if verbose:
             print("\nPass 5: Analytical refinement (second reading)...")
         refinement_result = run_refine(
-            text, extraction, hypothesis_space, bayesian, absence, synthesis, model=model,
+            text, extraction, hypothesis_space, bayesian, absence, synthesis, model=model, trace_id=trace_id,
         )
         if verbose:
             n_new = len(refinement_result.new_evidence)
@@ -251,7 +256,7 @@ def run_pipeline(
             print("\nRe-running passes 3-4 with refined data...")
         testing, absence, bayesian, synthesis = _run_passes_3_plus(
             extraction, hypothesis_space, text, model=model, verbose=verbose,
-            pass_label="[Refined]",
+            pass_label="[Refined]", trace_id=trace_id,
         )
 
     elapsed = time.time() - t0

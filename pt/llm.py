@@ -34,6 +34,8 @@ def call_llm(
     prompt: str,
     response_model: type[T],
     *,
+    task: str,
+    trace_id: str,
     model: str = DEFAULT_MODEL,
     temperature: float = 0.3,
     system: str = "You are an expert political scientist and historian performing Van Evera process tracing analysis. Respond with valid JSON matching the requested schema exactly. Keep your JSON output concise—use brief descriptions, not lengthy prose.",
@@ -66,6 +68,8 @@ def call_llm(
                 num_retries=3,
                 temperature=temperature,
                 response_format={"type": "json_object"},
+                task=task,
+                trace_id=trace_id,
             )
         except Exception as e:
             raise LLMError(f"LLM call failed: {e}") from e

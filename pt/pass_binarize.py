@@ -5,6 +5,7 @@ One LLM call per case. Maps extraction results to binary variable codings.
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 from llm_client import render_prompt
@@ -29,6 +30,7 @@ def binarize_case(
     bayesian: BayesianResult,
     causal_model: CausalModelSpec,
     model: str | None = None,
+    trace_id: str | None = None,
 ) -> CaseBinarization:
     """Binarize one case against a causal model.
 
@@ -78,10 +80,18 @@ def binarize_case(
         source_file=source_file,
     )
 
+    if trace_id is None:
+        trace_id = hashlib.sha256(case_id.encode()).hexdigest()[:8]
     kwargs: dict = {}
     if model is not None:
         kwargs["model"] = model
-    result = call_llm(messages[0]["content"], _BinarizationResponse, **kwargs)
+    result = call_llm(
+        messages[0]["content"],
+        _BinarizationResponse,
+        task=f"process_tracing.binarize.{case_id}",
+        trace_id=trace_id,
+        **kwargs,
+    )
 
     # Validate: every model variable must be coded
     coded_vars = {c.variable_name for c in result.codings}

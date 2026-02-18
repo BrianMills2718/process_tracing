@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from uuid import uuid4
 
 from llm_client import render_prompt
 
@@ -26,8 +27,11 @@ def _test_one_hypothesis(
     all_hypotheses: list[Hypothesis],
     *,
     model: str | None = None,
+    trace_id: str | None = None,
 ) -> HypothesisTestResult:
     """Run diagnostic tests for a single hypothesis."""
+    if trace_id is None:
+        trace_id = uuid4().hex[:8]
     kwargs = {"model": model} if model else {}
     brief_hypotheses = [{"id": h.id, "description": h.description} for h in all_hypotheses if h.id != hypothesis.id]
     messages = render_prompt(
@@ -39,6 +43,8 @@ def _test_one_hypothesis(
     return call_llm(
         messages[0]["content"],
         HypothesisTestResult,
+        task=f"process_tracing.test.{hypothesis.id}",
+        trace_id=trace_id,
         **kwargs,
     )
 
@@ -48,15 +54,18 @@ def run_test(
     hypothesis_space: HypothesisSpace,
     *,
     model: str | None = None,
+    trace_id: str | None = None,
 ) -> TestingResult:
     """Run diagnostic tests for all hypotheses (one LLM call per hypothesis)."""
+    if trace_id is None:
+        trace_id = uuid4().hex[:8]
     results: list[HypothesisTestResult] = []
     evidence = extraction.evidence
     all_hypotheses = hypothesis_space.hypotheses
 
     for i, h in enumerate(all_hypotheses, 1):
         print(f"  Testing hypothesis {i}/{len(all_hypotheses)}: {h.id}")
-        result = _test_one_hypothesis(h, evidence, all_hypotheses, model=model)
+        result = _test_one_hypothesis(h, evidence, all_hypotheses, model=model, trace_id=trace_id)
         result.hypothesis_id = h.id
 
         # Report coverage and balance

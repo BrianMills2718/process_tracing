@@ -269,7 +269,7 @@ def _make_synthesis() -> SynthesisResult:
 # ── Mock dispatcher ────────────────────────────────────────────────
 
 
-def _mock_call_llm(prompt: str, response_model: type, **kwargs):
+def _mock_call_llm(prompt: str, response_model: type, *, task: str = "", trace_id: str = "", **kwargs):
     """Return deterministic data based on the response model type."""
     model_name = response_model.__name__
 
