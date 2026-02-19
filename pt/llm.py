@@ -38,6 +38,7 @@ def call_llm(
     trace_id: str,
     model: str = DEFAULT_MODEL,
     temperature: float = 0.3,
+    max_budget: float = 0,
     system: str = "You are an expert political scientist and historian performing Van Evera process tracing analysis. Respond with valid JSON matching the requested schema exactly. Keep your JSON output concise—use brief descriptions, not lengthy prose.",
 ) -> T:
     """Call LLM and parse response into a Pydantic model.
@@ -70,6 +71,7 @@ def call_llm(
                 response_format={"type": "json_object"},
                 task=task,
                 trace_id=trace_id,
+                max_budget=max_budget,
             )
         except Exception as e:
             raise LLMError(f"LLM call failed: {e}") from e
