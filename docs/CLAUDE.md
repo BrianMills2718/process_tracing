@@ -1,0 +1,17 @@
+# docs
+
+Maintained documentation for `process_tracing`.
+
+## Route By Question
+
+- active implementation planning -> `plans/`
+- test harnesses, validation runners, and manual verification helpers -> `testing/`
+- validation-specific benchmarking and checks -> `validation/`
+
+## Working Rules
+
+- Keep this parent file at routing level only.
+- Historical or superseded material belongs in `archive/`, not in new top-level
+  docs files.
+- When changing pipeline behavior, update the closest methodological or
+  validation doc rather than adding loose status notes here.
