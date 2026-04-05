@@ -222,3 +222,37 @@ Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+## Commands
+
+```bash
+# Run process tracing pipeline
+python -m pt input_text/your_text.txt --output-dir output/your_run/
+
+# Run tests
+pytest tests/ -q
+
+# Multi-document analysis
+python -m pt --multi-doc input_text/ --output-dir output/multi/
+```
+
+## Principles
+
+- **LLM-First**: all semantic analysis uses LLM, never rule-based matching or keyword logic
+- **Structured output**: all LLM calls return Pydantic models; `if/elif` chains for semantic understanding are prohibited
+- **Fail loud**: raise on LLM failure, never return None/0/[] silently
+- **Generalist**: no dataset-specific hardcoding; the pipeline must work on any historical text
+
+## Workflow
+
+1. Pass text to `python -m pt` (or `python -m pt --multi-doc` for cross-case)
+2. Pipeline runs: Extract → Hypothesize → Test → Bayesian update → Synthesize → (optionally Refine)
+3. Output: `result.json` (full data) + `report.html` (visual network)
+4. Review HTML report for narrative and verdicts
+
+## References
+
+- `docs/V2_RECURSIVE_AGENT_MIGRATION_PLAN.md` — Recursive agent design (if present)
+- `pt/` — Active codebase (process tracing engine)
+- `CLAUDE.md` — This file (canonical operating guidance)
+- `AGENTS.md` — Generated mirror for non-Claude agents
