@@ -6,6 +6,7 @@ import html
 import json
 import math
 
+from pt.bayesian import compute_effective_lr
 from pt.schemas import ProcessTracingResult
 
 
@@ -202,7 +203,7 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
         for ev_eval in ht.evidence_evaluations:
             if ev_eval.evidence_id not in node_ids or ht.hypothesis_id not in node_ids:
                 continue
-            lr = ev_eval.p_e_given_h / max(ev_eval.p_e_given_not_h, 0.001)
+            lr = compute_effective_lr(ev_eval)
             if 0.67 <= lr <= 1.5:
                 continue  # Skip uninformative
             log_lr = abs(math.log(max(lr, 0.01)))
@@ -471,7 +472,7 @@ def generate_report(result: ProcessTracingResult) -> str:
         by_pred: dict[str | None, list] = {}
         for ev_eval in ht.evidence_evaluations:
             total_evals += 1
-            lr = ev_eval.p_e_given_h / max(ev_eval.p_e_given_not_h, 0.001)
+            lr = compute_effective_lr(ev_eval)
             if 0.9 < lr < 1.1:
                 continue
             informative_evals += 1
@@ -503,7 +504,7 @@ def generate_report(result: ProcessTracingResult) -> str:
                   {_th("Finding")}
                   {_th("P(E|H)", "Probability of observing this evidence if the hypothesis is true")}
                   {_th("P(E|~H)", "Probability of observing this evidence if the hypothesis is false")}
-                  {_th("LR", "Likelihood Ratio = P(E|H)/P(E|~H). LR>1 supports, LR<1 opposes the hypothesis")}
+                  {_th("LR", "Effective likelihood ratio after relevance gating and capping. LR>1 supports, LR<1 opposes the hypothesis")}
                   {_th("Relevance", "How relevant this evidence is to the hypothesis (0-1). Below 0.4 = forced uninformative")}
                   {_th("Justification")}
                 </tr></thead>
@@ -538,7 +539,7 @@ def generate_report(result: ProcessTracingResult) -> str:
                   {_th("Finding")}
                   {_th("P(E|H)", "Probability of observing this evidence if the hypothesis is true")}
                   {_th("P(E|~H)", "Probability of observing this evidence if the hypothesis is false")}
-                  {_th("LR", "Likelihood Ratio = P(E|H)/P(E|~H). LR>1 supports, LR<1 opposes the hypothesis")}
+                  {_th("LR", "Effective likelihood ratio after relevance gating and capping. LR>1 supports, LR<1 opposes the hypothesis")}
                   {_th("Relevance", "How relevant this evidence is to the hypothesis (0-1). Below 0.4 = forced uninformative")}
                   {_th("Justification")}
                 </tr></thead>

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from typing import TypeVar
 
@@ -28,6 +29,18 @@ MAX_RETRIES = 3
 
 class LLMError(Exception):
     """Raised when LLM call fails. No fallbacks—fail fast."""
+
+
+def _schema_response_format(response_model: type[BaseModel]) -> dict:
+    """Build the provider-enforced structured output contract."""
+    schema_name = re.sub(r"[^a-zA-Z0-9_-]", "_", response_model.__name__)
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": schema_name,
+            "schema": response_model.model_json_schema(),
+        },
+    }
 
 
 def call_llm(
@@ -68,7 +81,7 @@ def call_llm(
                 timeout=600,
                 num_retries=3,
                 temperature=temperature,
-                response_format={"type": "json_object"},
+                response_format=_schema_response_format(response_model),
                 task=task,
                 trace_id=trace_id,
                 max_budget=max_budget,

@@ -53,12 +53,11 @@ pt/
 ## Tests
 
 ```bash
-PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_pipeline_integration.py -q
+PYTHONPATH=. pytest tests -q
 ```
 
-The full suite currently includes legacy/live-LLM smoke tests; use the targeted
-command above for deterministic local verification until those tests are
-migrated or isolated.
+Legacy and live-LLM exploratory tests are explicitly skipped by default. Set
+`PT_RUN_LIVE_LLM_TESTS=1` to run the live provider smoke tests.
 
 ## Input Texts
 

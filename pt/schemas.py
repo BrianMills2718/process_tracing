@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar, Optional
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
 # ── Pass 1: Extraction ──────────────────────────────────────────────
@@ -132,6 +132,8 @@ class HypothesisTestResult(BaseModel):
 
 
 class TestingResult(BaseModel):
+    __test__: ClassVar[bool] = False
+
     hypothesis_tests: list[HypothesisTestResult]
 
 

@@ -40,7 +40,7 @@ def _prob(odds: float) -> float:
     return _clamp(odds / (1.0 + odds))
 
 
-def _compute_lr(ev_eval) -> float:
+def compute_effective_lr(ev_eval) -> float:
     """Compute the effective LR for an evidence evaluation (same logic as main update)."""
     p_e_h = max(ev_eval.p_e_given_h, 0.001)
     p_e_nh = max(ev_eval.p_e_given_not_h, 0.001)
@@ -50,6 +50,9 @@ def _compute_lr(ev_eval) -> float:
     if tr < 0.4:
         return 1.0
     return math.exp(tr * math.log(capped_lr)) if capped_lr > 0 else capped_lr
+
+
+_compute_lr = compute_effective_lr
 
 
 def _compute_robustness(updates: list[EvidenceUpdate]) -> str:
@@ -127,7 +130,7 @@ def run_bayesian_update(testing: TestingResult) -> BayesianResult:
         updates: list[EvidenceUpdate] = []
 
         for ev_eval in ht.evidence_evaluations:
-            lr = _compute_lr(ev_eval)
+            lr = compute_effective_lr(ev_eval)
 
             prior_for_update = current_prob
             current_odds = _odds(current_prob) * lr
@@ -184,7 +187,7 @@ def _run_sensitivity(
     # Precompute all effective LRs: lrs[h_idx][e_idx]
     all_lrs: list[list[float]] = []
     for ht in testing.hypothesis_tests:
-        all_lrs.append([_compute_lr(ev) for ev in ht.evidence_evaluations])
+        all_lrs.append([compute_effective_lr(ev) for ev in ht.evidence_evaluations])
 
     # For each hypothesis, find its top drivers (per-hypothesis, not global)
     per_hyp_top: list[set[int]] = []

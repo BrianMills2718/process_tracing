@@ -24,8 +24,8 @@ This file provides guidance to Claude Code when working with code in this reposi
 # Run process tracing pipeline
 python -m pt input_text/your_text.txt --output-dir output/your_run/
 
-# Run deterministic active-code tests
-PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_pipeline_integration.py -q
+# Run deterministic tests
+PYTHONPATH=. pytest tests -q
 
 # Multi-document analysis
 python -m pt.multi input_text/case_a.txt input_text/case_b.txt --output-dir output/multi/

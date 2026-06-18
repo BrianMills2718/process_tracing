@@ -3,12 +3,19 @@
 
 import os
 import litellm
+import pytest
 from pydantic import BaseModel, Field
 from typing import List
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+if os.getenv("PT_RUN_LIVE_LLM_TESTS") != "1":
+    pytest.skip(
+        "live LLM exploratory script; set PT_RUN_LIVE_LLM_TESTS=1 to run",
+        allow_module_level=True,
+    )
 
 # Set up API key
 api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")

@@ -2,10 +2,17 @@
 """Test using instructor library for proper structured output"""
 
 import os
+import pytest
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 load_dotenv()
+
+if os.getenv("PT_RUN_LIVE_LLM_TESTS") != "1":
+    pytest.skip(
+        "live LLM exploratory script; set PT_RUN_LIVE_LLM_TESTS=1 to run",
+        allow_module_level=True,
+    )
 
 # Check if instructor is available
 try:

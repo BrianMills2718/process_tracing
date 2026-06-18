@@ -12,6 +12,7 @@ import pytest
 
 from pt.bayesian import run_bayesian_update
 from pt.pipeline import run_pipeline
+from pt.report import generate_report
 from pt.schemas import (
     AbsenceEvaluation,
     AbsenceResult,
@@ -27,6 +28,7 @@ from pt.schemas import (
     HypothesisVerdict,
     Mechanism,
     Prediction,
+    ProcessTracingResult,
     SynthesisResult,
     TestingResult,
     TextHypothesis,
@@ -382,6 +384,48 @@ class TestBayesianMathDeterministic:
 
         # Verify ranking
         assert result.ranking == ["h1", "h2"]
+
+
+class TestReportConsistency:
+    """Report display should match Bayesian updater semantics."""
+
+    def test_low_relevance_extreme_evidence_hidden_as_uninformative(self):
+        extraction = _make_extraction()
+        hypothesis_space = _make_hypothesis_space()
+        testing = TestingResult(
+            hypothesis_tests=[
+                HypothesisTestResult(
+                    hypothesis_id="h1",
+                    prediction_classifications=[],
+                    evidence_evaluations=[
+                        EvidenceEvaluation(
+                            evidence_id="evi_debt",
+                            hypothesis_id="h1",
+                            finding="pass",
+                            p_e_given_h=1.0,
+                            p_e_given_not_h=0.001,
+                            justification="Raw probabilities are extreme but relevance is below the gate.",
+                            relevance=0.39,
+                        ),
+                    ],
+                ),
+            ],
+        )
+        bayesian = run_bayesian_update(testing)
+        result = ProcessTracingResult(
+            extraction=extraction,
+            hypothesis_space=hypothesis_space,
+            testing=testing,
+            absence=AbsenceResult(evaluations=[]),
+            bayesian=bayesian,
+            synthesis=_make_synthesis(),
+        )
+
+        html = generate_report(result)
+
+        assert bayesian.posteriors[0].updates[0].likelihood_ratio == pytest.approx(1.0)
+        assert "0 informative / 1 total evaluations shown" in html
+        assert "LR=1000.00" not in html
 
     def test_sensitivity_populated(self):
         testing = _make_testing()
