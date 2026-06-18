@@ -5,8 +5,9 @@ import os
 import litellm
 import pytest
 from pydantic import BaseModel, Field
-from typing import List
 from dotenv import load_dotenv
+
+from pt.llm import _schema_response_format
 
 # Load environment variables
 load_dotenv()
@@ -30,8 +31,8 @@ class TestAssessment(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")
     reasoning: str = Field(description="Reasoning for assessment")
 
-# Test 1: Pass Pydantic model directly to response_format
-print("Test 1: Pydantic model in response_format")
+# Test 1: Pass provider-enforced JSON schema response_format
+print("Test 1: json_schema response_format")
 print("-" * 40)
 
 try:
@@ -41,7 +42,7 @@ try:
             "role": "user", 
             "content": "Classify this as a Van Evera test type: 'The evidence strongly confirms the hypothesis'"
         }],
-        response_format=TestAssessment,  # Pass Pydantic model directly
+        response_format=_schema_response_format(TestAssessment),
         api_key=api_key
     )
     
@@ -65,8 +66,8 @@ except Exception as e:
 
 print("\n" + "=" * 60)
 
-# Test 2: Use response_format with dict
-print("Test 2: Dict-based response_format")
+# Test 2: Use the process_tracing schema helper directly
+print("Test 2: pt.llm schema response_format")
 print("-" * 40)
 
 try:
@@ -76,7 +77,7 @@ try:
             "role": "user", 
             "content": "Classify this as a Van Evera test type: 'The evidence is necessary but not sufficient'"
         }],
-        response_format={"type": "json_object"},
+        response_format=_schema_response_format(TestAssessment),
         api_key=api_key
     )
     
@@ -88,7 +89,7 @@ except Exception as e:
 print("\n" + "=" * 60)
 
 # Test 3: What the current code does
-print("Test 3: Current approach (schema in prompt)")
+print("Test 3: Current approach (schema in prompt + json_schema)")
 print("-" * 40)
 
 schema = TestAssessment.model_json_schema()
@@ -100,7 +101,7 @@ try:
     response = litellm.completion(
         model="gemini/gemini-2.5-flash",
         messages=[{"role": "user", "content": prompt}],
-        response_format={"type": "json_object"},
+        response_format=_schema_response_format(TestAssessment),
         api_key=api_key
     )
     

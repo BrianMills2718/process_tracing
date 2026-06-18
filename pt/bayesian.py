@@ -52,9 +52,6 @@ def compute_effective_lr(ev_eval) -> float:
     return math.exp(tr * math.log(capped_lr)) if capped_lr > 0 else capped_lr
 
 
-_compute_lr = compute_effective_lr
-
-
 def _compute_robustness(updates: list[EvidenceUpdate]) -> str:
     """Determine if posterior is 'robust' or 'fragile' from LR distribution.
 

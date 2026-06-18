@@ -6,6 +6,8 @@ import pytest
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
+from pt.llm import _schema_response_format
+
 load_dotenv()
 
 if os.getenv("PT_RUN_LIVE_LLM_TESTS") != "1":
@@ -64,7 +66,7 @@ except ImportError:
             "role": "user",
             "content": f"Classify as Van Evera test. Respond with JSON: {TestAssessment.model_json_schema()}"
         }],
-        response_format={"type": "json_object"}
+        response_format=_schema_response_format(TestAssessment)
     )
     
     # Must parse JSON string

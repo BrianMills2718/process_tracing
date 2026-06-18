@@ -14,6 +14,7 @@ from pt.bayesian import (
     _odds,
     _prob,
     _top_drivers,
+    compute_effective_lr,
     run_bayesian_update,
 )
 from pt.schemas import (
@@ -147,6 +148,16 @@ class TestRelevanceGating:
         h2_post = next(p for p in result.posteriors if p.hypothesis_id == "h2")
         assert h1_post.final_posterior > 0.5
         assert h2_post.final_posterior < 0.5
+
+    def test_public_effective_lr_matches_relevance_gate(self):
+        """Report generation and Bayesian updates share the same public LR helper."""
+        ev_eval = _make_eval(
+            p_e_given_h=1.0,
+            p_e_given_not_h=0.001,
+            relevance=0.39,
+        )
+
+        assert compute_effective_lr(ev_eval) == pytest.approx(1.0)
 
     def test_relevance_discount_monotonic(self):
         """Higher relevance should produce stronger LR effect."""
