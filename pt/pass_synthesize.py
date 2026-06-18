@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 from llm_client import render_prompt
@@ -34,7 +35,7 @@ def run_synthesize(
     """Generate final synthesis from all pipeline results."""
     if trace_id is None:
         trace_id = uuid4().hex[:8]
-    kwargs = {"model": model} if model else {}
+    kwargs: dict[str, Any] = {"model": model} if model else {}
     messages = render_prompt(
         PROMPTS_DIR / "pass4_synthesize.yaml",
         extraction_json=json.dumps(extraction.model_dump(), indent=2),

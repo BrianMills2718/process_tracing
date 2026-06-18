@@ -7,7 +7,7 @@ import json
 import math
 
 from pt.bayesian import compute_effective_lr
-from pt.schemas import ProcessTracingResult
+from pt.schemas import PredictionClassification, ProcessTracingResult
 
 
 def _esc(s: str) -> str:
@@ -142,8 +142,8 @@ def _render_narrative(text: str, ev_map: dict) -> str:
 
 def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict]]:
     """Build vis.js nodes and edges including evidence-hypothesis links."""
-    nodes = []
-    edges = []
+    nodes: list[dict[str, object]] = []
+    edges: list[dict[str, object]] = []
     ext = result.extraction
     posteriors = {p.hypothesis_id: p.final_posterior for p in result.bayesian.posteriors}
     node_ids = set()
@@ -233,7 +233,7 @@ def generate_report(result: ProcessTracingResult) -> str:
     edges_json = json.dumps(vis_edges)
 
     # -- Build prediction lookup: hypothesis_id -> prediction_id -> PredictionClassification
-    pred_class_map: dict[str, dict] = {}  # (hyp_id, pred_id) -> PredictionClassification
+    pred_class_map: dict[tuple[str, str], PredictionClassification] = {}
     for ht in result.testing.hypothesis_tests:
         for pc in ht.prediction_classifications:
             pred_class_map[(ht.hypothesis_id, pc.prediction_id)] = pc
@@ -323,34 +323,34 @@ def generate_report(result: ProcessTracingResult) -> str:
     # ===== Section 3: Hypothesis Comparison Table =====
     h_rows = []
     for rank, hid in enumerate(result.bayesian.ranking, 1):
-        h = h_map.get(hid)
+        hyp = h_map.get(hid)
         p = posteriors.get(hid)
         s = sensitivity.get(hid)
-        if not h or not p:
+        if not hyp or not p:
             continue
         verdict = next((v for v in result.synthesis.verdicts if v.hypothesis_id == hid), None)
         status = verdict.status if verdict else "indeterminate"
         sens_range = f"[{s.posterior_low:.3f}, {s.posterior_high:.3f}]" if s else "N/A"
         rank_badge = f'<span class="badge bg-{"success" if s and s.rank_stable else "warning"} bg-opacity-75" data-bs-toggle="tooltip" title="{"Rank is stable under sensitivity perturbation" if s and s.rank_stable else "Rank may change under sensitivity perturbation"}">{"Stable" if s and s.rank_stable else "Unstable"}</span>' if s else ""
         steelman_html = _esc(verdict.steelman) if verdict else ""
-        mechanism_html = _esc(h.causal_mechanism)
-        basis_html = _esc(h.theoretical_basis)
+        mechanism_html = _esc(hyp.causal_mechanism)
+        basis_html = _esc(hyp.theoretical_basis)
 
-        source_label = h.source
+        source_label = hyp.source
         source_badge_class = "bg-secondary"
-        if h.source == "text":
+        if hyp.source == "text":
             source_badge_class = "bg-info"
-        elif h.source == "generated":
+        elif hyp.source == "generated":
             source_badge_class = "bg-warning text-dark"
-        elif "theory" in h.source.lower():
+        elif "theory" in hyp.source.lower():
             source_badge_class = "bg-purple"
 
         h_rows.append(f"""
         <tr>
           <td>{rank}</td>
           <td><strong>{_esc(hid)}</strong></td>
-          <td>{_esc(h.description)}</td>
-          <td><span class="badge {source_badge_class}" data-bs-toggle="tooltip" title="{_esc(h.theoretical_basis)}">{_esc(source_label)}</span></td>
+          <td>{_esc(hyp.description)}</td>
+          <td><span class="badge {source_badge_class}" data-bs-toggle="tooltip" title="{_esc(hyp.theoretical_basis)}">{_esc(source_label)}</span></td>
           <td>{p.prior:.3f}</td>
           <td><strong>{p.final_posterior:.3f}</strong></td>
           <td>{_status_badge(status)}</td>
@@ -402,8 +402,8 @@ def generate_report(result: ProcessTracingResult) -> str:
     for hid in result.bayesian.ranking:
         p = posteriors.get(hid)
         s = sensitivity.get(hid)
-        h = h_map.get(hid)
-        if not p or not h:
+        hyp = h_map.get(hid)
+        if not p or not hyp:
             continue
         # Top drivers with descriptions
         drivers_html = ""
@@ -430,7 +430,7 @@ def generate_report(result: ProcessTracingResult) -> str:
         sens_rows.append(f"""
         <div class="mb-3 p-3 border rounded">
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <div><strong>{_esc(hid)}</strong>: {_esc(h.description[:80])}
+            <div><strong>{_esc(hid)}</strong>: {_esc(hyp.description[:80])}
               {_robustness_badge(p.robustness)}</div>
             <div class="text-end">
               <span class="badge bg-primary">Posterior: {baseline:.3f}</span>
@@ -465,8 +465,8 @@ def generate_report(result: ProcessTracingResult) -> str:
     informative_evals = 0
 
     for ht in result.testing.hypothesis_tests:
-        h = h_map.get(ht.hypothesis_id)
-        h_label = f"{ht.hypothesis_id}: {h.description[:60]}" if h else ht.hypothesis_id
+        hyp = h_map.get(ht.hypothesis_id)
+        h_label = f"{ht.hypothesis_id}: {hyp.description[:60]}" if hyp else ht.hypothesis_id
 
         # Group evaluations by prediction_id
         by_pred: dict[str | None, list] = {}
@@ -489,8 +489,8 @@ def generate_report(result: ProcessTracingResult) -> str:
         for pid, evals in by_pred.items():
             if pid is None:
                 continue
-            pc = pred_class_map.get((ht.hypothesis_id, pid))
-            dtype = pc.diagnostic_type if pc else "unknown"
+            pred_class = pred_class_map.get((ht.hypothesis_id, pid))
+            dtype = pred_class.diagnostic_type if pred_class else "unknown"
             pred_desc = pred_desc_map.get(pid, pid)
             inner_html += f"""
             <div class="mb-3">
@@ -597,12 +597,12 @@ def generate_report(result: ProcessTracingResult) -> str:
     # ===== Section 6: Bayesian Update Summary =====
     trail_items = []
     for p_obj in result.bayesian.posteriors:
-        h = h_map.get(p_obj.hypothesis_id)
-        h_label = f"{p_obj.hypothesis_id}: {h.description[:50]}" if h else p_obj.hypothesis_id
+        hyp = h_map.get(p_obj.hypothesis_id)
+        h_label = f"{p_obj.hypothesis_id}: {hyp.description[:50]}" if hyp else p_obj.hypothesis_id
         final_width = max(2, int(p_obj.final_posterior * 100))
 
         # Build SVG sparkline of posterior progression
-        svg_points = []
+        svg_points: list[tuple[float, float]] = []
         svg_w, svg_h = 500, 80
         updates_with_movement = [u for u in p_obj.updates if not (0.95 < u.likelihood_ratio < 1.05)]
         n_points = len(updates_with_movement) + 1  # +1 for the prior
@@ -743,8 +743,8 @@ def generate_report(result: ProcessTracingResult) -> str:
 
         absence_items = []
         for hid, aes in absence_by_hyp.items():
-            h = h_map.get(hid)
-            h_label = f"{hid}: {h.description[:60]}" if h else hid
+            hyp = h_map.get(hid)
+            h_label = f"{hid}: {hyp.description[:60]}" if hyp else hid
             rows = ""
             for ae in aes:
                 pred_desc = pred_desc_map.get(ae.prediction_id, ae.prediction_id)
@@ -886,8 +886,8 @@ def generate_report(result: ProcessTracingResult) -> str:
 
             hyp_ref_items = ""
             for hid, refinements in by_hyp.items():
-                h = h_map.get(hid)
-                h_label = f"{hid}: {h.description[:60]}" if h else hid
+                hyp = h_map.get(hid)
+                h_label = f"{hid}: {hyp.description[:60]}" if hyp else hid
                 ref_rows = ""
                 for hr in refinements:
                     type_colors = {

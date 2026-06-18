@@ -226,13 +226,13 @@ new vis.Network(dagContainer, dagData, dagOptions);
 <thead><tr><th>Case</th><th>Query</th><th>Mean</th><th>SD</th><th>95% CI</th></tr></thead>
 <tbody>
 """)
-            for est in cq.case_level_estimands:
-                ci = f"[{est.cred_low:.3f}, {est.cred_high:.3f}]" if est.cred_low is not None and est.cred_high is not None else "-"
-                sd_str = f"{est.sd:.3f}" if est.sd is not None else "-"
+            for case_est in cq.case_level_estimands:
+                ci = f"[{case_est.cred_low:.3f}, {case_est.cred_high:.3f}]" if case_est.cred_low is not None and case_est.cred_high is not None else "-"
+                sd_str = f"{case_est.sd:.3f}" if case_est.sd is not None else "-"
                 parts.append(f"""<tr>
-  <td>{_esc(est.case_id)}</td>
-  <td><code>{_esc(est.query)}</code></td>
-  <td><strong>{est.mean:.3f}</strong></td>
+  <td>{_esc(case_est.case_id)}</td>
+  <td><code>{_esc(case_est.query)}</code></td>
+  <td><strong>{case_est.mean:.3f}</strong></td>
   <td>{sd_str}</td>
   <td>{ci}</td>
 </tr>""")
@@ -280,9 +280,9 @@ new vis.Network(dagContainer, dagData, dagOptions);
             if run.cq_result:
                 est_map = {e.query: e for e in run.cq_result.population_estimands if e.using == "posteriors"}
                 for q in all_queries:
-                    e = est_map.get(q)
-                    if e:
-                        parts.append(f"<td>{e.mean:.3f}</td>")
+                    sensitivity_est = est_map.get(q)
+                    if sensitivity_est:
+                        parts.append(f"<td>{sensitivity_est.mean:.3f}</td>")
                     else:
                         parts.append("<td>-</td>")
             else:

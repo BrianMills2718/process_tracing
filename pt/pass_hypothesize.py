@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 from llm_client import render_prompt
@@ -44,7 +45,7 @@ def run_hypothesize(
         extraction_json=json.dumps(extraction.model_dump(), indent=2),
         theories_block=theories_block,
     )
-    kwargs = {"model": model} if model else {}
+    kwargs: dict[str, Any] = {"model": model} if model else {}
     return call_llm(
         messages[0]["content"],
         HypothesisSpace,

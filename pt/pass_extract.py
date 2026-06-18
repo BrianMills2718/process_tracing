@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+from typing import Any
 
 from llm_client import render_prompt
 
@@ -18,7 +19,7 @@ def run_extract(text: str, *, model: str | None = None, trace_id: str | None = N
     if trace_id is None:
         trace_id = hashlib.sha256(text.encode()).hexdigest()[:8]
     messages = render_prompt(PROMPTS_DIR / "pass1_extract.yaml", text=text)
-    kwargs = {"model": model} if model else {}
+    kwargs: dict[str, Any] = {"model": model} if model else {}
     return call_llm(
         messages[0]["content"],
         ExtractionResult,

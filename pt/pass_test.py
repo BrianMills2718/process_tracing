@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 from llm_client import render_prompt
@@ -32,7 +33,7 @@ def _test_one_hypothesis(
     """Run diagnostic tests for a single hypothesis."""
     if trace_id is None:
         trace_id = uuid4().hex[:8]
-    kwargs = {"model": model} if model else {}
+    kwargs: dict[str, Any] = {"model": model} if model else {}
     brief_hypotheses = [{"id": h.id, "description": h.description} for h in all_hypotheses if h.id != hypothesis.id]
     messages = render_prompt(
         PROMPTS_DIR / "pass3_test.yaml",
