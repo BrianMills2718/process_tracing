@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
-"""Check real LLM compliance"""
+"""Check that active semantic pipeline passes route through the shared LLM wrapper."""
 
 from pathlib import Path
 
 semantic_files = [
-    'core/enhance_evidence.py',
-    'core/enhance_hypotheses.py', 
-    'core/enhance_mechanisms.py',
-    'core/semantic_analysis_service.py',
-    'core/confidence_calculator.py',
-    'core/analyze.py',
-    'core/plugins/van_evera_testing_engine.py',
-    'core/plugins/diagnostic_rebalancer.py',
-    'core/plugins/alternative_hypothesis_generator.py',
-    'core/plugins/evidence_connector_enhancer.py',
-    'core/plugins/content_based_diagnostic_classifier.py',
-    'core/plugins/research_question_generator.py',
-    'core/plugins/primary_hypothesis_identifier.py',
-    'core/plugins/bayesian_van_evera_engine.py',
+    'pt/pass_extract.py',
+    'pt/pass_hypothesize.py',
+    'pt/pass_test.py',
+    'pt/pass_absence.py',
+    'pt/pass_synthesize.py',
+    'pt/pass_refine.py',
+    'pt/pass_binarize.py',
+    'pt/pass_propose_model.py',
 ]
 
 using_llm = []
@@ -28,12 +22,7 @@ for file_path in semantic_files:
     path = Path(file_path)
     if path.exists():
         content = path.read_text()
-        # Check for various LLM usage patterns
-        llm_patterns = [
-            'VanEveraLLMInterface', 'get_van_evera_llm', 'semantic_analysis_service', 'LLMGateway',
-            'LLMRequiredError', 'query_llm', 'genai.', 'litellm.', 'refine_.*_with_llm'
-        ]
-        if any(x in content for x in llm_patterns):
+        if 'call_llm(' in content and 'pt.llm import' in content:
             using_llm.append(file_path)
         else:
             not_using.append(file_path)

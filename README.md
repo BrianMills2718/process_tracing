@@ -8,8 +8,10 @@ Given a text, the pipeline:
 1. **Extracts** evidence, actors, events, mechanisms, and causal edges
 2. **Hypothesizes** competing causal explanations with observable predictions
 3. **Tests** each hypothesis against every evidence item (diagnostic tests + likelihood ratios)
-4. **Updates** posteriors via Bayesian math in odds space
-5. **Synthesizes** a written analytical narrative with verdicts
+4. **Evaluates absence-of-evidence** for missing predicted observations
+5. **Updates** posteriors via Bayesian math in odds space
+6. **Synthesizes** a written analytical narrative with verdicts
+7. **Optionally refines** via a second reading, then reruns testing and synthesis
 
 Output: `result.json` (structured data) + `report.html` (Bootstrap dashboard with vis.js network graph).
 
@@ -38,18 +40,25 @@ pt/
   pass_extract.py      Pass 1: Evidence extraction
   pass_hypothesize.py  Pass 2: Hypothesis generation
   pass_test.py         Pass 3: Diagnostic testing (one LLM call per hypothesis)
+  pass_absence.py      Pass 3b: Absence-of-evidence evaluation
   bayesian.py          Pass 3.5: Bayesian updating (pure math, no LLM)
   pass_synthesize.py   Pass 4: Written synthesis
+  pass_refine.py       Pass 5: Optional second-reading refinement
   pipeline.py          Orchestrator
   report.py            HTML report generation
   cli.py               CLI entry point
+  multi_pipeline.py    Multi-document cross-case analysis
 ```
 
 ## Tests
 
 ```bash
-python -m pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py -v
+PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_pipeline_integration.py -q
 ```
+
+The full suite currently includes legacy/live-LLM smoke tests; use the targeted
+command above for deterministic local verification until those tests are
+migrated or isolated.
 
 ## Input Texts
 

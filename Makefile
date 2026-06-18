@@ -212,10 +212,10 @@ test-quick:  ## Run pytest (no traceback)
 
 check:  ## Run all checks (test, mypy, lint)
 	@echo "Running tests..."
-	@pytest tests/ -q --tb=short
+	@PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_pipeline_integration.py -q --tb=short
 	@echo ""
 	@echo "Running mypy..."
-	@mypy src/ --ignore-missing-imports
+	@mypy pt --ignore-missing-imports
 	@echo ""
 	@echo "All checks passed!"
 
@@ -311,10 +311,10 @@ test-quick:  ## Run pytest (no traceback)
 
 check:  ## Run all checks (test, mypy, lint)
 	@echo "Running tests..."
-	@pytest tests/ -q --tb=short
+	@PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_pipeline_integration.py -q --tb=short
 	@echo ""
 	@echo "Running mypy..."
-	@mypy src/ --ignore-missing-imports
+	@mypy pt --ignore-missing-imports
 	@echo ""
 	@echo "All checks passed!"
 

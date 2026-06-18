@@ -22,7 +22,7 @@
 
 > **REQUIRED:** Cite specific code/docs reviewed before planning.
 
-- `src/example.py:45-89` - existing implementation
+- `pt/example.py:45-89` - active pipeline implementation, when relevant
 - `docs/architecture/current/example.md` - current design
 - `CLAUDE.md` - project conventions
 
@@ -32,9 +32,8 @@
 
 > **REQUIRED:** Declare upfront what files will be touched.
 
-- src/example.py (modify)
-- src/new_feature.py (create)
-- tests/test_feature.py (create)
+- pt/example.py (modify)
+- tests/test_feature.py (modify/create)
 
 ---
 
@@ -70,7 +69,8 @@
 
 - [ ] Required tests pass
 - [ ] Full test suite passes
-- [ ] Type check passes
+- [ ] Deterministic active-code tests pass
+- [ ] Type check passes, or current mypy debt is explicitly listed
 - [ ] Docs updated
 
 ---

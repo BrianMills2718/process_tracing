@@ -24,11 +24,11 @@ This file provides guidance to Claude Code when working with code in this reposi
 # Run process tracing pipeline
 python -m pt input_text/your_text.txt --output-dir output/your_run/
 
-# Run tests
-pytest tests/ -q
+# Run deterministic active-code tests
+PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_pipeline_integration.py -q
 
 # Multi-document analysis
-python -m pt --multi-doc input_text/ --output-dir output/multi/
+python -m pt.multi input_text/case_a.txt input_text/case_b.txt --output-dir output/multi/
 ```
 
 ## Operating Rules
@@ -46,7 +46,7 @@ read `CLAUDE.md` directly.
 
 ### Workflow
 
-1. Pass text to `python -m pt` (or `python -m pt --multi-doc` for cross-case)
+1. Pass text to `python -m pt` (or `python -m pt.multi` for cross-case)
 2. Pipeline runs: Extract → Hypothesize → Test → Bayesian update → Synthesize → (optionally Refine)
 3. Output: `result.json` (full data) + `report.html` (visual network)
 4. Review HTML report for narrative and verdicts
