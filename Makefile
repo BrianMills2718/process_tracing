@@ -5,6 +5,8 @@
 SCRIPTS_META := scripts/meta
 PLANS_DIR := docs/plans
 
+.DEFAULT_GOAL := help
+
 # >>> META-PROCESS WORKTREE TARGETS >>>
 WORKTREE_CREATE_SCRIPT := scripts/meta/worktree-coordination/create_worktree.py
 WORKTREE_REMOVE_SCRIPT := scripts/meta/worktree-coordination/safe_worktree_remove.py
@@ -25,7 +27,10 @@ SESSION_DEPENDS ?=
 SESSION_STOP_CONDITIONS ?=
 SESSION_NOTE ?=
 
-.PHONY: worktree worktree-list worktree-remove session-start session-heartbeat session-status session-finish session-close
+.PHONY: help worktree worktree-list worktree-remove session-start session-heartbeat session-status session-finish session-close
+
+help:  ## Show available Make targets
+	@awk 'BEGIN {FS = ":.*## "; printf "Available targets:\n\n"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 worktree:  ## Create claimed worktree (BRANCH=name TASK="..." [PLAN=N] [AGENT=name])
 ifndef BRANCH
