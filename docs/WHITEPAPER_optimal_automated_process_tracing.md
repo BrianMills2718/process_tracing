@@ -1,45 +1,63 @@
-# Toward Optimal Automated Process Tracing
+# A Bayesian Audit Architecture for Automated Process Tracing
 
-### An LLM-Native Bayesian Methodology for Causal Analysis of Historical Events
+### Externalized LLM Likelihoods, Trace-Production Models, and Local Causal-Graph Audits for Single-Text Historical Inference
 
-**Status:** Draft methodology white paper
+**Status:** Draft methodology white paper — **v2**
 **Scope:** Single-text and cross-case causal inference from historical narrative
 **Audience:** Methodologists, computational social scientists, and engineers building automated causal-inference pipelines
 
 ---
 
+## What changed in v2
+
+v2 revises v1 in response to adversarial review. The headline changes:
+
+1. **Demoted overclaims.** v1 said the two traditions "are the same Bayesian inference differing in one place" and described the architecture as "optimal feasible." Both are unjustified. v2 reframes the relationship as *degree of externalization* and the architecture as a *principled approximation* with a stated (if informal) objective.
+2. **Added a formal estimand (§5).** v1 slid between "posterior over explanations" and "infer causal structure." v2 fixes the single-text target precisely: posterior odds over mutually-exclusive explanatory hypotheses — **not** identified causal effects or a learned causal structure.
+3. **Separated event-causation from evidence-generation (§4).** v1 treated every likelihood judgment as a *causal-mechanism* judgment. `P(E|H)` is about how the *evidence* was produced. v2 introduces a **trace-production model** distinct from the substantive causal model, and reworks the worked example accordingly.
+4. **Separated priors from likelihoods (§6.2).** v1's worked example let a prior on a variable change a likelihood, then "resolved toward" a number — a category error. v2 adds a **likelihood-comparability requirement** and a reconciler that never fixes a prior by nudging a likelihood.
+5. **Specified the reconciler as a protocol (§6.4)** with a constrained action table, replacing v1's discretionary "diagnose and adjust."
+6. **Likelihood bands instead of false-precise points (§6.2); an explicit missingness model (§6.6); a validation section with the auditor ablation as the headline test (§8).**
+7. **Scoped out** the upstream extraction layer and the full validation protocol as companion work (§9), and trimmed implementation-roadmap material to keep methodology and engineering registers separate.
+
+The durable contribution is **architectural**, not a philosophical unification: use narrative likelihoods as the primary single-text engine, force their implicit models into explicit form, and audit only the posterior-moving evidence with local causal graphs.
+
+---
+
 ## Abstract
 
-Automated systems that read a historical text and output "what caused this" tend to do one of two things badly: produce confident prose with no inferential discipline, or impose a rigid formal model that discards the very textual richness that makes historical evidence informative. We argue that both failure modes stem from a misunderstanding of what separates the two established traditions of Bayesian process tracing — the *narrative / likelihoodist* tradition (Fairfield & Charman) and the *formal / model-based* tradition (Humphreys & Jacobs). The two are not rival theories of inference; they are the same Bayesian inference differing in **one** place: where the likelihood `P(evidence | hypothesis)` comes from. The narrative tradition assesses it by holistic judgment; the formal tradition derives it from an explicit causal graph. Crucially, a holistic likelihood judgment **always encodes an implicit causal model** — the difference is only whether that model is written down.
+Automated systems that read a historical text and output "what caused this" tend to fail in one of two ways: confident prose with no inferential discipline, or a rigid formal model that discards the textual richness that makes historical evidence informative. Both failures stem from misreading the relationship between the two traditions of Bayesian process tracing — the *narrative / likelihoodist* tradition (Fairfield & Charman) and the *formal / model-based* tradition (Humphreys & Jacobs). They can both be represented as Bayesian updating, but they differ in how they define hypotheses, encode mechanisms, represent dependence, and generate likelihoods. The operationally decisive difference for automation is the **degree to which the causal model behind the likelihood is externalized** — written down, made criticizable, and used to enforce coherence and detect dependence.
 
-From this observation we derive a methodology for *optimal feasible* automated process tracing. The theoretical optimum — a single coherent joint posterior with uncertainty over causal structures — is intractable. Among feasible approximations, the right design depends on what the data can *identify*: a single rich text cannot identify quantified counterfactuals or population effects no matter how it is modeled, while many comparable cases can. We therefore propose a **task-routed, LLM-native triangulation architecture**: for a single text, a narrative likelihood engine whose every estimate carries externalized reasoning, audited for coherence and hidden dependence by an independently-constructed formal causal graph, with disagreements *diagnosed* (not averaged) by a reconciler, and the expensive audit gated to the evidence that actually moves the posterior; for many cases, the formal model (CausalQueries) as the source of truth. Van Evera's diagnostic tests are retained as a human-legible labeling layer over the likelihoods. The result keeps narrative texture, gains structural coherence and dependence-handling where it matters, and is honest about the one thing no method can recover from a single case.
+A holistic likelihood judgment typically rests on an *implicit* model. But that model is not only a model of historical causation; `P(evidence | hypothesis)` is fundamentally about **how the evidence was produced** — solicited, recorded, preserved, observed — and conflating the two is a recurring error. We therefore keep two models distinct: the **substantive causal model** (events causing events) and the **trace-production model** (events producing the evidence now available).
+
+We do not claim optimality. We propose a **principled approximation** whose objective is to improve *auditability, dependence handling, and calibrated sensitivity reporting* relative to naive automated likelihood multiplication, at controlled cost. The architecture is **task-routed**: for a single text, a narrative likelihood engine whose estimates carry externalized reasoning and are stated as likelihood bands; for the posterior-moving subset of evidence, a structured second-pass audit by an independently-constructed local causal graph, with disagreements resolved by a **constrained reconciliation protocol** rather than averaging; and, for many comparable cases, the formal model (CausalQueries) as the source of truth for *identified* counterfactual and population estimands. Van Evera's diagnostic tests are retained as a human-legible labeling layer over the likelihoods. We state the estimand precisely, bound the architecture's claims by what the data can identify, and specify how one would test whether it works.
 
 ---
 
 ## 1. The problem
 
-Given a historical text, we want to infer the causal structure behind the events it describes: which of several competing explanations the evidence supports, how strongly, and how robust that conclusion is. "Automated process tracing" attempts to do this end to end — extract evidence and hypotheses, test each hypothesis against the evidence, update beliefs, and synthesize a verdict.
+Given a historical text, we want to infer which of several competing explanations the evidence supports, how strongly, and how robustly. "Automated process tracing" attempts this end to end: extract evidence and hypotheses, test each hypothesis against the evidence, update beliefs, synthesize a verdict.
 
 Two failure modes recur:
 
-1. **Pseudo-quantification.** The system emits "posterior probabilities" produced by machinery that is not a coherent probability model — typically per-evidence likelihood ratios multiplied together under an unstated independence assumption, then renormalized to look like a distribution. The numbers invite trust they have not earned.
+1. **Pseudo-quantification.** The system emits "posterior probabilities" from machinery that is not a coherent probability model — typically per-evidence likelihood ratios multiplied under an unstated independence assumption, then renormalized to look like a distribution.
 2. **Over-formalization.** The system forces the problem into a rigid causal graph over binary variables, discarding the discriminating texture of the evidence and committing to a structure the text does not warrant.
 
-Both are avoidable once the relationship between the two academic traditions is made precise.
+This paper aims at a design that avoids both, *and is honest about what it cannot deliver.*
 
 ---
 
 ## 2. Background: two traditions of Bayesian process tracing
 
-**Narrative / likelihoodist (Fairfield & Charman 2017, 2022).** The analyst specifies mutually exclusive hypotheses, assigns explicit prior odds from background knowledge, and for each piece of evidence assesses a *likelihood ratio* — how expected the evidence is under one hypothesis versus another — then updates by Bayes' rule in odds space and conducts sensitivity analysis over priors and likelihoods. The hypotheses are holistic explanations; no formal graph is required. Van Evera's diagnostic tests (hoop, smoking-gun, doubly-decisive, straw-in-the-wind) describe the *shape* of these likelihood ratios.
+**Narrative / likelihoodist (Fairfield & Charman 2017, 2022).** The analyst specifies mutually-exclusive hypotheses, assigns explicit prior odds from background knowledge, and for each piece of evidence assesses a *likelihood ratio* — how expected the evidence is under one hypothesis versus another — then updates by Bayes' rule in odds space and conducts sensitivity analysis over priors and likelihoods. Hypotheses are holistic explanations; no formal graph is required. Van Evera's diagnostic tests describe the *shape* of these ratios.
 
-**Formal / model-based (Humphreys & Jacobs 2015, 2023; the `CausalQueries` R package).** The analyst declares a causal directed acyclic graph (DAG) over (typically binary) nodes, places priors over *causal types* (how each node responds to its parents), and updates beliefs about those types from observed node values. Every hypothesis is a *query* against this one model. Process tracing (within-case) and cross-case correlational inference are unified in a single framework, and conditional dependence among evidence is handled structurally via d-separation.
+**Formal / model-based (Humphreys & Jacobs 2015, 2023; the `CausalQueries` R package).** The analyst declares a causal DAG over (typically binary) nodes, places priors over *causal types* (how each node responds to its parents), and updates beliefs about those types from observed node values. Each hypothesis is a *query* against this one model. Within-case process tracing and cross-case inference are unified, and conditional dependence among evidence is handled structurally via d-separation.
 
-These are routinely presented as alternatives. They are better understood as two settings of one dial.
+The traditions differ in more than arithmetic: in **what counts as a hypothesis** (an intensional, mechanism-specific story versus an extensional query over outcomes), in what counts as evidence, in how measurement error is represented, and in whether causal claims are defined by historically-specific mechanisms or by behavior across possible cases. These are real differences. What unifies them is only that both are *representable* as Bayesian updating.
 
 ---
 
-## 3. The core insight: both are Bayesian; they differ in *one* place
+## 3. The operational lever: how much of the model is externalized
 
 All process tracing here is Bayes' rule:
 
@@ -47,165 +65,222 @@ All process tracing here is Bayes' rule:
 P(H | evidence) ∝ P(H) · P(evidence | H)
 ```
 
-The only substantive disagreement between the traditions is **where the likelihood `P(evidence | H)` comes from**:
+The traditions can be placed on a single axis by asking **how the likelihood `P(evidence | H)` is obtained**:
 
-- **Narrative:** `P(evidence | H)` is assessed **directly**, as a holistic judgment.
-- **Formal:** `P(evidence | H)` is **derived** by propagating through a causal DAG with specified node-response parameters.
+- **Narrative:** assessed **directly**, as a holistic judgment, with the underlying model left implicit.
+- **Formal:** **derived** by propagating through an explicit causal graph with specified parameters.
 
-A worked contrast makes this concrete. Take hypothesis **H1** = "fiscal crisis caused the Revolution" and evidence **E** = "the 1789 *cahiers de doléances* overwhelmingly complained about taxes, not philosophy."
+A worked contrast. Take **H₁** = "fiscal crisis was the primary cause of the Revolution" and **E** = "the 1789 *cahiers de doléances* overwhelmingly complained about taxes, not philosophy."
 
-- *Narrative.* The analyst reasons "if fiscal crisis were the driver, grievances would track what hurts people → taxes" and writes `P(E | H1) = 0.85`. The number is an **input**: one judgment per (evidence, hypothesis) cell.
-- *Formal.* The analyst introduces nodes `F` (fiscal crisis), `G` (grievances are fiscal in content), `R` (revolution); a structure `F → G`, `F → R`; and parameters such as `P(G=1 | F=1) = 0.9`, `P(G=1 | F=0) = 0.3`, plus a prior on `F`. Then `P(E | H1)` is an **output**, computed from the structure and parameters. "H1" is no longer a free-standing story but a query about the `F → R` link.
+- *Narrative.* The analyst reasons "if fiscal crisis were the driver, grievances would track what hurts people → taxes" and writes a likelihood. The number is an **input**.
+- *Formal.* The analyst introduces nodes, a structure (`F → G`, `F → R`), and parameters, and the likelihood is an **output** of the model. "H₁" becomes a query about the `F → R` relationship.
 
-### 3.1 The decisive realization: the implicit model
+### 3.1 The implicit model — and what it actually contains
 
-When the analyst writes `P(E | H1) = 0.85` "directly," the reasoning that produced it — *fiscal driver → grievances track harm → taxes dominate* — **is a causal model, with a mechanism**. The narrative method does not make it explicit. Therefore:
+A direct likelihood judgment usually rests on an implicit model. But it is a mistake — v1's mistake — to assume that model is always a model of *historical causation*. A likelihood judgment can rest on a causal mechanism, an empirical regularity, source criticism, a semantic cue, or survival/selection bias in the archive. Several of these are about **how the evidence came to exist and be observed**, not about how one historical event caused another.
 
-> **The narrative method is formal inference with the causal model left implicit, undocumented, and thus neither checkable nor enforced for coherence.**
+This matters because `P(E|H)` is, by definition, a statement about the **evidence-generation process**. "The *cahiers* complained about taxes" may be likely under fiscal-crisis causation — *or* because tax grievances were administratively solicited, locally formulaic, and more documentable than ideological commitments. An audit that checks only the event-causation story will audit the wrong thing.
 
-The difference between the traditions was never "model versus no model." There is *always* a causal model in the reasoning. The difference is **how much of that ever-present model is externalized** — written down, made criticizable, and used to enforce consistency and detect dependence.
+> **Claim (corrected from v1):** a holistic likelihood judgment rests on an implicit model, but that model spans both *event causation* and *evidence generation*. Externalizing only the former is insufficient.
 
-### 3.2 Van Evera tests sit *above* the likelihood
+### 3.2 Van Evera tests are a labeling layer
 
-Hoop / smoking-gun / doubly-decisive / straw-in-the-wind are labels for regions of the likelihood ratio, independent of how the likelihood was obtained:
-
-- **Hoop:** `P(E | H)` high → absence of `E` strongly disconfirms `H` (necessary-ish).
-- **Smoking gun:** `P(E | ¬H)` low → presence of `E` strongly confirms `H` (sufficient-ish).
-- **Doubly decisive:** both. **Straw-in-the-wind:** weak both ways.
-
-They are a human-legible presentation layer over the likelihoods, compatible with either source. They do not constitute a third method.
+Hoop / smoking-gun / doubly-decisive / straw-in-the-wind are labels for regions of the likelihood ratio, independent of how the likelihood was obtained (hoop: `P(E|H)` high; smoking-gun: `P(E|¬H)` low; doubly-decisive: both; straw-in-the-wind: weak both ways). They are a presentation layer, not a third method.
 
 ---
 
-## 4. What is theoretically optimal
+## 4. Two models you must not conflate
 
-In the Jaynes/Cox sense of "probability as extended logic," the optimal inference is the single coherent posterior obtained from a complete joint model that encodes *all* relevant background knowledge and conditions on *all* the evidence. Pushed to its limit, the analyst is also uncertain about the **causal structure itself**, so the ideal is **Bayesian model averaging over causal structures**:
+The single most consequential design commitment in v2: keep two models explicitly separate.
+
+1. **Substantive causal model** — how historical events produced other historical events (`fiscal crisis → state breakdown → revolution`).
+2. **Trace-production model** — how those events (and institutions, archives, and analysts) produced the **evidence now observed** (`fiscal distress → grievances → administrative solicitation of grievances → document survival → extraction by the pipeline → observed proposition`).
+
+`P(E|H)` decomposes across both. Schematically:
 
 ```
-P(causal claim | all evidence) = Σ over structures  P(claim | structure, evidence) · P(structure | evidence)
+P(observed E | H) = P(latent fact | H)        ← substantive causal model
+                  × P(fact recorded & survives & observed | latent fact, H)   ← trace-production model
 ```
 
-This is the true optimum, and it is **intractable** for real historical cases — in elicitation (no one can specify priors over all structures and all parameters) and in computation. Every usable method is therefore a tractable approximation that *chooses what to externalize*:
-
-| Approach | Externalized | Left implicit |
-|---|---|---|
-| Theoretical optimum | full joint distribution **+ uncertainty over structures** | nothing |
-| Formal (Humphreys–Jacobs) | one (or few) causal model(s) + type priors | the choice of graph |
-| Narrative (Fairfield–Charman) | likelihoods + reasoning + sensitivity | the causal structure |
-| Naive automated tool | a few likelihood numbers | the structure **and** the reasoning behind the numbers |
-
-The naive automated baseline is the *least* externalized of all: it does not even record the reasoning behind each number. Closing that gap — not choosing a "side" — is the primary opportunity.
+Most automated systems (v1 included) collapse these, attributing all of `P(E|H)` to the causal story. The decomposition is what lets the architecture distinguish "this evidence is expected because the cause operated" from "this evidence is over-represented because of how the record was made."
 
 ---
 
-## 5. The identifiability boundary (what no single text can give)
+## 5. The estimand
 
-A quantified counterfactual ("probability the Revolution would not have occurred absent the fiscal crisis = 0.7") or a population effect ("fiscal crisis causes revolution in 60% of comparable cases") is, from a single case, like asking for the slope of a line from one point: **the information is not in the data.** A richer model does not manufacture it; it only makes the *assumptions* that fill the gap explicit and reports them back, dressed as a result.
+A methodology paper that criticizes pseudo-quantification must say exactly what quantity it infers.
 
-Two consequences follow, and they are not matters of taste:
+**Single-text estimand.** A posterior distribution (equivalently, posterior odds) over a **finite set of mutually-exclusive explanatory hypotheses** `{H₁ … H_k}`, each an *intensional* causal claim (a specified mechanism). The reported outputs are: the posterior odds/ranking, a robustness signal, and sensitivity ranges. This is **comparative explanatory support**, not an identified causal quantity.
 
-1. A formal DAG *can* be run on a single case (this is Humphreys & Jacobs' original within-case use), and it yields coherent updating, structural dependence-handling, and even case-level counterfactual queries — but those single-case counterfactuals are **prior-dominated**, because one case does not identify them from data.
-2. **Identified** quantified counterfactuals and population effects with heterogeneity genuinely require **many cases** with variation. This is an information limit shared by every method, not a narrative-versus-formal distinction.
+What the single-text estimand is **not**:
 
-The practical reading: reserve the formal model's distinctive deliverables for the multi-case setting where they are identified, and do not present prior-dominated single-case counterfactuals as if the evidence produced them.
+- not an identified average causal effect;
+- not a data-identified probability of necessity or sufficiency;
+- not a learned causal structure (the structure, where used, is an *audit instrument*, not an inferential target).
+
+Concretely, "fiscal crisis caused the Revolution" is operationalized as "`H_fiscal` carries higher posterior odds than its rivals given the evidence and stated priors." It is **not** a counterfactual probability. The looser readings — necessity, sufficiency, INUS membership, probability-raising, main-cause-relative-to-X, one node in a conjunctural package — are distinct claims; the single-text path commits only to *comparative support among the specified hypotheses*.
+
+**Cross-case estimand.** Identified population estimands (e.g., probability of causation, average effects) via the formal model, **conditional on comparability holding** (§7).
 
 ---
 
-## 6. The methodology
+## 6. The architecture
 
-We propose a **task-routed, LLM-native triangulation** architecture. Its design principles follow directly from Sections 3–5.
+The objective — not "optimality," but a stated target — is to **maximize auditability, dependence-handling, and calibrated sensitivity per unit of model-call cost**, relative to the naive baseline of multiplying LLM-elicited likelihoods. The components below each serve that objective.
 
-### 6.1 One Bayesian likelihood engine; route the *source* of likelihoods by task
+### 6.1 Route the source of likelihoods by task
 
-- **Single rich text → narrative-primary.** The likelihoods that drive updating are assessed directly (texture preserved), but every estimate carries **externalized reasoning** (the implicit model, written down). Updating is genuine multi-hypothesis Bayes with researcher-settable priors.
-- **Many comparable cases → formal (CausalQueries).** Binarization is natural (you genuinely want shared variables across cases), structural dependence-handling pays off, and counterfactual/population estimands are identified. This is the source of truth for cross-case numbers.
+- **Single rich text → narrative-primary.** Likelihoods that drive updating are assessed directly (texture preserved), but every estimate carries externalized reasoning covering *both* the causal and the trace-production rationale. Updating is genuine multi-hypothesis Bayes with researcher-settable priors.
+- **Many comparable cases → formal (CausalQueries).** Binarization is appropriate (shared variables across cases), structural dependence-handling pays off, and counterfactual/population estimands are identified. Source of truth for cross-case numbers.
 
 No single analysis is scored by two engines, so there is no contradiction surface between them.
 
-### 6.2 The DAG as an *auditor*, not the calculator (triangulation)
+### 6.2 Likelihood elicitation: bands, comparability, priors ≠ likelihoods
 
-For a single text, the formal graph earns its keep not by computing the answer but by **independently cross-checking** the narrative estimate. The disagreement between a holistic likelihood and a structurally-derived likelihood is itself the signal: it means either the narrative's implicit model is incoherent or double-counting, or the explicit graph is mis-specified or too lossy.
+**Bands, not false-precise points.** LLM-elicited continuous values (`0.85` vs `0.80`) imply a precision the elicitation cannot support. Likelihoods are elicited as **bands**, and sensitivity is run over bands:
 
-The mechanism is a three-role, parallel, *independent* process per audited likelihood:
+| Label | Likelihood ratio range |
+|---|---|
+| Strongly disconfirming | `< 0.2` |
+| Moderately disconfirming | `0.2 – 0.5` |
+| Weak / uninformative | `0.5 – 2` |
+| Moderately confirming | `2 – 5` |
+| Strongly confirming | `> 5` |
 
-1. **Estimator (narrative).** Produces `P(E | H)` with an explicit mechanism/reasoning chain.
-2. **Modeler (formal).** Independently constructs a local causal graph and derives a comparable `P(E | H)`.
-3. **Reconciler.** Compares the two **and their logic**, and — critically — **diagnoses the source of any disagreement rather than averaging it**:
-   - graph missing structure the narrative relies on → *add the node / mechanism and re-derive* (the "back-and-forth");
-   - narrative double-counting or assuming an unsupported link → *correct the estimate*;
-   - genuinely irreducible → *record as modeling uncertainty* for sensitivity analysis.
+(Interval-valued continuous likelihoods are an acceptable alternative; the requirement is that uncertainty be represented and propagated, not that values be discrete.)
 
-The reconciler's output is an adjusted estimate **plus the named structural reason**, optionally triggering another iteration. The loop terminates on agreement or on a certified-irreducible disagreement. This is, in effect, a procedure for **constructing the externalized causal model by reconciling it against holistic judgment** — an operational approximation to the "externalize and enforce coherence" ideal of Section 4, without committing to formal-all-the-way-down.
+**Multi-hypothesis, not two-way.** Likelihoods are elicited comparatively across the full hypothesis set, not as pairwise `H` vs `¬H` (which becomes incoherent when "¬H" is a blob of rival hypotheses).
 
-> **Worked example.** Estimator: `0.85` ("fiscal driver → grievances track harm → taxes"). Modeler: `≈0.60`, because its prior on `P(F=1)` is moderate. Reconciler: "Disagreement traces to the modeler's prior on `F`, which the estimator implicitly set near 1; the mechanism itself is sound and represented. Resolve toward `0.8`; flag the prior on `F` as a sensitivity lever." The triangulation did not merely yield a number — it **excavated a hidden assumption** that would otherwise never have surfaced.
+**Likelihood-comparability requirement (new in v2).** Whenever a narrative estimate and a formal-model estimate are to be compared (§6.3), they must:
 
-### 6.3 Gate the expensive audit to high-influence evidence
+- condition on the **same hypothesis event**,
+- refer to the **same evidence event**, and
+- separate uncertainty about *hypothesis truth* (which belongs in the prior over `H`) from uncertainty about *evidence production* (which belongs in the trace-production term).
 
-Three or more model calls per likelihood, with iteration, is costly. It is also unnecessary for most evidence. Run the cheap narrative estimate everywhere; trigger the triangulation audit only on the **evidence that actually moves the posterior** — the top drivers by `|log(LR)|`, which the pipeline already identifies for sensitivity analysis. Audit those; trust the cheap estimate for the rest. This is frugal *and* principled: scrutiny is concentrated exactly where error would change conclusions.
+Without this, disagreement between the two is *definitional, not diagnostic* — see the reworked example below.
 
-### 6.4 Dependence handling
+**Priors are researcher inputs.** A uniform prior is a defensible *reference* choice only when justified; priors are an explicit input, and sensitivity ranges over them.
 
-The narrative engine's characteristic error is treating correlated evidence as independent and multiplying likelihoods (five reports of one fact counted as five), producing overconfidence. Two complementary defenses:
+### 6.3 The DAG as auditor: structured second-pass criticism (not independent corroboration)
 
-- **Within the narrative engine:** cluster corroborating evidence and assign the *cluster* a single joint likelihood rather than multiplying members. This preserves texture and catches the dependence the analyst can see.
-- **Via the auditor:** the formal graph reveals when two pieces descend from a common cause, catching dependence the analyst missed. This is one of the audit's highest-value functions.
+For a single text, the formal graph earns its keep not by computing the answer but by **cross-checking** the narrative estimate on the evidence that matters. The disagreement between a holistic likelihood and a structurally-derived one is the signal: it indicates either an incoherent/double-counting implicit model, or a mis-specified/over-lossy graph, **or** a trace-production assumption that one side encoded and the other did not.
 
-### 6.5 Priors and sensitivity
+Because the estimator, modeler, and reconciler may all be instances of the same base model reading the same text, their independence is limited; agreement is **support, not proof**. The audit is therefore framed as **structured second-pass criticism**, and independence is engineered, not assumed:
 
-Priors are a **researcher input**, not a hardcoded uniform default; a uniform prior is a defensible *reference* choice only when justified. Sensitivity analysis ranges over **both** priors and likelihoods (and, where the auditor flags them, over the structural assumptions), and is reported alongside the posterior. Robustness signals (whether a conclusion rests on a few decisive items or an accumulation of weak ones) are mechanical and reported, not asserted.
+- different model families where available;
+- **blinded roles** — the modeler does not see the estimator's number;
+- randomized elicitation order; evidence-redaction probes;
+- human spot-checks on top-driver evidence;
+- retained disagreement logs for reproducibility.
 
-### 6.6 What each component is *for*
+> **Reworked worked example (v2).** Estimator (conditioning on `F=1`, i.e. fiscal crisis occurred and is the driver): "grievances would be fiscal → **strongly confirming**." Modeler, if it instead *marginalizes over* `P(F=1)`, returns a weaker band. **In v1 this gap was reported as a diagnostic disagreement and "resolved toward 0.8." That was an error:** the two were computing different conditional quantities, so the disagreement was *definitional*. Under the comparability requirement, both condition on `F=1`; the spurious gap disappears. The *genuine* diagnostic question then surfaces in the **trace-production** term: are fiscal grievances over-represented in the *cahiers* because they were administratively solicited? If so, the modeler lowers the trace-production factor, and that — not a prior on `F` — is the documented, auditable adjustment.
 
-| Component | Role | Why |
+### 6.4 The reconciler is a protocol, not a discretion
+
+The reconciler's power is constrained to a fixed action space, so it cannot launder arbitrary judgment into a number:
+
+| Diagnosis | Permitted action |
+|---|---|
+| Missing mechanism/node in graph | Revise graph; recompute the formal likelihood |
+| Unsupported narrative link | Lower the likelihood **band**; cite the missing evidence |
+| Evidence dependence | Cluster the evidence; recompute a **joint** likelihood (§6.5) |
+| Trace-production mismatch | Adjust the **trace-production** term explicitly; leave the causal term |
+| Prior mismatch | Separate prior from likelihood; **adjust the prior, never the likelihood** |
+| Irreducible disagreement | Preserve an interval / model-averaged uncertainty; do not collapse |
+
+The reconciler emits an adjusted **band** plus the named diagnosis and action; "split the difference" is not in its action space.
+
+### 6.5 Dependence handling via an evidence graph
+
+The naive engine's characteristic error is multiplying likelihoods of dependent evidence (five reports of one fact counted as five). Dependence has distinct types requiring distinct treatment:
+
+| Dependence type | Example | Treatment |
 |---|---|---|
-| Narrative likelihood engine | drives updating for single text | preserves discriminating texture |
-| Externalized reasoning | documents the implicit model per estimate | auditability, coherence checking |
-| Formal DAG (auditor) | cross-checks high-influence likelihoods | catches incoherence and hidden dependence |
-| Reconciler (diagnostic) | resolves disagreement by naming its source | turns disagreement into a learning signal, not mush |
-| Top-driver gating | scopes the expensive audit | concentrates scrutiny where it changes conclusions |
-| Van Evera labels | presentation layer over likelihoods | human legibility for process-tracing scholars |
-| Sensitivity (priors + likelihoods) | reports robustness | honesty about dependence on assumptions |
-| Formal model (CausalQueries) | source of truth for multi-case | identified counterfactuals and population effects |
+| Common source | Five articles cite one speech | Collapse / downweight |
+| Common cause | Many grievances from one fiscal shock | Model as mediated evidence |
+| Sequential | One event leaves a later trace | Temporal ordering |
+| Selection / survival | Only certain documents survive | Trace-production / missingness model |
+| Interpretive | One extractor produces overlapping claims | Audit the extraction stage |
+
+This requires an **evidence graph** distinct from the causal event graph, with nodes for *source*, *claim*, *observation*, and *extracted proposition*. Dependence is flagged on the evidence graph **before** likelihoods are combined. "Cluster the evidence" (§6.4) is defined operationally as: detect a shared parent in the evidence graph, then elicit one joint likelihood for the cluster.
+
+### 6.6 Missingness model (absence of evidence)
+
+Hoop tests turn on expected-but-absent evidence, which is dangerous to automate because "not in the supplied text" ≠ "did not occur." The architecture distinguishes four states:
+
+| State | Meaning |
+|---|---|
+| Absent from world | the event/trace did not exist |
+| Absent from source | the source omits it |
+| Absent from extraction | the pipeline failed to detect it |
+| Absent from query | the pipeline never looked |
+
+An absence disconfirms a hypothesis **only** to the extent the evidence *would probably have been observed if it existed* — a quantity supplied by the trace-production model. Absent that, absence findings are reported **qualitatively** and excluded from quantitative updating. (The reference implementation already takes this conservative stance: its absence pass is qualitative-only and does not feed the Bayesian update — see §9.)
+
+### 6.7 Top-driver gating
+
+Triangulation (estimator + modeler + reconciler, with iteration) is costly and unnecessary for most evidence. Run the cheap narrative estimate everywhere; trigger the audit only on the **evidence that moves the posterior** — the top drivers by `|log(LR)|`, already computed for sensitivity. This concentrates scrutiny where error would change conclusions, and is the cost term in the §6 objective. Any cap on audited evidence is logged, not silently applied.
 
 ---
 
-## 7. Why an LLM changes what is feasible
+## 7. Identifiability and comparability boundaries
 
-Classical process tracing could not externalize reasoning, run independent parallel estimators, and reconcile them *at scale* — the labor was prohibitive, so analysts left the model implicit (narrative) or paid the full formalization cost once (formal). Language models make three things cheap that were not before:
+**Single-case identifiability.** A quantified counterfactual or population effect from a single case is, informationally, the slope of a line from one point: the data does not contain it. A formal DAG *can* run on a single case (Humphreys & Jacobs' original within-case use), yielding coherent updating and dependence-handling, but its single-case counterfactuals are **prior-dominated**. Identified counterfactual/population quantities require **many cases with variation**. This is an information limit, not a method preference, and it is why §5 forbids the single-text path from claiming them.
 
-1. **Externalized reasoning per estimate** — the implicit model can be emitted as structured output alongside every likelihood.
-2. **Independent parallel estimation** — narrative and formal estimates can be produced by separate agents with genuinely different framings, so agreement is corroboration and disagreement is diagnostic (subject to the correlated-error caveat in Section 8).
-3. **Diagnostic reconciliation and iterative model construction** — a third agent can localize disagreements to specific structural assumptions and drive the back-and-forth that refines both estimate and graph.
-
-This is what makes the "externalize and check coherence" ideal of Section 4 operational rather than aspirational, while staying honest about the identifiability limits of Section 5.
+**Cross-case comparability.** The formal path is legitimate only when cases are genuinely comparable. Binarizing "fiscal crisis" across Bourbon France, late-Qing China, and Weimar Germany as a common `F=1` can manufacture false comparability and reproduce the very pseudo-quantification this paper criticizes. Cross-case eligibility therefore requires: common variable definitions; comparable measurement/trace-production regimes; sufficient variation in treatment and outcome; a defensible case-selection rule; an explicit missing-data model; and sensitivity to alternative codings. (The reference implementation already exhibits this failure mode when running uniformly "successful" cases against a fixed model, which collapses to all-`1`s and leaves nothing to estimate — a documented limitation, §9.)
 
 ---
 
-## 8. Limitations and known boundaries
+## 8. Validation: how we would know it works
 
-- **Correlated model errors.** Independent agents drawn from the same model family can share blind spots and agree while both wrong. Agreement is *support*, not proof. Mitigations: distinct prompts/roles, and where possible distinct model families; treat the auditor as a check, not an oracle.
-- **The reconciler must diagnose, not average.** Splitting the difference between two models is not Bayesian; it is noise reduction at the cost of meaning. The reconciler is constrained (by schema) to name the structural source of disagreement and a corrective action.
-- **Single-case counterfactuals remain prior-dominated.** The methodology refuses to present them as evidence-driven. Identified counterfactuals require the multi-case path.
-- **Texture vs. structure at the audit boundary.** Comparing a narrative likelihood to a formal one requires representing the evidence as a node for the comparison — a local, temporary binarization. This is scoped to the audit; it does not bind the primary narrative estimate.
-- **Cost.** Triangulation is expensive; gating to top-driver evidence is the control. The trade-off (depth on consequential evidence, cheap judgment elsewhere) should be made explicit and logged, never silently truncated.
-- **The optimum is unreachable.** Full Bayesian model averaging over structures is intractable; this methodology is the best *feasible* approximation, not the optimum itself.
+The architecture's central empirical claim is that **the local causal-graph audit improves coherence and dependence-handling over a narrative-only baseline**. That is testable, and the paper commits to testing it. A minimal protocol:
 
----
+| Design | What it tests |
+|---|---|
+| **Auditor ablation** (headline) | Does the DAG audit improve results vs. narrative-only, at its cost? |
+| Synthetic cases with known structure | Does the system recover known dependencies and rankings? |
+| Calibration on band assignments | Do likelihood bands behave sensibly across many items? |
+| Paraphrase robustness | Do conclusions survive rewording of the source? |
+| Source-contamination test | Are repeated/copied reports correctly *not* double-counted? |
+| Missing-evidence test | Is absence handled cautiously (no over-disconfirmation)? |
+| Expert agreement (with caution) | Agreement with human process tracers, noting bias-reproduction risk |
 
-## 9. Relationship to the reference implementation
-
-The companion pipeline already instantiates parts of this methodology and points at the rest:
-
-- A single-text path (narrative-style likelihood updating, Van Evera diagnostic classification, mechanical robustness, sensitivity over likelihoods) and a separate cross-case path bridging to `CausalQueries` for formal estimation — i.e., the task-routing of Section 6.1 is structurally present.
-- Per-hypothesis "top driver" identification already exists, supplying the gate of Section 6.3 at no additional cost.
-
-The gaps this methodology defines as next steps: researcher-settable priors with prior-sensitivity; comparative multi-hypothesis likelihoods replacing the two-way "H vs. ¬H" formulation; externalized reasoning attached to each likelihood; the triangulation auditor with diagnostic reconciliation, gated to top drivers; and explicit evidence-dependence clustering. Each is independently shippable and leaves the pipeline working — the methodology is intended to be adopted in thin slices, not as a flag-day rewrite.
+The objective in §6 (auditability, dependence-handling, calibrated sensitivity per cost) is what these designs operationalize. Calibration against *truth* is hard for unique historical events; the protocol therefore leans on synthetic recovery, ablation, and internal-coherence tests, with expert agreement as a secondary, bias-aware check.
 
 ---
 
-## 10. Summary
+## 9. Scope boundaries and companion work
 
-The choice was never narrative *versus* formal. Both are Bayes' rule; they differ only in where the likelihood comes from, and a "direct" likelihood is simply an undocumented causal model. The theoretical optimum — one coherent posterior averaged over causal structures — is intractable, and a single text cannot identify counterfactual or population quantities regardless of method. The best feasible automated methodology therefore (i) keeps narrative texture as the inferential substrate for single texts, (ii) forces the implicit model into the open via externalized reasoning, (iii) uses an independently-constructed formal graph to *audit* the high-influence likelihoods for coherence and hidden dependence, resolving disagreements by diagnosis rather than averaging, (iv) reserves the formal model's identified counterfactual and population estimands for the multi-case setting where the data support them, and (v) reports sensitivity to priors, likelihoods, and structure throughout. Language models are what make this affordable at scale; identifiability is what bounds its ambitions.
+To keep this a methodology paper rather than a research program, two areas are **scoped out** of the core and named as companion work:
+
+- **Upstream extraction validity.** This paper begins after evidence and hypotheses are extracted, yet automated process tracing often fails earlier — segmentation, event extraction, coreference, chronology, hypothesis exhaustiveness and mutual-exclusivity. Bayes' rule cannot rescue a bad evidence representation. A companion *extraction-validity* note should cover source characterization, event/proposition extraction, hypothesis generation, and mutual-exclusivity/chronology audits as preconditions for the inference layer described here.
+- **Full validation protocol and benchmark construction.** §8 specifies the tests; building the synthetic generators, the expert-coded benchmark, and the calibration harness is a separate empirical effort.
+
+**Relationship to the reference implementation (methodology register).** The companion pipeline already realizes parts of this architecture and points at the rest: a narrative-style single-text path (likelihood updating, Van Evera classification, mechanical robustness, sensitivity), a separate cross-case path bridging to `CausalQueries`, a qualitative-only absence pass consistent with §6.6, per-hypothesis top-driver identification supplying the §6.7 gate, and a documented cross-case false-comparability failure mode motivating §7. The gaps this methodology defines as next steps — a formal estimand, researcher-settable priors with prior-sensitivity, comparative multi-hypothesis bands replacing the two-way formulation, externalized causal-and-trace reasoning per likelihood, the blinded triangulation auditor with the §6.4 protocol, and the evidence-graph dependence layer — are intended for **staged adoption**. (Engineering sequencing is deliberately left to a separate implementation note.)
+
+---
+
+## 10. Why an LLM changes what is feasible
+
+Classical process tracing could not externalize reasoning, run blinded parallel estimators, and reconcile them *at scale*; the labor was prohibitive, so analysts left the model implicit (narrative) or paid full formalization once (formal). Language models make three things affordable: (1) externalized causal-and-trace reasoning emitted as structured output per likelihood; (2) blinded, separately-framed estimation so disagreement is informative (subject to the correlated-error caveat of §6.3); and (3) protocol-constrained reconciliation that localizes disagreement to a specific assumption and drives iterative refinement. This makes "externalize and check coherence" operational — while §7 bounds the ambition.
+
+---
+
+## 11. Limitations
+
+- **Correlated model errors** can make blinded agents agree while both wrong; agreement is support, not proof (§6.3).
+- **Reconciler scope.** Even constrained, the action table encodes judgment; its choices are logged for audit, not presumed correct.
+- **Single-case counterfactuals remain prior-dominated** and are excluded from the single-text estimand (§5, §7).
+- **Trace-production models are themselves assumptions** — better externalized and criticizable than implicit, but not ground truth.
+- **Cost.** Triangulation is expensive; top-driver gating is the control, and any cap is logged (§6.7).
+- **No optimality claim.** This is a principled approximation against a stated objective, not a proven optimum; the true Bayesian optimum (a coherent joint posterior averaged over causal structures) is intractable for real cases.
+
+---
+
+## 12. Summary
+
+The choice was never narrative *versus* formal. Both are Bayes' rule; they differ in how hypotheses, mechanisms, and dependence are represented, and — operationally — in how much of the model behind the likelihood is externalized. A "direct" likelihood is an undocumented model spanning *both* historical causation and evidence generation, and conflating those two is a core error. No single text can identify counterfactual or population quantities, so the single-text estimand is fixed as comparative posterior odds over specified explanatory hypotheses. The proposed architecture keeps narrative texture as the inferential substrate, forces the implicit causal-and-trace models into the open, audits only posterior-moving likelihoods with a blinded local causal graph under a constrained reconciliation protocol, handles dependence on an explicit evidence graph, treats absence through a missingness model, and reserves identified counterfactual/population estimands for the multi-case path where the data support them. Language models make this affordable at scale; identifiability bounds its claims; and the headline empirical question — does the audit beat narrative-only — is left testable by design.
 
 ---
 
@@ -216,6 +291,7 @@ The choice was never narrative *versus* formal. Both are Bayes' rule; they diffe
 - Humphreys, M., & Jacobs, A. (2015). *Mixing Methods: A Bayesian Approach.* American Political Science Review 109(4).
 - Humphreys, M., & Jacobs, A. (2023). *Integrated Inferences: Causal Models for Qualitative and Mixed-Method Research.* Cambridge University Press. https://macartan.github.io/integrated_inferences/
 - *CausalQueries: Make, Update, and Query Binary Causal Models* (R package). https://cran.r-project.org/package=CausalQueries — Guide: https://macartan.github.io/causalmodels/process-tracing.html
-- Van Evera, S. (1997). *Guide to Methods for Students of Political Science.* Cornell University Press. (Hoop / smoking-gun / doubly-decisive / straw-in-the-wind diagnostic tests.)
-- Jaynes, E. T. (2003). *Probability Theory: The Logic of Science.* Cambridge University Press. (Probability as extended logic.)
+- Van Evera, S. (1997). *Guide to Methods for Students of Political Science.* Cornell University Press.
+- Jaynes, E. T. (2003). *Probability Theory: The Logic of Science.* Cambridge University Press.
+- Mahoney, J. (2012). *The Logic of Process Tracing Tests in the Social Sciences.* Sociological Methods & Research 41(4). (INUS conditions and necessity/sufficiency in process tracing.)
 - *Two fully specified Bayes factors for hypothesis testing and sensitivity analysis in process tracing* (2026). arXiv. https://arxiv.org/html/2606.16683
