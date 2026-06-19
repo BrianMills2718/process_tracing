@@ -1,0 +1,21 @@
+version: 1
+project: process_tracing
+publish:
+  - path: README.md
+    type: ProjectOverview
+    title: Process Tracing Overview
+    tags: [portfolio, analysis, process-tracing]
+  - path: docs/WHITEPAPER_optimal_automated_process_tracing.md
+    type: Whitepaper
+    tags: [analysis, process-tracing, methodology]
+  - path: docs/ontology.md
+    type: ProjectDoc
+    tags: [analysis, ontology, process-tracing]
+  - glob: evidence/*.md
+    type: EvidenceArtifact
+    tags: [evidence, verification, process-tracing]
+exclude:
+  - docs/CLAUDE.md
+  - hooks/**
+  - .pytest_cache/**
+  - archive/**
