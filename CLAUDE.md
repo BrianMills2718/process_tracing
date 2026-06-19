@@ -229,8 +229,8 @@ NEVER proactively create documentation files (*.md) or README files. Only create
 # Run process tracing pipeline
 python -m pt input_text/your_text.txt --output-dir output/your_run/
 
-# Run deterministic tests
-PYTHONPATH=. pytest tests -q
+# Run deterministic tests and repo validators
+make check
 
 # Multi-document analysis
 python -m pt.multi input_text/case_a.txt input_text/case_b.txt --output-dir output/multi/
