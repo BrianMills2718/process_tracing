@@ -19,7 +19,8 @@ Output: `result.json` (structured data) + `report.html` (Bootstrap dashboard wit
 
 ```bash
 # Install dependencies
-pip install litellm pydantic
+pip install -r requirements.txt
+pip install -e ../llm_client
 
 # Set up API key (any LiteLLM-supported provider)
 export GEMINI_API_KEY=your_key_here
@@ -53,7 +54,7 @@ pt/
 ## Tests
 
 ```bash
-PYTHONPATH=. pytest tests -q
+make check
 ```
 
 Legacy and live-LLM exploratory tests are explicitly skipped by default. Set
