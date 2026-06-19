@@ -44,5 +44,6 @@ messages:
       5. Be CONSISTENT: apply the same evidentiary standard across all variables.
       6. The outcome variable ({{ outcome_variable }}) should almost always be codeable.
 
-      Return the coding for case_id="{{ case_id }}" with source_file="{{ source_file }}".
-      Include analyst_notes summarizing any difficult coding decisions.
+      Return the codings for every variable, plus analyst_notes summarizing any
+      difficult coding decisions. (The case identity is assigned by the system —
+      do not include it.)
