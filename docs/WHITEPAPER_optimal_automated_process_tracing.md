@@ -2,11 +2,22 @@
 
 ### Externalized LLM Likelihoods, Trace-Production Models, and Local Causal-Graph Audits for Single-Text Historical Inference
 
-**Status:** Draft methodology white paper — **v2**
+**Status:** Draft methodology white paper — **v3**
 **Scope:** Single-text and cross-case causal inference from historical narrative
 **Audience:** Methodologists, computational social scientists, and engineers building automated causal-inference pipelines
 
 ---
+
+## What changed in v3
+
+v3 responds to a second adversarial review (which graded v2 B+ and asked for "revise and resubmit"). It pins down the parts that were named but not operational:
+
+1. **Formal likelihood-band semantics (§6.2.1).** Bands are now defined as LR intervals with a stated propagation model (log-uniform Monte Carlo → posterior-odds distribution), plus conservative interval-arithmetic and ordinal-only fallbacks. Open-ended bands are bounded by the implementation's LR floor/cap.
+2. **Hypothesis-partition validity (§5.1).** Rules for mutual exclusivity, exhaustiveness via an explicit residual hypothesis, nesting, conjunctural causes, granularity, and split/merge — closing the "gerrymandered menu" hole.
+3. **Formal evidence graph (§6.5).** Node/edge schema, an operational clustering rule, and a worked duplicate-evidence example.
+4. **Validation metrics and falsification thresholds (§8).** Scoring rules, an operationally-identical baseline, benchmark-construction cautions, a cost metric, and provisional pass/fail thresholds.
+5. **One complete worked run (§6.8).** Three hypotheses + residual, priors, bands, dependence graph, trace-production adjustment, a posterior interval, a reconciler log, and a sensitivity conclusion.
+6. **Adversarial objections folded in:** procedural/model/**epistemic** independence distinction (§6.3); a faithful-abstraction "translation contract" the auditor must certify before comparing numbers (§6.3); cluster-/volume-aware audit triggers so correlated weak evidence is not missed (§6.7); **observability bands** for absence so negative evidence is not toothless (§6.6); a narrowed feasibility claim (§10); and "ritualized Bayesianism" countered by proper scoring + protocol preregistration (§8).
 
 ## What changed in v2
 
@@ -123,6 +134,18 @@ Concretely, "fiscal crisis caused the Revolution" is operationalized as "`H_fisc
 
 **Cross-case estimand.** Identified population estimands (e.g., probability of causation, average effects) via the formal model, **conditional on comparability holding** (§7).
 
+### 5.1 Hypothesis-partition validity
+
+A posterior over a badly-constructed hypothesis set can be perfectly coherent and substantively meaningless. Because the estimand is *conditional on the partition*, the partition is itself an object that must be audited. Five rules govern it:
+
+1. **Mutual exclusivity.** Hypotheses must be competing *complete* explanatory stories, not overlapping factors. The pipeline's existing self-check — "if H_A is decisive, does that make H_B unnecessary or false?" — is the operational test; a "no" means the two are not exclusive and must be merged.
+2. **Exhaustiveness via an explicit residual.** The set always includes a residual hypothesis **H₀ = "none of the specified stories (other cause, or a genuinely conjunctural combination)."** Without it, the posterior is conditional on a closed menu and silently assumes the truth is on the list. H₀ carries real prior mass.
+3. **Nesting and conjunction.** Conjunctural explanations ("fiscal crisis caused elite fragmentation, which let ideology mobilize") are *not* mutually exclusive with their components and must not sit alongside them as if they were. A conjunctural story is admitted only as **its own distinct hypothesis** with the component factors removed from the menu, or it is deferred to the formal model (§7), which represents composition natively. The single-text partition is a set of *mutually-exclusive whole stories*, never a mix of factors and combinations-of-factors.
+4. **Granularity.** All hypotheses share a comparable mechanism grain; one richly specified story tested against vague rivals biases the comparison toward the rivals (more ways to be "consistent").
+5. **Split/merge discipline.** Merge when exclusivity fails (rule 1); split when a single "hypothesis" bundles separable mechanisms that the evidence can discriminate.
+
+These rules are enforced at the **partition-audit** step, which is preregistered and frozen before the testing pass (the pipeline's `--review` checkpoint is the natural home). A gerrymandered menu is the easiest way to game posterior odds; making the partition an audited, frozen artifact is the defense.
+
 ---
 
 ## 6. The architecture
@@ -162,6 +185,24 @@ Without this, disagreement between the two is *definitional, not diagnostic* —
 
 **Priors are researcher inputs.** A uniform prior is a defensible *reference* choice only when justified; priors are an explicit input, and sensitivity ranges over them.
 
+#### 6.2.1 Formal band semantics and propagation
+
+A band is not a number; it is an interval on the likelihood ratio. The posterior odds between hypotheses `Hᵢ`, `Hⱼ` after `m` (clustered, §6.5) evidence items is
+
+```
+O_ij^post = O_ij^prior · ∏_m LR_m(i,j),     LR_m(i,j) = P(E_m | H_i) / P(E_m | H_j)
+```
+
+where each `LR_m(i,j)` is supplied only as a band → an interval `[lo, hi]`. Open-ended bands are bounded by the implementation's floor and cap (`LR_FLOOR = 0.05`, `LR_CAP = 20`): "strongly disconfirming" = `[0.05, 0.2]`, "strongly confirming" = `[5, 20]`. The output object and how the interval propagates must be stated; we specify three modes, in decreasing strength of assumption:
+
+| Mode | Assumption | Output | Use |
+|---|---|---|---|
+| **Monte Carlo (default)** | each LR is **log-uniform** on its band | a posterior-odds *distribution* → median + central interval, and **rank-stability** = fraction of draws preserving each pairwise order | the standard report |
+| **Interval arithmetic** | none beyond `[lo, hi]` | guaranteed posterior-odds **bounds** (worst/best case) | conservative robustness check |
+| **Ordinal-only** | bands carry order, not magnitude | a **dominance** relation over hypotheses, no numbers | when even interval endpoints are indefensible |
+
+Log-uniform is chosen because likelihood ratios live naturally on a log scale; the assumption is declared, not hidden, and the interval-arithmetic mode is always reported alongside as a no-assumption bound. The headline single-text output is therefore **a posterior-odds interval per hypothesis plus a rank-stability fraction**, never a single "posterior probability." For a dependent cluster, a **single joint band** is elicited (§6.5), not a product of member bands — this is where double-counting is prevented mechanically.
+
 ### 6.3 The DAG as auditor: structured second-pass criticism (not independent corroboration)
 
 For a single text, the formal graph earns its keep not by computing the answer but by **cross-checking** the narrative estimate on the evidence that matters. The disagreement between a holistic likelihood and a structurally-derived one is the signal: it indicates either an incoherent/double-counting implicit model, or a mis-specified/over-lossy graph, **or** a trace-production assumption that one side encoded and the other did not.
@@ -173,6 +214,27 @@ Because the estimator, modeler, and reconciler may all be instances of the same 
 - randomized elicitation order; evidence-redaction probes;
 - human spot-checks on top-driver evidence;
 - retained disagreement logs for reproducibility.
+
+**Three grades of independence — and we mostly buy the weakest.** Independence is not one thing:
+
+| Grade | Means | What it rules out | Achieved here? |
+|---|---|---|---|
+| Procedural | different prompts, blinded roles, randomized order | prompt-leak, anchoring | **yes** |
+| Model | different model families | family-specific quirks | sometimes (when a second family is available) |
+| Epistemic | different information / differently-trained priors | shared training-data artifacts, shared historiographic stereotypes | **rarely** |
+
+Only **epistemic** independence makes agreement strong evidence. If every model has absorbed the same "fiscal-crisis → French Revolution" trope, blinded agents can agree from a shared cultural prior, not from the evidence. The audit's evidential weight is therefore discounted accordingly: agreement is treated as *removal of procedural error*, not as corroboration of substance. Human spot-checks on top drivers, and (where possible) a genuinely different information source, are the only routes to epistemic independence, and are flagged as the highest-value — and currently weakest — link.
+
+**Faithful-abstraction (translation) contract.** Before any number is compared, the auditor must certify that its local graph is a *faithful abstraction* of the narrative object — otherwise the audit silently changes the claim being audited. The auditor logs, for each translation:
+
+| Narrative object | DAG representation | Logged loss check |
+|---|---|---|
+| mechanism | nodes + edges | which mechanism steps were dropped? |
+| evidence proposition | observation node | what semantic detail was compressed? |
+| trace process | measurement / survival nodes | what source-selection assumptions were *added*? |
+| hypothesis | graph query | did the claim change in translation? |
+
+If the translation loss is material (e.g., the query no longer expresses the same hypothesis), the comparison is **void** and reported as "not auditable at this granularity," not as agreement or disagreement.
 
 > **Reworked worked example (v2).** Estimator (conditioning on `F=1`, i.e. fiscal crisis occurred and is the driver): "grievances would be fiscal → **strongly confirming**." Modeler, if it instead *marginalizes over* `P(F=1)`, returns a weaker band. **In v1 this gap was reported as a diagnostic disagreement and "resolved toward 0.8." That was an error:** the two were computing different conditional quantities, so the disagreement was *definitional*. Under the comparability requirement, both condition on `F=1`; the spurious gap disappears. The *genuine* diagnostic question then surfaces in the **trace-production** term: are fiscal grievances over-represented in the *cahiers* because they were administratively solicited? If so, the modeler lowers the trace-production factor, and that — not a prior on `F` — is the documented, auditable adjustment.
 
@@ -203,7 +265,28 @@ The naive engine's characteristic error is multiplying likelihoods of dependent 
 | Selection / survival | Only certain documents survive | Trace-production / missingness model |
 | Interpretive | One extractor produces overlapping claims | Audit the extraction stage |
 
-This requires an **evidence graph** distinct from the causal event graph, with nodes for *source*, *claim*, *observation*, and *extracted proposition*. Dependence is flagged on the evidence graph **before** likelihoods are combined. "Cluster the evidence" (§6.4) is defined operationally as: detect a shared parent in the evidence graph, then elicit one joint likelihood for the cluster.
+Naming the types is not enough; the hard part is *deciding when two items are dependent and how much to downweight*. That requires an **evidence graph** distinct from the causal event graph.
+
+**Schema.** Node types: `Event`, `Institution`, `ArchiveProcess`, `Source`, `Document`, `Extractor`, `Claim`, `ExtractedProposition`. Edge types:
+
+```
+Event        → Claim                  (the event gives rise to a claim)
+Institution  → Source                 (who produced the source)
+ArchiveProcess → Document             (survival / preservation)
+Source       → Document → Claim       (a document carries claims)
+Extractor    → ExtractedProposition   (the pipeline's reading)
+Claim        → ExtractedProposition   (what the proposition is about)
+```
+
+**Operational clustering rule.** Two extracted propositions are **dependent** iff they share an ancestor in the evidence graph that explains their evidential similarity (a common `Source`, `Document`, `ArchiveProcess`, or originating `Event`). Dependent propositions are placed in one **cluster**, and the cluster receives **one joint likelihood band** (§6.2.1) — not the product of member bands. Independent clusters multiply; members within a cluster do not.
+
+**Worked duplicate example.** A reported ministerial speech generates: (a) five newspaper articles, three of which copy the same wire report and two of which rely on the same official transcript; (b) a memoir recalling the speech 30 years later; (c) a police report on public reaction. The evidence graph yields:
+
+- the three wire-copying articles + two transcript-based articles share the parent `Document = official transcript/wire` → **one cluster**, one joint band (≈ the band of a single independent report, not five);
+- the memoir has a distinct path (`Event → Claim`, decades later, high distortion) → **separate** item, with a trace-production discount for recall decay;
+- the police report observes *reaction*, not the speech content → a **different `Claim`** → independent item.
+
+Result: five "sources" collapse to **three** evidentially-distinct contributions, and the speech is not counted five times. Clustering decisions are logged for audit.
 
 ### 6.6 Missingness model (absence of evidence)
 
@@ -216,11 +299,82 @@ Hoop tests turn on expected-but-absent evidence, which is dangerous to automate 
 | Absent from extraction | the pipeline failed to detect it |
 | Absent from query | the pipeline never looked |
 
-An absence disconfirms a hypothesis **only** to the extent the evidence *would probably have been observed if it existed* — a quantity supplied by the trace-production model. Absent that, absence findings are reported **qualitatively** and excluded from quantitative updating. (The reference implementation already takes this conservative stance: its absence pass is qualitative-only and does not feed the Bayesian update — see §9.)
+An absence disconfirms a hypothesis **only** to the extent the evidence *would probably have been observed if it existed* — the **observability** `P(observe E | E true)`, supplied by the trace-production model. A blanket "always qualitative" rule is too toothless: genuinely probative silences (no tax record, parliamentary debate, or police file mentions a supposedly central mechanism) are then never used. We therefore graduate by observability:
+
+| Observability if true | Treatment of the absence |
+|---|---|
+| low | qualitative note only (no update) |
+| moderate | weak disconfirmation |
+| high | quantitative hoop-test penalty |
+| near-certain | strong disconfirmation |
+
+The four-state distinction above (world / source / extraction / query) governs *eligibility*: only "absent from world (given the source would carry it)" can disconfirm; "absent from extraction" or "absent from query" are pipeline failures and must be excluded. (The reference implementation currently takes the most conservative stance — its absence pass is qualitative-only and does not feed the Bayesian update, §9 — which corresponds to treating all observability as "low"; graduating it per the table above is a defined next step.)
 
 ### 6.7 Top-driver gating
 
-Triangulation (estimator + modeler + reconciler, with iteration) is costly and unnecessary for most evidence. Run the cheap narrative estimate everywhere; trigger the audit only on the **evidence that moves the posterior** — the top drivers by `|log(LR)|`, already computed for sensitivity. This concentrates scrutiny where error would change conclusions, and is the cost term in the §6 objective. Any cap on audited evidence is logged, not silently applied.
+Triangulation (estimator + modeler + reconciler, with iteration) is costly and unnecessary for most evidence. Run the cheap narrative estimate everywhere; trigger the audit selectively. But a pure high-`|log(LR)|` trigger misses a real failure mode: **many individually-weak items that share a source or motif** can dominate the posterior collectively while no single one looks like a top driver. The audit is therefore triggered on the **union** of:
+
+1. **high `|log(LR)|`** items (individually posterior-moving);
+2. **high-volume / repeated-motif clusters** from the evidence graph (§6.5) — a cluster whose *combined* naive contribution is large, even if each member is weak;
+3. items the reconciler or partition-audit flagged as contested.
+
+This concentrates scrutiny where error would change conclusions *and* where correlated weak evidence would otherwise distort the posterior silently. Any cap on audited evidence is logged, not silently applied.
+
+### 6.8 A complete worked run (illustrative)
+
+This miniature run exercises every component. Numbers are illustrative, chosen to show the *mechanics and the honest conclusion*, not to settle the historiography.
+
+**Step 1 — Partition (§5.1).** Mutually-exclusive whole stories plus a residual:
+
+- `H₁` fiscal crisis was the primary driver
+- `H₂` ideological radicalization was the primary driver
+- `H₃` elite fragmentation was the primary driver
+- `H₀` residual: none of these / a genuinely conjunctural combination
+
+The exclusivity self-check passes (each is a distinct *primary* driver); the conjunctural story "fiscal → elite fragmentation → ideological mobilization" is **not** added alongside `H₁₋₃` — it is absorbed into `H₀` (or deferred to the formal model), per rule 3.
+
+**Step 2 — Priors (researcher-set, justified).** Longstanding debate, no consensus → spread, with real mass on the residual: `P(H₁)=0.30, P(H₂)=0.25, P(H₃)=0.25, H₀=0.20`.
+
+**Step 3 — Evidence and the evidence graph (§6.5).**
+
+- `E₁` *cahiers de doléances* dominated by fiscal grievances
+- `E₂` regional administrative grievance summaries, also fiscal-dominated — **but produced by the same 1788–89 royal solicitation** as `E₁`
+- `E₃` surviving provincial elite correspondence showing coordination breakdown
+
+Graph: `E₁, E₂` share parent `ArchiveProcess/Institution = royal solicitation of grievances` → **cluster C = {E₁, E₂}**, one joint band. `E₃` is independent.
+
+**Step 4 — Bands, with trace-production adjustment (§4, §6.2.1).** Naively, cluster C reads *strongly confirming* for `H₁`. The trace-production model intervenes: grievances were *solicited through fiscal-administrative channels*, so fiscal content is over-represented by construction. The joint band for C is discounted to **moderately confirming (2–5)** for `H₁`, and — crucially — C is **one** band, not `(>5)×(>5)`.
+
+| Item | vs `H₁` | vs `H₂` | vs `H₃` |
+|---|---|---|---|
+| Cluster C (fiscal grievances, solicited) | moderately confirming `2–5` | weak `0.5–2` | weak `0.5–2` |
+| `E₃` (elite correspondence) | weak `0.5–2` | weak `0.5–2` | moderately confirming `2–5` |
+
+**Step 5 — Reconciler log (§6.4).**
+
+```
+audit C:
+  estimator band (vs H1): STRONGLY confirming (>5)
+  modeler: local graph flags node `solicitation → grievance-content`
+  diagnosis: trace-production mismatch  (not a prior issue)
+  action:   adjust trace-production term; lower joint band to MODERATELY confirming (2–5)
+  diagnosis: E1,E2 share parent `royal solicitation` (common process)
+  action:   cluster {E1,E2}; elicit ONE joint band  (no product)
+  translation check: query "primary driver = fiscal" preserved → audit valid
+```
+
+**Step 6 — Posterior (Monte Carlo, log-uniform within bands; §6.2.1).** Updating the priors by C and `E₃` and sampling yields, illustratively:
+
+| Hypothesis | Posterior interval (central) | 
+|---|---|
+| `H₁` fiscal | ~0.30 – 0.48 |
+| `H₃` elite | ~0.24 – 0.42 |
+| `H₂` ideology | ~0.08 – 0.16 |
+| `H₀` residual | ~0.10 – 0.20 |
+
+**Rank-stability:** `H₁ > H₂` holds in ~96% of draws; `H₁ > H₃` holds in only ~58%.
+
+**Step 7 — Sensitivity / conclusion.** Varying cluster C across its full plausible band (weak ↔ strongly-confirming) and the priors over their stated ranges: the conclusion **"`H₂` (ideology-primary) is disfavored"** is robust; the ordering **`H₁` vs `H₃`** is *not* — they are not distinguishable from this evidence. The honest report is therefore: *"the evidence favors a fiscal or elite-fragmentation primary driver over an ideology-primary one, but does not discriminate between fiscal and elite; residual mass remains for a conjunctural account."* Note what the trace-production step bought: without it, the un-discounted, un-clustered fiscal grievances would have produced a spuriously decisive `H₁`.
 
 ---
 
@@ -248,6 +402,33 @@ The architecture's central empirical claim is that **the local causal-graph audi
 
 The objective in §6 (auditability, dependence-handling, calibrated sensitivity per cost) is what these designs operationalize. Calibration against *truth* is hard for unique historical events; the protocol therefore leans on synthetic recovery, ablation, and internal-coherence tests, with expert agreement as a secondary, bias-aware check.
 
+### 8.1 Scoring rules and a comparable baseline
+
+A test menu is not a validation design without metrics, a baseline, and thresholds.
+
+| Quantity | Scoring rule |
+|---|---|
+| Rank accuracy (which hypothesis the evidence favors) | Kendall's τ / top-1 accuracy vs. ground-truth ordering on synthetic cases |
+| Probabilistic calibration | log score and Brier score on band-implied posteriors |
+| Dependence detection | precision/recall of the evidence-graph clustering vs. injected duplicates |
+| Duplicate overcounting | ratio of posterior shift from a planted copied report to that from an independent one (target ≈ 1) |
+| Absence handling | false-disconfirmation rate on planted observability-low absences (target ≈ 0) |
+| Cost | model calls, tokens, wall-time, and human-review minutes **per audited (top-driver) item** |
+
+**Baseline.** "Narrative-only" must be the **operationally identical pipeline with the audit and evidence-graph clustering removed** — same extraction, same priors, same bands — so the ablation isolates the audit's contribution and nothing else.
+
+**Benchmark construction caution.** Synthetic cases generated from the same assumptions the model uses are too easy and inflate results; generators must be **held-out / adversarial** (different causal structures, planted dependence and survival bias). Expert-coded historical cases supply external validity but **expert agreement is not ground truth** — inter-annotator variation is measured and reported, not assumed away.
+
+### 8.2 Falsification thresholds (provisional)
+
+The architecture must be able to fail. Provisional pass criteria — exact values to be preregistered:
+
+> The auditor **passes** only if, relative to the narrative-only baseline, it (i) improves dependence-detection F1 by ≥ X, (ii) brings duplicate-overcounting ratio within ±Y of 1.0, (iii) holds posterior-rank accuracy on synthetic cases within Z of baseline-or-better, and (iv) achieves this at ≤ C additional cost per audited item. Failing (i)–(iii) **falsifies** the central claim that the audit improves inference.
+
+### 8.3 Against "ritualized Bayesianism"
+
+Bands, graphs, reconciliation tables, and robustness ranges can become an elaborate ritual that still launders opaque judgment. The antidote is not more architecture; it is **proper scoring** (calibration + discrimination measured against held-out outcomes) and **protocol preregistration**: the hypothesis partition (§5.1), priors, band scheme, audit triggers, and scoring rules are frozen *before* the testing pass (the `--review` checkpoint is the freeze point). Architecture without scoring is decoration; the validation protocol is what makes the architecture answerable.
+
 ---
 
 ## 9. Scope boundaries and companion work
@@ -263,7 +444,11 @@ To keep this a methodology paper rather than a research program, two areas are *
 
 ## 10. Why an LLM changes what is feasible
 
-Classical process tracing could not externalize reasoning, run blinded parallel estimators, and reconcile them *at scale*; the labor was prohibitive, so analysts left the model implicit (narrative) or paid full formalization once (formal). Language models make three things affordable: (1) externalized causal-and-trace reasoning emitted as structured output per likelihood; (2) blinded, separately-framed estimation so disagreement is informative (subject to the correlated-error caveat of §6.3); and (3) protocol-constrained reconciliation that localizes disagreement to a specific assumption and drives iterative refinement. This makes "externalize and check coherence" operational — while §7 bounds the ambition.
+Classical process tracing could not externalize reasoning, run blinded parallel estimators, and reconcile them *at scale*; the labor was prohibitive, so analysts left the model implicit (narrative) or paid full formalization once (formal). Language models change the **cost structure**, not (by themselves) the reliability. The precise claim:
+
+> LLMs reduce the marginal cost of producing structured, inspectable likelihood and trace-production rationales, and of running blinded parallel estimation and protocol-constrained reconciliation. **Whether those rationales improve inferential reliability is an empirical question, answered only by the auditor-ablation protocol (§8), not by the affordances themselves.**
+
+"Feasible" here means *technically and economically* feasible. Epistemic reliability (§6.3) and institutional auditability are claims the validation protocol must earn, not consequences of using an LLM. §7 bounds the ambition regardless of cost.
 
 ---
 
@@ -272,7 +457,8 @@ Classical process tracing could not externalize reasoning, run blinded parallel 
 - **Correlated model errors** can make blinded agents agree while both wrong; agreement is support, not proof (§6.3).
 - **Reconciler scope.** Even constrained, the action table encodes judgment; its choices are logged for audit, not presumed correct.
 - **Single-case counterfactuals remain prior-dominated** and are excluded from the single-text estimand (§5, §7).
-- **Trace-production models are themselves assumptions** — better externalized and criticizable than implicit, but not ground truth.
+- **Trace-production models are themselves assumptions, and may be near-speculative.** In many cases the record-production process (how much was lost, censored, standardized, copied, selectively preserved) is poorly known. Visibility does not make a bad assumption good. The discipline is to mark each trace-production term as *estimated* vs. *speculative*; when speculative, widen the band (§6.2.1) or fall back to qualitative treatment rather than assert a discount.
+- **Epistemic independence is rarely achieved** (§6.3). The audit mostly removes procedural error; it is weak against shared training-data priors and historiographic stereotypes. Treat audit agreement accordingly.
 - **Cost.** Triangulation is expensive; top-driver gating is the control, and any cap is logged (§6.7).
 - **No optimality claim.** This is a principled approximation against a stated objective, not a proven optimum; the true Bayesian optimum (a coherent joint posterior averaged over causal structures) is intractable for real cases.
 
@@ -280,7 +466,9 @@ Classical process tracing could not externalize reasoning, run blinded parallel 
 
 ## 12. Summary
 
-The choice was never narrative *versus* formal. Both are Bayes' rule; they differ in how hypotheses, mechanisms, and dependence are represented, and — operationally — in how much of the model behind the likelihood is externalized. A "direct" likelihood is an undocumented model spanning *both* historical causation and evidence generation, and conflating those two is a core error. No single text can identify counterfactual or population quantities, so the single-text estimand is fixed as comparative posterior odds over specified explanatory hypotheses. The proposed architecture keeps narrative texture as the inferential substrate, forces the implicit causal-and-trace models into the open, audits only posterior-moving likelihoods with a blinded local causal graph under a constrained reconciliation protocol, handles dependence on an explicit evidence graph, treats absence through a missingness model, and reserves identified counterfactual/population estimands for the multi-case path where the data support them. Language models make this affordable at scale; identifiability bounds its claims; and the headline empirical question — does the audit beat narrative-only — is left testable by design.
+**Thesis.** Single-text historical inference should report **comparative posterior support over an explicitly partitioned set of mutually-exclusive explanatory hypotheses** — not identified causal effects. Because a likelihood judgment confounds *event causation* with *evidence production*, automated systems should externalize **both** the substantive causal model and the trace-production model, propagate likelihood uncertainty as **bands/intervals** with declared semantics, and audit the posterior-sensitive and dependence-sensitive evidence through a **local causal graph whose translation losses are logged** and whose disagreements are resolved by a **constrained protocol**, never by averaging.
+
+The choice was never narrative *versus* formal. Both are Bayes' rule; they differ in how hypotheses, mechanisms, and dependence are represented, and — operationally — in how much of the model behind the likelihood is externalized. A "direct" likelihood is an undocumented model spanning both historical causation and evidence generation, and conflating those two is a core error. No single text can identify counterfactual or population quantities, so those are reserved for the multi-case path where the data support them. Language models lower the *cost* of externalization and audit; they do not, by themselves, establish reliability — that is what the validation protocol (§8) exists to earn. Identifiability bounds the claims; preregistered scoring keeps the architecture from becoming ritual; and the headline empirical question — does the audit beat narrative-only — is left testable, and falsifiable, by design.
 
 ---
 
@@ -294,4 +482,5 @@ The choice was never narrative *versus* formal. Both are Bayes' rule; they diffe
 - Van Evera, S. (1997). *Guide to Methods for Students of Political Science.* Cornell University Press.
 - Jaynes, E. T. (2003). *Probability Theory: The Logic of Science.* Cambridge University Press.
 - Mahoney, J. (2012). *The Logic of Process Tracing Tests in the Social Sciences.* Sociological Methods & Research 41(4). (INUS conditions and necessity/sufficiency in process tracing.)
+- Gneiting, T., & Raftery, A. E. (2007). *Strictly Proper Scoring Rules, Prediction, and Estimation.* Journal of the American Statistical Association 102(477). (Log and Brier scores; calibration vs. discrimination.)
 - *Two fully specified Bayes factors for hypothesis testing and sensitivity analysis in process tracing* (2026). arXiv. https://arxiv.org/html/2606.16683
