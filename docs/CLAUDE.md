@@ -5,8 +5,9 @@ Maintained documentation for `process_tracing`.
 ## Route By Question
 
 - active implementation planning -> `plans/`
-- test harnesses, validation runners, and manual verification helpers -> `testing/`
-- validation-specific benchmarking and checks -> `validation/`
+- active deterministic verification -> `../tests/` via `make check`
+- historical manual verification helpers -> `testing/`
+- historical validation benchmarks and checks -> `validation/`
 
 ## Working Rules
 
