@@ -292,10 +292,13 @@ endif
 	@python $(SCRIPTS_META)/complete_plan.py --plan $(PLAN)
 
 # --- Quality ---
-.PHONY: dead-code
+.PHONY: dead-code clean
 
 dead-code:  ## Run dead code detection
 	@python $(SCRIPTS_META)/check_dead_code.py
+
+clean:  ## Remove local Python and test caches
+	@find . -type d \( -name '__pycache__' -o -name '.pytest_cache' -o -name '.mypy_cache' \) -prune -exec rm -rf {} +
 
 # --- Help ---
 .PHONY: help-meta

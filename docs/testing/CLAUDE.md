@@ -1,8 +1,13 @@
 # docs/testing
 
-Manual and exploratory validation helpers for `process_tracing`.
+Historical manual and exploratory validation helpers for `process_tracing`.
 
-This subtree is for verification scripts and analyst-facing checks that support
-claims about the pipeline. Keep production code in `pt/`; use this subtree for
-test-driving, reproducibility checks, and evidence that a methodological claim
-actually holds.
+This subtree is **not** part of the active pytest suite. Several files preserve
+old investigation scripts from the pre-`pt` pipeline era and may reference
+removed entry points such as `process_trace_advanced.py`.
+
+Active verification lives in `tests/` and runs through `make check`.
+Production code lives in `pt/`.
+
+Before reusing anything here, verify it against the current `pt` APIs and move
+revived tests into `tests/` as deterministic pytest coverage.
