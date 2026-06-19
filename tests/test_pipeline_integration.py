@@ -439,3 +439,66 @@ class TestReportConsistency:
         result = run_bayesian_update(testing)
         for p in result.posteriors:
             assert p.robustness in ("robust", "fragile", "moderate", "unknown")
+
+
+def _make_result(extraction: ExtractionResult) -> ProcessTracingResult:
+    """Assemble a minimal valid result around a given extraction."""
+    hs = _make_hypothesis_space()
+    testing = TestingResult(hypothesis_tests=[
+        HypothesisTestResult(hypothesis_id=h.id, prediction_classifications=[],
+                             evidence_evaluations=[])
+        for h in hs.hypotheses
+    ])
+    bayesian = run_bayesian_update(testing)
+    return ProcessTracingResult(
+        extraction=extraction,
+        hypothesis_space=hs,
+        testing=testing,
+        absence=AbsenceResult(evaluations=[]),
+        bayesian=bayesian,
+        synthesis=_make_synthesis(),
+    )
+
+
+class TestReportSecurity:
+    """The HTML report embeds LLM-authored text; it must not break out of
+    contexts or silently drop graph data."""
+
+    def test_script_breakout_neutralized(self):
+        # An evidence description containing </script> must not terminate the
+        # embedded <script> block when serialized into vis.js node JSON.
+        ext = _make_extraction()
+        ext.evidence[0].description = "break</script><script>alert(1)</script>"
+        html = generate_report(_make_result(ext))
+        assert "</script><script>alert(1)" not in html
+        assert "<\\/script>" in html  # neutralized form is present
+
+    def test_click_handler_escapes_label(self):
+        # The network click handler assigns node.label via innerHTML; labels are
+        # unescaped for the canvas, so the JS must escape before innerHTML.
+        html = generate_report(_make_result(_make_extraction()))
+        assert "function escapeHtml" in html
+        assert "escapeHtml(node.label)" in html
+
+    def test_duplicate_node_id_fails_loud(self):
+        # vis.js silently drops duplicate ids; the builder must raise instead.
+        ext = _make_extraction()
+        ext.evidence[0].id = ext.events[0].id  # force a cross-type collision
+        with pytest.raises(ValueError, match="Duplicate graph node id"):
+            generate_report(_make_result(ext))
+
+    def test_narrative_id_replacement_is_boundary_safe(self):
+        # 'evi_debt' must not match inside a longer id like 'evi_debt_extra'.
+        ext = _make_extraction()
+        ext.evidence.append(Evidence(
+            id="evi_debt_extra",
+            description="An unrelated longer-id item",
+            source_text="Some other quote.",
+        ))
+        synth = _make_synthesis()
+        synth.analytical_narrative = "The marker evi_debt_extra should resolve to its own item."
+        result = _make_result(ext)
+        result.synthesis = synth
+        html = generate_report(result)
+        # The longer id resolves to its own description, not the debt item's.
+        assert "An unrelated longer-id item" in html

@@ -127,15 +127,19 @@ def _render_narrative(text: str, ev_map: dict) -> str:
         import re
         escaped = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', escaped)
         escaped = re.sub(r'\*(.+?)\*', r'<em>\1</em>', escaped)
-        # Replace evidence IDs with human-readable descriptions
+        # Replace evidence IDs with human-readable descriptions. Match on
+        # identifier boundaries (not substring) so 'h1' does not match inside
+        # 'h10' / 'evi_1' inside 'evi_12'.
         for eid, ev in ev_map.items():
             esc_eid = _esc(eid)
-            if esc_eid in escaped:
-                desc = _esc(ev.description[:60])
-                escaped = escaped.replace(
-                    esc_eid,
-                    f'<abbr class="text-primary" data-bs-toggle="tooltip" title="{_esc(ev.source_text[:200])}">{desc}</abbr>'
-                )
+            desc = _esc(ev.description[:60])
+            repl = (
+                f'<abbr class="text-primary" data-bs-toggle="tooltip" '
+                f'title="{_esc(ev.source_text[:200])}">{desc}</abbr>'
+            )
+            escaped = re.sub(
+                rf'(?<![\w]){re.escape(esc_eid)}(?![\w])', lambda _m: repl, escaped
+            )
         out.append(f"<p>{escaped}</p>")
     return "\n".join(out)
 
@@ -146,48 +150,57 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
     edges: list[dict[str, object]] = []
     ext = result.extraction
     posteriors = {p.hypothesis_id: p.final_posterior for p in result.bayesian.posteriors}
-    node_ids = set()
+    node_ids: set[str] = set()
+
+    def _add_node(node: dict[str, object]) -> None:
+        # vis.js DataSet silently drops/overwrites duplicate ids (and their
+        # edges), so a cross-type id collision would lose graph data with no
+        # signal. Fail loud instead — ids are LLM-assigned and not guaranteed
+        # unique across events/actors/evidence/mechanisms/hypotheses.
+        nid = str(node["id"])
+        if nid in node_ids:
+            raise ValueError(
+                f"Duplicate graph node id '{nid}' across extraction entities; "
+                f"node ids must be globally unique for the network report."
+            )
+        node_ids.add(nid)
+        nodes.append(node)
 
     for e in ext.events:
-        nodes.append({
+        _add_node({
             "id": e.id, "label": e.description[:40], "title": _esc(e.description),
             "color": "#66b3ff", "shape": "dot", "size": 15, "group": "event",
         })
-        node_ids.add(e.id)
 
     for a in ext.actors:
-        nodes.append({
+        _add_node({
             "id": a.id, "label": a.name[:30], "title": _esc(a.description),
             "color": "#ff99cc", "shape": "dot", "size": 12, "group": "actor",
             "hidden": True,
         })
-        node_ids.add(a.id)
 
     for ev in ext.evidence:
-        nodes.append({
+        _add_node({
             "id": ev.id, "label": ev.description[:40], "title": _esc(ev.source_text[:200]),
             "color": "#ff6666", "shape": "diamond", "size": 10, "group": "evidence",
         })
-        node_ids.add(ev.id)
 
     for m in ext.mechanisms:
-        nodes.append({
+        _add_node({
             "id": m.id, "label": m.description[:40], "title": _esc(m.description),
             "color": "#99ff99", "shape": "dot", "size": 12, "group": "mechanism",
             "hidden": True,
         })
-        node_ids.add(m.id)
 
     for h in result.hypothesis_space.hypotheses:
         post = posteriors.get(h.id, 0)
         size = 15 + post * 30
-        nodes.append({
+        _add_node({
             "id": h.id, "label": f"{h.id}: {h.description[:30]}",
             "title": _esc(f"{h.description}\nPosterior: {post:.3f}"),
             "color": "#ffcc00", "shape": "star", "size": int(size),
             "group": "hypothesis",
         })
-        node_ids.add(h.id)
 
     # Causal edges from extraction
     for ce in ext.causal_edges:
@@ -229,8 +242,11 @@ def generate_report(result: ProcessTracingResult) -> str:
     ev_map = {e.id: e for e in result.extraction.evidence}
 
     vis_nodes, vis_edges = _build_vis_data(result)
-    nodes_json = json.dumps(vis_nodes)
-    edges_json = json.dumps(vis_edges)
+    # Neutralize "</script>" (and "<!--") breakout when this JSON is embedded in
+    # a <script> block. "<\/" is valid JSON-in-JS and parses identically, but
+    # the HTML parser no longer sees a closing script tag in LLM-authored text.
+    nodes_json = json.dumps(vis_nodes).replace("</", "<\\/").replace("<!--", "<\\!--")
+    edges_json = json.dumps(vis_edges).replace("</", "<\\/").replace("<!--", "<\\!--")
 
     # -- Build prediction lookup: hypothesis_id -> prediction_id -> PredictionClassification
     pred_class_map: dict[tuple[str, str], PredictionClassification] = {}
@@ -1143,15 +1159,22 @@ document.addEventListener('DOMContentLoaded', function() {{
     interaction: {{hover: true, tooltipDelay: 200, zoomView: true, dragView: true}}
   }});
 
+  function escapeHtml(s) {{
+    return String(s).replace(/[&<>"']/g, function(c) {{
+      return {{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c];
+    }});
+  }}
   network.on('click', function(params) {{
     var info = document.getElementById('network-info');
     if (params.nodes.length > 0) {{
       var node = nodes.get(params.nodes[0]);
-      info.innerHTML = '<strong>' + node.label + '</strong><br>' + (node.title || '');
+      // node.label is raw text (unescaped for canvas rendering); node.title is
+      // already HTML-escaped at build time. Escape label before innerHTML.
+      info.innerHTML = '<strong>' + escapeHtml(node.label) + '</strong><br>' + (node.title || '');
       info.className = 'alert alert-info mt-2 small';
     }} else if (params.edges.length > 0) {{
       var edge = edges.get(params.edges[0]);
-      info.innerHTML = '<strong>Edge:</strong> ' + (edge.label || edge.title || 'relationship');
+      info.innerHTML = '<strong>Edge:</strong> ' + escapeHtml(edge.label || edge.title || 'relationship');
       info.className = 'alert alert-secondary mt-2 small';
     }}
   }});

@@ -113,23 +113,28 @@ def _default_model_review(model_spec: CausalModelSpec, yaml_path: str) -> Causal
 def _apply_confidence_threshold(
     binarizations: list[CaseBinarization],
     threshold: float,
+    variable_order: list[str] | None = None,
 ) -> tuple[list[dict[str, int | None]], int]:
     """Re-binarize with a confidence threshold: codings below it become NA.
 
-    Returns (data_frame, n_na_codings).
+    Returns (data_frame, n_na_codings). When ``variable_order`` is given, every
+    row is emitted with that fixed key order (see ``CaseBinarization.to_row``).
     """
     n_na = 0
     rows: list[dict[str, int | None]] = []
     for b in binarizations:
-        row: dict[str, int | None] = {}
+        coded: dict[str, int | None] = {}
         for c in b.codings:
             if c.confidence < threshold:
-                row[c.variable_name] = None
+                coded[c.variable_name] = None
                 if c.value is not None:
                     n_na += 1
             else:
-                row[c.variable_name] = c.value
-        rows.append(row)
+                coded[c.variable_name] = c.value
+        if variable_order is None:
+            rows.append(coded)
+        else:
+            rows.append({name: coded.get(name) for name in variable_order})
     return rows, n_na
 
 
@@ -144,15 +149,19 @@ def _run_sensitivity(
     runs: list[BinarizationSensitivityRun] = []
 
     for threshold in thresholds:
-        df, n_na = _apply_confidence_threshold(binarizations, threshold)
+        df, n_na = _apply_confidence_threshold(
+            binarizations, threshold, causal_model.variable_names
+        )
 
         cq_result: CausalQueriesResult | None = None
         if not skip_cq:
-            try:
-                from pt.cq_bridge import run_causal_queries
+            from pt.cq_bridge import is_r_available, run_causal_queries
+            if not is_r_available():
+                print(f"  CQ at threshold {threshold} skipped: R not installed")
+            else:
+                # R is present: a failure here is a real error, not graceful
+                # degradation, so let it propagate (fail loud per project policy).
                 cq_result = run_causal_queries(causal_model, df)
-            except Exception as e:
-                print(f"  CQ at threshold {threshold} failed: {e}")
 
         runs.append(BinarizationSensitivityRun(
             confidence_threshold=threshold,
@@ -290,8 +299,11 @@ def run_multi_pipeline(
         if na:
             print(f"    NA: {na}")
 
-    # Build primary data frame (no threshold filtering)
-    data_frame = [b.to_row() for b in binarizations]
+    # Build primary data frame (no threshold filtering). Order columns by the
+    # model's canonical variable list so every row has identical key order —
+    # the R bridge binds rows positionally, so inconsistent order corrupts data.
+    var_order = causal_model.variable_names
+    data_frame = [b.to_row(var_order) for b in binarizations]
 
     # ── Step 4: CausalQueries bridge ───────────────────────────────
     cq_result: CausalQueriesResult | None = None
@@ -304,13 +316,19 @@ def run_multi_pipeline(
         print("STEP 4: CausalQueries estimation")
         print(f"{'='*60}")
 
-        try:
-            from pt.cq_bridge import run_causal_queries
+        from pt.cq_bridge import is_r_available, run_causal_queries
+        if not is_r_available():
+            # Documented graceful degradation: the pipeline works without R
+            # through binarization. R absent is the ONLY swallowed condition.
+            print("  R not installed — skipping CausalQueries (use --skip-cq to "
+                  "silence this). Binarization output is still produced.")
+        else:
+            # R is present: any failure is a real error (bad model, Stan crash,
+            # malformed data) and must fail loud, not silently produce empty
+            # estimands that read downstream as a successful run.
             cq_result = run_causal_queries(causal_model, data_frame)
             print(f"  Population estimands: {len(cq_result.population_estimands)}")
             print(f"  Case-level estimands: {len(cq_result.case_level_estimands)}")
-        except Exception as e:
-            print(f"  CausalQueries failed (continuing without): {e}")
 
         # Sensitivity analysis
         print("\n  Running binarization sensitivity analysis...")
