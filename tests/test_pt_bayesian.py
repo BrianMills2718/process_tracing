@@ -419,6 +419,17 @@ class TestRobustness:
         updates = [self._make_update(1.0, f"e{i}") for i in range(10)]
         assert _compute_robustness(updates) == "unknown"
 
+    def test_uninformative_items_do_not_force_fragile(self):
+        """Moderate-strength evidence diluted with relevance-gated LR=1.0 items
+        must not be misclassified 'fragile' just because the uninformative items
+        outnumber the informative ones."""
+        updates = (
+            [self._make_update(3.0, f"m{i}") for i in range(4)]   # moderate, informative
+            + [self._make_update(1.0, f"u{i}") for i in range(10)]  # uninformative
+        )
+        # Before the fix the 10 LR=1.0 items inflated the weak count → "fragile".
+        assert _compute_robustness(updates) != "fragile"
+
     def test_moderate_mixed(self):
         """Mix of decisive and weak should be 'moderate'."""
         updates = [
