@@ -2,11 +2,23 @@
 
 ### Externalized LLM Likelihoods, Trace-Production Models, and Local Causal-Graph Audits for Single-Text Historical Inference
 
-**Status:** Draft methodology white paper — **v3.1**
+**Status:** Draft methodology white paper — **v4**
 **Scope:** Single-text and cross-case causal inference from historical narrative
 **Audience:** Methodologists, computational social scientists, and engineers building automated causal-inference pipelines
 
 ---
+
+## What changed in v4
+
+v4 addresses a third adversarial review (graded v3 "B+ / A− border"), whose central objection was a coherence gap in the multi-hypothesis likelihood layer.
+
+1. **Coherent likelihood-vector elicitation (§6.2.1).** The headline fix. Independently-elicited pairwise likelihood-ratio bands can violate reciprocity and transitivity for ≥3 hypotheses — pseudo-quantification in disguise. v4 elicits one **relative-log-likelihood vector** per evidence cluster and *derives* pairwise ratios from it, so coherence holds by construction.
+2. **H₀ as an explicit mixture, or ordinal-only (§5.1).** The residual hypothesis is no longer treated as one clean generative model; it is a weighted mixture over named subtypes, or marked ordinal-only when underspecified.
+3. **Sharper dependence rule (§6.5).** "Shared ancestor → collapse" is replaced by a *conditional-dependence* test with partial-dependence handling (lineage collapses; same-event independent channels are only down-weighted; extractor artifacts and genre templates are routed to extraction-audit / trace-production).
+4. **Cap/floor sensitivity (§6.2.1).** Rankings are reported across an `LR_CAP`/`LR_FLOOR` grid so apparent conservatism isn't a hidden artifact of an arbitrary cap.
+5. **Concrete falsification thresholds (§8.2).** The X/Y/Z/C placeholders are replaced with provisional numbers (F1 ≥ 0.15; duplicate ratio ∈ [0.8, 1.25]; rank accuracy within 0.05; cost ≤ 3×).
+6. **Adversarial faithful-abstraction certification (§6.3).** A separate critic — not the graph-builder — certifies the translation, so the contract is not a self-issued rubber stamp.
+7. **Epistemic-risk note (§11).** A dedicated ethics section remains out of scope per author direction, but the *validity-relevant* risks (false neutrality, source asymmetry, epistemic monoculture, automation bias) are recorded as live threats.
 
 ## What changed in v3.1
 
@@ -146,7 +158,13 @@ Concretely, "fiscal crisis caused the Revolution" is operationalized as "`H_fisc
 A posterior over a badly-constructed hypothesis set can be perfectly coherent and substantively meaningless. Because the estimand is *conditional on the partition*, the partition is itself an object that must be audited. Five rules govern it:
 
 1. **Mutual exclusivity.** Hypotheses must be competing *complete* explanatory stories, not overlapping factors. The pipeline's existing self-check — "if H_A is decisive, does that make H_B unnecessary or false?" — is the operational test; a "no" means the two are not exclusive and must be merged.
-2. **Exhaustiveness via an explicit residual.** The set always includes a residual hypothesis **H₀ = "none of the specified stories (other cause, or a genuinely conjunctural combination)."** Without it, the posterior is conditional on a closed menu and silently assumes the truth is on the list. H₀ carries real prior mass.
+2. **Exhaustiveness via an explicit residual.** The set always includes a residual hypothesis **H₀ = "none of the specified stories (other cause, or a genuinely conjunctural combination)."** Without it, the posterior is conditional on a closed menu and silently assumes the truth is on the list. H₀ carries real prior mass. **But H₀ is not a normal hypothesis** — it is a heterogeneous catch-all (foreign-conspiracy, fiscal+ideology-jointly, …), each subtype with very different evidence expectations, so a single clean `P(E|H₀)` is not well defined. It must be handled as a **mixture**:
+
+   ```
+   P(E | H₀) = Σ_r P(E | R_r) · P(R_r | H₀)
+   ```
+
+   over named residual subtypes `R_r` (at least the salient conjunctural combinations are enumerated and given mixture weights). When the internal mixture is too underspecified to assign weights honestly, H₀ is marked **ordinal-only**: it functions as a floor/"is the leading story even beating *something unspecified*?" check and is excluded from the numeric posterior-odds report rather than given a fabricated likelihood.
 3. **Nesting and conjunction.** Conjunctural explanations ("fiscal crisis caused elite fragmentation, which let ideology mobilize") are *not* mutually exclusive with their components and must not sit alongside them as if they were. A conjunctural story is admitted only as **its own distinct hypothesis** with the component factors removed from the menu, or it is deferred to the formal model (§7), which represents composition natively. The single-text partition is a set of *mutually-exclusive whole stories*, never a mix of factors and combinations-of-factors.
 4. **Granularity.** All hypotheses share a comparable mechanism grain; one richly specified story tested against vague rivals biases the comparison toward the rivals (more ways to be "consistent").
 5. **Split/merge discipline.** Merge when exclusivity fails (rule 1); split when a single "hypothesis" bundles separable mechanisms that the evidence can discriminate.
@@ -200,23 +218,42 @@ Without this, disagreement between the two is *definitional, not diagnostic* —
 
 **Priors are researcher inputs.** A uniform prior is a defensible *reference* choice only when justified; priors are an explicit input, and sensitivity ranges over them.
 
-#### 6.2.1 Formal band semantics and propagation
+#### 6.2.1 Coherent likelihood-vector elicitation and band propagation
 
-A band is not a number; it is an interval on the likelihood ratio. The posterior odds between hypotheses `Hᵢ`, `Hⱼ` after `m` (clustered, §6.5) evidence items is
+**The coherence trap (and why we do not elicit pairwise LRs).** A tempting design elicits a pairwise likelihood-ratio band `LR_m(i,j) = P(E_m|H_i)/P(E_m|H_j)` for each hypothesis pair independently. For three or more hypotheses this is *incoherent*: independently elicited pairwise ratios need not satisfy reciprocity (`LR(i,j) = 1/LR(j,i)`) or transitivity (`LR(1,2)·LR(2,3) = LR(1,3)`). An LLM can easily emit `LR(1,2)=5, LR(2,3)=5, LR(1,3)=2`, which **no single probability model can realize** — the exact pseudo-quantification this paper opposes, merely better-dressed.
+
+**The fix: elicit one likelihood *vector* per evidence cluster, derive ratios from it.** For each (clustered, §6.5) evidence item `m`, the primitive elicited is a vector of **relative log-likelihoods** across all `k` hypotheses, anchored to a reference hypothesis `H_ref`:
 
 ```
-O_ij^post = O_ij^prior · ∏_m LR_m(i,j),     LR_m(i,j) = P(E_m | H_i) / P(E_m | H_j)
+η_{m,i} = log P(E_m | H_i) − log P(E_m | H_ref)      (η_{m,ref} = 0)
 ```
 
-where each `LR_m(i,j)` is supplied only as a band → an interval `[lo, hi]`. Open-ended bands are bounded by the implementation's floor and cap (`LR_FLOOR = 0.05`, `LR_CAP = 20`): "strongly disconfirming" = `[0.05, 0.2]`, "strongly confirming" = `[5, 20]`. The output object and how the interval propagates must be stated; we specify three modes, in decreasing strength of assumption:
+Each `η_{m,i}` is given as a **band** (an interval on the log scale; the LR bands of §6.2 are the elicitation UI, but they are read as bands on `η` relative to the reference). Pairwise ratios are then **derived**, never elicited:
+
+```
+LR_m(i,j) = exp(η_{m,i} − η_{m,j})
+```
+
+so reciprocity and transitivity hold *by construction*. The posterior odds is the standard multi-hypothesis update over the vector:
+
+```
+O_ij^post = O_ij^prior · ∏_m exp( η_{m,i} − η_{m,j} )
+          = (P(H_i)/P(H_j)) · ∏_m ( P(E_m|H_i) / P(E_m|H_j) )
+```
+
+Open-ended bands are bounded by the implementation's floor and cap (`LR_FLOOR = 0.05`, `LR_CAP = 20` → `η ∈ [log 0.05, log 20]` relative to the reference). For a **dependent cluster**, a single joint vector is elicited (§6.5), not a product of member vectors — this is where double-counting is blocked mechanically.
+
+**Propagation modes**, in decreasing strength of assumption:
 
 | Mode | Assumption | Output | Use |
 |---|---|---|---|
-| **Monte Carlo (default)** | each LR is **log-uniform** on its band | a posterior-odds *distribution* → median + central interval, and **rank-stability** = fraction of draws preserving each pairwise order | the standard report |
-| **Interval arithmetic** | none beyond `[lo, hi]` | guaranteed posterior-odds **bounds** (worst/best case) | conservative robustness check |
+| **Monte Carlo (default)** | each `η_{m,i}` **uniform on its log-band** | a posterior-odds *distribution* → median + central interval, and **rank-stability** = fraction of draws preserving each pairwise order | the standard report |
+| **Interval arithmetic** | none beyond the band endpoints | guaranteed posterior-odds **bounds** (worst/best case) | conservative robustness check |
 | **Ordinal-only** | bands carry order, not magnitude | a **dominance** relation over hypotheses, no numbers | when even interval endpoints are indefensible |
 
-Log-uniform is chosen because likelihood ratios live naturally on a log scale; the assumption is declared, not hidden, and the interval-arithmetic mode is always reported alongside as a no-assumption bound. The headline single-text output is therefore **a posterior-odds interval per hypothesis plus a rank-stability fraction**, never a single "posterior probability." For a dependent cluster, a **single joint band** is elicited (§6.5), not a product of member bands — this is where double-counting is prevented mechanically.
+The headline single-text output is **a posterior-odds interval per hypothesis plus a rank-stability fraction**, never a single "posterior probability."
+
+**The thresholds are themselves priors — so test them.** The band edges, the log-uniform-within-band assumption, and especially the floor/cap are stipulations, not neutral facts; a cap of 20 vs. 100 can flip rankings when strong evidence appears. The protocol therefore reports rankings under a grid `LR_CAP ∈ {10, 20, 50, 100}`, `LR_FLOOR ∈ {0.01, 0.05, 0.1}`, and flags any conclusion that is not stable across it. Apparent conservatism that is merely an artifact of a low cap must be visible as such.
 
 ### 6.3 The DAG as auditor: structured second-pass criticism (not independent corroboration)
 
@@ -250,6 +287,8 @@ Only **epistemic** independence makes agreement strong evidence. If every model 
 | hypothesis | graph query | did the claim change in translation? |
 
 If the translation loss is material (e.g., the query no longer expresses the same hypothesis), the comparison is **void** and reported as "not auditable at this granularity," not as agreement or disagreement.
+
+**The certification must be adversarial, not self-issued.** If the same agent builds the graph and certifies its own faithfulness, the contract is a rubber stamp. So the graph-builder produces the abstraction, and a **separate critic** (different role, ideally different model family) enumerates the four loss types above and rates each *material* or *immaterial*; only then does the reconciler rule the comparison valid, void, or qualitative-only. Self-certification is not permitted.
 
 > **Reworked worked example (v2).** Estimator (conditioning on `F=1`, i.e. fiscal crisis occurred and is the driver): "grievances would be fiscal → **strongly confirming**." Modeler, if it instead *marginalizes over* `P(F=1)`, returns a weaker band. **In v1 this gap was reported as a diagnostic disagreement and "resolved toward 0.8." That was an error:** the two were computing different conditional quantities, so the disagreement was *definitional*. Under the comparability requirement, both condition on `F=1`; the spurious gap disappears. The *genuine* diagnostic question then surfaces in the **trace-production** term: are fiscal grievances over-represented in the *cahiers* because they were administratively solicited? If so, the modeler lowers the trace-production factor, and that — not a prior on `F` — is the documented, auditable adjustment.
 
@@ -293,7 +332,16 @@ Extractor    → ExtractedProposition   (the pipeline's reading)
 Claim        → ExtractedProposition   (what the proposition is about)
 ```
 
-**Operational clustering rule.** Two extracted propositions are **dependent** iff they share an ancestor in the evidence graph that explains their evidential similarity (a common `Source`, `Document`, `ArchiveProcess`, or originating `Event`). Dependent propositions are placed in one **cluster**, and the cluster receives **one joint likelihood band** (§6.2.1) — not the product of member bands. Independent clusters multiply; members within a cluster do not.
+**Operational dependence rule — shared ancestry is necessary, not sufficient.** Naively "share an ancestor → collapse" over-collapses: a newspaper transcript, a participant's diary, and a police report of the *same speech* share the originating event yet remain largely *conditionally independent* observation channels and should not be merged into one. The test is **conditional dependence given the hypothesis** — does proposition B still carry new information once we condition on A and on `H`? — and the action depends on *why* they are similar:
+
+| Shared ancestor | Conditional dependence | Treatment |
+|---|---|---|
+| Same `Document` / `Source` lineage (copies, wire, transcript) | near-total | **collapse** to one joint vector (§6.2.1) |
+| Same originating `Event`, **independent channels** | partial | **partial downweight**, not collapse — keep as separate items with a shared-event discount factor `0 < ρ < 1` on their combined log-likelihood |
+| Same `Extractor` artifact (overlapping spans) | spurious | **audit the extraction stage**; not historical evidence at all |
+| Same genre / `Institution` template (solicited, formulaic) | systematic | **trace-production discount** (§4), applied to each item |
+
+Only the first row fully collapses; the rest are handled without discarding genuine independent information. Cluster/dependence decisions and the chosen `ρ` are logged for audit.
 
 **Worked duplicate example.** A reported ministerial speech generates: (a) five newspaper articles, three of which copy the same wire report and two of which rely on the same official transcript; (b) a memoir recalling the speech 30 years later; (c) a police report on public reaction. The evidence graph yields:
 
@@ -358,12 +406,14 @@ The exclusivity self-check passes (each is a distinct *primary* driver); the con
 
 Graph: `E₁, E₂` share parent `ArchiveProcess/Institution = royal solicitation of grievances` → **cluster C = {E₁, E₂}**, one joint band. `E₃` is independent.
 
-**Step 4 — Bands, with trace-production adjustment (§4, §6.2.1).** Naively, cluster C reads *strongly confirming* for `H₁`. The trace-production model intervenes: grievances were *solicited through fiscal-administrative channels*, so fiscal content is over-represented by construction. The joint band for C is discounted to **moderately confirming (2–5)** for `H₁`, and — crucially — C is **one** band, not `(>5)×(>5)`.
+**Step 4 — Likelihood vectors, with trace-production adjustment (§4, §6.2.1).** Each row is the item's **relative-likelihood vector** across hypotheses (§6.2.1), *not* independently-set pairwise ratios; pairwise LRs are derived from the vector. Naively, cluster C reads *strongly confirming* for `H₁`. The trace-production model intervenes: grievances were *solicited through fiscal-administrative channels*, so fiscal content is over-represented by construction. The joint vector for C is discounted to **moderately confirming** on `H₁`, and — crucially — C contributes **one** vector, not `(>5)×(>5)`.
 
-| Item | vs `H₁` | vs `H₂` | vs `H₃` |
+| Item | under `H₁` | under `H₂` | under `H₃` |
 |---|---|---|---|
 | Cluster C (fiscal grievances, solicited) | moderately confirming `2–5` | weak `0.5–2` | weak `0.5–2` |
 | `E₃` (elite correspondence) | weak `0.5–2` | weak `0.5–2` | moderately confirming `2–5` |
+
+(Bands are anchored to the weakest-supported hypothesis as reference; the derived `LR(H₁,H₂)` for cluster C is then automatically consistent with `LR(H₁,H₃)` and `LR(H₂,H₃)`.)
 
 **Step 5 — Reconciler log (§6.4).**
 
@@ -436,9 +486,9 @@ A test menu is not a validation design without metrics, a baseline, and threshol
 
 ### 8.2 Falsification thresholds (provisional)
 
-The architecture must be able to fail. Provisional pass criteria — exact values to be preregistered:
+The architecture must be able to fail, and "fail" must be numeric now, not deferred to future authors. Provisional thresholds (debatable, but binding once preregistered):
 
-> The auditor **passes** only if, relative to the narrative-only baseline, it (i) improves dependence-detection F1 by ≥ X, (ii) brings duplicate-overcounting ratio within ±Y of 1.0, (iii) holds posterior-rank accuracy on synthetic cases within Z of baseline-or-better, and (iv) achieves this at ≤ C additional cost per audited item. Failing (i)–(iii) **falsifies** the central claim that the audit improves inference.
+> The auditor **passes** only if, relative to the narrative-only baseline, it (i) improves dependence-detection **F1 by ≥ 0.15**; (ii) brings the duplicate-overcounting ratio **within [0.8, 1.25]** of 1.0; (iii) holds posterior-rank accuracy **no worse than baseline by more than 0.05** on synthetic cases; and (iv) costs **≤ 3× narrative-only** per audited item. Failing (i)–(iii) **falsifies** the central claim that the audit improves inference; failing only (iv) demotes the auditor to an opt-in mode rather than the default.
 
 ### 8.3 Against "ritualized Bayesianism"
 
@@ -500,6 +550,15 @@ Classical process tracing could not externalize reasoning, run blinded parallel 
 - **Epistemic independence is rarely achieved** (§6.3). The audit mostly removes procedural error; it is weak against shared training-data priors and historiographic stereotypes. Treat audit agreement accordingly.
 - **Cost.** Triangulation is expensive; top-driver gating is the control, and any cap is logged (§6.7).
 - **No optimality claim.** This is a principled approximation against a stated objective, not a proven optimum; the true Bayesian optimum (a coherent joint posterior averaged over causal structures) is intractable for real cases.
+
+**Epistemic risks (validity-relevant, distinct from a deferred ethics review).** A dedicated ethics/threat-model section is out of scope for this planning document, but several risks bear directly on *validity* and are recorded here:
+
+- **False neutrality.** Bayesian formalism can lend a partisan or stereotyped narrative the appearance of objective support; the posterior is only as neutral as the partition (§5.1), priors, and likelihood reasoning behind it.
+- **Source asymmetry.** Archives over-represent state actors and literate elites; absent a trace-production correction (§4), the system mistakes *who got recorded* for *what mattered*.
+- **Epistemic monoculture.** Because LLMs share historiographic priors (§6.3), the whole pipeline — estimator, modeler, critic — can converge on a received interpretation; audit agreement is not corroboration.
+- **Automation bias.** Users may over-trust a ranked posterior with an interval more than its evidential basis warrants; reporting rank-stability and band/cap sensitivity (§6.2.1) is partly intended to counter this.
+
+These are flagged as live threats, not solved problems; a full threat model is deferred, not denied.
 
 ---
 
