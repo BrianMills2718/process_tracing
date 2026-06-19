@@ -2,11 +2,11 @@
 
 Track all implementation work here.
 
-## Active Plans
+## Gap Summary
 
 | # | Name | Priority | Status | Blocks |
 |---|------|----------|--------|--------|
-| - | No active plans | - | - | - |
+| 1 | Tentative Maintenance Roadmap | Medium | 📋 Planned | Future cleanup/refactor implementation plans |
 
 ## Status Key
 
