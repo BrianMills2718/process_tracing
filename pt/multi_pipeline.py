@@ -6,6 +6,7 @@ then binarizes against a causal model and optionally bridges to CausalQueries.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
@@ -38,23 +39,42 @@ def _run_single_case(
 ) -> ProcessTracingResult:
     """Run single-text pipeline for one case, with caching.
 
-    If case_output_dir/result.json exists, loads from cache.
-    Otherwise runs the full pipeline and saves result.
+    The cache is keyed on the input text content (sha256) AND the resolved
+    model id, not just the existence of result.json. A cached result is reused
+    only when both match — otherwise it is recomputed. Without this, re-running
+    with a different --model, or with edited input text under the same path,
+    silently returned the previous (wrong) extraction.
     """
+    from pt.llm import DEFAULT_MODEL
+
     result_path = os.path.join(case_output_dir, "result.json")
-
-    if os.path.isfile(result_path):
-        print(f"  Cache hit: {result_path}")
-        with open(result_path, "r", encoding="utf-8") as f:
-            return ProcessTracingResult.model_validate(json.load(f))
-
-    os.makedirs(case_output_dir, exist_ok=True)
+    meta_path = os.path.join(case_output_dir, "cache_meta.json")
 
     with open(input_path, "r", encoding="utf-8") as f:
         text = f.read()
 
     if not text.strip():
         raise ValueError(f"Input file is empty: {input_path}")
+
+    effective_model = model or DEFAULT_MODEL
+    cache_key = {
+        "text_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+        "model": effective_model,
+    }
+
+    if os.path.isfile(result_path):
+        cached_key = None
+        if os.path.isfile(meta_path):
+            with open(meta_path, "r", encoding="utf-8") as f:
+                cached_key = json.load(f)
+        if cached_key == cache_key:
+            print(f"  Cache hit: {result_path}")
+            with open(result_path, "r", encoding="utf-8") as f:
+                return ProcessTracingResult.model_validate(json.load(f))
+        reason = "model or input text changed" if cached_key else "no cache key recorded"
+        print(f"  Cache stale ({reason}) — recomputing {result_path}")
+
+    os.makedirs(case_output_dir, exist_ok=True)
 
     from pt.pipeline import run_pipeline
     from pt.report import generate_report
@@ -67,9 +87,11 @@ def _run_single_case(
         theories=theories,
     )
 
-    # Save result
+    # Save result and its cache key
     with open(result_path, "w", encoding="utf-8") as f:
         json.dump(result.model_dump(), f, indent=2)
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(cache_key, f, indent=2)
 
     # Save HTML report
     html_path = os.path.join(case_output_dir, "report.html")
@@ -238,6 +260,14 @@ def run_multi_pipeline(
 
     for i, path in enumerate(input_paths, 1):
         case_id = _case_id_from_path(path)
+        if case_id in case_results:
+            # Case dirs are derived from the file basename; two inputs with the
+            # same basename would share a cache dir and silently overwrite each
+            # other. Fail loud rather than corrupt the cross-case set.
+            raise ValueError(
+                f"Duplicate case id '{case_id}' from input '{path}' — two inputs "
+                f"share a basename. Rename one so case ids stay unique."
+            )
         case_dir = os.path.join(output_dir, "cases", case_id)
         result_path = os.path.join(case_dir, "result.json")
 

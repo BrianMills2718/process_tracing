@@ -9,6 +9,7 @@ import hashlib
 from pathlib import Path
 
 from llm_client import render_prompt
+from pydantic import BaseModel
 
 from pt.llm import DEFAULT_MODEL, call_llm
 from pt.schemas import BayesianResult, ExtractionResult
@@ -17,9 +18,11 @@ from pt.schemas_multi import CaseBinarization, CausalModelSpec, VariableCoding
 PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 
-class _BinarizationResponse(CaseBinarization):
-    """Wrapper so the LLM returns the full CaseBinarization structure."""
-    pass
+class _BinarizationResponse(BaseModel):
+    """LLM-facing schema. Excludes the system-assigned case_id/source_file so
+    the model does not waste tokens generating values that are overwritten."""
+    codings: list[VariableCoding]
+    analyst_notes: str = ""
 
 
 def binarize_case(
@@ -77,7 +80,6 @@ def binarize_case(
         evidence_block=evidence_block,
         posterior_block=posterior_block,
         outcome_variable=causal_model.outcome_variable,
-        source_file=source_file,
     )
 
     if trace_id is None:
@@ -107,8 +109,10 @@ def binarize_case(
         if coding.confidence < 0.5 and coding.value is not None:
             coding.value = None
 
-    # Override case_id and source_file to ensure consistency
-    result.case_id = case_id
-    result.source_file = source_file
-
-    return result
+    # Attach system-assigned case identity (never LLM-provided).
+    return CaseBinarization(
+        case_id=case_id,
+        source_file=source_file,
+        codings=result.codings,
+        analyst_notes=result.analyst_notes,
+    )
