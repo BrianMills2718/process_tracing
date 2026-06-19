@@ -224,12 +224,21 @@ test:  ## Run pytest
 test-quick:  ## Run pytest (no traceback)
 	pytest tests/ -q --tb=no
 
-check:  ## Run all checks (test, mypy, lint)
+check:  ## Run tests, type check, and repo validators
 	@echo "Running tests..."
 	@PYTHONPATH=. pytest tests -q --tb=short
 	@echo ""
 	@echo "Running mypy..."
 	@mypy pt --ignore-missing-imports
+	@echo ""
+	@echo "Checking real LLM compliance..."
+	@PYTHONPATH=. python scripts/check_real_compliance.py
+	@echo ""
+	@echo "Checking markdown links..."
+	@PYTHONPATH=. python scripts/check_markdown_links.py
+	@echo ""
+	@echo "Checking AGENTS.md sync..."
+	@PYTHONPATH=. python scripts/meta/check_agents_sync.py --check
 	@echo ""
 	@echo "All checks passed!"
 
