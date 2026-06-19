@@ -2,11 +2,20 @@
 
 ### Externalized LLM Likelihoods, Trace-Production Models, and Local Causal-Graph Audits for Single-Text Historical Inference
 
-**Status:** Draft methodology white paper — **v4**
+**Status:** Draft methodology white paper — **v5** (the *optimum* paper: quality-only, cost unconstrained)
 **Scope:** Single-text and cross-case causal inference from historical narrative
 **Audience:** Methodologists, computational social scientists, and engineers building automated causal-inference pipelines
 
 ---
+
+## What changed in v5
+
+v5 makes the paper's purpose explicit: it describes the **quality-optimal architecture with compute cost treated as unconstrained**, and deliberately removes the pragmatic compromises that were biasing the optimum. Pragmatic cost-quality tradeoffs are a *separate, later* document and are kept out so as not to contaminate the north-star.
+
+1. **Cost removed as a design constraint.** The §6 objective is now "maximize inferential validity, cost unconstrained" (was "per unit of model-call cost"); the abstract, validation cost-metric, and falsification thresholds (§8.2) no longer treat cost as a quality criterion — cost is *recorded* to inform the future pragmatic design only.
+2. **Audit everything (§6.7).** Top-driver *gating* is recast as a cost compromise and removed from the optimum: the optimum audits **every** evidence cluster. Selective triggering is noted only as the boundary to the pragmatic design.
+3. **Incoherence as a reliability signal (§6.2.1).** New: the optimum elicits redundant pairwise comparisons alongside the coherent vector and uses any incoherence as a *confidence flag* (widen band, route to auditor) while the final number still comes from the vector. Distinguishes intra-judgment incoherence (a reliability signal) from inter-model disagreement (evidence). *(Contributed by the author.)*
+4. **Diversity is the independence lever (§6.3).** With cost unconstrained, the optimum spends compute on **maximally diverse model families and information sources** for estimator/modeler/critic; same-model agreement is treated as near-worthless.
 
 ## What changed in v4
 
@@ -60,7 +69,7 @@ Automated systems that read a historical text and output "what caused this" tend
 
 A holistic likelihood judgment typically rests on an *implicit* model. But that model is not only a model of historical causation; `P(evidence | hypothesis)` is fundamentally about **how the evidence was produced** — solicited, recorded, preserved, observed — and conflating the two is a recurring error. We therefore keep two models distinct: the **substantive causal model** (events causing events) and the **trace-production model** (events producing the evidence now available).
 
-We do not claim optimality. We propose a **principled approximation** whose objective is to improve *auditability, dependence handling, and calibrated sensitivity reporting* relative to naive automated likelihood multiplication, at controlled cost. The architecture is **task-routed**: for a single text, a narrative likelihood engine whose estimates carry externalized reasoning and are stated as likelihood bands; for the posterior-moving subset of evidence, a structured second-pass audit by an independently-constructed local causal graph, with disagreements resolved by a **constrained reconciliation protocol** rather than averaging; and, for many comparable cases, the formal model (CausalQueries) as the source of truth for *identified* counterfactual and population estimands. Van Evera's diagnostic tests are retained as a human-legible labeling layer over the likelihoods. We state the estimand precisely, bound the architecture's claims by what the data can identify, and specify how one would test whether it works.
+This paper specifies the **quality-optimal architecture** — the design that maximizes *inferential validity* (auditability, dependence handling, calibrated sensitivity) treating **compute cost as unconstrained**. It is the north-star, not a build plan: pragmatic cost-quality compromises are a separate, later concern and are deliberately excluded so as not to bias the optimum. ("Quality-optimal" is a design aspiration toward the intractable Bayesian optimum of §7, not a claim of *proven* optimality, which only validation can establish.) The architecture is **task-routed**: for a single text, a narrative likelihood engine whose estimates carry externalized reasoning and are stated as likelihood bands; **every** evidence cluster audited by an independently-constructed local causal graph, with disagreements resolved by a **constrained reconciliation protocol** rather than averaging; and, for many comparable cases, the formal model (CausalQueries) as the source of truth for *identified* counterfactual and population estimands. Van Evera's diagnostic tests are retained as a human-legible labeling layer over the likelihoods. We state the estimand precisely, bound the architecture's claims by what the data can identify, and specify how one would test whether it works.
 
 ---
 
@@ -175,7 +184,7 @@ These rules are enforced at the **partition-audit** step, which is preregistered
 
 ## 6. The architecture
 
-The objective — not "optimality," but a stated target — is to **maximize auditability, dependence-handling, and calibrated sensitivity per unit of model-call cost**, relative to the naive baseline of multiplying LLM-elicited likelihoods. The components below each serve that objective.
+The objective is to **maximize inferential validity** — auditability, dependence-handling, calibrated sensitivity — relative to the naive baseline of multiplying LLM-elicited likelihoods, with **compute cost treated as unconstrained**. This section specifies the quality-optimal design; wherever a choice trades quality for cost or simplicity, the optimum takes quality and the compromise is deferred to a separate pragmatic design. The components below each serve that objective.
 
 **What "auditability" does and does not mean here.** Three things must not be conflated:
 
@@ -253,6 +262,13 @@ Open-ended bands are bounded by the implementation's floor and cap (`LR_FLOOR = 
 
 The headline single-text output is **a posterior-odds interval per hypothesis plus a rank-stability fraction**, never a single "posterior probability."
 
+**Redundant elicitation: incoherence as a reliability signal.** Deriving ratios from a single vector *guarantees* the final numbers are coherent — but it also throws away a diagnostic. So the optimum **also** elicits a few independent pairwise comparisons for the same item and checks them against the vector. The distinction matters and is worth stating precisely:
+
+- A disagreement between the **estimator and the modeler** (§6.3) is an *inter-model* disagreement about the same quantity — it is *evidence* about which model is wrong, to be surfaced and diagnosed.
+- An **incoherence within one source's pairwise judgments** (e.g. it says fiscal is 4× ideology, ideology 0.5× elite, fiscal 5× elite — impossible) is an *intra-judgment inconsistency*. The contradiction carries no truth to recover; you do not "resolve" it by averaging. **But its mere presence is information about reliability:** a model that contradicts itself on an item is reasoning unreliably about that item.
+
+The optimum therefore uses incoherence not as evidence but as a **confidence flag**: where elicited pairwise comparisons cannot be reconciled to the vector, widen that item's band and route it to the auditor; the *final* likelihood still comes only from the coherent vector. This buys both a number that cannot be incoherent and a signal that flags the items most likely to be wrong.
+
 **The thresholds are themselves priors — so test them.** The band edges, the log-uniform-within-band assumption, and especially the floor/cap are stipulations, not neutral facts; a cap of 20 vs. 100 can flip rankings when strong evidence appears. The protocol therefore reports rankings under a grid `LR_CAP ∈ {10, 20, 50, 100}`, `LR_FLOOR ∈ {0.01, 0.05, 0.1}`, and flags any conclusion that is not stable across it. Apparent conservatism that is merely an artifact of a low cap must be visible as such.
 
 ### 6.3 The DAG as auditor: structured second-pass criticism (not independent corroboration)
@@ -275,7 +291,7 @@ Because the estimator, modeler, and reconciler may all be instances of the same 
 | Model | different model families | family-specific quirks | sometimes (when a second family is available) |
 | Epistemic | different information / differently-trained priors | shared training-data artifacts, shared historiographic stereotypes | **rarely** |
 
-Only **epistemic** independence makes agreement strong evidence. If every model has absorbed the same "fiscal-crisis → French Revolution" trope, blinded agents can agree from a shared cultural prior, not from the evidence. The audit's evidential weight is therefore discounted accordingly: agreement is treated as *removal of procedural error*, not as corroboration of substance. Human spot-checks on top drivers, and (where possible) a genuinely different information source, are the only routes to epistemic independence, and are flagged as the highest-value — and currently weakest — link.
+Only **epistemic** independence makes agreement strong evidence. If every model has absorbed the same "fiscal-crisis → French Revolution" trope, blinded agents can agree from a shared cultural prior, not from the evidence. **This is where unconstrained cost actually cashes out into quality.** The single highest-value lever in the optimum is not more passes of one model — it is *diversity of source*: run the estimator, modeler, and critic on **maximally different model families**, trained on different corpora, and where possible give them **different information** (e.g., one works only from primary-source excerpts, another from the full text), plus human spot-checks. Same-model agreement is treated as **near-worthless** (it removes procedural error only); cross-family, cross-information agreement is what counts. Because compute is not a constraint here, the optimum spends it on independence — diverse models and human review — rather than on repetition.
 
 **Faithful-abstraction (translation) contract.** Before any number is compared, the auditor must certify that its local graph is a *faithful abstraction* of the narrative object — otherwise the audit silently changes the claim being audited. The auditor logs, for each translation:
 
@@ -373,15 +389,11 @@ An absence disconfirms a hypothesis **only** to the extent the evidence *would p
 
 The four-state distinction above (world / source / extraction / query) governs *eligibility*: only "absent from world (given the source would carry it)" can disconfirm; "absent from extraction" or "absent from query" are pipeline failures and must be excluded. (The reference implementation currently takes the most conservative stance — its absence pass is qualitative-only and does not feed the Bayesian update, §9 — which corresponds to treating all observability as "low"; graduating it per the table above is a defined next step.)
 
-### 6.7 Top-driver gating
+### 6.7 Audit coverage (the optimum audits everything)
 
-Triangulation (estimator + modeler + reconciler, with iteration) is costly and unnecessary for most evidence. Run the cheap narrative estimate everywhere; trigger the audit selectively. But a pure high-`|log(LR)|` trigger misses a real failure mode: **many individually-weak items that share a source or motif** can dominate the posterior collectively while no single one looks like a top driver. The audit is therefore triggered on the **union** of:
+Because cost is unconstrained here, the quality-optimal policy is simple: **audit every evidence cluster** with the full triangulation (estimator + modeler + critic + reconciler), iterated to convergence. There is no quality reason to skip any item; selective auditing can only lose information.
 
-1. **high `|log(LR)|`** items (individually posterior-moving);
-2. **high-volume / repeated-motif clusters** from the evidence graph (§6.5) — a cluster whose *combined* naive contribution is large, even if each member is weak;
-3. items the reconciler or partition-audit flagged as contested.
-
-This concentrates scrutiny where error would change conclusions *and* where correlated weak evidence would otherwise distort the posterior silently. Any cap on audited evidence is logged, not silently applied.
+This is deliberately *not* a gating scheme. (Selective triggering — auditing only high-`|log(LR)|` items, or only high-volume/repeated-motif clusters, or only reconciler-flagged items — is a **cost compromise**, and as such belongs to the separate pragmatic design, not to this optimum. It is noted here only to mark the boundary: when cost must be bounded, those are the highest-value clusters to audit first; the optimum simply audits all.)
 
 ### 6.8 A complete worked run (illustrative)
 
@@ -428,6 +440,8 @@ audit C:
   translation check: query "primary driver = fiscal" preserved → audit valid
 ```
 
+*(Under the optimum every cluster is audited (§6.7); the log above shows only cluster C for brevity — `E₃` is audited identically.)*
+
 **Step 6 — Posterior (Monte Carlo, log-uniform within bands; §6.2.1).** Updating the priors by C and `E₃` and sampling yields, illustratively:
 
 | Hypothesis | Posterior interval (central) | 
@@ -457,7 +471,7 @@ The architecture's central empirical claim is that **the local causal-graph audi
 
 | Design | What it tests |
 |---|---|
-| **Auditor ablation** (headline) | Does the DAG audit improve results vs. narrative-only, at its cost? |
+| **Auditor ablation** (headline) | Does the DAG audit improve results vs. narrative-only? |
 | Synthetic cases with known structure | Does the system recover known dependencies and rankings? |
 | Calibration on band assignments | Do likelihood bands behave sensibly across many items? |
 | Paraphrase robustness | Do conclusions survive rewording of the source? |
@@ -465,7 +479,7 @@ The architecture's central empirical claim is that **the local causal-graph audi
 | Missing-evidence test | Is absence handled cautiously (no over-disconfirmation)? |
 | Expert agreement (with caution) | Agreement with human process tracers, noting bias-reproduction risk |
 
-The objective in §6 (auditability, dependence-handling, calibrated sensitivity per cost) is what these designs operationalize. Calibration against *truth* is hard for unique historical events; the protocol therefore leans on synthetic recovery, ablation, and internal-coherence tests, with expert agreement as a secondary, bias-aware check.
+The objective in §6 (auditability, dependence-handling, calibrated sensitivity — cost unconstrained) is what these designs operationalize. Calibration against *truth* is hard for unique historical events; the protocol therefore leans on synthetic recovery, ablation, and internal-coherence tests, with expert agreement as a secondary, bias-aware check.
 
 ### 8.1 Scoring rules and a comparable baseline
 
@@ -478,7 +492,7 @@ A test menu is not a validation design without metrics, a baseline, and threshol
 | Dependence detection | precision/recall of the evidence-graph clustering vs. injected duplicates |
 | Duplicate overcounting | ratio of posterior shift from a planted copied report to that from an independent one (target ≈ 1) |
 | Absence handling | false-disconfirmation rate on planted observability-low absences (target ≈ 0) |
-| Cost | model calls, tokens, wall-time, and human-review minutes **per audited (top-driver) item** |
+| Cost (recorded, not optimized) | model calls, tokens, wall-time, human-review minutes — measured to inform the *later* pragmatic design, **not** a quality criterion here |
 
 **Baseline.** "Narrative-only" must be the **operationally identical pipeline with the audit and evidence-graph clustering removed** — same extraction, same priors, same bands — so the ablation isolates the audit's contribution and nothing else.
 
@@ -488,7 +502,7 @@ A test menu is not a validation design without metrics, a baseline, and threshol
 
 The architecture must be able to fail, and "fail" must be numeric now, not deferred to future authors. Provisional thresholds (debatable, but binding once preregistered):
 
-> The auditor **passes** only if, relative to the narrative-only baseline, it (i) improves dependence-detection **F1 by ≥ 0.15**; (ii) brings the duplicate-overcounting ratio **within [0.8, 1.25]** of 1.0; (iii) holds posterior-rank accuracy **no worse than baseline by more than 0.05** on synthetic cases; and (iv) costs **≤ 3× narrative-only** per audited item. Failing (i)–(iii) **falsifies** the central claim that the audit improves inference; failing only (iv) demotes the auditor to an opt-in mode rather than the default.
+> The auditor **passes** only if, relative to the narrative-only baseline, it (i) improves dependence-detection **F1 by ≥ 0.15**; (ii) brings the duplicate-overcounting ratio **within [0.8, 1.25]** of 1.0; and (iii) holds posterior-rank accuracy **no worse than baseline by more than 0.05** on synthetic cases. Failing any of (i)–(iii) **falsifies** the central claim that the audit improves inference. Cost is **recorded but is not a pass/fail criterion** in this quality-optimal framing; the cost-vs-quality tradeoff (e.g. whether the audit is worth its expense, and whether to gate it) is decided later, in the pragmatic design.
 
 ### 8.3 Against "ritualized Bayesianism"
 
@@ -521,7 +535,7 @@ To keep this a methodology paper rather than a research program, two areas are *
 | Evidence graph + dependence clustering (§6.5) | **Planned** | independent multiplication; LR cap + relevance as crude dampers | explicit evidence graph, joint cluster bands |
 | Triangulation auditor + translation contract (§6.3) | **Planned** | — | estimator/modeler/reconciler not built |
 | Reconciler protocol (§6.4) | **Planned** | — | constrained action table |
-| Top-driver gating (§6.7) | **Partial** | `top_drivers` computed | no auditor yet to gate; cluster/volume trigger absent |
+| Audit coverage = all clusters (§6.7) | **Planned** | `top_drivers` computed (a future gating input, not the optimum) | optimum audits every cluster; no auditor built yet |
 | Missingness model w/ observability bands (§6.6) | **Partial** | qualitative-only absence pass (`pass_absence`), excluded from updating | observability grading |
 | Cross-case formal estimation (§7) | **Implemented** | `pt.multi` + `cq_bridge` → CausalQueries | — |
 | Cross-case eligibility criteria (§7) | **Planned** | documented all-`1`s failure mode | enforced comparability checks |
@@ -548,8 +562,8 @@ Classical process tracing could not externalize reasoning, run blinded parallel 
 - **Single-case counterfactuals remain prior-dominated** and are excluded from the single-text estimand (§5, §7).
 - **Trace-production models are themselves assumptions, and may be near-speculative.** In many cases the record-production process (how much was lost, censored, standardized, copied, selectively preserved) is poorly known. Visibility does not make a bad assumption good. The discipline is to mark each trace-production term as *estimated* vs. *speculative*; when speculative, widen the band (§6.2.1) or fall back to qualitative treatment rather than assert a discount.
 - **Epistemic independence is rarely achieved** (§6.3). The audit mostly removes procedural error; it is weak against shared training-data priors and historiographic stereotypes. Treat audit agreement accordingly.
-- **Cost.** Triangulation is expensive; top-driver gating is the control, and any cap is logged (§6.7).
-- **No optimality claim.** This is a principled approximation against a stated objective, not a proven optimum; the true Bayesian optimum (a coherent joint posterior averaged over causal structures) is intractable for real cases.
+- **Cost is unmodeled by design.** This paper specifies the quality-optimum and treats compute as free; the (real) expense of auditing every cluster on diverse model families is intentionally not addressed here and is the central question of the deferred pragmatic design.
+- **"Optimum" is an aspiration, not a proof.** This is the *quality-optimal feasible architecture* targeting the intractable Bayesian optimum of §7 (a coherent joint posterior averaged over causal structures); it is not a *proven* optimum, and empirical optimality awaits the validation of §8.
 
 **Epistemic risks (validity-relevant, distinct from a deferred ethics review).** A dedicated ethics/threat-model section is out of scope for this planning document, but several risks bear directly on *validity* and are recorded here:
 
