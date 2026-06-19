@@ -2,11 +2,25 @@
 
 ### Externalized LLM Likelihoods, Trace-Production Models, and Local Causal-Graph Audits for Single-Text Historical Inference
 
-**Status:** Draft methodology white paper — **v6** (the *optimum* paper: quality-only, cost unconstrained)
+**Status:** Draft methodology white paper — **v7** (the *optimum* paper: quality-only, cost unconstrained)
 **Scope:** Single-text and cross-case causal inference from historical narrative
 **Audience:** Methodologists, computational social scientists, and engineers building automated causal-inference pipelines
 
 ---
+
+## What changed in v7
+
+v7 fixes the coherence defects and adds the validity refinements from a fifth review. Headline: the single-text auditor is honestly recast as a *qualitative* critic, since a graph's topology cannot compute a likelihood.
+
+1. **DAG auditor recast as a qualitative structural critic (§6.3) — headline.** A graph without parameters cannot *derive* `P(E|H)`. The single-text critic now outputs categories (`confound`/`too-strong`/`void`/`confirm`) and *directions*; the **estimator re-elicits** the magnitude. True likelihood-derivation is reserved for the parameterized cross-case path (§7).
+2. **`H₀` claim corrected (§6.8).** With `H₀` ordinal-only and unassessed, the example no longer claims "leaders don't beat the residual" — only that the residual is *not ruled out*; the table is explicitly a posterior over `{H₁,H₂,H₃}` only.
+3. **Two-sided missingness formula (§6.6).** Corrected `P(omit E|H)` so the fact-false branch isn't assumed to be silent (consistent with §4's false-positive channel).
+4. **"No contradiction surface" reworded (§6.1).** The *paths* aren't mixed on one case; the intra-path audit deliberately *does* create a contradiction surface.
+5. **"Convergence" redefined (§6.7)** as convergence of audit *state* (incl. `irreducibly-widened`), not numerical agreement.
+6. **Human review degated (§6.3).** All-cluster human review is the optimum; top-driver-only is a pragmatic compromise.
+7. **Post-selection & prior-provenance guards (§5.2, new).** Controls for hypotheses generated from the same text, and for priors formed from evidence later counted in the likelihood — "a quantity may enter the calculation once."
+8. **Cross-cluster shared error terms (§6.2.1).** Joint sampling extended across clusters (shared latent errors for model family, genre, archive process, trace-production assumption) so shared mistakes don't cancel artificially.
+9. **Uncertainty over competing trace-production *structures* (§4).** Carry rival trace-production graphs via model-averaging instead of picking one discount.
 
 ## What changed in v6
 
@@ -158,6 +172,8 @@ The second term is what stops a well-preserved but dubious source from inflating
 
 Most automated systems (v1 included) collapse all of this, attributing `P(E|H)` to the causal story alone. The decomposition is what lets the architecture distinguish three different reasons a trace is present: "the cause operated and was recorded," "the record-production process over-represents it," and "the claim was asserted though false."
 
+**Carry competing trace-production *structures*, do not pick one.** Often several trace-production stories are *jointly plausible*: fiscal grievances dominate the *cahiers* because fiscal distress was genuinely causal, **or** because administrative solicitation made fiscal complaints especially recordable. These imply different likelihood directions. A reconciler that selects *one* diagnosis and adjusts a single band manufactures a falsely crisp posterior. The optimum instead **carries the rival trace-production structures forward** — averaging over them (preserving, not collapsing, their disagreement) so that *structural* uncertainty about how the record was made appears in the final posterior interval, exactly as model-averaging over causal structures (§7) handles uncertainty about how events unfolded. When two trace-production structures point in opposite directions and cannot be adjudicated, that item's band widens rather than resolving to one discount.
+
 ---
 
 ## 5. The estimand
@@ -194,6 +210,16 @@ A posterior over a badly-constructed hypothesis set can be perfectly coherent an
 
 These rules are enforced at the **partition-audit** step, which is preregistered and frozen before the testing pass (the pipeline's `--review` checkpoint is the natural home). A gerrymandered menu is the easiest way to game posterior odds; making the partition an audited, frozen artifact is the defense.
 
+### 5.2 Input provenance: the evidence must not have already been used
+
+Freezing the partition (§5.1) is necessary but not sufficient. Two subtler ways the same evidence gets counted twice — both of which silently inflate the posterior — must be controlled, because in an automated pipeline the hypotheses *and* the priors are typically produced from the very text later used as evidence.
+
+**Post-selection bias in hypothesis generation.** If the system reads a tax-heavy narrative, *generates* `H₁ = fiscal-primary` *because* of that tax content, and then counts the same tax evidence as strong support for `H₁`, the posterior is inflated: the evidence helped *create* the hypothesis it is now "confirming." The menu was not exogenous. The optimum must condition on the **hypothesis-generation procedure**, not pretend the partition was fixed before the data was seen. Concretely: (a) evidence that *drove* a hypothesis's generation is down-weighted or excluded when testing that hypothesis (the pipeline's existing anti-circularity rule — interpretive/derivation evidence forced toward `LR ≈ 1` — is a partial instance of this); and (b) uncertainty over *which admissible partitions* the generator might have produced is propagated, so the posterior does not pretend the chosen menu was the only one.
+
+**Prior/likelihood double-counting via shared provenance.** Separating priors from likelihoods *formally* (§6.2) does not prevent the **same sources** from informing both. If a researcher sets a high prior on fiscal-primary because the historiography already leans on the *cahiers*, and the pipeline then updates again on the *cahiers*, that evidence is counted twice. The optimum runs a **prior-provenance audit**: record which sources informed the prior, check overlap against the evidence clusters, and for any overlap either (i) exclude that material from the likelihood, (ii) move it wholly into the prior, or (iii) model it explicitly as already-observed. A prior is only "independent of the evidence" if its provenance has been checked to be so.
+
+Both are instances of one principle: **a quantity may enter the calculation once.** Partition freezing, anti-circularity, and prior-provenance auditing are the three guards that enforce it.
+
 ---
 
 ## 6. The architecture
@@ -213,7 +239,7 @@ This architecture directly buys (1) and most of (2): every likelihood carries ex
 - **Single rich text → narrative-primary.** Likelihoods that drive updating are assessed directly (texture preserved), but every estimate carries externalized reasoning covering *both* the causal and the trace-production rationale. Updating is genuine multi-hypothesis Bayes with researcher-settable priors.
 - **Many comparable cases → formal (CausalQueries).** Binarization is appropriate (shared variables across cases), structural dependence-handling pays off, and counterfactual/population estimands are identified. Source of truth for cross-case numbers.
 
-No single analysis is scored by two engines, so there is no contradiction surface between them.
+No single analysis's *final answer* is jointly sourced from both the narrative and the formal-cross-case engines — the two **paths** are not mixed on one case. (This is distinct from the *intra*-path audit of §6.3, which deliberately creates a contradiction surface between the narrative estimate and a structural critique of it; that disagreement is the audit signal, by design.)
 
 ### 6.2 Likelihood elicitation: bands, comparability, priors ≠ likelihoods
 
@@ -274,29 +300,42 @@ Open-ended bands are bounded by the implementation's floor and cap (`LR_FLOOR = 
 | **Interval arithmetic** | none beyond the band endpoints | guaranteed posterior-odds **bounds** (worst/best case) | conservative robustness check |
 | **Ordinal-only** | bands carry order, not magnitude | a **dominance** relation over hypotheses, no numbers | when even interval endpoints are indefensible |
 
-**Why joint, not independent, sampling.** Drawing each `η_{m,i}` independently within its band is wrong by default: likelihood judgments for *rival* hypotheses are correlated — evidence that weakens both fiscal-primary and ideology-primary relative to elite-primary should move those two together. Independent draws manufacture artificial rank reversals (and, elsewhere, artificial certainty), so the headline rank-stability metric would reflect a *sampling artifact* rather than epistemic uncertainty. The optimum therefore elicits (or audits) a **joint** distribution over the vector — at minimum a correlation structure among components — and samples that. Where the correlation is itself uncertain, it is stress-tested (sample under independence *and* under strong positive correlation) and any conclusion that flips is flagged. The log-uniform-within-band shape remains a declared stipulation, and §6.2.1's cap/floor grid still applies.
+**Why joint, not independent, sampling — within *and* across clusters.** Drawing each `η_{m,i}` independently within its band is wrong by default: likelihood judgments for *rival* hypotheses are correlated — evidence that weakens both fiscal-primary and ideology-primary relative to elite-primary should move those two together. Independent draws manufacture artificial rank reversals (and, elsewhere, artificial certainty), so the headline rank-stability metric would reflect a *sampling artifact* rather than epistemic uncertainty. The optimum therefore elicits (or audits) a **joint** distribution over the vector — at minimum a correlation structure among components — and samples that.
+
+The same correlation exists **across clusters**, and ignoring it is the more dangerous error. Many clusters share a *common* source of uncertainty — one model family, one source genre, one archive process, or one trace-production assumption (e.g., "royal solicitation strongly over-produced fiscal language" feeds *every* fiscal-grievance cluster at once). If clusters are sampled independently, those shared errors cancel or diversify artificially and the posterior interval looks far tighter than the real epistemic risk. The optimum therefore introduces **shared latent error terms** — common random variables for model family, genre, archive process, and each named trace-production assumption — on which the per-cluster vectors load, so uncertainty moves *jointly* wherever the underlying mistake would be common. Where a correlation (within- or cross-cluster) is itself uncertain, it is stress-tested (sample under independence *and* under strong positive correlation) and any conclusion that flips is flagged. The log-uniform-within-band shape remains a declared stipulation, and the cap/floor grid below still applies.
 
 The headline single-text output is **a posterior-odds interval per hypothesis plus a rank-stability fraction**, never a single "posterior probability."
 
 **Redundant elicitation: incoherence as a reliability signal.** Deriving ratios from a single vector *guarantees* the final numbers are coherent — but it also throws away a diagnostic. So the optimum **also** elicits a few independent pairwise comparisons for the same item and checks them against the vector. The distinction matters and is worth stating precisely:
 
-- A disagreement between the **estimator and the modeler** (§6.3) is an *inter-model* disagreement about the same quantity — it is *evidence* about which model is wrong, to be surfaced and diagnosed.
+- A disagreement between the **estimator and the critic** (§6.3) is an *inter-source* disagreement — the critic raises a structural objection to the estimate — and is *evidence* that the estimate may be wrong, to be surfaced and diagnosed.
 - An **incoherence within one source's pairwise judgments** (e.g. it says fiscal is 4× ideology, ideology 0.5× elite, fiscal 5× elite — impossible) is an *intra-judgment inconsistency*. The contradiction carries no truth to recover; you do not "resolve" it by averaging. **But its mere presence is information about reliability:** a model that contradicts itself on an item is reasoning unreliably about that item.
 
 The optimum therefore uses incoherence not as evidence but as a **confidence flag**: where elicited pairwise comparisons cannot be reconciled to the vector, widen that item's band and route it to the auditor; the *final* likelihood still comes only from the coherent vector. This buys both a number that cannot be incoherent and a signal that flags the items most likely to be wrong.
 
 **The thresholds are themselves priors — so test them.** The band edges, the log-uniform-within-band assumption, and especially the floor/cap are stipulations, not neutral facts; a cap of 20 vs. 100 can flip rankings when strong evidence appears. The protocol therefore reports rankings under a grid `LR_CAP ∈ {10, 20, 50, 100}`, `LR_FLOOR ∈ {0.01, 0.05, 0.1}`, and flags any conclusion that is not stable across it. Apparent conservatism that is merely an artifact of a low cap must be visible as such.
 
-### 6.3 The DAG as auditor: structured second-pass criticism (not independent corroboration)
+### 6.3 The DAG as a *qualitative* auditor (it critiques the likelihood; it does not compute it)
 
-For a single text, the formal graph earns its keep not by computing the answer but by **cross-checking** the narrative estimate on the evidence that matters. The disagreement between a holistic likelihood and a structurally-derived one is the signal: it indicates either an incoherent/double-counting implicit model, or a mis-specified/over-lossy graph, **or** a trace-production assumption that one side encoded and the other did not.
+**A graph's topology cannot produce a likelihood magnitude.** A DAG without conditional-probability tables, causal-type priors, and measurement parameters encodes *structure*, not numbers — it can reveal that a pathway is missing (`solicitation → grievance-content`) but it cannot, by itself, say the corrected band is `2–5` rather than `0.5–2`. So in the single-text path the auditor is **not** a second likelihood-generating engine. It is a **qualitative structural critic** whose outputs are categorical and directional:
 
-Because the estimator, modeler, and reconciler may all be instances of the same base model reading the same text, their independence is limited; agreement is **support, not proof**. The audit is therefore framed as **structured second-pass criticism**, and independence is engineered, not assumed:
+| Critic output | Meaning |
+|---|---|
+| `confound` | a trace-production or causal pathway the estimate ignored (with its *direction* of bias) |
+| `too-strong` / `too-weak` | the band over- or under-states the evidence, directionally |
+| `void` | the local graph is not a faithful abstraction (§ translation contract) → not auditable |
+| `confirm` | no structural objection |
+
+**Magnitudes are never read off the graph.** When the critic flags `confound` or `too-strong`, the *number* is produced by the **estimator re-eliciting the likelihood vector** (§6.2.1) now that the missing consideration is on the table — not by the graph computing it. The graph supplies the *reason*; the holistic estimator supplies the *magnitude*. (True likelihood **derivation** from a parameterized graph belongs to the **cross-case path** of §7, where causal-type priors and CPTs exist; optionally, when a single case admits a small, clearly parameterizable local model, the critic may also emit a rough structural likelihood as a *second opinion* — but that is the exception, available only when the parameters are defensible, never the default.)
+
+So the "disagreement" the audit surfaces is between the narrative band and a **structural critique** of it — a reason the band may be wrong — not a clash of two numbers. That is still a genuine, useful contradiction surface; it just isn't a second computation.
+
+Because the estimator, critic, and reconciler may all be instances of the same base model reading the same text, their independence is limited; agreement is **support, not proof**. The audit is therefore framed as **structured second-pass criticism**, and independence is engineered, not assumed:
 
 - different model families where available;
-- **blinded roles** — the modeler does not see the estimator's number;
+- **blinded roles** — the critic does not see the estimator's number;
 - randomized elicitation order; evidence-redaction probes;
-- human spot-checks on top-driver evidence;
+- **human review across all clusters** (in the optimum); rationing human attention to top-driver/contested items is a *pragmatic compromise*, not part of the north-star;
 - retained disagreement logs for reproducibility.
 
 **Three grades of independence — and we mostly buy the weakest.** Independence is not one thing:
@@ -307,7 +346,7 @@ Because the estimator, modeler, and reconciler may all be instances of the same 
 | Model | different model families | family-specific quirks | sometimes (when a second family is available) |
 | Epistemic | different information / differently-trained priors | shared training-data artifacts, shared historiographic stereotypes | **rarely** |
 
-Only **epistemic** independence makes agreement strong evidence. If every model has absorbed the same "fiscal-crisis → French Revolution" trope, blinded agents can agree from a shared cultural prior, not from the evidence. **This is where unconstrained cost actually cashes out into quality.** The single highest-value lever in the optimum is not more passes of one model — it is *diversity of source*: run the estimator, modeler, and critic on **maximally different model families**, trained on different corpora, and where possible give them **different information** (e.g., one works only from primary-source excerpts, another from the full text), plus human spot-checks. Same-model agreement is treated as **near-worthless** (it removes procedural error only); cross-family, cross-information agreement is what counts. Because compute is not a constraint here, the optimum spends it on independence — diverse models and human review — rather than on repetition.
+Only **epistemic** independence makes agreement strong evidence. If every model has absorbed the same "fiscal-crisis → French Revolution" trope, blinded agents can agree from a shared cultural prior, not from the evidence. **This is where unconstrained cost actually cashes out into quality.** The single highest-value lever in the optimum is not more passes of one model — it is *diversity of source*: run the estimator and critic (and the cross-case modeler) on **maximally different model families**, trained on different corpora, and where possible give them **different information** (e.g., one works only from primary-source excerpts, another from the full text), plus human spot-checks. Same-model agreement is treated as **near-worthless** (it removes procedural error only); cross-family, cross-information agreement is what counts. Because compute is not a constraint here, the optimum spends it on independence — diverse models and human review — rather than on repetition.
 
 **Faithful-abstraction (translation) contract.** Before any number is compared, the auditor must certify that its local graph is a *faithful abstraction* of the narrative object — otherwise the audit silently changes the claim being audited. The auditor logs, for each translation:
 
@@ -320,11 +359,11 @@ Only **epistemic** independence makes agreement strong evidence. If every model 
 
 If the translation loss is material (e.g., the query no longer expresses the same hypothesis), the comparison is **void** and reported as "not auditable at this granularity," not as agreement or disagreement.
 
-**Audit outcomes must propagate into the posterior, not just the log.** A void or qualitative-only audit, and an irreducible estimator/modeler disagreement (§6.4), each carries an epistemic consequence that the *final* likelihood must reflect — otherwise a failed audit disappears into a log while the number still looks fully audited. The propagation rule:
+**Audit outcomes must propagate into the posterior, not just the log.** A void or qualitative-only audit, and an irreducible estimator/critic disagreement (§6.4), each carries an epistemic consequence that the *final* likelihood must reflect — otherwise a failed audit disappears into a log while the number still looks fully audited. The propagation rule:
 
 | Audit outcome | Effect on the item's final likelihood vector |
 |---|---|
-| Confirmed (estimator ≈ modeler) | use the (possibly reconciler-adjusted) vector as-is |
+| Confirmed (critic raises no objection) | use the (possibly reconciler-adjusted) vector as-is |
 | Reconciled (diagnosis applied) | use the corrected vector; log the diagnosis |
 | Irreducible disagreement | **widen** the band to span both estimates; rank-stability then reflects the unresolved uncertainty |
 | Void (translation not faithful) | mark the item **qualitative-only** — excluded from numeric updating, surfaced in the narrative |
@@ -333,7 +372,7 @@ So the headline posterior interval always encodes the *evidential status* of eac
 
 **The certification must be adversarial, not self-issued.** If the same agent builds the graph and certifies its own faithfulness, the contract is a rubber stamp. So the graph-builder produces the abstraction, and a **separate critic** (different role, ideally different model family) enumerates the four loss types above and rates each *material* or *immaterial*; only then does the reconciler rule the comparison valid, void, or qualitative-only. Self-certification is not permitted.
 
-> **Reworked worked example (v2).** Estimator (conditioning on `F=1`, i.e. fiscal crisis occurred and is the driver): "grievances would be fiscal → **strongly confirming**." Modeler, if it instead *marginalizes over* `P(F=1)`, returns a weaker band. **In v1 this gap was reported as a diagnostic disagreement and "resolved toward 0.8." That was an error:** the two were computing different conditional quantities, so the disagreement was *definitional*. Under the comparability requirement, both condition on `F=1`; the spurious gap disappears. The *genuine* diagnostic question then surfaces in the **trace-production** term: are fiscal grievances over-represented in the *cahiers* because they were administratively solicited? If so, the modeler lowers the trace-production factor, and that — not a prior on `F` — is the documented, auditable adjustment.
+> **Comparability illustration.** Suppose a *parameterized structural second-opinion* is available (the optional case of §6.3). The estimator, conditioning on `F=1` (fiscal crisis occurred and is the driver), reads "grievances would be fiscal → **strongly confirming**." If the structural model instead *marginalizes over* `P(F=1)`, it returns a weaker number. **Naively comparing the two looks like disagreement — but it is *definitional*, not diagnostic:** they condition on different propositions. The comparability requirement (condition both on `F=1`; keep `P(F=1)` uncertainty in the prior, not the likelihood) makes the spurious gap vanish. The *genuine* objection the critic should raise is qualitative and structural: fiscal grievances may be over-represented in the *cahiers* because they were administratively solicited — a `confound` flag whose direction is "inflates `H₁`," prompting the estimator to **re-elicit** a lower band. That trace-production correction, not a prior on `F`, is the documented adjustment.
 
 ### 6.4 The reconciler is a protocol, not a discretion
 
@@ -407,14 +446,14 @@ Hoop tests turn on expected-but-absent evidence, which is dangerous to automate 
 | Absent from extraction | the pipeline failed to detect it |
 | Absent from query | the pipeline never looked |
 
-**The datum is source-silence, not world-absence.** A common error is to demand proof that the event *did not occur* before an absence can disconfirm. That is wrong in Bayesian terms: what we actually observe is that *the source is silent*, and the correct likelihood is `P(source omits E | H)` — a source's silence can disconfirm `H` without anyone first establishing world-absence. Concretely, the source-omission likelihood factors through the trace-production model (§4):
+**The datum is source-silence, not world-absence.** A common error is to demand proof that the event *did not occur* before an absence can disconfirm. That is wrong in Bayesian terms: what we actually observe is that *the source is silent*, and the correct likelihood is `P(source omits E | H)` — a source's silence can disconfirm `H` without anyone first establishing world-absence. The omission likelihood must factor through the **two-sided** trace-production model of §4 (a fact can be present-and-omitted, *or* absent-yet-asserted), so it has **both** a fact-true and a fact-false branch:
 
 ```
-P(source omits E | H) = P(E did not occur | H)                                     (true negative)
-                      + P(E occurred | H) · P(source omits E | E occurred)          (missed despite occurring)
+P(omit E | H) = P(F | H) · P(omit E | F true,  H)      (occurred but not recorded/surfaced)
+              + P(¬F | H) · P(omit E | F false, H)      (did not occur, and was not falsely asserted either)
 ```
 
-`H` is disconfirmed when it predicts the source *would* carry E had it occurred — i.e. when **observability** `P(source carries E | E true)` is high, so the second term is small and the silence is informative. Disconfirmation is graduated by that observability:
+The second term is *not* simply `P(¬F | H)`: even when the fact is false, a false claim is sometimes produced (the §4 false-positive channel), so `P(omit E | F false) < 1`. `H` is disconfirmed when it predicts the source *would* carry E had it occurred — i.e. when **observability** `P(source carries E | F true)` is high, so the first term's omission probability is small and the silence is informative — *and* when false assertion is unlikely, so silence is not merely the absence of propaganda. Disconfirmation is graduated by that observability:
 
 | Observability if true | Treatment of the silence |
 |---|---|
@@ -427,7 +466,7 @@ The four-state distinction governs *eligibility*: **"absent from source" is the 
 
 ### 6.7 Audit coverage (the optimum audits everything)
 
-Because cost is unconstrained here, the quality-optimal policy is simple: **audit every evidence cluster** with the full triangulation (estimator + modeler + critic + reconciler), iterated to convergence. There is no quality reason to skip any item; selective auditing can only lose information.
+Because cost is unconstrained here, the quality-optimal policy is simple: **audit every evidence cluster** with the full triangulation (estimator + critic + reconciler), iterated until the **audit *state*** stabilizes. Convergence here means a settled *state* — `confirmed`, `corrected`, `void`, `qualitative-only`, or `irreducibly-widened` — **not** numerical agreement of estimates. Forcing numerical convergence would destroy the irreducible-disagreement signal that §6.3–§6.4 deliberately preserve (a genuine clash resolves to a *wider band*, and that is a terminal, converged state). There is no quality reason to skip any item; selective auditing can only lose information.
 
 This is deliberately *not* a gating scheme. (Selective triggering — auditing only high-`|log(LR)|` items, or only high-volume/repeated-motif clusters, or only reconciler-flagged items — is a **cost compromise**, and as such belongs to the separate pragmatic design, not to this optimum. It is noted here only to mark the boundary: when cost must be bounded, those are the highest-value clusters to audit first; the optimum simply audits all.)
 
@@ -467,14 +506,18 @@ Graph: `E₁, E₂` share parent `ArchiveProcess/Institution = royal solicitatio
 
 ```
 audit C:
-  estimator band (vs H1): STRONGLY confirming (>5)
-  modeler: local graph flags node `solicitation → grievance-content`
-  diagnosis: trace-production mismatch  (not a prior issue)
-  action:   adjust trace-production term; lower joint band to MODERATELY confirming (2–5)
-  diagnosis: E1,E2 share parent `royal solicitation` (common process)
-  action:   cluster {E1,E2}; elicit ONE joint band  (no product)
-  translation check: query "primary driver = fiscal" preserved → audit valid
+  estimator vector (ref H2): H1 STRONGLY confirming (>5)
+  critic (qualitative): flags pathway `solicitation -> grievance-content`
+         output = `confound`, direction = inflates H1   (no number computed)
+  reconciler: diagnosis = trace-production confound (not a prior issue)
+         action  = re-elicit C's vector accounting for solicitation
+  estimator (re-elicited): H1 now MODERATELY confirming (2-5 rel. to ref)
+  critic: E1,E2 share parent `royal solicitation` -> dependence
+         action  = treat {E1,E2} as ONE joint vector (no product)
+  translation check: query "primary driver = fiscal" preserved -> audit valid
 ```
+
+Note the division of labor (§6.3): the critic supplies the *reason* (`confound`, direction); the **estimator re-elicits the magnitude**. No band is read off the graph.
 
 *(Under the optimum every cluster is audited (§6.7); the log above shows only cluster C for brevity — `E₃` is audited identically.)*
 
@@ -486,7 +529,7 @@ audit C:
 | `H₃` elite | ~0.33 – 0.49 |
 | `H₂` ideology | ~0.09 – 0.18 |
 
-`H₀` (reserve mass 0.20, ordinal-only) is not numerically updated; ordinally, neither leader's support is strong enough to claim it beats "an unspecified alternative," so the conjunctural/other account is *not* ruled out.
+`H₀` (reserve mass 0.20) is **unassessed by the numeric posterior**: since we specified neither a mixture likelihood nor an ordinal dominance relation for it, we can make *no* comparison between the leaders and `H₀`. The only supported statement is that the residual is **not ruled out** — *not* the stronger (and here unsupported) claim that the leaders fail to beat it. The table is a posterior over `{H₁,H₂,H₃}` only, not over the full exhaustive partition.
 
 **Rank-stability:** `H₁ > H₂` holds in ~96% of joint draws; `H₁ > H₃` in only ~57% — and because the vector is sampled *jointly* (§6.2.1), that 57% reflects genuine epistemic closeness, not an independent-sampling artifact.
 
@@ -570,7 +613,7 @@ To keep this a methodology paper rather than a research program, two areas are *
 | Externalized causal-**and-trace** reasoning (§4) | **Partial** | per-evaluation `justification` text | trace-production reasoning not separated from causal |
 | Trace-production model (§4) | **Planned** | — | not represented |
 | Evidence graph + dependence clustering (§6.5) | **Planned** | independent multiplication; LR cap + relevance as crude dampers | explicit evidence graph, joint cluster bands |
-| Triangulation auditor + translation contract (§6.3) | **Planned** | — | estimator/modeler/reconciler not built |
+| Triangulation auditor + translation contract (§6.3) | **Planned** | — | estimator/critic/reconciler not built |
 | Reconciler protocol (§6.4) | **Planned** | — | constrained action table |
 | Audit coverage = all clusters (§6.7) | **Planned** | `top_drivers` computed (a future gating input, not the optimum) | optimum audits every cluster; no auditor built yet |
 | Missingness model w/ observability bands (§6.6) | **Partial** | qualitative-only absence pass (`pass_absence`), excluded from updating | observability grading |
@@ -606,7 +649,7 @@ Classical process tracing could not externalize reasoning, run blinded parallel 
 
 - **False neutrality.** Bayesian formalism can lend a partisan or stereotyped narrative the appearance of objective support; the posterior is only as neutral as the partition (§5.1), priors, and likelihood reasoning behind it.
 - **Source asymmetry.** Archives over-represent state actors and literate elites; absent a trace-production correction (§4), the system mistakes *who got recorded* for *what mattered*.
-- **Epistemic monoculture.** Because LLMs share historiographic priors (§6.3), the whole pipeline — estimator, modeler, critic — can converge on a received interpretation; audit agreement is not corroboration.
+- **Epistemic monoculture.** Because LLMs share historiographic priors (§6.3), the whole pipeline — estimator, critic, reconciler — can converge on a received interpretation; audit agreement is not corroboration.
 - **Automation bias.** Users may over-trust a ranked posterior with an interval more than its evidential basis warrants; reporting rank-stability and band/cap sensitivity (§6.2.1) is partly intended to counter this.
 
 These are flagged as live threats, not solved problems; a full threat model is deferred, not denied.
