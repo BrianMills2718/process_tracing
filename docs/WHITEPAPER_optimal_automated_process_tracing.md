@@ -2,11 +2,23 @@
 
 ### Externalized LLM Likelihoods, Trace-Production Models, and Local Causal-Graph Audits for Single-Text Historical Inference
 
-**Status:** Draft methodology white paper — **v5** (the *optimum* paper: quality-only, cost unconstrained)
+**Status:** Draft methodology white paper — **v6** (the *optimum* paper: quality-only, cost unconstrained)
 **Scope:** Single-text and cross-case causal inference from historical narrative
 **Audience:** Methodologists, computational social scientists, and engineers building automated causal-inference pipelines
 
 ---
+
+## What changed in v6
+
+v6 fixes the internal-coherence defects and adds the validity refinements from a fourth review (run with the optimum-seeking prompt).
+
+1. **`H₀` coherence (§6.8) — the headline fix.** v5's worked example gave the residual hypothesis prior mass *and* a posterior interval without any residual likelihood, contradicting §5.1 and leaving normalization underdetermined. v6 takes the §5.1 ordinal-only fallback in the example: `H₀` holds reserve prior mass, is excluded from the numeric posterior, and the table is reported *conditional on* `{H₁,H₂,H₃}`.
+2. **Two-sided trace-production model (§4).** `P(E|H)` now includes a **false-positive channel** (`observe E | fact false`) — propaganda, formula, hallucination — so well-preserved-but-dubious sources no longer inflate LRs.
+3. **Joint (not independent) vector sampling (§6.2.1).** The default Monte Carlo samples the likelihood *vector* jointly with elicited correlation among rival hypotheses; independent draws manufactured artificial rank reversals/certainty.
+4. **Partial dependence is per-hypothesis, not a scalar (§6.5).** Replaced the single `0<ρ<1` discount with a per-hypothesis redundancy vector / joint likelihood, since two reports can be redundant under one hypothesis and independent under another.
+5. **Source-silence vs. world-absence (§6.6).** The disconfirming datum is `P(source omits E | H)` (weighted by observability), not a requirement to first prove the event did not occur; corrected the eligibility rule.
+6. **Audit-outcome propagation (§6.3).** Void/qualitative-only audits and irreducible disagreements now propagate into the final likelihood (widen / mark qualitative-only / exclude), so a failed audit cannot pass through as audited precision.
+7. **Worked vector table (§6.8) and §8.3 wording** aligned to the formalism (explicit neutral reference cell; "audit-coverage rule" not "audit triggers").
 
 ## What changed in v5
 
@@ -135,14 +147,16 @@ The single most consequential design commitment in v2: keep two models explicitl
 1. **Substantive causal model** — how historical events produced other historical events (`fiscal crisis → state breakdown → revolution`).
 2. **Trace-production model** — how those events (and institutions, archives, and analysts) produced the **evidence now observed** (`fiscal distress → grievances → administrative solicitation of grievances → document survival → extraction by the pipeline → observed proposition`).
 
-`P(E|H)` decomposes across both. Schematically:
+`P(E|H)` decomposes across both — and the trace-production model must be **two-sided**: evidence can be produced when the latent fact is *true* (recording, survival, observation) **or when it is false** (rumor, propaganda, bureaucratic formula, mistranslation, retrospective rationalization, extractor hallucination). The full decomposition is therefore a measurement model with both a hit channel and a false-positive channel:
 
 ```
-P(observed E | H) = P(latent fact | H)        ← substantive causal model
-                  × P(fact recorded & survives & observed | latent fact, H)   ← trace-production model
+P(observed E | H) = P(fact | H)   · P(observe E | fact true,  H)     ← cause operated, and it was recorded/survived/observed
+                  + P(¬fact | H)  · P(observe E | fact false, H)     ← the claim was produced although the fact did not hold
 ```
 
-Most automated systems (v1 included) collapse these, attributing all of `P(E|H)` to the causal story. The decomposition is what lets the architecture distinguish "this evidence is expected because the cause operated" from "this evidence is over-represented because of how the record was made."
+The second term is what stops a well-preserved but dubious source from inflating the likelihood ratio: a trace that exists *because someone had reason to assert it* (propaganda, formula) should not count as if it existed *because the event happened*. Omitting the false-positive channel biases LRs upward exactly for the sources most likely to mislead.
+
+Most automated systems (v1 included) collapse all of this, attributing `P(E|H)` to the causal story alone. The decomposition is what lets the architecture distinguish three different reasons a trace is present: "the cause operated and was recorded," "the record-production process over-represents it," and "the claim was asserted though false."
 
 ---
 
@@ -256,9 +270,11 @@ Open-ended bands are bounded by the implementation's floor and cap (`LR_FLOOR = 
 
 | Mode | Assumption | Output | Use |
 |---|---|---|---|
-| **Monte Carlo (default)** | each `η_{m,i}` **uniform on its log-band** | a posterior-odds *distribution* → median + central interval, and **rank-stability** = fraction of draws preserving each pairwise order | the standard report |
+| **Joint Monte Carlo (default)** | the **vector** `η_m = (η_{m,i})_i` is sampled jointly, with elicited correlation among components | a posterior-odds *distribution* → median + central interval, and **rank-stability** = fraction of draws preserving each pairwise order | the standard report |
 | **Interval arithmetic** | none beyond the band endpoints | guaranteed posterior-odds **bounds** (worst/best case) | conservative robustness check |
 | **Ordinal-only** | bands carry order, not magnitude | a **dominance** relation over hypotheses, no numbers | when even interval endpoints are indefensible |
+
+**Why joint, not independent, sampling.** Drawing each `η_{m,i}` independently within its band is wrong by default: likelihood judgments for *rival* hypotheses are correlated — evidence that weakens both fiscal-primary and ideology-primary relative to elite-primary should move those two together. Independent draws manufacture artificial rank reversals (and, elsewhere, artificial certainty), so the headline rank-stability metric would reflect a *sampling artifact* rather than epistemic uncertainty. The optimum therefore elicits (or audits) a **joint** distribution over the vector — at minimum a correlation structure among components — and samples that. Where the correlation is itself uncertain, it is stress-tested (sample under independence *and* under strong positive correlation) and any conclusion that flips is flagged. The log-uniform-within-band shape remains a declared stipulation, and §6.2.1's cap/floor grid still applies.
 
 The headline single-text output is **a posterior-odds interval per hypothesis plus a rank-stability fraction**, never a single "posterior probability."
 
@@ -303,6 +319,17 @@ Only **epistemic** independence makes agreement strong evidence. If every model 
 | hypothesis | graph query | did the claim change in translation? |
 
 If the translation loss is material (e.g., the query no longer expresses the same hypothesis), the comparison is **void** and reported as "not auditable at this granularity," not as agreement or disagreement.
+
+**Audit outcomes must propagate into the posterior, not just the log.** A void or qualitative-only audit, and an irreducible estimator/modeler disagreement (§6.4), each carries an epistemic consequence that the *final* likelihood must reflect — otherwise a failed audit disappears into a log while the number still looks fully audited. The propagation rule:
+
+| Audit outcome | Effect on the item's final likelihood vector |
+|---|---|
+| Confirmed (estimator ≈ modeler) | use the (possibly reconciler-adjusted) vector as-is |
+| Reconciled (diagnosis applied) | use the corrected vector; log the diagnosis |
+| Irreducible disagreement | **widen** the band to span both estimates; rank-stability then reflects the unresolved uncertainty |
+| Void (translation not faithful) | mark the item **qualitative-only** — excluded from numeric updating, surfaced in the narrative |
+
+So the headline posterior interval always encodes the *evidential status* of each item; non-auditability widens or removes, it never silently passes through as precision.
 
 **The certification must be adversarial, not self-issued.** If the same agent builds the graph and certifies its own faithfulness, the contract is a rubber stamp. So the graph-builder produces the abstraction, and a **separate critic** (different role, ideally different model family) enumerates the four loss types above and rates each *material* or *immaterial*; only then does the reconciler rule the comparison valid, void, or qualitative-only. Self-certification is not permitted.
 
@@ -353,11 +380,13 @@ Claim        → ExtractedProposition   (what the proposition is about)
 | Shared ancestor | Conditional dependence | Treatment |
 |---|---|---|
 | Same `Document` / `Source` lineage (copies, wire, transcript) | near-total | **collapse** to one joint vector (§6.2.1) |
-| Same originating `Event`, **independent channels** | partial | **partial downweight**, not collapse — keep as separate items with a shared-event discount factor `0 < ρ < 1` on their combined log-likelihood |
+| Same originating `Event`, **independent channels** | partial | **partial pooling**, not collapse — elicit one *joint* likelihood vector for the set that interpolates between "independent" (member vectors add) and "fully redundant" (one vector). The degree of redundancy is **per-hypothesis**, not a single scalar: two reports can be near-duplicates under `H₁` yet near-independent under `H₂` (see note) |
 | Same `Extractor` artifact (overlapping spans) | spurious | **audit the extraction stage**; not historical evidence at all |
 | Same genre / `Institution` template (solicited, formulaic) | systematic | **trace-production discount** (§4), applied to each item |
 
-Only the first row fully collapses; the rest are handled without discarding genuine independent information. Cluster/dependence decisions and the chosen `ρ` are logged for audit.
+Only the first row fully collapses; the rest are handled without discarding genuine independent information.
+
+**Why dependence is a vector, not a scalar.** It is tempting to model partial dependence as one discount `0 < ρ < 1` on a cluster's combined log-likelihood. That is wrong in general: redundancy is *hypothesis-specific*. Two grievance reports may be near-duplicates under "fiscal-primary" (both are the same solicited fiscal complaint) yet carry near-independent information under "elite-primary" (each names different actors). A single scalar cannot represent `ρ_{H₁} ≠ ρ_{H₂}`, so it over- or under-counts depending on the hypothesis. The optimum therefore represents partial dependence as a **per-hypothesis joint likelihood vector** for the set — equivalently a redundancy vector `(ρ_i)` rather than a scalar — and the reconciler elicits/audits it as such. Dependence decisions and the per-hypothesis redundancy are logged for audit.
 
 **Worked duplicate example.** A reported ministerial speech generates: (a) five newspaper articles, three of which copy the same wire report and two of which rely on the same official transcript; (b) a memoir recalling the speech 30 years later; (c) a police report on public reaction. The evidence graph yields:
 
@@ -378,16 +407,23 @@ Hoop tests turn on expected-but-absent evidence, which is dangerous to automate 
 | Absent from extraction | the pipeline failed to detect it |
 | Absent from query | the pipeline never looked |
 
-An absence disconfirms a hypothesis **only** to the extent the evidence *would probably have been observed if it existed* — the **observability** `P(observe E | E true)`, supplied by the trace-production model. A blanket "always qualitative" rule is too toothless: genuinely probative silences (no tax record, parliamentary debate, or police file mentions a supposedly central mechanism) are then never used. We therefore graduate by observability:
+**The datum is source-silence, not world-absence.** A common error is to demand proof that the event *did not occur* before an absence can disconfirm. That is wrong in Bayesian terms: what we actually observe is that *the source is silent*, and the correct likelihood is `P(source omits E | H)` — a source's silence can disconfirm `H` without anyone first establishing world-absence. Concretely, the source-omission likelihood factors through the trace-production model (§4):
 
-| Observability if true | Treatment of the absence |
+```
+P(source omits E | H) = P(E did not occur | H)                                     (true negative)
+                      + P(E occurred | H) · P(source omits E | E occurred)          (missed despite occurring)
+```
+
+`H` is disconfirmed when it predicts the source *would* carry E had it occurred — i.e. when **observability** `P(source carries E | E true)` is high, so the second term is small and the silence is informative. Disconfirmation is graduated by that observability:
+
+| Observability if true | Treatment of the silence |
 |---|---|
 | low | qualitative note only (no update) |
 | moderate | weak disconfirmation |
 | high | quantitative hoop-test penalty |
 | near-certain | strong disconfirmation |
 
-The four-state distinction above (world / source / extraction / query) governs *eligibility*: only "absent from world (given the source would carry it)" can disconfirm; "absent from extraction" or "absent from query" are pipeline failures and must be excluded. (The reference implementation currently takes the most conservative stance — its absence pass is qualitative-only and does not feed the Bayesian update, §9 — which corresponds to treating all observability as "low"; graduating it per the table above is a defined next step.)
+The four-state distinction governs *eligibility*: **"absent from source" is the legitimate datum** (with observability supplying its weight); "absent from extraction" and "absent from query" are pipeline failures and must be excluded; and one must never *launder* source-silence into the stronger claim "absent from world" — the inference stays a statement about the record, weighted by observability. (The reference implementation currently takes the most conservative stance — its absence pass is qualitative-only and does not feed the Bayesian update, §9 — i.e. all observability treated as "low"; graduating it per the table above is a defined next step.)
 
 ### 6.7 Audit coverage (the optimum audits everything)
 
@@ -418,14 +454,14 @@ The exclusivity self-check passes (each is a distinct *primary* driver); the con
 
 Graph: `E₁, E₂` share parent `ArchiveProcess/Institution = royal solicitation of grievances` → **cluster C = {E₁, E₂}**, one joint band. `E₃` is independent.
 
-**Step 4 — Likelihood vectors, with trace-production adjustment (§4, §6.2.1).** Each row is the item's **relative-likelihood vector** across hypotheses (§6.2.1), *not* independently-set pairwise ratios; pairwise LRs are derived from the vector. Naively, cluster C reads *strongly confirming* for `H₁`. The trace-production model intervenes: grievances were *solicited through fiscal-administrative channels*, so fiscal content is over-represented by construction. The joint vector for C is discounted to **moderately confirming** on `H₁`, and — crucially — C contributes **one** vector, not `(>5)×(>5)`.
+**Step 4 — Likelihood vectors, with trace-production adjustment (§4, §6.2.1).** Each row is the item's **relative-likelihood vector**, expressed against a fixed reference hypothesis whose entry is exactly neutral (`η = 0`, i.e. `1`); pairwise LRs are *derived* from the vector. We take **`H₂` as the reference** for both items. Naively, cluster C reads *strongly confirming* for `H₁`; the trace-production model intervenes (grievances were *solicited through fiscal-administrative channels*, so fiscal content is over-represented), discounting C's `H₁` entry to **2–5×** the reference. C contributes **one** vector, not `(>5)×(>5)`.
 
-| Item | under `H₁` | under `H₂` | under `H₃` |
+| Item | `H₁` (rel. to ref) | `H₂` (reference) | `H₃` (rel. to ref) |
 |---|---|---|---|
-| Cluster C (fiscal grievances, solicited) | moderately confirming `2–5` | weak `0.5–2` | weak `0.5–2` |
-| `E₃` (elite correspondence) | weak `0.5–2` | weak `0.5–2` | moderately confirming `2–5` |
+| Cluster C (fiscal grievances, solicited) | `2–5` | `1` (ref) | `0.5–2` |
+| `E₃` (elite correspondence) | `0.5–2` | `1` (ref) | `2–5` |
 
-(Bands are anchored to the weakest-supported hypothesis as reference; the derived `LR(H₁,H₂)` for cluster C is then automatically consistent with `LR(H₁,H₃)` and `LR(H₂,H₃)`.)
+(Because every cell is relative to the same reference, the derived `LR(H₁,H₃) = LR(H₁,H₂)/LR(H₃,H₂)` is automatically consistent — the incoherence trap of §6.2.1 cannot occur.)
 
 **Step 5 — Reconciler log (§6.4).**
 
@@ -442,16 +478,17 @@ audit C:
 
 *(Under the optimum every cluster is audited (§6.7); the log above shows only cluster C for brevity — `E₃` is audited identically.)*
 
-**Step 6 — Posterior (Monte Carlo, log-uniform within bands; §6.2.1).** Updating the priors by C and `E₃` and sampling yields, illustratively:
+**Step 6 — Posterior (joint Monte Carlo over the vectors; §6.2.1).** We did **not** enumerate `H₀`'s residual subtypes, so per §5.1 we take the **ordinal-only fallback**: `H₀` keeps its prior reserve mass (0.20) but is **excluded from the numeric posterior**, which is reported *conditional on* `{H₁, H₂, H₃}`. (The full optimum would instead give `H₀` a mixture likelihood and include it; we take the honest fallback because we specified no mixture.) Updating the conditional priors by C and `E₃`:
 
-| Hypothesis | Posterior interval (central) | 
+| Hypothesis | Posterior (conditional on `{H₁,H₂,H₃}`) |
 |---|---|
-| `H₁` fiscal | ~0.30 – 0.48 |
-| `H₃` elite | ~0.24 – 0.42 |
-| `H₂` ideology | ~0.08 – 0.16 |
-| `H₀` residual | ~0.10 – 0.20 |
+| `H₁` fiscal | ~0.40 – 0.56 |
+| `H₃` elite | ~0.33 – 0.49 |
+| `H₂` ideology | ~0.09 – 0.18 |
 
-**Rank-stability:** `H₁ > H₂` holds in ~96% of draws; `H₁ > H₃` holds in only ~58%.
+`H₀` (reserve mass 0.20, ordinal-only) is not numerically updated; ordinally, neither leader's support is strong enough to claim it beats "an unspecified alternative," so the conjunctural/other account is *not* ruled out.
+
+**Rank-stability:** `H₁ > H₂` holds in ~96% of joint draws; `H₁ > H₃` in only ~57% — and because the vector is sampled *jointly* (§6.2.1), that 57% reflects genuine epistemic closeness, not an independent-sampling artifact.
 
 **Step 7 — Sensitivity / conclusion.** Varying cluster C across its full plausible band (weak ↔ strongly-confirming) and the priors over their stated ranges: the conclusion **"`H₂` (ideology-primary) is disfavored"** is robust; the ordering **`H₁` vs `H₃`** is *not* — they are not distinguishable from this evidence. The honest report is therefore: *"the evidence favors a fiscal or elite-fragmentation primary driver over an ideology-primary one, but does not discriminate between fiscal and elite; residual mass remains for a conjunctural account."* Note what the trace-production step bought: without it, the un-discounted, un-clustered fiscal grievances would have produced a spuriously decisive `H₁`.
 
@@ -506,7 +543,7 @@ The architecture must be able to fail, and "fail" must be numeric now, not defer
 
 ### 8.3 Against "ritualized Bayesianism"
 
-Bands, graphs, reconciliation tables, and robustness ranges can become an elaborate ritual that still launders opaque judgment. The antidote is not more architecture; it is **proper scoring** (calibration + discrimination measured against held-out outcomes) and **protocol preregistration**: the hypothesis partition (§5.1), priors, band scheme, audit triggers, and scoring rules are frozen *before* the testing pass (the `--review` checkpoint is the freeze point). Architecture without scoring is decoration; the validation protocol is what makes the architecture answerable.
+Bands, graphs, reconciliation tables, and robustness ranges can become an elaborate ritual that still launders opaque judgment. The antidote is not more architecture; it is **proper scoring** (calibration + discrimination measured against held-out outcomes) and **protocol preregistration**: the hypothesis partition (§5.1), priors, band scheme, audit-coverage rule (all clusters, §6.7), and scoring rules are frozen *before* the testing pass (the `--review` checkpoint is the freeze point). Architecture without scoring is decoration; the validation protocol is what makes the architecture answerable.
 
 ---
 
