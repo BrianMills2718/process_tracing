@@ -2,11 +2,18 @@
 
 ### Externalized LLM Likelihoods, Trace-Production Models, and Local Causal-Graph Audits for Single-Text Historical Inference
 
-**Status:** Draft methodology white paper — **v3**
+**Status:** Draft methodology white paper — **v3.1**
 **Scope:** Single-text and cross-case causal inference from historical narrative
 **Audience:** Methodologists, computational social scientists, and engineers building automated causal-inference pipelines
 
 ---
+
+## What changed in v3.1
+
+Minor revision applying transferable lessons from a review of a sibling project. This remains a **planning/architecture document** (no empirical results claimed) and intentionally omits an ethics/threat section as out of scope.
+
+1. **Implementation-status table (§9).** Per-capability honest status — Implemented / Partial / Planned — so no named stage is mistaken for a demonstrated capability.
+2. **Construct-language pass (§6).** Distinguishes auditability of *process* vs. of *interpretation* vs. *validity* of interpretation, and states explicitly that the architecture buys the first two, not the third (which §8 must earn).
 
 ## What changed in v3
 
@@ -151,6 +158,14 @@ These rules are enforced at the **partition-audit** step, which is preregistered
 ## 6. The architecture
 
 The objective — not "optimality," but a stated target — is to **maximize auditability, dependence-handling, and calibrated sensitivity per unit of model-call cost**, relative to the naive baseline of multiplying LLM-elicited likelihoods. The components below each serve that objective.
+
+**What "auditability" does and does not mean here.** Three things must not be conflated:
+
+1. **Auditability of process** — logs, schemas, provenance, stage dependencies (can we see *what the system did*?);
+2. **Auditability of interpretation** — can a third party trace, contest, and reproduce a *specific analytic claim*?
+3. **Validity of interpretation** — are the resulting likelihoods and ranking *substantively defensible*?
+
+This architecture directly buys (1) and most of (2): every likelihood carries externalized reasoning, dependence is on an explicit graph, the auditor logs translation losses, and the reconciler logs its actions. It does **not** by itself buy (3). Validity of interpretation is an *empirical* property that only the validation protocol (§8) can establish; the architecture makes invalid interpretations **visible and contestable**, not impossible. Where this paper uses words like "audit," "coherence," or "robustness," they denote process/interpretation affordances, not demonstrated substantive validity.
 
 ### 6.1 Route the source of likelihoods by task
 
@@ -438,7 +453,31 @@ To keep this a methodology paper rather than a research program, two areas are *
 - **Upstream extraction validity.** This paper begins after evidence and hypotheses are extracted, yet automated process tracing often fails earlier — segmentation, event extraction, coreference, chronology, hypothesis exhaustiveness and mutual-exclusivity. Bayes' rule cannot rescue a bad evidence representation. A companion *extraction-validity* note should cover source characterization, event/proposition extraction, hypothesis generation, and mutual-exclusivity/chronology audits as preconditions for the inference layer described here.
 - **Full validation protocol and benchmark construction.** §8 specifies the tests; building the synthetic generators, the expert-coded benchmark, and the calibration harness is a separate empirical effort.
 
-**Relationship to the reference implementation (methodology register).** The companion pipeline already realizes parts of this architecture and points at the rest: a narrative-style single-text path (likelihood updating, Van Evera classification, mechanical robustness, sensitivity), a separate cross-case path bridging to `CausalQueries`, a qualitative-only absence pass consistent with §6.6, per-hypothesis top-driver identification supplying the §6.7 gate, and a documented cross-case false-comparability failure mode motivating §7. The gaps this methodology defines as next steps — a formal estimand, researcher-settable priors with prior-sensitivity, comparative multi-hypothesis bands replacing the two-way formulation, externalized causal-and-trace reasoning per likelihood, the blinded triangulation auditor with the §6.4 protocol, and the evidence-graph dependence layer — are intended for **staged adoption**. (Engineering sequencing is deliberately left to a separate implementation note.)
+**Relationship to the reference implementation (implementation status).** This is a planning/architecture document, not a results paper: it describes a *target* architecture, and the companion pipeline realizes some of it today. To avoid letting a named stage stand in for a demonstrated capability, the table below states honest status — **Implemented** (in the codebase, exercised by tests), **Partial** (present but not in the form the methodology specifies), or **Planned** (designed here, not built). It claims *engineering/architectural* status only; substantive analytic validity is the separate, not-yet-executed question of §8.
+
+| Capability (§) | Status | Where / form today | Gap to methodology target |
+|---|---|---|---|
+| Bayesian likelihood updating (§3) | **Partial** | `pt/bayesian.py`, odds-space update | two-way `H` vs `¬H` + uniform prior; not multi-hypothesis comparative |
+| Van Evera diagnostic classification (§3.2) | **Implemented** | `pass3_test` prompt + schema | — |
+| Mechanical robustness signal (§6) | **Implemented** | `pt/bayesian._compute_robustness` | — |
+| Sensitivity over likelihoods (§6.5) | **Implemented** | `pt/bayesian._run_sensitivity` | — |
+| Sensitivity over priors (§6.2) | **Planned** | — | priors not yet an input |
+| Researcher-settable priors (§5, §6.2) | **Planned** | hardcoded uniform `1/n` | elicited/justified priors |
+| Likelihood bands + propagation (§6.2.1) | **Planned** | continuous point LRs, capped/relevance-discounted | bands, log-uniform MC, rank-stability |
+| Multi-hypothesis comparative likelihoods (§6.2) | **Planned** | pairwise vs-`¬H` | full-set comparative elicitation |
+| Estimand discipline & residual `H₀` (§5, §5.1) | **Partial** | exclusivity self-check in prompt; `--review` freeze | explicit residual hypothesis; estimand stated in output |
+| Externalized causal-**and-trace** reasoning (§4) | **Partial** | per-evaluation `justification` text | trace-production reasoning not separated from causal |
+| Trace-production model (§4) | **Planned** | — | not represented |
+| Evidence graph + dependence clustering (§6.5) | **Planned** | independent multiplication; LR cap + relevance as crude dampers | explicit evidence graph, joint cluster bands |
+| Triangulation auditor + translation contract (§6.3) | **Planned** | — | estimator/modeler/reconciler not built |
+| Reconciler protocol (§6.4) | **Planned** | — | constrained action table |
+| Top-driver gating (§6.7) | **Partial** | `top_drivers` computed | no auditor yet to gate; cluster/volume trigger absent |
+| Missingness model w/ observability bands (§6.6) | **Partial** | qualitative-only absence pass (`pass_absence`), excluded from updating | observability grading |
+| Cross-case formal estimation (§7) | **Implemented** | `pt.multi` + `cq_bridge` → CausalQueries | — |
+| Cross-case eligibility criteria (§7) | **Planned** | documented all-`1`s failure mode | enforced comparability checks |
+| Validation protocol / auditor ablation (§8) | **Planned** | `make check` (software tests only) | methodological evaluation not executed |
+
+The Implemented rows establish **software integrity and the scaffolding**; they do **not** establish analytic validity, which §8 exists to earn. The Planned/Partial rows are intended for **staged adoption**; engineering sequencing is deliberately left to a separate implementation note.
 
 ---
 
