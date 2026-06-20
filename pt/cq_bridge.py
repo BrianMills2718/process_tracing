@@ -27,6 +27,16 @@ class CQBridgeError(Exception):
 CQ_TIMEOUT = 600  # 10 minutes — Stan can be slow
 
 
+def is_r_available() -> bool:
+    """True if Rscript is on PATH.
+
+    Used to distinguish intended graceful degradation (R not installed) from
+    genuine CausalQueries failures (R present but the run errored), which must
+    fail loud per the project's no-silent-fallback policy.
+    """
+    return shutil.which("Rscript") is not None
+
+
 def _find_rscript() -> str:
     """Find the Rscript executable or raise."""
     path = shutil.which("Rscript")

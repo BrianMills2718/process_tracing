@@ -144,9 +144,22 @@ class CaseBinarization(BaseModel):
     codings: list[VariableCoding]
     analyst_notes: str = ""
 
-    def to_row(self) -> dict[str, Optional[int]]:
-        """Convert to a flat dict suitable for a data frame row."""
-        return {c.variable_name: c.value for c in self.codings}
+    def to_row(
+        self, variable_order: Optional[list[str]] = None
+    ) -> dict[str, Optional[int]]:
+        """Convert to a flat dict suitable for a data frame row.
+
+        When ``variable_order`` is given (the causal model's canonical variable
+        list), the returned dict has exactly those keys in that order, with any
+        uncoded variable set to None. This guarantees every case produces rows
+        with an identical, fixed column order — without it, rows are keyed in
+        whatever order the LLM emitted codings, which can silently transpose
+        columns when the data frame is bound row-wise in R (rbind is positional).
+        """
+        coded = {c.variable_name: c.value for c in self.codings}
+        if variable_order is None:
+            return coded
+        return {name: coded.get(name) for name in variable_order}
 
 
 # ── CausalQueries Results ─────────────────────────────────────────

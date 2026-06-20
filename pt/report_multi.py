@@ -91,10 +91,14 @@ def generate_multi_report(result: MultiDocResult, output_dir: str = "") -> str:
     for e in model.edges:
         edges_vis.append({"from": e.parent, "to": e.child, "arrows": "to"})
 
+    # Neutralize "</script>" breakout when embedding JSON in a <script> block
+    # (node titles carry LLM/model-file text). "<\/" parses identically in JS.
+    dag_nodes_json = json.dumps(nodes).replace("</", "<\\/").replace("<!--", "<\\!--")
+    dag_edges_json = json.dumps(edges_vis).replace("</", "<\\/").replace("<!--", "<\\!--")
     parts.append(f"""
 <script>
-var dagNodes = new vis.DataSet({json.dumps(nodes)});
-var dagEdges = new vis.DataSet({json.dumps(edges_vis)});
+var dagNodes = new vis.DataSet({dag_nodes_json});
+var dagEdges = new vis.DataSet({dag_edges_json});
 var dagContainer = document.getElementById('dag-container');
 var dagData = {{ nodes: dagNodes, edges: dagEdges }};
 var dagOptions = {{
