@@ -47,6 +47,6 @@ messages:
       ### Hypotheses and their predictions
       {{ hypotheses_json }}
 
-      ### Testing summary (which predictions had relevant evidence)
-      This shows which predictions were linked to relevant evidence during testing. Use it as a starting point, but always verify against the extracted evidence list — some evidence may address a prediction without being formally linked to it.
+      ### Substantive evidence (items the testing pass found relevant)
+      These are the evidence ids the testing pass treated as substantive (relevance ≥ 0.6). Use them to focus on what the text actually addresses, but always verify against the full extracted evidence list above — an item below this threshold may still partially address a prediction.
       {{ testing_summary_json }}

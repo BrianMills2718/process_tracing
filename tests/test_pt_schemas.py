@@ -34,6 +34,10 @@ class TestEvidence:
         e = Evidence(id="e1", description="test", source_text="quote", approximate_date="1789-07")
         assert e.approximate_date == "1789-07"
 
+    def test_evidence_type_rejects_invalid(self):
+        with pytest.raises(ValidationError):
+            Evidence(id="e1", description="test", source_text="quote", evidence_type="anecdotal")
+
 
 def _likelihood(relevance: float = 1.0) -> EvidenceLikelihood:
     return EvidenceLikelihood(

@@ -6,6 +6,12 @@ from typing import ClassVar, Literal, Optional
 from pydantic import BaseModel, Field, model_validator
 
 DiagnosticType = Literal["hoop", "smoking_gun", "doubly_decisive", "straw_in_the_wind"]
+EvidenceType = Literal["empirical", "interpretive"]
+Severity = Literal["damaging", "notable", "minor"]
+RefinementType = Literal["sharpen_mechanism", "add_prediction", "reframe", "merge_suggestion"]
+VerdictStatus = Literal[
+    "strongly_supported", "supported", "weakened", "eliminated", "indeterminate"
+]
 
 
 # ── Pass 1: Extraction ──────────────────────────────────────────────
@@ -32,7 +38,7 @@ class Evidence(BaseModel):
     id: str = Field(description="Unique identifier, e.g. 'evi_tax_records'")
     description: str
     source_text: str = Field(description="Direct quote from the input text")
-    evidence_type: str = Field(
+    evidence_type: EvidenceType = Field(
         default="empirical",
         description="'empirical' for facts/events/actions, 'interpretive' for historian arguments/scholarly claims"
     )
@@ -274,7 +280,7 @@ class AbsenceEvaluation(BaseModel):
     prediction_id: str
     missing_evidence: str = Field(description="What predicted evidence is absent from the text")
     reasoning: str = Field(description="Why absence is informative given the text's scope")
-    severity: str = Field(description="'damaging', 'notable', or 'minor'")
+    severity: Severity = Field(description="'damaging', 'notable', or 'minor'")
     would_be_extractable: bool = Field(
         description="Would this evidence appear in a text of this scope if it existed?"
     )
@@ -290,15 +296,15 @@ class NewEvidence(BaseModel):
     id: str = Field(description="Must use 'evi_ref_' prefix to distinguish from original extraction")
     description: str
     source_text: str = Field(description="Direct quote from input text")
-    evidence_type: str = Field(default="empirical", description="'empirical' or 'interpretive'")
+    evidence_type: EvidenceType = Field(default="empirical", description="'empirical' or 'interpretive'")
     approximate_date: Optional[str] = None
     rationale: str = Field(description="Why missed initially, why it matters now")
 
 
 class ReinterpretedEvidence(BaseModel):
     evidence_id: str
-    original_type: str
-    new_type: str
+    original_type: EvidenceType
+    new_type: EvidenceType
     reinterpretation: str
     updated_description: Optional[str] = None
 
@@ -318,7 +324,7 @@ class SpuriousExtraction(BaseModel):
 
 class HypothesisRefinement(BaseModel):
     hypothesis_id: str
-    refinement_type: str = Field(
+    refinement_type: RefinementType = Field(
         description="'sharpen_mechanism', 'add_prediction', 'reframe', or 'merge_suggestion'"
     )
     description: str
@@ -346,7 +352,7 @@ class RefinementResult(BaseModel):
 
 class HypothesisVerdict(BaseModel):
     hypothesis_id: str
-    status: str = Field(description="'strongly_supported', 'supported', 'weakened', 'eliminated', or 'indeterminate'")
+    status: VerdictStatus = Field(description="'strongly_supported', 'supported', 'weakened', 'eliminated', or 'indeterminate'")
     key_evidence_for: list[str] = Field(description="Evidence IDs that support this hypothesis")
     key_evidence_against: list[str] = Field(description="Evidence IDs that weigh against this hypothesis")
     reasoning: str

@@ -6,8 +6,18 @@ import html
 import json
 import math
 
-from pt.bayesian import RESIDUAL_ID, lr_matrix
+from pt.bayesian import INTERPRETIVE_LR_CAP, RESIDUAL_ID, lr_matrix
 from pt.schemas import Hypothesis, PredictionClassification, ProcessTracingResult
+
+
+def _interpretive_caps(result: ProcessTracingResult) -> dict[str, float]:
+    """Per-evidence interpretive caps, matching what the Bayesian update applied,
+    so the report's displayed LRs agree with the model."""
+    return {
+        ev.id: INTERPRETIVE_LR_CAP
+        for ev in result.extraction.evidence
+        if ev.evidence_type == "interpretive"
+    }
 
 
 def _esc(s: str) -> str:
@@ -182,9 +192,9 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
                 "color": {"color": "#999"}, "group": "causal",
             })
 
-    # Evidence-hypothesis edges from the likelihood matrix
+    # Evidence-hypothesis edges from the likelihood matrix (same caps as the update)
     hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
-    for evidence_id, lrs in lr_matrix(result.testing, hyp_ids):
+    for evidence_id, lrs in lr_matrix(result.testing, hyp_ids, _interpretive_caps(result)):
         if evidence_id not in node_ids:
             continue
         for hyp_id, lr in lrs.items():
@@ -267,17 +277,17 @@ def generate_report(result: ProcessTracingResult) -> str:
             f'{ptxt}</span>'
         )
 
-    # Honest overconfidence flag: a near-degenerate top support driven by accumulation
-    # of many weak items is the signature of unmodeled evidence dependence (clustering
-    # is not yet applied). Treat such a result as a ranking, not a calibrated number.
+    # Honest overconfidence flag: a near-degenerate top support that is still "fragile"
+    # after dependence pooling means the items weren't grouped strongly enough to offset
+    # accumulation. Treat such a result as a ranking, not a calibrated number.
     overconfidence_banner = ""
     if top_post > 0.99 and top_robust == "fragile":
         overconfidence_banner = (
             '<div class="alert alert-warning mb-3"><strong>⚠ Likely overconfident.</strong> '
             'The top support is near-degenerate and the posterior is <em>fragile</em> — driven by '
             'accumulation of many weakly-discriminating (and possibly correlated) evidence items. '
-            'Evidence-dependence clustering is not yet applied, so the magnitude is unreliable. '
-            'Read this as a <strong>ranking</strong>, not a calibrated probability.</div>'
+            'Dependence pooling is applied, but if it did not group these items strongly enough the '
+            'magnitude remains unreliable. Read this as a <strong>ranking</strong>, not a calibrated probability.</div>'
         )
 
     exec_summary = f"""
@@ -501,7 +511,7 @@ def generate_report(result: ProcessTracingResult) -> str:
     # likelihood under each hypothesis, and the derived per-hypothesis LR
     # (relative_likelihood / geometric mean of the item's vector).
     hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
-    matrix = dict(lr_matrix(result.testing, hyp_ids))  # evidence_id -> {hyp_id: lr}
+    matrix = dict(lr_matrix(result.testing, hyp_ids, _interpretive_caps(result)))  # evidence_id -> {hyp_id: lr}
     # evidence_id -> {hyp_id: (relative_likelihood, diagnostic_type)}, plus item meta
     vec_by_ev: dict[str, dict] = {}
     for item in result.testing.evidence_likelihoods:

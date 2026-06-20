@@ -185,6 +185,35 @@ critic/auditor + ablation, trace-production model, provenance guards.
 - Tests: port test_pt_bayesian/test_pt_schemas/test_pipeline_integration fixtures to vectors.
 - Atomic commit (central structure change); make check green before commit; then live run.
 
+## Adversarial code review (round 3) — fixes applied
+
+Two earlier "round 3" pastes were STALE (reviewer on pre-rebuild commits) — disregarded.
+The genuine round-3 review (against current head) split into stale-branch artifacts vs.
+real issues on this branch. Real ones, all fixed:
+
+- **HIGH: report LRs ≠ update LRs.** `_build_vis_data` and the test matrix called
+  `lr_matrix` without the interpretive caps the update uses, so displayed LRs could
+  exceed what actually drove the posterior. Added `_interpretive_caps(result)` helper;
+  applied to both `lr_matrix(...)` calls in report.py.
+- **HIGH: refinement fail-open.** `apply_refinement` silently ignored unknown
+  reinterpretation/hypothesis targets, unknown spurious ids, and out-of-graph new-edge
+  endpoints. Now fails loud (except a target removed-as-spurious in the same delta,
+  which is a legitimate no-op) and reports ACTUAL removal counts. New
+  `tests/test_apply_refinement.py` (8 cases).
+- **MEDIUM: absence prompt/context mismatch.** Prompt described a per-prediction
+  "which predictions had relevant evidence" linkage the code no longer sends (it sends
+  `substantive_evidence_ids`, relevance ≥ 0.6). Prompt section rewritten to match.
+- **MEDIUM: enum-like string fields unconstrained.** `evidence_type`, `severity`,
+  `refinement_type`, verdict `status`, and `ReinterpretedEvidence` type fields are now
+  Literals. Enum-rejection test added.
+- **LOW: stale overconfidence banner.** Said "clustering is not yet applied" — now false
+  (partial pooling IS applied). Reworded to "pooling applied; magnitude unreliable if
+  items weren't grouped strongly enough."
+
+Per user YAGNI guidance, report security hardening (click-handler escaping etc.) was
+NOT done — only correctness/contract fixes and the cheap render-robustness already present.
+118 passed / 1 skipped; mypy clean; make check green.
+
 ## Running log
 
 - 2026-06-19: boundary rebuilt + live smoke green (1 structured call, 2.8s). Keys
