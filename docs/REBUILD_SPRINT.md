@@ -114,6 +114,14 @@ partial-pooling / cross-cluster shared-error model (still deferred). Net state:
 coherent + duplicate-safe + honestly-flagged; magnitude still rank-only on dense
 texts. Order-invariance and ranking are sound. make check green; 96 passed.
 
+## Residual H0 — done
+
+Opt-in residual hypothesis (`RESIDUAL_ID = "H0_residual"`, `include_residual=True`
+from the pipeline): exhaustive partition with a reserve prior + flat likelihood, so
+the system isn't forced to crown a listed story. Default off (keeps unit math/tests
+explicit); pipeline enables it; report renders it. Validated on the live french_rev
+vectors (H0 present in posteriors/ranking/report). 100 passed; make check green.
+
 ## SPRINT COMPLETE (scoped slices)
 
 All non-deferred slices done, verified, and live-validated. Branch

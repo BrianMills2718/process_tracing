@@ -10,6 +10,7 @@ import pytest
 
 from pt.bayesian import (
     LR_CAP,
+    RESIDUAL_ID,
     _compute_robustness,
     _top_drivers,
     item_lrs,
@@ -99,6 +100,45 @@ class TestDependenceClustering:
         result = run_bayesian_update(_testing(*five, clusters=[cluster]), ["h1", "h2"])
         h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
         assert len(h1.updates) == 1  # 5 items -> 1 effective observation
+
+
+class TestResidualHypothesis:
+    """Opt-in residual H0 makes the partition exhaustive (estimand completeness)."""
+
+    def test_default_excludes_residual(self):
+        result = run_bayesian_update(_testing(_vec("e1", {"h1": 9.0, "h2": 1.0})), ["h1", "h2"])
+        assert all(p.hypothesis_id != RESIDUAL_ID for p in result.posteriors)
+
+    def test_residual_present_when_enabled(self):
+        result = run_bayesian_update(
+            _testing(_vec("e1", {"h1": 9.0, "h2": 1.0})), ["h1", "h2"], include_residual=True
+        )
+        ids = {p.hypothesis_id for p in result.posteriors}
+        assert RESIDUAL_ID in ids
+        assert RESIDUAL_ID in result.ranking
+
+    def test_residual_uniform_with_no_evidence(self):
+        # No informative evidence -> uniform over {h1, h2, H0} = 1/3 each.
+        result = run_bayesian_update(_testing(), ["h1", "h2"], include_residual=True)
+        for p in result.posteriors:
+            assert p.final_posterior == pytest.approx(1 / 3, abs=0.01)
+
+    def test_residual_has_flat_likelihood(self):
+        result = run_bayesian_update(
+            _testing(_vec("e1", {"h1": 9.0, "h2": 1.0})), ["h1", "h2"], include_residual=True
+        )
+        h0 = next(p for p in result.posteriors if p.hypothesis_id == RESIDUAL_ID)
+        assert all(u.likelihood_ratio == pytest.approx(1.0) for u in h0.updates)
+
+    def test_residual_with_researcher_priors(self):
+        # Priors cover only the listed hypotheses; residual still gets reserve mass.
+        result = run_bayesian_update(
+            _testing(_vec("e1", {"h1": 1.0, "h2": 1.0})), ["h1", "h2"],
+            priors={"h1": 3.0, "h2": 1.0}, include_residual=True,
+        )
+        ids = {p.hypothesis_id for p in result.posteriors}
+        assert RESIDUAL_ID in ids
+        assert sum(p.final_posterior for p in result.posteriors) == pytest.approx(1.0, abs=1e-6)
 
 
 class TestJointUpdate:

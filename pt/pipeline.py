@@ -128,7 +128,8 @@ def _run_passes_3_plus(
     if verbose:
         print(f"{prefix}Bayesian updating...")
     bayesian = run_bayesian_update(
-        testing, [h.id for h in hypothesis_space.hypotheses], priors=priors
+        testing, [h.id for h in hypothesis_space.hypotheses], priors=priors,
+        include_residual=True,
     )
     if verbose:
         top = bayesian.ranking[0] if bayesian.ranking else "none"

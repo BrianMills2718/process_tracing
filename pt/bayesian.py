@@ -37,6 +37,8 @@ LR_CAP = 20.0  # bound on a single item's pairwise max:min likelihood ratio
 
 RELEVANCE_GATE = 0.4  # below this, an item is uninformative (LR forced to 1.0)
 
+RESIDUAL_ID = "H0_residual"  # explicit "none of the listed explanations" hypothesis
+
 # Robustness thresholds
 DECISIVE_LR_THRESHOLD = 1.6   # |log(LR)| > 1.6 means LR > 5.0 or < 0.2
 WEAK_LR_THRESHOLD = 0.7       # |log(LR)| < 0.7 means LR between 0.5 and 2.0
@@ -226,6 +228,7 @@ def run_bayesian_update(
     testing: TestingResult,
     hypothesis_ids: list[str] | None = None,
     priors: dict[str, float] | None = None,
+    include_residual: bool = False,
 ) -> BayesianResult:
     """Compute posteriors via a coherent joint multinomial update.
 
@@ -234,19 +237,25 @@ def run_bayesian_update(
         hypothesis_ids: the canonical hypothesis universe (so hypotheses with no
             discriminating evidence still receive a posterior = their prior).
             Falls back to the union found in the vectors.
-        priors: optional researcher prior per hypothesis (need not be normalized);
-            defaults to uniform.
+        priors: optional researcher prior per the *listed* hypotheses (need not be
+            normalized); defaults to uniform.
+        include_residual: if True, add an explicit residual hypothesis
+            (``RESIDUAL_ID``) to make the partition exhaustive. It carries reserve
+            prior mass and a flat (uninformative) likelihood — it competes on prior
+            alone, so a leading listed hypothesis must beat "an unspecified
+            alternative". The system is never forced to crown a listed story.
     """
     if hypothesis_ids is None:
         hypothesis_ids = hypothesis_ids_from_testing(testing)
-    n = len(hypothesis_ids)
+    listed_ids = list(hypothesis_ids)
+    n = len(listed_ids)
     if n == 0:
         return BayesianResult(posteriors=[], ranking=[])
 
     if priors:
-        # Fail loud: priors must cover exactly the hypothesis set with positive,
+        # Fail loud: priors must cover exactly the LISTED hypotheses with positive,
         # finite weights — no silent zero-filling of omitted/unknown hypotheses.
-        known = set(hypothesis_ids)
+        known = set(listed_ids)
         unknown = set(priors) - known
         missing = known - set(priors)
         if unknown:
@@ -256,10 +265,18 @@ def run_bayesian_update(
         for h, w in priors.items():
             if not math.isfinite(w) or w <= 0:
                 raise ValueError(f"prior for '{h}' must be a positive finite weight, got {w}")
-        total_prior = sum(priors[h] for h in hypothesis_ids)
-        prior_by_id = {h: priors[h] / total_prior for h in hypothesis_ids}
+        weights = {h: float(priors[h]) for h in listed_ids}
     else:
-        prior_by_id = {h: 1.0 / n for h in hypothesis_ids}
+        weights = {h: 1.0 for h in listed_ids}
+
+    hypothesis_ids = listed_ids
+    if include_residual:
+        # Reserve a "typical hypothesis" worth of prior mass for the residual.
+        weights[RESIDUAL_ID] = sum(weights.values()) / n
+        hypothesis_ids = listed_ids + [RESIDUAL_ID]
+
+    total_prior = sum(weights.values())
+    prior_by_id = {h: weights[h] / total_prior for h in hypothesis_ids}
 
     # Collapse dependence clusters first so correlated evidence isn't double-counted.
     matrix = _collapse_clusters(lr_matrix(testing, hypothesis_ids), testing.dependence_clusters, hypothesis_ids)

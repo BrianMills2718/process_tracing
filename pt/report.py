@@ -6,8 +6,8 @@ import html
 import json
 import math
 
-from pt.bayesian import lr_matrix
-from pt.schemas import PredictionClassification, ProcessTracingResult
+from pt.bayesian import RESIDUAL_ID, lr_matrix
+from pt.schemas import Hypothesis, PredictionClassification, ProcessTracingResult
 
 
 def _esc(s: str) -> str:
@@ -212,6 +212,17 @@ def generate_report(result: ProcessTracingResult) -> str:
     posteriors = {p.hypothesis_id: p for p in result.bayesian.posteriors}
     sensitivity = {s.hypothesis_id: s for s in result.bayesian.sensitivity}
     h_map = {h.id: h for h in result.hypothesis_space.hypotheses}
+    # The residual hypothesis is added only at the Bayesian stage; give the report a
+    # description so it renders in the posterior table / network.
+    if any(p.hypothesis_id == RESIDUAL_ID for p in result.bayesian.posteriors) and RESIDUAL_ID not in h_map:
+        h_map[RESIDUAL_ID] = Hypothesis(
+            id=RESIDUAL_ID,
+            description="None of the listed explanations (other cause, or a genuinely conjunctural combination)",
+            source="residual",
+            theoretical_basis="Exhaustiveness: reserve mass so the listed set need not contain the truth.",
+            causal_mechanism="(residual — no specific mechanism)",
+            observable_predictions=[],
+        )
     ev_map = {e.id: e for e in result.extraction.evidence}
 
     vis_nodes, vis_edges = _build_vis_data(result)
