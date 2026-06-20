@@ -177,10 +177,17 @@ class EvidenceCluster(BaseModel):
     single effective observation (log-average of member vectors).
     """
     evidence_ids: list[str] = Field(
-        description="Two or more evidence ids that share a source, event, or underlying "
-        "fact and therefore carry overlapping (non-independent) information."
+        description="Two or more evidence ids that share a source, event, mechanism, or "
+        "underlying sub-narrative and therefore carry overlapping (non-independent) information."
     )
-    reason: str = Field(description="Why these items are dependent (shared source/event/fact).")
+    reason: str = Field(description="Why these items are dependent (shared source/event/mechanism).")
+    dependence_strength: float = Field(
+        default=1.0, ge=0.0, le=1.0, allow_inf_nan=False,
+        description="How redundant the members are (0=independent, 1=fully redundant). "
+        "1.0 for duplicates/same-source copies; ~0.5–0.8 for items about the same event or "
+        "mechanism that still add some independent signal. Sets the cluster's effective "
+        "observation count k_eff = 1 + (k-1)(1-dependence_strength).",
+    )
 
 
 class TestingResult(BaseModel):

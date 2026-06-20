@@ -140,6 +140,25 @@ vectors (H0 present in posteriors/ranking/report). 100 passed; make check green.
 - **GAP: stale sprint doc** → the Slice-3 design block updated to softmax + pairwise cap.
 - Tests added for every code-enforced fix. 106 passed; make check green.
 
+## Partial-pooling dependence model — implemented + mechanism-validated
+
+Generalized cluster full-collapse to **partial pooling**: `EvidenceCluster.dependence_strength`
+(ρ∈[0,1]); `_pool_clusters` computes effective count `k_eff = 1 + (k-1)(1-ρ)` and the cluster
+contributes `exp(k_eff · mean_log_LR)` per hypothesis (ρ=1 collapse, ρ=0 independent). Prompt now
+asks for broad clustering (source/event/mechanism/sub-narrative) + a dependence_strength.
+
+Deterministic: collapse < partial < independent (unit-tested). 109 passed; make check green.
+
+**Real-data demonstration (no LLM)** on the french-rev vectors — a broad cluster at varying ρ:
+ρ=0 → top 0.994, ρ=0.3 → 0.964, ρ=0.6 → 0.796, ρ=0.8 → 0.500, ρ=1.0 → 0.182. So broad clustering
+at moderate ρ turns the degenerate 0.997 into a non-degenerate posterior — the overconfidence
+lever works on real magnitudes.
+
+**Open: live LLM-behavior confirmation is quota-blocked** (Gemini free-tier quota hit after many
+runs today). Re-run `python -m pt input_text/revolutions/french_revolution.txt -o output/x` when
+quota resets (or with a paid key) to confirm the LLM clusters broadly enough. Per-hypothesis ρ
+remains the deferred refinement.
+
 ## SPRINT COMPLETE (scoped slices)
 
 All non-deferred slices done, verified, and live-validated. Branch

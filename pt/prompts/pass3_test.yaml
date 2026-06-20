@@ -76,14 +76,22 @@ messages:
       ## Dependence clustering (prevents double-counting)
 
       Also output `dependence_clusters`: groups of evidence items that are NOT
-      conditionally independent — they share a source/document, describe the same
-      originating event, or restate the same underlying fact, so they carry
-      OVERLAPPING information. Each cluster needs >= 2 distinct evidence ids and a
-      brief `reason`. An item may appear in at most one cluster; items that are
-      genuinely independent observations belong in NO cluster. Be conservative:
-      cluster only when the items would double-count if treated as independent
-      (e.g., five reports of one speech, or several phrasings of the same fact).
-      Each cluster will be collapsed to a single effective observation.
+      conditionally independent — they share a source/document, the same originating
+      event, the same mechanism, or the same sub-narrative, so they carry OVERLAPPING
+      information. Cluster broadly: many historical "items" are really facets of one
+      storyline and should not each count as independent confirmation. Each cluster
+      needs >= 2 distinct evidence ids, a brief `reason`, and a `dependence_strength`
+      in [0,1]:
+      - **1.0** — duplicates / same-source copies / restatements of one fact.
+      - **0.6–0.8** — same event or mechanism, partly independent details.
+      - **0.3–0.5** — same broad sub-narrative but meaningfully different observations.
+
+      An item appears in at most one cluster; genuinely independent observations stay
+      unclustered. A cluster contributes an *effective* count
+      `k_eff = 1 + (k-1)(1-dependence_strength)` observations — so strongly-redundant
+      groups count as ~1, loosely-related groups count as several. This is the main
+      guard against overconfidence from piling up correlated evidence; prefer to
+      cluster when in doubt.
 
       ## Relevance scoring
       - decades before the outcome: 0.3–0.5 | years before: 0.5–0.7 | same period: 0.8–1.0

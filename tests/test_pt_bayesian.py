@@ -101,6 +101,29 @@ class TestDependenceClustering:
         h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
         assert len(h1.updates) == 1  # 5 items -> 1 effective observation
 
+    def _h1_post(self, rho):
+        five = [_vec(f"d{i}", {"h1": 0.9, "h2": 0.1}) for i in range(5)]
+        cluster = EvidenceCluster(evidence_ids=[f"d{i}" for i in range(5)], reason="r", dependence_strength=rho)
+        r = run_bayesian_update(_testing(*five, clusters=[cluster]), ["h1", "h2"])
+        return next(p.final_posterior for p in r.posteriors if p.hypothesis_id == "h1")
+
+    def test_rho_one_is_full_collapse(self):
+        single = run_bayesian_update(_testing(_vec("d0", {"h1": 0.9, "h2": 0.1})), ["h1", "h2"])
+        s_h1 = next(p.final_posterior for p in single.posteriors if p.hypothesis_id == "h1")
+        assert self._h1_post(1.0) == pytest.approx(s_h1, abs=1e-6)
+
+    def test_rho_zero_is_independent(self):
+        five = [_vec(f"d{i}", {"h1": 0.9, "h2": 0.1}) for i in range(5)]
+        indep = run_bayesian_update(_testing(*five), ["h1", "h2"])  # no cluster
+        i_h1 = next(p.final_posterior for p in indep.posteriors if p.hypothesis_id == "h1")
+        assert self._h1_post(0.0) == pytest.approx(i_h1, abs=1e-6)
+
+    def test_partial_pooling_is_between(self):
+        collapse = self._h1_post(1.0)
+        independent = self._h1_post(0.0)
+        partial = self._h1_post(0.5)
+        assert collapse < partial < independent  # 0.5 sits strictly between
+
 
 class TestResidualHypothesis:
     """Opt-in residual H0 makes the partition exhaustive (estimand completeness)."""

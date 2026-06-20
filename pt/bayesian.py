@@ -122,19 +122,28 @@ def lr_matrix(
     ]
 
 
-def _collapse_clusters(
+def _pool_clusters(
     matrix: list[tuple[str, dict[str, float]]],
     clusters: list,
     hypothesis_ids: list[str],
 ) -> list[tuple[str, dict[str, float]]]:
-    """Collapse each dependence cluster to ONE effective observation.
+    """Partially pool each dependence cluster into one effective observation.
 
-    Conditionally-dependent evidence (same source/event/fact) carries overlapping
-    information; multiplying its likelihoods double-counts. Each cluster's per-item
-    LR vectors are combined by log-average (geometric mean), so a cluster of k
-    items contributes like a single observation in the direction of its members.
-    Items not in any cluster are unchanged. Order is preserved (a cluster takes
-    the position of its first member).
+    Conditionally-dependent evidence (same source/event/mechanism) carries
+    overlapping information; treating its members as independent double-counts. Each
+    cluster contributes an **effective count** of observations via the standard
+    design-effect formula:
+
+        k_eff = 1 + (k - 1) * (1 - dependence_strength)
+
+    (dependence_strength=1 ⇒ k_eff=1, full collapse; =0 ⇒ k_eff=k, independence.)
+    The cluster emits one row whose LR is the member geometric-mean raised to k_eff,
+    so it contributes ``k_eff`` effective observations to the joint log-update.
+    Items not in any cluster are unchanged; a cluster takes its first member's slot.
+
+    Limitation: dependence_strength is a single scalar per cluster (same across
+    hypotheses). Per-hypothesis redundancy (a cluster redundant under one hypothesis
+    but informative under another) is a deferred refinement.
     """
     if not clusters:
         return matrix
@@ -154,10 +163,14 @@ def _collapse_clusters(
         if cidx in emitted:
             continue  # cluster already represented at its first member's position
         emitted.add(cidx)
-        members = [m for m in clusters[cidx].evidence_ids if m in row_by_id]
+        cluster = clusters[cidx]
+        members = [m for m in cluster.evidence_ids if m in row_by_id]
+        k = len(members)
+        rho = getattr(cluster, "dependence_strength", 1.0)
+        k_eff = 1.0 + (k - 1) * (1.0 - rho)
         combined = {
             h: math.exp(
-                sum(math.log(max(row_by_id[m][h], 1e-300)) for m in members) / len(members)
+                k_eff * (sum(math.log(max(row_by_id[m][h], 1e-300)) for m in members) / k)
             )
             for h in hypothesis_ids
         }
@@ -288,8 +301,8 @@ def run_bayesian_update(
     total_prior = sum(weights.values())
     prior_by_id = {h: weights[h] / total_prior for h in hypothesis_ids}
 
-    # Collapse dependence clusters first so correlated evidence isn't double-counted.
-    matrix = _collapse_clusters(
+    # Partially pool dependence clusters so correlated evidence isn't double-counted.
+    matrix = _pool_clusters(
         lr_matrix(testing, hypothesis_ids, caps), testing.dependence_clusters, hypothesis_ids
     )
 
