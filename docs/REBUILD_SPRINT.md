@@ -60,7 +60,15 @@ harness.
 - [x] Slice 2 — researcher priors + prior-sensitivity (CLI --priors, pipeline threading, PriorSensitivity)
 - [x] Integration — Slice 2/4 report rendering validated on the live french_rev vectors
       (no new LLM calls): prior_sensitivity populated, interval/badges render, all checks pass
-- [ ] Ledger + docs update; open PR
+- [x] Ledger + docs update; PR opened (#6)
+
+## SPRINT COMPLETE (scoped slices)
+
+All non-deferred slices done, verified, and live-validated. Branch
+`feat/inference-core-rebuild` → PR #6. `make check`: 86 passed / 1 skipped, mypy
+clean, 100% compliance (only the pre-existing markdown-links module fails).
+Deferred (optimum-scope): band elicitation + joint MC, evidence-graph clustering,
+critic/auditor + ablation, trace-production model, provenance guards.
 
 ## Slice 3 design (locked)
 
