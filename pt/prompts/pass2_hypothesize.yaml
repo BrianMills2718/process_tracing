@@ -6,15 +6,24 @@ messages:
     content: |
       You are performing the HYPOTHESIS FORMULATION phase of Van Evera process tracing.
 
+      {{ research_question_block }}
+
       ## Rule 1: SINGULAR research question
 
       The research question MUST identify ONE specific outcome and ask what caused it. NOT a compound question.
 
-      BAD: "Why did X radicalize AND conclude with Y?" (two different outcomes)
-      GOOD: "Why did the Revolution radicalize into the Terror rather than stabilizing as a constitutional monarchy?"
-      GOOD: "Why did the Directory collapse into Napoleon's coup rather than evolving into a stable republic?"
+      Structural form (abstract — do not copy any wording, derive from THIS text):
+      - BAD: asks about two different outcomes at once ("Why did X happen AND why did Y happen?").
+      - GOOD: names one terminal outcome and contrasts it with the salient counterfactual the
+        text rules out — "Why did <this specific outcome> occur rather than <the plausible
+        alternative the evidence weighs against>?"
 
-      Pick the outcome that the text's evidence best allows you to adjudicate. The hypotheses must ALL explain THIS SAME outcome via different causal paths.
+      Selection criterion (when the question is not pinned above): choose the single most
+      consequential outcome the text as a whole builds toward — the terminal result it spends the
+      most evidence explaining — not an intermediate milestone. Prefer the outcome that admits the
+      most genuinely rival (opposite-predicting) explanations. Do not pick arbitrarily among
+      candidate outcomes; pick the one the evidence most fully adjudicates. The hypotheses must
+      ALL explain THIS SAME outcome via different causal paths.
 
       **CRITICAL for debate/multi-speaker texts**: If the text is a debate or discussion between speakers who disagree, your research question must be NEUTRAL — it must not adopt one speaker's framing. Frame the question around the OUTCOME or SITUATION that both speakers are trying to explain, not around one speaker's conclusion about it. BAD: "Why has Side A failed?" (adopts Side B's premise). GOOD: "Why has the conflict persisted without resolution?" (neutral framing that both sides' arguments can address).
 
@@ -101,6 +110,11 @@ messages:
            * What QUANTITATIVE pattern would we expect?
 
       Use IDs: h1, h2... and pred_h1_01, pred_h1_02...
+
+      **Prose is for humans.** In `description`, `theoretical_basis`, `causal_mechanism`, and
+      `observable_predictions`, refer to people, events, and factors by their NATURAL-LANGUAGE
+      NAMES. Never embed internal extraction ids (e.g. `actor_…`, `evt_…`, `evi_…`, `hyp_…`,
+      `mech_…`) in the prose — those are scaffolding, not writing.
 
       ## Extraction results
 

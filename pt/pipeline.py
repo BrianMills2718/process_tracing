@@ -163,6 +163,7 @@ def run_pipeline(
     review_fn: Callable[[HypothesisSpace, str | None], HypothesisSpace] | None = None,
     output_dir: str | None = None,
     theories: str | None = None,
+    research_question: str | None = None,
     refine: bool = False,
     from_result: ProcessTracingResult | None = None,
     trace_id: str | None = None,
@@ -178,6 +179,8 @@ def run_pipeline(
         review_fn: Custom review function. Defaults to interactive CLI review.
         output_dir: Directory for writing review files.
         theories: Optional plain-text theoretical frameworks for hypothesis generation.
+        research_question: Optional researcher-pinned research question. Pins the outcome to
+            explain (reproducible across runs); when None the LLM selects it.
         refine: If True, run analytical refinement after initial pipeline, then re-run passes 3+.
         from_result: Load extraction + hypothesis_space from existing result, skip passes 1-2. Implies refine.
     """
@@ -213,7 +216,10 @@ def run_pipeline(
         if verbose:
             extra = " (with user theories)" if theories else ""
             print(f"Pass 2/4: Building hypothesis space{extra}...")
-        hypothesis_space = run_hypothesize(extraction, model=model, theories=theories, trace_id=trace_id)
+        hypothesis_space = run_hypothesize(
+            extraction, model=model, theories=theories,
+            research_question=research_question, trace_id=trace_id,
+        )
         if verbose:
             print(f"  {len(hypothesis_space.hypotheses)} hypotheses "
                   f"(text + rivals), research question: {hypothesis_space.research_question[:80]}...")

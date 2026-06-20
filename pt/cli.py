@@ -18,6 +18,7 @@ def main() -> None:
     parser.add_argument("--model", "-m", default=None, help="LLM model override (default: PT_MODEL env or gemini-2.5-flash)")
     parser.add_argument("--review", action="store_true", help="Pause after hypothesis generation for human review")
     parser.add_argument("--theories", default=None, help="Path to text file with theoretical frameworks for hypothesis generation")
+    parser.add_argument("--research-question", default=None, help="Pin the research question (the outcome to explain). Makes runs reproducible; when omitted the LLM selects it.")
     parser.add_argument("--refine", action="store_true", help="Run analytical refinement after initial pipeline, then re-run passes 3+")
     parser.add_argument("--from-result", default=None, help="Path to existing result.json; skips passes 1-2, implies --refine")
     parser.add_argument("--priors", default=None, help="Path to JSON file mapping hypothesis_id -> prior weight (need not sum to 1). Default: uniform.")
@@ -83,7 +84,8 @@ def main() -> None:
 
     result = run_pipeline(
         text, model=args.model, review=args.review, output_dir=output_dir,
-        theories=theories, refine=args.refine, from_result=from_result,
+        theories=theories, research_question=args.research_question,
+        refine=args.refine, from_result=from_result,
         priors=priors,
     )
 
