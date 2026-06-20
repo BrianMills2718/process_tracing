@@ -1,17 +1,21 @@
-"""Single LLM call abstraction — delegates to llm_client."""
+"""Single LLM call abstraction — delegates to llm_client structured output.
+
+The boundary is intentionally thin: it builds the system+user messages and hands
+off to ``llm_client.call_llm_structured``, which owns schema enforcement (native
+JSON-schema where the provider supports it, instructor fallback otherwise),
+transient-error retry, and validated Pydantic parsing. We do not hand-roll schema
+injection or JSON parsing here. Fail-loud: any failure raises ``LLMError``.
+"""
 
 from __future__ import annotations
 
-import json
 import os
-import re
 import time
+from pathlib import Path
 from typing import TypeVar
 
-from pathlib import Path
-
 from dotenv import load_dotenv
-from llm_client import call_llm as _call_llm_raw, strip_fences
+from llm_client import call_llm_structured
 from pydantic import BaseModel
 
 # Load API keys from shared secrets, then project .env for overrides
@@ -26,21 +30,16 @@ DEFAULT_MODEL = os.getenv("PT_MODEL") or os.getenv("GEMINI_MODEL") or "gemini-2.
 
 MAX_RETRIES = 3
 
+_SYSTEM = (
+    "You are an expert political scientist and historian performing Van Evera "
+    "process tracing analysis. Respond with valid JSON matching the requested "
+    "schema exactly. Keep your JSON output concise—use brief descriptions, not "
+    "lengthy prose."
+)
+
 
 class LLMError(Exception):
-    """Raised when LLM call fails. No fallbacks—fail fast."""
-
-
-def _schema_response_format(response_model: type[BaseModel]) -> dict:
-    """Build the provider-enforced structured output contract."""
-    schema_name = re.sub(r"[^a-zA-Z0-9_-]", "_", response_model.__name__)
-    return {
-        "type": "json_schema",
-        "json_schema": {
-            "name": schema_name,
-            "schema": response_model.model_json_schema(),
-        },
-    }
+    """Raised when an LLM call or its structured parse fails. No fallbacks—fail fast."""
 
 
 def call_llm(
@@ -52,61 +51,36 @@ def call_llm(
     model: str = DEFAULT_MODEL,
     temperature: float = 0.3,
     max_budget: float = 0,
-    system: str = "You are an expert political scientist and historian performing Van Evera process tracing analysis. Respond with valid JSON matching the requested schema exactly. Keep your JSON output concise—use brief descriptions, not lengthy prose.",
+    system: str = _SYSTEM,
 ) -> T:
-    """Call LLM and parse response into a Pydantic model.
+    """Call the LLM and return a validated instance of ``response_model``.
 
-    Delegates retry on transient errors (rate limits, timeouts, empty responses),
-    thinking model detection, max token defaulting, and truncation handling to
-    llm_client. This wrapper adds: message building, schema injection, fence
-    stripping, Pydantic validation with retry, and pipeline-specific logging.
+    Delegates structured-output handling (schema enforcement, instructor
+    fallback, transient retry, parsing) to ``llm_client.call_llm_structured``.
+    Raises ``LLMError`` on any failure (transient exhaustion, validation, etc.).
     """
-    schema_json = json.dumps(response_model.model_json_schema(), indent=2)
-    full_prompt = f"{prompt}\n\nRespond with JSON matching this schema:\n{schema_json}"
-
     messages = [
         {"role": "system", "content": system},
-        {"role": "user", "content": full_prompt},
+        {"role": "user", "content": prompt},
     ]
 
-    # Retry loop for Pydantic validation failures (bad JSON from LLM).
-    # Transient errors (rate limits, timeouts, etc.) are retried inside
-    # llm_client, so this loop only re-calls on parse failures.
-    for attempt in range(MAX_RETRIES + 1):
-        t0 = time.time()
-        try:
-            result = _call_llm_raw(
-                model,
-                messages,
-                timeout=600,
-                num_retries=3,
-                temperature=temperature,
-                response_format=_schema_response_format(response_model),
-                task=task,
-                trace_id=trace_id,
-                max_budget=max_budget,
-            )
-        except Exception as e:
-            raise LLMError(f"LLM call failed: {e}") from e
-
-        elapsed = time.time() - t0
-        content = strip_fences(result.content)
-        print(
-            f"  LLM call: {elapsed:.1f}s, {len(content)} chars, "
-            f"finish={result.finish_reason}, model={result.model}"
+    t0 = time.time()
+    try:
+        parsed, result = call_llm_structured(
+            model,
+            messages,
+            response_model,
+            num_retries=MAX_RETRIES,
+            temperature=temperature,
+            task=task,
+            trace_id=trace_id,
+            max_budget=max_budget,
         )
+    except Exception as e:  # fail loud — no silent fallback
+        raise LLMError(f"LLM structured call failed: {e}") from e
 
-        try:
-            parsed = response_model.model_validate_json(content)
-            if attempt > 0:
-                print(f"  Succeeded after {attempt} parse retries")
-            return parsed
-        except Exception as e:
-            if attempt < MAX_RETRIES:
-                print(f"  JSON parse failed (retrying): {e}")
-                continue
-            raise LLMError(
-                f"Failed to parse LLM response: {e}\nRaw: {content[:500]}"
-            ) from e
-
-    raise LLMError(f"LLM call failed after {MAX_RETRIES + 1} attempts")
+    elapsed = time.time() - t0
+    model_used = getattr(result, "model", model)
+    finish = getattr(result, "finish_reason", "?")
+    print(f"  LLM call: {elapsed:.1f}s, finish={finish}, model={model_used}")
+    return parsed
