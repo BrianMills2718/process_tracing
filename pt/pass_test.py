@@ -70,15 +70,33 @@ def run_test(
         **kwargs,
     )
 
-    # Coverage + balance report (advisory; bayesian treats gaps as neutral)
-    n_items = len(result.evidence_likelihoods)
-    print(f"  {n_items}/{len(evidence)} evidence items vectorized across {len(hyps)} hypotheses")
-    incomplete = [
-        item.evidence_id
-        for item in result.evidence_likelihoods
-        if len(item.hypothesis_likelihoods) < len(hyps)
-    ]
-    if incomplete:
-        print(f"    WARNING: {len(incomplete)} items missing a likelihood for some hypothesis "
-              f"(treated as uninformative): {incomplete[:5]}")
+    # Fail loud: the matrix must be complete and exact — every evidence item present
+    # once, and every item's vector covering exactly the hypothesis set (no missing,
+    # duplicate, or unknown ids). Silently tolerating gaps would launder bad LLM
+    # output as neutral evidence.
+    expected_hyp_ids = {h.id for h in hyps}
+    expected_ev_ids = {e.id for e in evidence}
+    seen_ev_ids: list[str] = []
+    for item in result.evidence_likelihoods:
+        seen_ev_ids.append(item.evidence_id)
+        hyp_ids = [hl.hypothesis_id for hl in item.hypothesis_likelihoods]
+        if len(hyp_ids) != len(set(hyp_ids)):
+            raise ValueError(
+                f"testing: duplicate hypothesis ids in vector for evidence '{item.evidence_id}': {hyp_ids}"
+            )
+        if set(hyp_ids) != expected_hyp_ids:
+            raise ValueError(
+                f"testing: evidence '{item.evidence_id}' vector covers {sorted(set(hyp_ids))}, "
+                f"expected exactly {sorted(expected_hyp_ids)}"
+            )
+    if len(seen_ev_ids) != len(set(seen_ev_ids)):
+        raise ValueError("testing: duplicate evidence ids in likelihood vectors")
+    if set(seen_ev_ids) != expected_ev_ids:
+        missing = expected_ev_ids - set(seen_ev_ids)
+        extra = set(seen_ev_ids) - expected_ev_ids
+        raise ValueError(
+            f"testing: evidence coverage mismatch — missing {sorted(missing)}, extra {sorted(extra)}"
+        )
+
+    print(f"  {len(seen_ev_ids)}/{len(evidence)} evidence items vectorized across {len(hyps)} hypotheses")
     return result

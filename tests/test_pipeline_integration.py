@@ -354,6 +354,34 @@ class TestReportConsistency:
             assert p.robustness in ("robust", "fragile", "moderate", "unknown")
 
 
+class TestVectorCompleteness:
+    """run_test must fail loud on incomplete / malformed likelihood matrices."""
+
+    def _run_with(self, testing):
+        from pt import pass_test
+        with patch.object(pass_test, "call_llm", side_effect=lambda *a, **k: testing):
+            return pass_test.run_test(_make_extraction(), _make_hypothesis_space())
+
+    def test_rejects_missing_hypothesis_in_vector(self):
+        # One item's vector covers only h1, not {h1, h2}.
+        good = _make_testing()
+        good.evidence_likelihoods[0].hypothesis_likelihoods = [
+            HypothesisLikelihood(hypothesis_id="h1", relative_likelihood=1.0, diagnostic_type="hoop")
+        ]
+        with pytest.raises(ValueError, match="expected exactly"):
+            self._run_with(good)
+
+    def test_rejects_missing_evidence_item(self):
+        good = _make_testing()
+        good.evidence_likelihoods = good.evidence_likelihoods[:3]  # drop one of 4
+        with pytest.raises(ValueError, match="coverage mismatch"):
+            self._run_with(good)
+
+    def test_accepts_complete_matrix(self):
+        result = self._run_with(_make_testing())
+        assert len(result.evidence_likelihoods) == 4
+
+
 class TestExecutiveSummary:
     """Slice 4 + truth-in-labeling: the headline surfaces a support interval and
     stability flags, framed as comparative support (not absolute probability)."""
@@ -383,3 +411,21 @@ class TestExecutiveSummary:
         html = generate_report(self._result())
         assert "range " in html  # support interval badge
         assert ("robust to prior" in html) or ("prior-sensitive" in html)
+
+    def test_overconfidence_banner_on_degenerate_fragile_posterior(self):
+        # Many weakly-pro-h1 items -> near-1.0 support, fragile -> warning banner.
+        items = [_ev_like(f"e{i}", h1=2.0, h2=1.0, relevance=0.9) for i in range(20)]
+        testing = TestingResult(evidence_likelihoods=items)
+        result = ProcessTracingResult(
+            extraction=_make_extraction(),
+            hypothesis_space=_make_hypothesis_space(),
+            testing=testing,
+            absence=AbsenceResult(evaluations=[]),
+            bayesian=run_bayesian_update(testing, ["h1", "h2"]),
+            synthesis=_make_synthesis(),
+        )
+        assert result.bayesian.posteriors[0].final_posterior > 0.99
+        assert "Likely overconfident" in generate_report(result)
+
+    def test_no_overconfidence_banner_on_normal_result(self):
+        assert "Likely overconfident" not in generate_report(self._result())

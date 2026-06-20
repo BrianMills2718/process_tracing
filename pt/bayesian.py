@@ -58,11 +58,6 @@ def _prob(odds: float) -> float:
     return _clamp(odds / (1.0 + odds))
 
 
-def _geomean(values: list[float]) -> float:
-    """Geometric mean of positive values."""
-    return math.exp(sum(math.log(max(v, 1e-12)) for v in values) / len(values))
-
-
 def hypothesis_ids_from_testing(testing: TestingResult) -> list[str]:
     """Union of hypothesis ids appearing in the likelihood vectors, first-seen order.
 
@@ -79,12 +74,18 @@ def hypothesis_ids_from_testing(testing: TestingResult) -> list[str]:
     return seen
 
 
+_HALF_LOG_CAP = 0.5 * math.log(LR_CAP)  # bounds a single item's pairwise max:min ratio to LR_CAP
+
+
 def item_lrs(item: EvidenceLikelihood, hypothesis_ids: list[str]) -> dict[str, float]:
     """Per-hypothesis effective LR for one evidence item, derived from its vector.
 
     Each hypothesis's LR is its relative likelihood over the vector's geometric
-    mean, clamped and relevance-discounted. A hypothesis absent from the vector,
-    or an item below the relevance gate, contributes LR 1.0 (no update).
+    mean (so the LRs are centered, geomean 1). The per-item **pairwise** spread is
+    capped: each centered log-LR is clamped to ±0.5·log(LR_CAP), so no single
+    evidence item can move any pair of hypotheses by more than LR_CAP:1. Then a
+    soft relevance discount is applied on the log scale; an item below the
+    relevance gate, or a hypothesis absent from the vector, contributes LR 1.0.
     """
     by_id = {
         hl.hypothesis_id: max(hl.relative_likelihood, 1e-9)
@@ -93,7 +94,7 @@ def item_lrs(item: EvidenceLikelihood, hypothesis_ids: list[str]) -> dict[str, f
     present = [by_id[h] for h in hypothesis_ids if h in by_id]
     if not present:
         return {h: 1.0 for h in hypothesis_ids}
-    geo = _geomean(present)
+    log_geo = sum(math.log(v) for v in present) / len(present)
     rel = item.relevance
     out: dict[str, float] = {}
     for h in hypothesis_ids:
@@ -101,12 +102,13 @@ def item_lrs(item: EvidenceLikelihood, hypothesis_ids: list[str]) -> dict[str, f
         if v is None:
             out[h] = 1.0
             continue
-        lr = max(LR_FLOOR, min(LR_CAP, v / geo))
+        log_lr = math.log(v) - log_geo
+        log_lr = max(-_HALF_LOG_CAP, min(_HALF_LOG_CAP, log_lr))  # cap pairwise spread
         if rel < RELEVANCE_GATE:
-            lr = 1.0
+            log_lr = 0.0
         else:
-            lr = math.exp(rel * math.log(lr))  # soft relevance discount on log scale
-        out[h] = lr
+            log_lr *= rel  # soft relevance discount on the log scale
+        out[h] = math.exp(log_lr)
     return out
 
 
@@ -166,12 +168,26 @@ def _top_drivers(updates: list[EvidenceUpdate], n: int = 3) -> list[str]:
     return [eid for _, eid in scored[:n]]
 
 
-def _posterior_from_lrs(prior: float, lrs: list[float]) -> float:
-    """Posterior probability from a prior and a list of LRs (used for sensitivity)."""
-    current = prior
-    for lr in lrs:
-        current = _prob(_odds(current) * lr)
-    return current
+def _joint_posteriors(
+    per_hyp_lrs: dict[str, list[float]],
+    hypothesis_ids: list[str],
+    prior_by_id: dict[str, float],
+) -> dict[str, float]:
+    """Coherent joint posterior via log-space softmax (order-invariant).
+
+    log w_i = log(prior_i) + Σ_m log(LR_{m,i}); posterior_i = softmax(log w)_i.
+    No per-step clamping, so the result depends only on the *set* of evidence, not
+    its order — this is the actual multinomial update over the hypothesis set.
+    """
+    log_w = {
+        h: math.log(max(prior_by_id[h], 1e-300))
+        + sum(math.log(max(lr, 1e-300)) for lr in per_hyp_lrs[h])
+        for h in hypothesis_ids
+    }
+    m = max(log_w.values())
+    exps = {h: math.exp(log_w[h] - m) for h in hypothesis_ids}
+    z = sum(exps.values())
+    return {h: exps[h] / z for h in hypothesis_ids}
 
 
 def run_bayesian_update(
@@ -196,45 +212,64 @@ def run_bayesian_update(
         return BayesianResult(posteriors=[], ranking=[])
 
     if priors:
-        total_prior = sum(max(priors.get(h, 0.0), 0.0) for h in hypothesis_ids)
-        if total_prior > 0:
-            prior_by_id = {h: max(priors.get(h, 0.0), 0.0) / total_prior for h in hypothesis_ids}
-        else:
-            prior_by_id = {h: 1.0 / n for h in hypothesis_ids}
+        # Fail loud: priors must cover exactly the hypothesis set with positive,
+        # finite weights — no silent zero-filling of omitted/unknown hypotheses.
+        known = set(hypothesis_ids)
+        unknown = set(priors) - known
+        missing = known - set(priors)
+        if unknown:
+            raise ValueError(f"priors reference unknown hypotheses: {sorted(unknown)}")
+        if missing:
+            raise ValueError(f"priors missing weights for hypotheses: {sorted(missing)}")
+        for h, w in priors.items():
+            if not math.isfinite(w) or w <= 0:
+                raise ValueError(f"prior for '{h}' must be a positive finite weight, got {w}")
+        total_prior = sum(priors[h] for h in hypothesis_ids)
+        prior_by_id = {h: priors[h] / total_prior for h in hypothesis_ids}
     else:
         prior_by_id = {h: 1.0 / n for h in hypothesis_ids}
 
     matrix = lr_matrix(testing, hypothesis_ids)
 
-    posteriors: list[HypothesisPosterior] = []
-    for h in hypothesis_ids:
-        current_prob = prior_by_id[h]
-        updates: list[EvidenceUpdate] = []
-        for evidence_id, lrs in matrix:
-            lr = lrs[h]
-            prior_for_update = current_prob
-            current_prob = _prob(_odds(current_prob) * lr)
-            updates.append(EvidenceUpdate(
+    # Joint update: accumulate log weights and softmax-normalize after every item.
+    # The trail records the *joint* (normalized) posterior of each hypothesis after
+    # each evidence item, so it is order-invariant and the columns sum to 1.
+    log_w = {h: math.log(max(prior_by_id[h], 1e-300)) for h in hypothesis_ids}
+
+    def _softmax(weights: dict[str, float]) -> dict[str, float]:
+        m = max(weights.values())
+        exps = {h: math.exp(weights[h] - m) for h in hypothesis_ids}
+        z = sum(exps.values())
+        return {h: exps[h] / z for h in hypothesis_ids}
+
+    prev_post = _softmax(log_w)  # = normalized prior
+    trails: dict[str, list[EvidenceUpdate]] = {h: [] for h in hypothesis_ids}
+    for evidence_id, lrs in matrix:
+        for h in hypothesis_ids:
+            log_w[h] += math.log(max(lrs[h], 1e-300))
+        cur_post = _softmax(log_w)
+        for h in hypothesis_ids:
+            trails[h].append(EvidenceUpdate(
                 evidence_id=evidence_id,
                 prediction_id=None,
-                likelihood_ratio=round(lr, 4),
-                prior=round(prior_for_update, 6),
-                posterior=round(current_prob, 6),
+                likelihood_ratio=round(lrs[h], 4),
+                prior=round(prev_post[h], 6),
+                posterior=round(cur_post[h], 6),
             ))
-        posteriors.append(HypothesisPosterior(
+        prev_post = cur_post
+
+    final_post = _softmax(log_w)
+    posteriors = [
+        HypothesisPosterior(
             hypothesis_id=h,
             prior=round(prior_by_id[h], 6),
-            updates=updates,
-            final_posterior=current_prob,
-            robustness=_compute_robustness(updates),
-            top_drivers=_top_drivers(updates),
-        ))
-
-    # Normalize so posteriors sum to 1 (joint multinomial normalization)
-    total = sum(p.final_posterior for p in posteriors)
-    if total > 0:
-        for p in posteriors:
-            p.final_posterior = round(_clamp(p.final_posterior / total), 6)
+            updates=trails[h],
+            final_posterior=round(final_post[h], 6),
+            robustness=_compute_robustness(trails[h]),
+            top_drivers=_top_drivers(trails[h]),
+        )
+        for h in hypothesis_ids
+    ]
 
     ranking = sorted(posteriors, key=lambda p: p.final_posterior, reverse=True)
     ranking_ids = [p.hypothesis_id for p in ranking]
@@ -255,15 +290,9 @@ def _normalized_posteriors(
     hypothesis_ids: list[str],
     prior_by_id: dict[str, float],
 ) -> dict[str, float]:
-    """Final normalized posteriors for a given prior (no update trail)."""
-    raw: dict[str, float] = {}
-    for h in hypothesis_ids:
-        current = prior_by_id[h]
-        for _, lrs in matrix:
-            current = _prob(_odds(current) * lrs[h])
-        raw[h] = current
-    total = sum(raw.values())
-    return {h: raw[h] / total for h in hypothesis_ids} if total > 0 else raw
+    """Final joint posteriors for a given prior (no update trail)."""
+    per_hyp = {h: [lrs[h] for _, lrs in matrix] for h in hypothesis_ids}
+    return _joint_posteriors(per_hyp, hypothesis_ids, prior_by_id)
 
 
 def _prior_sensitivity(
@@ -332,8 +361,8 @@ def _run_sensitivity(
                 for e in per_hyp_top[h]:
                     perturb.add((h, e))
 
-        best_raw: dict[str, float] = {}
-        worst_raw: dict[str, float] = {}
+        best_raw: dict[str, list[float]] = {}
+        worst_raw: dict[str, list[float]] = {}
         for h in hypothesis_ids:
             best_lrs: list[float] = []
             worst_lrs: list[float] = []
@@ -352,13 +381,11 @@ def _run_sensitivity(
                 else:
                     best_lrs.append(lr)
                     worst_lrs.append(lr)
-            best_raw[h] = _posterior_from_lrs(prior_by_id[h], best_lrs)
-            worst_raw[h] = _posterior_from_lrs(prior_by_id[h], worst_lrs)
+            best_raw[h] = best_lrs
+            worst_raw[h] = worst_lrs
 
-        best_total = sum(best_raw.values())
-        worst_total = sum(worst_raw.values())
-        best_norm = {k: _clamp(v / best_total) for k, v in best_raw.items()} if best_total > 0 else best_raw
-        worst_norm = {k: _clamp(v / worst_total) for k, v in worst_raw.items()} if worst_total > 0 else worst_raw
+        best_norm = _joint_posteriors(best_raw, hypothesis_ids, prior_by_id)
+        worst_norm = _joint_posteriors(worst_raw, hypothesis_ids, prior_by_id)
 
         best_rank = sorted(best_norm, key=lambda k: best_norm[k], reverse=True)
         worst_rank = sorted(worst_norm, key=lambda k: worst_norm[k], reverse=True)

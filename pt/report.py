@@ -177,7 +177,7 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
         size = 15 + post * 30
         nodes.append({
             "id": h.id, "label": f"{h.id}: {h.description[:30]}",
-            "title": _esc(f"{h.description}\nPosterior: {post:.3f}"),
+            "title": _esc(f"{h.description}\nSupport: {post:.3f}"),
             "color": "#ffcc00", "shape": "star", "size": int(size),
             "group": "hypothesis",
         })
@@ -266,10 +266,24 @@ def generate_report(result: ProcessTracingResult) -> str:
             f'{ptxt}</span>'
         )
 
+    # Honest overconfidence flag: a near-degenerate top support driven by accumulation
+    # of many weak items is the signature of unmodeled evidence dependence (clustering
+    # is not yet applied). Treat such a result as a ranking, not a calibrated number.
+    overconfidence_banner = ""
+    if top_post > 0.99 and top_robust == "fragile":
+        overconfidence_banner = (
+            '<div class="alert alert-warning mb-3"><strong>⚠ Likely overconfident.</strong> '
+            'The top support is near-degenerate and the posterior is <em>fragile</em> — driven by '
+            'accumulation of many weakly-discriminating (and possibly correlated) evidence items. '
+            'Evidence-dependence clustering is not yet applied, so the magnitude is unreliable. '
+            'Read this as a <strong>ranking</strong>, not a calibrated probability.</div>'
+        )
+
     exec_summary = f"""
     <div class="card mb-4 shadow-sm">
       <div class="card-header bg-primary text-white"><h4 class="mb-0">Executive Summary</h4></div>
       <div class="card-body">
+        {overconfidence_banner}
         <p><strong>Research Question:</strong> {_esc(result.hypothesis_space.research_question)}</p>
         <p><strong>Top Hypothesis:</strong> {_esc(top_h.description) if top_h else 'N/A'}
            <span class="badge bg-warning text-dark"
@@ -406,8 +420,8 @@ def generate_report(result: ProcessTracingResult) -> str:
             {_th("ID")}
             {_th("Hypothesis")}
             {_th("Source")}
-            {_th("Prior", "Starting probability before any evidence is considered")}
-            {_th("Posterior", "Final probability after Bayesian updating with all evidence")}
+            {_th("Prior", "Starting support before any evidence is considered (uniform across hypotheses by default)")}
+            {_th("Support", "Comparative support: normalized odds across the listed hypotheses after Bayesian updating — not an absolute probability of truth")}
             {_th("Status")}
             {_th("Robustness", "Whether the posterior is driven by few decisive tests (robust) or many weak ones (fragile)")}
             {_th("Sensitivity", "Range of posterior values under ±50% perturbation of the most influential evidence")}
@@ -455,7 +469,7 @@ def generate_report(result: ProcessTracingResult) -> str:
             <div><strong>{_esc(hid)}</strong>: {_esc(hyp.description[:80])}
               {_robustness_badge(p.robustness)}</div>
             <div class="text-end">
-              <span class="badge bg-primary">Posterior: {baseline:.3f}</span>
+              <span class="badge bg-primary">Support: {baseline:.3f}</span>
               {'<span class="badge bg-' + ('success' if s.rank_stable else 'warning') + '">Rank ' + ('stable' if s.rank_stable else 'unstable') + '</span>' if s else ''}
             </div>
           </div>
@@ -675,7 +689,7 @@ def generate_report(result: ProcessTracingResult) -> str:
     bayesian_section = f"""
     <div class="card mb-4 shadow-sm">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h4 class="mb-0" data-bs-toggle="tooltip" title="Starting from equal priors, each evidence item updates the posterior probability via its likelihood ratio. LR > 1 increases support, LR < 1 decreases it.">Bayesian Update Summary</h4>
+        <h4 class="mb-0" data-bs-toggle="tooltip" title="Starting from the prior, each evidence item updates the comparative support via its likelihood ratio. LR > 1 increases support, LR < 1 decreases it. The result is support relative to the listed hypotheses, not an absolute probability.">Bayesian Update Summary</h4>
         <button class="btn btn-sm btn-outline-primary section-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#bayesianBody">Expand</button>
       </div>
       <div class="collapse" id="bayesianBody">

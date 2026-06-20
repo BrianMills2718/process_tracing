@@ -62,6 +62,42 @@ harness.
       (no new LLM calls): prior_sensitivity populated, interval/badges render, all checks pass
 - [x] Ledger + docs update; PR opened (#6)
 
+## Adversarial code review (round 1) — fixes applied
+
+A fresh agent reviewed the rebuild and found the coherence claim was FALSE: the
+update was still per-hypothesis binary-odds-then-normalize with per-step clamping
+(order-dependent: 5 pro + 5 anti → 0.001; reversed → 0.999). Fixed + other defects:
+
+- **DEFECT (headline): real joint update.** Rewrote to log-space softmax
+  (log w_i = log prior_i + Σ log LR_i; softmax). Order-invariant (unit-tested +
+  validated on real data), no per-step clamping. `_joint_posteriors` helper; trail
+  records the joint normalized posterior after each item.
+- **DEFECT: cap was per-LR (400:1 pairwise).** Now caps per-item PAIRWISE spread to
+  LR_CAP (each centered log-LR clamped to ±0.5·log CAP).
+- **DEFECT: silent vector incompleteness.** `pass_test` now fails loud on missing/
+  duplicate/unknown hypothesis ids per item and missing/extra/duplicate evidence ids.
+- **DEFECT: silent prior handling.** `run_bayesian_update` now raises on unknown/
+  missing/non-positive priors.
+- **DEFECT: partial truth-in-labeling.** Remaining report/pipeline "probability"
+  labels → "support".
+- GAP (labeled honestly): sensitivity is local (±50% top drivers); prior-sensitivity
+  is one-at-a-time — tooltips say so.
+
+**KEY EMPIRICAL FINDING (the fix surfaced it):** with the *correct* joint update, the
+76-item French-Rev run gives h1 = **1.000** (the buggy clamping was masking this at
+0.948). This is Naive-Bayes overconfidence from unmodeled evidence **dependence** —
+exactly what the white paper warns about, and what dependence-clustering (deferred
+Slice 5) fixes. **This run shows Slice 5 is now REQUIRED, not optional**, for usable
+single-text magnitudes. Added an honest overconfidence banner (top>0.99 + fragile →
+"read as ranking, not calibrated probability"). Order-invariance + rank are still
+sound; only the magnitude is unreliable until clustering lands.
+
+Verified: 96 passed / 1 skipped, mypy clean, 100% compliance.
+
+Still open from the review: residual **H0** not implemented (estimand incomplete —
+contract violation, was already marked Partial); white-paper/build-plan docs live on
+PR #4's branch, not this one (broken cross-branch reference in PROJECT_THEORY).
+
 ## SPRINT COMPLETE (scoped slices)
 
 All non-deferred slices done, verified, and live-validated. Branch

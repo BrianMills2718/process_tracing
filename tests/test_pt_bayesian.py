@@ -115,6 +115,36 @@ class TestCoherence:
             assert lrs[h] == pytest.approx(1.0, abs=1e-9)
 
 
+class TestJointUpdate:
+    """The update must be a coherent joint multinomial update (softmax of summed
+    log-LRs), not per-hypothesis binary odds with post-hoc normalization."""
+
+    def test_matches_closed_form_softmax(self):
+        # {h1:16, h2:1}: LRs 4 and 0.25; joint posterior = 4/(4+0.25) = 0.941,
+        # NOT the binary-odds-then-normalize value of 0.8.
+        result = run_bayesian_update(_testing(_vec("e1", {"h1": 16.0, "h2": 1.0})), ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.final_posterior == pytest.approx(4.0 / 4.25, abs=1e-3)
+
+    def test_order_invariant(self):
+        # 5 strongly-pro-h1 items then 5 strongly-anti-h1 items must give the SAME
+        # posterior regardless of order (the old binary-odds path gave 0.001 / 0.999 / 0.5).
+        pro = [_vec(f"p{i}", {"h1": 100.0, "h2": 1.0}) for i in range(5)]
+        anti = [_vec(f"a{i}", {"h1": 1.0, "h2": 100.0}) for i in range(5)]
+
+        def post(items):
+            r = run_bayesian_update(_testing(*items), ["h1", "h2"])
+            return next(p.final_posterior for p in r.posteriors if p.hypothesis_id == "h1")
+
+        forward = post(pro + anti)
+        reverse = post(anti + pro)
+        alternating = post([x for pair in zip(pro, anti) for x in pair])
+        assert forward == pytest.approx(reverse, abs=1e-6)
+        assert forward == pytest.approx(alternating, abs=1e-6)
+        # symmetric pro/anti -> back to 0.5
+        assert forward == pytest.approx(0.5, abs=1e-6)
+
+
 # ── LR capping ───────────────────────────────────────────────────────
 
 
@@ -123,11 +153,14 @@ class TestLRCapping:
         assert LR_CAP == 20.0
         assert LR_FLOOR == pytest.approx(0.05)
 
-    def test_strong_evidence_capped(self):
-        # sqrt(1e6/1) = 1000 -> capped to 20
+    def test_strong_evidence_capped_on_pairwise_spread(self):
+        # Cap bounds a single item's PAIRWISE max:min ratio to LR_CAP, not each
+        # centered LR independently. {1e6, 1} -> {sqrt(CAP), 1/sqrt(CAP)}, ratio == CAP.
+        import math
         lrs = item_lrs(_vec("e1", {"h1": 1e6, "h2": 1.0}), ["h1", "h2"])
-        assert lrs["h1"] == pytest.approx(LR_CAP)
-        assert lrs["h2"] == pytest.approx(LR_FLOOR)
+        assert lrs["h1"] == pytest.approx(math.sqrt(LR_CAP))
+        assert lrs["h2"] == pytest.approx(1.0 / math.sqrt(LR_CAP))
+        assert lrs["h1"] / lrs["h2"] == pytest.approx(LR_CAP)
 
     def test_single_item_does_not_reach_certainty(self):
         testing = _testing(_vec("e1", {"h1": 1e6, "h2": 1.0}))
@@ -418,3 +451,18 @@ class TestPriors:
         testing = _testing(_vec("e1", {"h1": 1.05, "h2": 1.0}, relevance=0.5))
         result = run_bayesian_update(testing, ["h1", "h2"])
         assert result.prior_sensitivity.stable_under_prior_perturbation is False
+
+    def test_priors_reject_unknown_hypothesis(self):
+        testing = _testing(_vec("e1", {"h1": 2.0, "h2": 1.0}))
+        with pytest.raises(ValueError, match="unknown"):
+            run_bayesian_update(testing, ["h1", "h2"], priors={"h1": 1.0, "h2": 1.0, "h9": 1.0})
+
+    def test_priors_reject_missing_hypothesis(self):
+        testing = _testing(_vec("e1", {"h1": 2.0, "h2": 1.0}))
+        with pytest.raises(ValueError, match="missing"):
+            run_bayesian_update(testing, ["h1", "h2"], priors={"h1": 1.0})
+
+    def test_priors_reject_nonpositive_weight(self):
+        testing = _testing(_vec("e1", {"h1": 2.0, "h2": 1.0}))
+        with pytest.raises(ValueError, match="positive"):
+            run_bayesian_update(testing, ["h1", "h2"], priors={"h1": 1.0, "h2": 0.0})

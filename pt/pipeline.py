@@ -135,7 +135,7 @@ def _run_passes_3_plus(
         top_post = next(
             (p.final_posterior for p in bayesian.posteriors if p.hypothesis_id == top), 0
         )
-        print(f"  Top hypothesis: {top} (posterior: {top_post:.3f})")
+        print(f"  Top hypothesis: {top} (support: {top_post:.3f})")
 
     if verbose:
         print(f"{prefix}Pass 4: Synthesizing analysis...")
