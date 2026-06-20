@@ -20,6 +20,7 @@ def main() -> None:
     parser.add_argument("--theories", default=None, help="Path to text file with theoretical frameworks for hypothesis generation")
     parser.add_argument("--refine", action="store_true", help="Run analytical refinement after initial pipeline, then re-run passes 3+")
     parser.add_argument("--from-result", default=None, help="Path to existing result.json; skips passes 1-2, implies --refine")
+    parser.add_argument("--priors", default=None, help="Path to JSON file mapping hypothesis_id -> prior weight (need not sum to 1). Default: uniform.")
     args = parser.parse_args()
 
     if not os.path.isfile(args.input):
@@ -67,9 +68,23 @@ def main() -> None:
             from_result = ProcessTracingResult.model_validate(json.load(f))
         print(f"Loaded result: {args.from_result}")
 
+    # Load researcher priors if provided
+    priors = None
+    if args.priors:
+        if not os.path.isfile(args.priors):
+            print(f"Error: priors file not found: {args.priors}", file=sys.stderr)
+            sys.exit(1)
+        with open(args.priors, "r", encoding="utf-8") as f:
+            priors = json.load(f)
+        if not isinstance(priors, dict) or not priors:
+            print("Error: priors file must be a non-empty JSON object {hypothesis_id: weight}", file=sys.stderr)
+            sys.exit(1)
+        print(f"Priors: {args.priors} ({len(priors)} hypotheses)")
+
     result = run_pipeline(
         text, model=args.model, review=args.review, output_dir=output_dir,
         theories=theories, refine=args.refine, from_result=from_result,
+        priors=priors,
     )
 
     # Write JSON

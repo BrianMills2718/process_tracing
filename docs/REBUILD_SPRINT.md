@@ -54,7 +54,7 @@ harness.
 - [x] LLM boundary → call_llm_structured — committed + live-smoke validated
 - [x] Slice 3 — coherent likelihood vector (MVP) — deterministic green + live-validated
 - [ ] Slice 4 — bands + posterior interval + rank-stability
-- [ ] Slice 2 — researcher priors + prior-sensitivity (priors param already in run_bayesian_update)
+- [x] Slice 2 — researcher priors + prior-sensitivity (CLI --priors, pipeline threading, PriorSensitivity)
 - [ ] Integration live run + report adaptation
 - [ ] Ledger + docs update; open PR
 

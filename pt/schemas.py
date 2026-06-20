@@ -190,12 +190,28 @@ class SensitivityEntry(BaseModel):
     rank_stable: bool = Field(description="True if this hypothesis keeps its rank across all perturbations")
 
 
+class PriorSensitivity(BaseModel):
+    """Whether the ranking survives reasonable changes to the prior."""
+    top_hypothesis_id: str
+    stable_under_prior_perturbation: bool = Field(
+        description="True if the top-ranked hypothesis stays top when each hypothesis's "
+        "prior is independently up- and down-weighted by the perturbation factor."
+    )
+    perturbation_factor: float = Field(
+        default=2.0, description="Multiplicative factor applied to each prior."
+    )
+
+
 class BayesianResult(BaseModel):
     posteriors: list[HypothesisPosterior]
     ranking: list[str] = Field(description="Hypothesis IDs ordered by final posterior, highest first")
     sensitivity: list[SensitivityEntry] = Field(
         default_factory=list,
         description="How posteriors change when the most influential LRs are perturbed ±50%"
+    )
+    prior_sensitivity: Optional[PriorSensitivity] = Field(
+        default=None,
+        description="Whether the top-ranked hypothesis is robust to changes in the prior."
     )
 
 

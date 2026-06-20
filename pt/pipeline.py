@@ -105,6 +105,7 @@ def _run_passes_3_plus(
     verbose: bool = True,
     pass_label: str = "",
     trace_id: str | None = None,
+    priors: dict[str, float] | None = None,
 ) -> tuple:
     """Run passes 3, 3b, Bayesian, and 4. Returns (testing, absence, bayesian, synthesis)."""
     prefix = f"{pass_label} " if pass_label else ""
@@ -127,7 +128,7 @@ def _run_passes_3_plus(
     if verbose:
         print(f"{prefix}Bayesian updating...")
     bayesian = run_bayesian_update(
-        testing, [h.id for h in hypothesis_space.hypotheses]
+        testing, [h.id for h in hypothesis_space.hypotheses], priors=priors
     )
     if verbose:
         top = bayesian.ranking[0] if bayesian.ranking else "none"
@@ -157,6 +158,7 @@ def run_pipeline(
     refine: bool = False,
     from_result: ProcessTracingResult | None = None,
     trace_id: str | None = None,
+    priors: dict[str, float] | None = None,
 ) -> ProcessTracingResult:
     """Run the full process tracing pipeline.
 
@@ -216,6 +218,7 @@ def run_pipeline(
     # Run passes 3-4 (initial)
     testing, absence, bayesian, synthesis = _run_passes_3_plus(
         extraction, hypothesis_space, text, model=model, verbose=verbose, trace_id=trace_id,
+        priors=priors,
     )
 
     refinement_result = None
@@ -258,7 +261,7 @@ def run_pipeline(
             print("\nRe-running passes 3-4 with refined data...")
         testing, absence, bayesian, synthesis = _run_passes_3_plus(
             extraction, hypothesis_space, text, model=model, verbose=verbose,
-            pass_label="[Refined]", trace_id=trace_id,
+            pass_label="[Refined]", trace_id=trace_id, priors=priors,
         )
 
     elapsed = time.time() - t0

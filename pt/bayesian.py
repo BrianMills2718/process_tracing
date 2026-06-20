@@ -23,6 +23,7 @@ from pt.schemas import (
     EvidenceLikelihood,
     EvidenceUpdate,
     HypothesisPosterior,
+    PriorSensitivity,
     SensitivityEntry,
     TestingResult,
 )
@@ -239,8 +240,57 @@ def run_bayesian_update(
     ranking_ids = [p.hypothesis_id for p in ranking]
 
     sensitivity = _run_sensitivity(matrix, hypothesis_ids, posteriors, prior_by_id)
+    prior_sens = _prior_sensitivity(matrix, hypothesis_ids, prior_by_id, ranking_ids[0]) if ranking_ids else None
 
-    return BayesianResult(posteriors=posteriors, ranking=ranking_ids, sensitivity=sensitivity)
+    return BayesianResult(
+        posteriors=posteriors,
+        ranking=ranking_ids,
+        sensitivity=sensitivity,
+        prior_sensitivity=prior_sens,
+    )
+
+
+def _normalized_posteriors(
+    matrix: list[tuple[str, dict[str, float]]],
+    hypothesis_ids: list[str],
+    prior_by_id: dict[str, float],
+) -> dict[str, float]:
+    """Final normalized posteriors for a given prior (no update trail)."""
+    raw: dict[str, float] = {}
+    for h in hypothesis_ids:
+        current = prior_by_id[h]
+        for _, lrs in matrix:
+            current = _prob(_odds(current) * lrs[h])
+        raw[h] = current
+    total = sum(raw.values())
+    return {h: raw[h] / total for h in hypothesis_ids} if total > 0 else raw
+
+
+def _prior_sensitivity(
+    matrix: list[tuple[str, dict[str, float]]],
+    hypothesis_ids: list[str],
+    prior_by_id: dict[str, float],
+    baseline_top: str,
+    factor: float = 2.0,
+) -> PriorSensitivity:
+    """Is the top-ranked hypothesis robust to up/down-weighting each prior by `factor`?"""
+    stable = True
+    for h in hypothesis_ids:
+        for f in (factor, 1.0 / factor):
+            pert = dict(prior_by_id)
+            pert[h] = pert[h] * f
+            tot = sum(pert.values())
+            if tot <= 0:
+                continue
+            pert = {k: v / tot for k, v in pert.items()}
+            post = _normalized_posteriors(matrix, hypothesis_ids, pert)
+            if max(post, key=lambda k: post[k]) != baseline_top:
+                stable = False
+    return PriorSensitivity(
+        top_hypothesis_id=baseline_top,
+        stable_under_prior_perturbation=stable,
+        perturbation_factor=factor,
+    )
 
 
 def _run_sensitivity(

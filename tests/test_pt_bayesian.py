@@ -376,3 +376,45 @@ class TestSensitivity:
         result = run_bayesian_update(_testing(*items), ["h1", "h2"])
         h1_sens = next(s for s in result.sensitivity if s.hypothesis_id == "h1")
         assert h1_sens.rank_stable is True
+
+
+# ── Researcher priors + prior sensitivity ───────────────────────────
+
+
+class TestPriors:
+    def test_uniform_default(self):
+        # No evidence + no priors -> uniform.
+        result = run_bayesian_update(_testing(), ["h1", "h2", "h3"])
+        for p in result.posteriors:
+            assert p.final_posterior == pytest.approx(1 / 3, abs=0.01)
+
+    def test_non_uniform_priors_shift_posteriors(self):
+        # Uninformative evidence -> posterior reflects the (normalized) prior.
+        testing = _testing(_vec("e1", {"h1": 1.0, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"], priors={"h1": 3.0, "h2": 1.0})
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.final_posterior == pytest.approx(0.75, abs=0.01)
+        assert h1.prior == pytest.approx(0.75, abs=0.01)
+
+    def test_priors_need_not_be_normalized(self):
+        testing = _testing(_vec("e1", {"h1": 1.0, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"], priors={"h1": 30.0, "h2": 10.0})
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.final_posterior == pytest.approx(0.75, abs=0.01)
+
+    def test_prior_sensitivity_populated(self):
+        testing = _testing(_vec("e1", {"h1": 9.0, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        assert result.prior_sensitivity is not None
+        assert result.prior_sensitivity.top_hypothesis_id == result.ranking[0]
+
+    def test_prior_sensitivity_stable_when_evidence_dominant(self):
+        items = [_vec(f"e{i}", {"h1": 0.95, "h2": 0.05}) for i in range(4)]
+        result = run_bayesian_update(_testing(*items), ["h1", "h2"])
+        assert result.prior_sensitivity.stable_under_prior_perturbation is True
+
+    def test_prior_sensitivity_unstable_when_evidence_weak(self):
+        # Near-tie evidence: a 2x prior swing flips the leader.
+        testing = _testing(_vec("e1", {"h1": 1.05, "h2": 1.0}, relevance=0.5))
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        assert result.prior_sensitivity.stable_under_prior_perturbation is False
