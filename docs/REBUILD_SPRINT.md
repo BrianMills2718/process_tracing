@@ -52,13 +52,41 @@ harness.
 
 - [x] Spec doc (PROJECT_THEORY_AND_GOALS.md) — committed
 - [x] LLM boundary → call_llm_structured — committed + live-smoke validated
-- [ ] Slice 3 — coherent likelihood vector (MVP)
+- [x] Slice 3 — coherent likelihood vector (MVP) — deterministic green + live-validated
 - [ ] Slice 4 — bands + posterior interval + rank-stability
-- [ ] Slice 2 — researcher priors + prior-sensitivity
+- [ ] Slice 2 — researcher priors + prior-sensitivity (priors param already in run_bayesian_update)
 - [ ] Integration live run + report adaptation
 - [ ] Ledger + docs update; open PR
+
+## Slice 3 design (locked)
+
+- Testing input becomes per-evidence vectors: `EvidenceLikelihood{evidence_id,
+  hypothesis_likelihoods:[{hypothesis_id, relative_likelihood>0, diagnostic_type}],
+  relevance, justification}`; `TestingResult{evidence_likelihoods, prediction_classifications}`.
+  Drop `EvidenceEvaluation`/`HypothesisTestResult`.
+- `bayesian`: per item m, per hyp i, derive `LR_{m,i} = relL_i / geomean_j(relL_j)`,
+  clamp to [LR_FLOOR, LR_CAP], relevance-discount (`LR**relevance`; <0.4 ⇒ 1.0).
+  Joint update `post_i ∝ prior_i · Π_m LR_{m,i}`, normalize. **Reuse** EvidenceUpdate/
+  HypothesisPosterior/BayesianResult, robustness, top_drivers, sensitivity unchanged
+  (they operate on the derived per-hyp LRs).
+- `pass_test`: ONE matrix call (all hyps + all evidence) → TestingResult.
+- `report`/`pass_absence`/`pipeline`: adapt to new structure (show vector + derived LR).
+- Tests: port test_pt_bayesian/test_pt_schemas/test_pipeline_integration fixtures to vectors.
+- Atomic commit (central structure change); make check green before commit; then live run.
 
 ## Running log
 
 - 2026-06-19: boundary rebuilt + live smoke green (1 structured call, 2.8s). Keys
-  present (Gemini/OpenAI). Starting Slice 3.
+  present (Gemini/OpenAI). Mapped old-testing consumers. Starting Slice 3 schema.
+- 2026-06-19: Slice 3 DONE. Rewrote schemas (EvidenceLikelihood vectors), bayesian
+  (geomean-derived per-hyp LRs + joint normalization, reusing EvidenceUpdate/
+  HypothesisPosterior/robustness/top_drivers/sensitivity), pass_test (one matrix
+  call), pass3_test.yaml, pass_absence, pipeline, report (test matrix shows
+  vector+derived LR). Ported all 3 test files to vectors. make check: 77 passed,
+  mypy clean, 100% compliance (only pre-existing markdown-links module fails).
+  LIVE RUN on french_revolution.txt: 76 evidence × 4 hyps in one call (99s),
+  complete coherent vectors, low-relevance items flattened correctly, h1=0.948
+  (fragile — honestly flags accumulation-from-weak), sensitivity h1 [0.75,0.99]
+  rank-stable. result.json + report.html valid. NOTE: Slice 1 (truth-in-labeling)
+  is a separate PR off master, not on this branch — caveat text will appear at
+  merge. Next: Slice 4 (bands).

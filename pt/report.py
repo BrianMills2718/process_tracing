@@ -6,7 +6,7 @@ import html
 import json
 import math
 
-from pt.bayesian import compute_effective_lr
+from pt.bayesian import lr_matrix
 from pt.schemas import PredictionClassification, ProcessTracingResult
 
 
@@ -65,12 +65,6 @@ def _diagnostic_badge(dtype: str) -> str:
         f'data-bs-toggle="tooltip" data-bs-placement="top" title="{tip}">'
         f'{label}</span>'
     )
-
-
-def _finding_badge(finding: str) -> str:
-    colors = {"pass": "#28a745", "fail": "#dc3545", "ambiguous": "#f0ad4e"}
-    color = colors.get(finding, "#6c757d")
-    return f'<span class="badge" style="background:{color}">{_esc(finding)}</span>'
 
 
 def _robustness_badge(robustness: str) -> str:
@@ -198,19 +192,21 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
                 "color": {"color": "#999"}, "group": "causal",
             })
 
-    # Evidence-hypothesis edges from testing
-    for ht in result.testing.hypothesis_tests:
-        for ev_eval in ht.evidence_evaluations:
-            if ev_eval.evidence_id not in node_ids or ht.hypothesis_id not in node_ids:
+    # Evidence-hypothesis edges from the likelihood matrix
+    hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    for evidence_id, lrs in lr_matrix(result.testing, hyp_ids):
+        if evidence_id not in node_ids:
+            continue
+        for hyp_id, lr in lrs.items():
+            if hyp_id not in node_ids:
                 continue
-            lr = compute_effective_lr(ev_eval)
             if 0.67 <= lr <= 1.5:
                 continue  # Skip uninformative
             log_lr = abs(math.log(max(lr, 0.01)))
             width = max(0.5, min(4, log_lr))
             color = "#28a745" if lr > 1 else "#dc3545"
             edges.append({
-                "from": ev_eval.evidence_id, "to": ht.hypothesis_id,
+                "from": evidence_id, "to": hyp_id,
                 "arrows": "to", "width": round(width, 1),
                 "color": {"color": color, "opacity": 0.6},
                 "group": "evidence_link",
@@ -232,11 +228,10 @@ def generate_report(result: ProcessTracingResult) -> str:
     nodes_json = json.dumps(vis_nodes)
     edges_json = json.dumps(vis_edges)
 
-    # -- Build prediction lookup: hypothesis_id -> prediction_id -> PredictionClassification
+    # -- Build prediction lookup: (hypothesis_id, prediction_id) -> PredictionClassification
     pred_class_map: dict[tuple[str, str], PredictionClassification] = {}
-    for ht in result.testing.hypothesis_tests:
-        for pc in ht.prediction_classifications:
-            pred_class_map[(ht.hypothesis_id, pc.prediction_id)] = pc
+    for pc in result.testing.prediction_classifications:
+        pred_class_map[(pc.hypothesis_id, pc.prediction_id)] = pc
 
     # -- Build prediction descriptions: pred_id -> description
     pred_desc_map: dict[str, str] = {}
@@ -460,118 +455,85 @@ def generate_report(result: ProcessTracingResult) -> str:
     </div>"""
 
     # ===== Section 5: Diagnostic Test Matrix (Accordion by hypothesis) =====
+    # Built from the coherent likelihood vectors: per evidence item the relative
+    # likelihood under each hypothesis, and the derived per-hypothesis LR
+    # (relative_likelihood / geometric mean of the item's vector).
+    hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    matrix = dict(lr_matrix(result.testing, hyp_ids))  # evidence_id -> {hyp_id: lr}
+    # evidence_id -> {hyp_id: (relative_likelihood, diagnostic_type)}, plus item meta
+    vec_by_ev: dict[str, dict] = {}
+    for item in result.testing.evidence_likelihoods:
+        vec_by_ev[item.evidence_id] = {
+            "relevance": item.relevance,
+            "justification": item.justification,
+            "cells": {
+                hl.hypothesis_id: (hl.relative_likelihood, hl.diagnostic_type)
+                for hl in item.hypothesis_likelihoods
+            },
+        }
+
     test_accordion_items = []
     total_evals = 0
     informative_evals = 0
 
-    for ht in result.testing.hypothesis_tests:
-        hyp = h_map.get(ht.hypothesis_id)
-        h_label = f"{ht.hypothesis_id}: {hyp.description[:60]}" if hyp else ht.hypothesis_id
-
-        # Group evaluations by prediction_id
-        by_pred: dict[str | None, list] = {}
-        for ev_eval in ht.evidence_evaluations:
+    for h in result.hypothesis_space.hypotheses:
+        h_label = f"{h.id}: {h.description[:60]}"
+        matrix_rows: list[tuple[float, str]] = []
+        for evidence_id, lrs in matrix.items():
+            lr = lrs.get(h.id, 1.0)
             total_evals += 1
-            lr = compute_effective_lr(ev_eval)
             if 0.9 < lr < 1.1:
                 continue
             informative_evals += 1
-            pid = ev_eval.prediction_id
-            by_pred.setdefault(pid, []).append((ev_eval, lr))
+            matrix_rows.append((lr, evidence_id))
+        matrix_rows.sort(key=lambda x: abs(math.log(max(x[0], 0.01))), reverse=True)
 
-        # Sort each group by |log(LR)| descending
-        for pid in by_pred:
-            by_pred[pid].sort(key=lambda x: abs(math.log(max(x[1], 0.01))), reverse=True)
+        body = f"""
+            <table class="table table-sm table-bordered mb-0 sortable-table">
+              <thead><tr>
+                {_th("Evidence")}
+                {_th("Direction", "Whether this evidence favors (LR>1) or weighs against (LR<1) this hypothesis relative to the others")}
+                {_th("Rel. likelihood", "Relative likelihood of this evidence under this hypothesis on the item's shared scale (only ratios across hypotheses matter)")}
+                {_th("LR", "Derived likelihood ratio: relative likelihood / geometric mean across hypotheses, after relevance gating and capping. LR>1 favors this hypothesis")}
+                {_th("Diagnostic", "Van Evera character of this evidence for this hypothesis")}
+                {_th("Relevance", "How discriminating this evidence is (0-1). Below 0.4 = forced uninformative")}
+                {_th("Justification")}
+              </tr></thead>
+              <tbody>"""
+        for lr, evidence_id in matrix_rows:
+            ev = ev_map.get(evidence_id)
+            ev_label = ev.description[:80] if ev else evidence_id
+            meta = vec_by_ev.get(evidence_id, {})
+            rel_like, dtype = meta.get("cells", {}).get(h.id, (None, "straw_in_the_wind"))
+            relevance = meta.get("relevance", 1.0)
+            justification = meta.get("justification", "")
+            lr_color = "#28a745" if lr > 1.1 else "#dc3545"
+            direction = "favors" if lr > 1.1 else "against"
+            dir_color = "#28a745" if lr > 1.1 else "#dc3545"
+            rel_like_str = f"{rel_like:.2f}" if rel_like is not None else "—"
+            body += f"""
+                <tr>
+                  <td class="small" data-bs-toggle="tooltip" title="{_esc(ev.source_text[:200]) if ev else ''}">{_esc(ev_label)}</td>
+                  <td><span class="badge" style="background:{dir_color}">{direction}</span></td>
+                  <td>{rel_like_str}</td>
+                  <td><strong style="color:{lr_color}">{lr:.2f}</strong></td>
+                  <td>{_diagnostic_badge(dtype)}</td>
+                  <td>{relevance:.2f}</td>
+                  <td class="small">{_esc(justification)}</td>
+                </tr>"""
+        body += "</tbody></table>"
 
-        # Build inner HTML
-        inner_html = ""
-        # First: predictions with evaluations
-        for pid, evals in by_pred.items():
-            if pid is None:
-                continue
-            pred_class = pred_class_map.get((ht.hypothesis_id, pid))
-            dtype = pred_class.diagnostic_type if pred_class else "unknown"
-            pred_desc = pred_desc_map.get(pid, pid)
-            inner_html += f"""
-            <div class="mb-3">
-              <div class="fw-bold small text-muted mb-1">
-                {_diagnostic_badge(dtype)}
-                <span class="ms-1">{_esc(pred_desc[:120])}</span>
-              </div>
-              <table class="table table-sm table-bordered mb-0 sortable-table">
-                <thead><tr>
-                  {_th("Evidence")}
-                  {_th("Finding")}
-                  {_th("P(E|H)", "Probability of observing this evidence if the hypothesis is true")}
-                  {_th("P(E|~H)", "Probability of observing this evidence if the hypothesis is false")}
-                  {_th("LR", "Effective likelihood ratio after relevance gating and capping. LR>1 supports, LR<1 opposes the hypothesis")}
-                  {_th("Relevance", "How relevant this evidence is to the hypothesis (0-1). Below 0.4 = forced uninformative")}
-                  {_th("Justification")}
-                </tr></thead>
-                <tbody>"""
-            for ev_eval, lr in evals:
-                ev = ev_map.get(ev_eval.evidence_id)
-                ev_label = ev.description[:80] if ev else ev_eval.evidence_id
-                lr_color = "#28a745" if lr > 1.1 else "#dc3545"
-                inner_html += f"""
-                  <tr>
-                    <td class="small" data-bs-toggle="tooltip" title="{_esc(ev.source_text[:200]) if ev else ''}">{_esc(ev_label)}</td>
-                    <td>{_finding_badge(ev_eval.finding)}</td>
-                    <td>{ev_eval.p_e_given_h:.2f}</td>
-                    <td>{ev_eval.p_e_given_not_h:.2f}</td>
-                    <td><strong style="color:{lr_color}">{lr:.2f}</strong></td>
-                    <td>{ev_eval.relevance:.2f}</td>
-                    <td class="small">{_esc(ev_eval.justification)}</td>
-                  </tr>"""
-            inner_html += "</tbody></table></div>"
-
-        # Unlinked evidence (prediction_id is None)
-        if None in by_pred:
-            evals = by_pred[None]
-            inner_html += f"""
-            <div class="mb-3">
-              <div class="fw-bold small text-muted mb-1">Unlinked Evidence
-                <span class="badge bg-secondary" data-bs-toggle="tooltip" title="Evidence not mapped to a specific prediction. Diagnostic type determined by the overall relationship to the hypothesis.">No specific prediction</span>
-              </div>
-              <table class="table table-sm table-bordered mb-0 sortable-table">
-                <thead><tr>
-                  {_th("Evidence")}
-                  {_th("Finding")}
-                  {_th("P(E|H)", "Probability of observing this evidence if the hypothesis is true")}
-                  {_th("P(E|~H)", "Probability of observing this evidence if the hypothesis is false")}
-                  {_th("LR", "Effective likelihood ratio after relevance gating and capping. LR>1 supports, LR<1 opposes the hypothesis")}
-                  {_th("Relevance", "How relevant this evidence is to the hypothesis (0-1). Below 0.4 = forced uninformative")}
-                  {_th("Justification")}
-                </tr></thead>
-                <tbody>"""
-            for ev_eval, lr in evals:
-                ev = ev_map.get(ev_eval.evidence_id)
-                ev_label = ev.description[:80] if ev else ev_eval.evidence_id
-                lr_color = "#28a745" if lr > 1.1 else "#dc3545"
-                inner_html += f"""
-                  <tr>
-                    <td class="small" data-bs-toggle="tooltip" title="{_esc(ev.source_text[:200]) if ev else ''}">{_esc(ev_label)}</td>
-                    <td>{_finding_badge(ev_eval.finding)}</td>
-                    <td>{ev_eval.p_e_given_h:.2f}</td>
-                    <td>{ev_eval.p_e_given_not_h:.2f}</td>
-                    <td><strong style="color:{lr_color}">{lr:.2f}</strong></td>
-                    <td>{ev_eval.relevance:.2f}</td>
-                    <td class="small">{_esc(ev_eval.justification)}</td>
-                  </tr>"""
-            inner_html += "</tbody></table></div>"
-
-        hyp_eval_count = sum(len(v) for v in by_pred.values())
-        collapsed = "" if ht == result.testing.hypothesis_tests[0] else "collapsed"
-        show = "show" if ht == result.testing.hypothesis_tests[0] else ""
+        collapsed = "" if h == result.hypothesis_space.hypotheses[0] else "collapsed"
+        show = "show" if h == result.hypothesis_space.hypotheses[0] else ""
         test_accordion_items.append(f"""
         <div class="accordion-item">
           <h2 class="accordion-header">
-            <button class="accordion-button {collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#test-{_esc(ht.hypothesis_id)}">
-              {_esc(h_label)} <span class="badge bg-info ms-2">{hyp_eval_count} informative</span>
+            <button class="accordion-button {collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#test-{_esc(h.id)}">
+              {_esc(h_label)} <span class="badge bg-info ms-2">{len(matrix_rows)} informative</span>
             </button>
           </h2>
-          <div id="test-{_esc(ht.hypothesis_id)}" class="accordion-collapse collapse {show}" data-bs-parent="#testAccordion">
-            <div class="accordion-body">{inner_html}</div>
+          <div id="test-{_esc(h.id)}" class="accordion-collapse collapse {show}" data-bs-parent="#testAccordion">
+            <div class="accordion-body">{body}</div>
           </div>
         </div>""")
 
@@ -581,7 +543,7 @@ def generate_report(result: ProcessTracingResult) -> str:
     test_matrix = f"""
     <div class="card mb-4 shadow-sm">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h4 class="mb-0" data-bs-toggle="tooltip" title="Each piece of evidence is evaluated against each hypothesis using Van Evera's diagnostic tests. The likelihood ratio (LR) measures how much the evidence shifts the probability.">Diagnostic Test Matrix</h4>
+        <h4 class="mb-0" data-bs-toggle="tooltip" title="Each evidence item gets a likelihood vector across all hypotheses; the per-hypothesis LR is derived from that vector (relative likelihood over the geometric mean), so the comparisons are coherent.">Diagnostic Test Matrix</h4>
         <button class="btn btn-sm btn-outline-primary section-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#testMatrixBody">Expand</button>
       </div>
       <div class="collapse" id="testMatrixBody">

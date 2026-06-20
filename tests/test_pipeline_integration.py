@@ -19,12 +19,12 @@ from pt.schemas import (
     Actor,
     CausalEdge,
     Evidence,
-    EvidenceEvaluation,
+    EvidenceLikelihood,
     Event,
     ExtractionResult,
     Hypothesis,
+    HypothesisLikelihood,
     HypothesisSpace,
-    HypothesisTestResult,
     HypothesisVerdict,
     Mechanism,
     Prediction,
@@ -124,102 +124,32 @@ def _make_hypothesis_space() -> HypothesisSpace:
     )
 
 
+def _ev_like(evidence_id: str, h1: float, h2: float, relevance: float, dtype: str = "straw_in_the_wind") -> EvidenceLikelihood:
+    """One evidence item's likelihood vector across {h1, h2}."""
+    return EvidenceLikelihood(
+        evidence_id=evidence_id,
+        hypothesis_likelihoods=[
+            HypothesisLikelihood(hypothesis_id="h1", relative_likelihood=h1, diagnostic_type=dtype),
+            HypothesisLikelihood(hypothesis_id="h2", relative_likelihood=h2, diagnostic_type=dtype),
+        ],
+        relevance=relevance,
+        justification="deterministic test vector",
+    )
+
+
 def _make_testing() -> TestingResult:
-    """Deterministic testing results with known LR values for Bayesian verification."""
+    """Deterministic likelihood vectors. Relative likelihood = P(E|H) per hypothesis;
+    derived per-hypothesis LR is the value over the vector's geometric mean."""
     return TestingResult(
-        hypothesis_tests=[
-            HypothesisTestResult(
-                hypothesis_id="h1",
-                prediction_classifications=[],
-                evidence_evaluations=[
-                    # evi_debt: strong for h1 (fiscal)
-                    EvidenceEvaluation(
-                        evidence_id="evi_debt",
-                        hypothesis_id="h1",
-                        finding="pass",
-                        p_e_given_h=0.9,
-                        p_e_given_not_h=0.3,
-                        justification="Debt directly supports fiscal hypothesis",
-                        relevance=0.9,
-                    ),
-                    # evi_tax_revolt: moderate for h1
-                    EvidenceEvaluation(
-                        evidence_id="evi_tax_revolt",
-                        hypothesis_id="h1",
-                        finding="pass",
-                        p_e_given_h=0.8,
-                        p_e_given_not_h=0.4,
-                        justification="Tax revolt consistent with fiscal breakdown",
-                        relevance=0.85,
-                    ),
-                    # evi_elite_plot: against h1
-                    EvidenceEvaluation(
-                        evidence_id="evi_elite_plot",
-                        hypothesis_id="h1",
-                        finding="fail",
-                        p_e_given_h=0.3,
-                        p_e_given_not_h=0.7,
-                        justification="Elite plotting not predicted by fiscal hypothesis",
-                        relevance=0.7,
-                    ),
-                    # evi_historian_claim: weak/neutral
-                    EvidenceEvaluation(
-                        evidence_id="evi_historian_claim",
-                        hypothesis_id="h1",
-                        finding="ambiguous",
-                        p_e_given_h=0.5,
-                        p_e_given_not_h=0.5,
-                        justification="Interpretive claim, not diagnostic",
-                        relevance=0.3,
-                    ),
-                ],
-            ),
-            HypothesisTestResult(
-                hypothesis_id="h2",
-                prediction_classifications=[],
-                evidence_evaluations=[
-                    # evi_debt: against h2
-                    EvidenceEvaluation(
-                        evidence_id="evi_debt",
-                        hypothesis_id="h2",
-                        finding="fail",
-                        p_e_given_h=0.3,
-                        p_e_given_not_h=0.7,
-                        justification="Debt not predicted by elite conspiracy",
-                        relevance=0.5,
-                    ),
-                    # evi_tax_revolt: neutral for h2
-                    EvidenceEvaluation(
-                        evidence_id="evi_tax_revolt",
-                        hypothesis_id="h2",
-                        finding="ambiguous",
-                        p_e_given_h=0.4,
-                        p_e_given_not_h=0.5,
-                        justification="Tax revolt not relevant to conspiracy",
-                        relevance=0.4,
-                    ),
-                    # evi_elite_plot: strong for h2
-                    EvidenceEvaluation(
-                        evidence_id="evi_elite_plot",
-                        hypothesis_id="h2",
-                        finding="pass",
-                        p_e_given_h=0.9,
-                        p_e_given_not_h=0.2,
-                        justification="Secret meetings directly support conspiracy hypothesis",
-                        relevance=0.95,
-                    ),
-                    # evi_historian_claim: neutral
-                    EvidenceEvaluation(
-                        evidence_id="evi_historian_claim",
-                        hypothesis_id="h2",
-                        finding="ambiguous",
-                        p_e_given_h=0.5,
-                        p_e_given_not_h=0.5,
-                        justification="Interpretive claim about ideology, not conspiracy",
-                        relevance=0.2,
-                    ),
-                ],
-            ),
+        evidence_likelihoods=[
+            # evi_debt: favors h1 (fiscal)
+            _ev_like("evi_debt", h1=0.9, h2=0.3, relevance=0.9, dtype="smoking_gun"),
+            # evi_tax_revolt: favors h1
+            _ev_like("evi_tax_revolt", h1=0.8, h2=0.4, relevance=0.85, dtype="straw_in_the_wind"),
+            # evi_elite_plot: favors h2 (conspiracy)
+            _ev_like("evi_elite_plot", h1=0.3, h2=0.9, relevance=0.9, dtype="smoking_gun"),
+            # evi_historian_claim: interpretive, low relevance, uninformative
+            _ev_like("evi_historian_claim", h1=0.5, h2=0.5, relevance=0.3, dtype="straw_in_the_wind"),
         ],
     )
 
@@ -279,12 +209,8 @@ def _mock_call_llm(prompt: str, response_model: type, *, task: str = "", trace_i
         return _make_extraction()
     elif model_name == "HypothesisSpace":
         return _make_hypothesis_space()
-    elif model_name == "HypothesisTestResult":
-        # Determine which hypothesis is being tested from the prompt
-        testing = _make_testing()
-        if '"h2"' in prompt or "'h2'" in prompt:
-            return testing.hypothesis_tests[1]
-        return testing.hypothesis_tests[0]
+    elif model_name == "TestingResult":
+        return _make_testing()
     elif model_name == "AbsenceResult":
         return _make_absence()
     elif model_name == "SynthesisResult":
@@ -339,9 +265,9 @@ class TestPipelineOrchestration:
         assert pipeline_result.hypothesis_space.research_question
 
     def test_testing_populated(self, pipeline_result):
-        assert len(pipeline_result.testing.hypothesis_tests) == 2
-        for ht in pipeline_result.testing.hypothesis_tests:
-            assert len(ht.evidence_evaluations) == 4
+        assert len(pipeline_result.testing.evidence_likelihoods) == 4
+        for item in pipeline_result.testing.evidence_likelihoods:
+            assert len(item.hypothesis_likelihoods) == 2
 
     def test_absence_populated(self, pipeline_result):
         assert len(pipeline_result.absence.evaluations) == 1
@@ -367,22 +293,20 @@ class TestBayesianMathDeterministic:
 
     def test_posteriors_from_fixed_testing(self):
         testing = _make_testing()
-        result = run_bayesian_update(testing)
+        result = run_bayesian_update(testing, ["h1", "h2"])
 
         h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
         h2 = next(p for p in result.posteriors if p.hypothesis_id == "h2")
 
-        # h1 has: 0.9/0.3=3.0 for, 0.8/0.4=2.0 for, 0.3/0.7≈0.43 against, 0.5/0.5=1.0 neutral
-        # h2 has: 0.3/0.7≈0.43 against, 0.4/0.5=0.8 against, 0.9/0.2=4.5 for, 0.5/0.5=1.0 neutral
-        # Both have a mix of for/against — h1 should come out ahead
+        # Two items favor h1 (debt, tax revolt), one favors h2 (elite plot), one
+        # is uninformative — net, h1 comes out ahead.
         assert h1.final_posterior > h2.final_posterior
         assert h1.final_posterior + h2.final_posterior == pytest.approx(1.0, abs=0.01)
 
-        # Verify update trails exist
+        # One update per evidence item, per hypothesis.
         assert len(h1.updates) == 4
         assert len(h2.updates) == 4
 
-        # Verify ranking
         assert result.ranking == ["h1", "h2"]
 
 
@@ -392,26 +316,13 @@ class TestReportConsistency:
     def test_low_relevance_extreme_evidence_hidden_as_uninformative(self):
         extraction = _make_extraction()
         hypothesis_space = _make_hypothesis_space()
+        # Extreme vector but relevance below the gate ⇒ forced uninformative (LR 1.0).
         testing = TestingResult(
-            hypothesis_tests=[
-                HypothesisTestResult(
-                    hypothesis_id="h1",
-                    prediction_classifications=[],
-                    evidence_evaluations=[
-                        EvidenceEvaluation(
-                            evidence_id="evi_debt",
-                            hypothesis_id="h1",
-                            finding="pass",
-                            p_e_given_h=1.0,
-                            p_e_given_not_h=0.001,
-                            justification="Raw probabilities are extreme but relevance is below the gate.",
-                            relevance=0.39,
-                        ),
-                    ],
-                ),
+            evidence_likelihoods=[
+                _ev_like("evi_debt", h1=1.0, h2=0.001, relevance=0.39, dtype="smoking_gun"),
             ],
         )
-        bayesian = run_bayesian_update(testing)
+        bayesian = run_bayesian_update(testing, ["h1", "h2"])
         result = ProcessTracingResult(
             extraction=extraction,
             hypothesis_space=hypothesis_space,
@@ -423,19 +334,21 @@ class TestReportConsistency:
 
         html = generate_report(result)
 
+        # Both hypotheses' LR for the gated item is 1.0.
         assert bayesian.posteriors[0].updates[0].likelihood_ratio == pytest.approx(1.0)
-        assert "0 informative / 1 total evaluations shown" in html
+        # Report counts evaluations per (hypothesis, evidence): 2 hyps × 1 item = 2 total.
+        assert "0 informative / 2 total evaluations shown" in html
         assert "LR=1000.00" not in html
 
     def test_sensitivity_populated(self):
         testing = _make_testing()
-        result = run_bayesian_update(testing)
+        result = run_bayesian_update(testing, ["h1", "h2"])
         assert len(result.sensitivity) == 2
         for s in result.sensitivity:
             assert s.posterior_low <= s.baseline_posterior <= s.posterior_high
 
     def test_robustness_populated(self):
         testing = _make_testing()
-        result = run_bayesian_update(testing)
+        result = run_bayesian_update(testing, ["h1", "h2"])
         for p in result.posteriors:
             assert p.robustness in ("robust", "fragile", "moderate", "unknown")

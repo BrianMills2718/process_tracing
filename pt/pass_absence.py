@@ -20,23 +20,17 @@ from pt.schemas import (
 PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 
-def _build_testing_summary(testing: TestingResult) -> list[dict]:
-    """Summarize which predictions had relevant evidence evaluations.
+def _build_testing_summary(testing: TestingResult) -> dict:
+    """Summarize which evidence was substantive, WITHOUT leaking hypothesis strength.
 
-    Deliberately omits hypothesis-level support/opposition counts to avoid
-    leaking hypothesis strength to the absence evaluator (prevents confirmation bias).
+    The absence evaluator should know what evidence the testing pass found
+    discriminating (so it can reason about what is genuinely missing) but not which
+    hypothesis that evidence favored — that would invite confirmation bias.
     """
-    summary = []
-    for ht in testing.hypothesis_tests:
-        pred_hits: dict[str, int] = {}
-        for ev in ht.evidence_evaluations:
-            if ev.prediction_id and ev.relevance >= 0.6:
-                pred_hits[ev.prediction_id] = pred_hits.get(ev.prediction_id, 0) + 1
-        summary.append({
-            "hypothesis_id": ht.hypothesis_id,
-            "predictions_with_relevant_evidence": pred_hits,
-        })
-    return summary
+    substantive = sorted(
+        {item.evidence_id for item in testing.evidence_likelihoods if item.relevance >= 0.6}
+    )
+    return {"substantive_evidence_ids": substantive}
 
 
 def run_absence(

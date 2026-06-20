@@ -113,8 +113,8 @@ def _run_passes_3_plus(
         print(f"{prefix}Pass 3: Diagnostic testing ({len(hypothesis_space.hypotheses)} hypotheses)...")
     testing = run_test(extraction, hypothesis_space, model=model, trace_id=trace_id)
     if verbose:
-        total_evals = sum(len(ht.evidence_evaluations) for ht in testing.hypothesis_tests)
-        print(f"  {total_evals} evidence evaluations across all hypotheses")
+        print(f"  {len(testing.evidence_likelihoods)} evidence likelihood vectors "
+              f"across {len(hypothesis_space.hypotheses)} hypotheses")
 
     if verbose:
         print(f"{prefix}Pass 3b: Evaluating absence of evidence...")
@@ -126,7 +126,9 @@ def _run_passes_3_plus(
 
     if verbose:
         print(f"{prefix}Bayesian updating...")
-    bayesian = run_bayesian_update(testing)
+    bayesian = run_bayesian_update(
+        testing, [h.id for h in hypothesis_space.hypotheses]
+    )
     if verbose:
         top = bayesian.ranking[0] if bayesian.ranking else "none"
         top_post = next(

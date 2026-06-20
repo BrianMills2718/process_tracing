@@ -101,40 +101,59 @@ class PredictionClassification(BaseModel):
     )
 
 
-class EvidenceEvaluation(BaseModel):
-    prediction_id: Optional[str] = Field(
-        None, description="ID of the most relevant prediction, or null if no prediction directly applies"
-    )
-    evidence_id: str
+class HypothesisLikelihood(BaseModel):
+    """Relative likelihood of one evidence item under one hypothesis.
+
+    Values are on a common positive scale across all hypotheses for the *same*
+    evidence item — only the ratios between hypotheses matter. Equal values across
+    hypotheses ⇒ the evidence is uninformative. Eliciting the whole vector at once
+    (rather than independent pairwise ratios) is what keeps the likelihoods
+    coherent: every pairwise ratio is derived from one vector, so reciprocity and
+    transitivity hold by construction.
+    """
     hypothesis_id: str
-    finding: str = Field(description="'pass', 'fail', or 'ambiguous'")
-    p_e_given_h: float = Field(
-        ge=0.0, le=1.0,
-        description="Probability of observing this evidence if the hypothesis is true"
+    relative_likelihood: float = Field(
+        gt=0.0,
+        description="Relative likelihood P(E|H) of THIS evidence under THIS hypothesis, "
+        "on a common positive scale shared by all hypotheses for this evidence item. "
+        "Larger = this hypothesis predicts this evidence more strongly. Equal across "
+        "hypotheses = uninformative.",
     )
-    p_e_given_not_h: float = Field(
-        ge=0.0, le=1.0,
-        description="Probability of observing this evidence if the hypothesis is false"
+    diagnostic_type: str = Field(
+        description="Van Evera label for how this evidence bears on this hypothesis: "
+        "'hoop', 'smoking_gun', 'doubly_decisive', or 'straw_in_the_wind'.",
     )
-    justification: str = Field(
-        description="Why these probability estimates are appropriate"
+
+
+class EvidenceLikelihood(BaseModel):
+    """One evidence item's likelihood vector across all competing hypotheses."""
+    evidence_id: str
+    hypothesis_likelihoods: list[HypothesisLikelihood] = Field(
+        description="Exactly one entry per hypothesis — the relative likelihood of this "
+        "evidence under each, on a shared scale.",
     )
     relevance: float = Field(
         default=1.0, ge=0.0, le=1.0,
-        description="How relevant this evidence is to the hypothesis (considering temporal proximity, causal domain, and specificity). 0.0=completely irrelevant, 1.0=directly relevant."
+        description="How relevant/discriminating this evidence is (temporal proximity, "
+        "causal domain, specificity). 0.0=irrelevant, 1.0=directly relevant. Below 0.4 the "
+        "item is treated as uninformative regardless of the vector.",
     )
-
-
-class HypothesisTestResult(BaseModel):
-    hypothesis_id: str
-    prediction_classifications: list[PredictionClassification]
-    evidence_evaluations: list[EvidenceEvaluation]
+    justification: str = Field(
+        description="Why these relative likelihoods — covering both the causal story and how "
+        "the evidence was produced (solicited/recorded/survived).",
+    )
 
 
 class TestingResult(BaseModel):
     __test__: ClassVar[bool] = False
 
-    hypothesis_tests: list[HypothesisTestResult]
+    evidence_likelihoods: list[EvidenceLikelihood] = Field(
+        description="Per-evidence likelihood vectors across all hypotheses.",
+    )
+    prediction_classifications: list[PredictionClassification] = Field(
+        default_factory=list,
+        description="Optional Van Evera classification of hypothesis predictions.",
+    )
 
 
 # ── Bayesian Update ─────────────────────────────────────────────────

@@ -7,14 +7,13 @@ from pt.schemas import (
     AbsenceResult,
     BayesianResult,
     Evidence,
-    EvidenceEvaluation,
+    EvidenceLikelihood,
     EvidenceUpdate,
     ExtractionResult,
     Hypothesis,
+    HypothesisLikelihood,
     HypothesisPosterior,
     HypothesisSpace,
-    HypothesisTestResult,
-    HypothesisVerdict,
     ProcessTracingResult,
     SynthesisResult,
     TestingResult,
@@ -36,52 +35,36 @@ class TestEvidence:
         assert e.approximate_date == "1789-07"
 
 
-class TestEvidenceEvaluation:
-    def test_defaults(self):
-        ee = EvidenceEvaluation(
-            evidence_id="e1",
-            hypothesis_id="h1",
-            finding="pass",
-            p_e_given_h=0.8,
-            p_e_given_not_h=0.2,
-            justification="test",
-        )
-        assert ee.relevance == 1.0
-        assert ee.prediction_id is None
+def _likelihood(relevance: float = 1.0) -> EvidenceLikelihood:
+    return EvidenceLikelihood(
+        evidence_id="e1",
+        hypothesis_likelihoods=[
+            HypothesisLikelihood(hypothesis_id="h1", relative_likelihood=4.0, diagnostic_type="smoking_gun"),
+            HypothesisLikelihood(hypothesis_id="h2", relative_likelihood=1.0, diagnostic_type="hoop"),
+        ],
+        relevance=relevance,
+        justification="test",
+    )
 
-    def test_probability_bounds(self):
+
+class TestEvidenceLikelihood:
+    def test_defaults(self):
+        el = _likelihood()
+        assert el.relevance == 1.0
+        assert len(el.hypothesis_likelihoods) == 2
+
+    def test_relative_likelihood_must_be_positive(self):
         with pytest.raises(ValidationError):
-            EvidenceEvaluation(
-                evidence_id="e1",
-                hypothesis_id="h1",
-                finding="pass",
-                p_e_given_h=1.5,  # out of bounds
-                p_e_given_not_h=0.2,
-                justification="test",
-            )
+            HypothesisLikelihood(hypothesis_id="h1", relative_likelihood=0.0, diagnostic_type="hoop")
 
     def test_relevance_bounds(self):
         with pytest.raises(ValidationError):
-            EvidenceEvaluation(
-                evidence_id="e1",
-                hypothesis_id="h1",
-                finding="pass",
-                p_e_given_h=0.8,
-                p_e_given_not_h=0.2,
-                justification="test",
-                relevance=1.5,  # out of bounds
-            )
+            _likelihood(relevance=1.5)  # out of bounds
 
-    def test_zero_probabilities_valid(self):
-        ee = EvidenceEvaluation(
-            evidence_id="e1",
-            hypothesis_id="h1",
-            finding="fail",
-            p_e_given_h=0.0,
-            p_e_given_not_h=0.0,
-            justification="test",
-        )
-        assert ee.p_e_given_h == 0.0
+    def test_vector_values_preserved(self):
+        el = _likelihood()
+        by_id = {hl.hypothesis_id: hl.relative_likelihood for hl in el.hypothesis_likelihoods}
+        assert by_id == {"h1": 4.0, "h2": 1.0}
 
 
 class TestExtractionResult:
@@ -136,7 +119,7 @@ class TestProcessTracingResult:
                 research_question="Why?",
                 hypotheses=[],
             ),
-            testing=TestingResult(hypothesis_tests=[]),
+            testing=TestingResult(evidence_likelihoods=[]),
             absence=AbsenceResult(evaluations=[]),
             bayesian=BayesianResult(posteriors=[], ranking=[]),
             synthesis=SynthesisResult(
