@@ -34,6 +34,7 @@ from pt.schemas import (
 )
 
 LR_CAP = 20.0  # bound on a single item's pairwise max:min likelihood ratio
+INTERPRETIVE_LR_CAP = 5.0  # tighter bound for interpretive (scholarly-claim) evidence
 
 RELEVANCE_GATE = 0.4  # below this, an item is uninformative (LR forced to 1.0)
 
@@ -65,19 +66,20 @@ def hypothesis_ids_from_testing(testing: TestingResult) -> list[str]:
     return seen
 
 
-_HALF_LOG_CAP = 0.5 * math.log(LR_CAP)  # bounds a single item's pairwise max:min ratio to LR_CAP
-
-
-def item_lrs(item: EvidenceLikelihood, hypothesis_ids: list[str]) -> dict[str, float]:
+def item_lrs(
+    item: EvidenceLikelihood, hypothesis_ids: list[str], cap: float = LR_CAP
+) -> dict[str, float]:
     """Per-hypothesis effective LR for one evidence item, derived from its vector.
 
     Each hypothesis's LR is its relative likelihood over the vector's geometric
     mean (so the LRs are centered, geomean 1). The per-item **pairwise** spread is
-    capped: each centered log-LR is clamped to ±0.5·log(LR_CAP), so no single
-    evidence item can move any pair of hypotheses by more than LR_CAP:1. Then a
-    soft relevance discount is applied on the log scale; an item below the
-    relevance gate, or a hypothesis absent from the vector, contributes LR 1.0.
+    capped: each centered log-LR is clamped to ±0.5·log(cap), so no single
+    evidence item can move any pair of hypotheses by more than ``cap``:1. (The
+    caller passes a tighter cap for interpretive evidence.) Then a soft relevance
+    discount is applied on the log scale; an item below the relevance gate, or a
+    hypothesis absent from the vector, contributes LR 1.0.
     """
+    half_log_cap = 0.5 * math.log(cap)
     by_id = {
         hl.hypothesis_id: max(hl.relative_likelihood, 1e-9)
         for hl in item.hypothesis_likelihoods
@@ -94,7 +96,7 @@ def item_lrs(item: EvidenceLikelihood, hypothesis_ids: list[str]) -> dict[str, f
             out[h] = 1.0
             continue
         log_lr = math.log(v) - log_geo
-        log_lr = max(-_HALF_LOG_CAP, min(_HALF_LOG_CAP, log_lr))  # cap pairwise spread
+        log_lr = max(-half_log_cap, min(half_log_cap, log_lr))  # cap pairwise spread
         if rel < RELEVANCE_GATE:
             log_lr = 0.0
         else:
@@ -104,11 +106,18 @@ def item_lrs(item: EvidenceLikelihood, hypothesis_ids: list[str]) -> dict[str, f
 
 
 def lr_matrix(
-    testing: TestingResult, hypothesis_ids: list[str]
+    testing: TestingResult,
+    hypothesis_ids: list[str],
+    caps: dict[str, float] | None = None,
 ) -> list[tuple[str, dict[str, float]]]:
-    """Effective LRs for every (evidence item, hypothesis), in evidence order."""
+    """Effective LRs for every (evidence item, hypothesis), in evidence order.
+
+    ``caps`` optionally maps an evidence_id to a tighter pairwise cap (e.g.
+    interpretive evidence is capped at INTERPRETIVE_LR_CAP); default is LR_CAP.
+    """
+    caps = caps or {}
     return [
-        (item.evidence_id, item_lrs(item, hypothesis_ids))
+        (item.evidence_id, item_lrs(item, hypothesis_ids, caps.get(item.evidence_id, LR_CAP)))
         for item in testing.evidence_likelihoods
     ]
 
@@ -229,6 +238,7 @@ def run_bayesian_update(
     hypothesis_ids: list[str] | None = None,
     priors: dict[str, float] | None = None,
     include_residual: bool = False,
+    caps: dict[str, float] | None = None,
 ) -> BayesianResult:
     """Compute posteriors via a coherent joint multinomial update.
 
@@ -279,7 +289,9 @@ def run_bayesian_update(
     prior_by_id = {h: weights[h] / total_prior for h in hypothesis_ids}
 
     # Collapse dependence clusters first so correlated evidence isn't double-counted.
-    matrix = _collapse_clusters(lr_matrix(testing, hypothesis_ids), testing.dependence_clusters, hypothesis_ids)
+    matrix = _collapse_clusters(
+        lr_matrix(testing, hypothesis_ids, caps), testing.dependence_clusters, hypothesis_ids
+    )
 
     # Joint update: accumulate log weights and softmax-normalize after every item.
     # The trail records the *joint* (normalized) posterior of each hypothesis after

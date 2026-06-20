@@ -46,9 +46,11 @@ messages:
       likelihoods to all hypotheses for more than 5 items. For relevant evidence, think
       harder about which hypotheses predict it more strongly.
 
-      Rule B — EVERY HYPOTHESIS HAS WEAKNESSES: For AT LEAST 5 evidence items, a RIVAL
-      hypothesis must have a higher relative likelihood than the otherwise-leading
-      hypothesis. No hypothesis is favored by all evidence.
+      Rule B — REPORT WEAKNESSES HONESTLY: No hypothesis is favored by *all* evidence.
+      Wherever a rival genuinely predicts an item more strongly than the otherwise-leading
+      hypothesis, give that rival the higher likelihood — do NOT shade every item toward one
+      hypothesis. (Do not invent counter-evidence to hit a quota; if the evidence really is
+      one-sided, report it as one-sided.)
 
       Rule C — VARIED MAGNITUDES: Use a range of ratios (1.5×, 3×, 8×…), not just one or two
       round multipliers.
@@ -102,6 +104,8 @@ messages:
 
       ## Discrimination check
 
-      Before finishing: for each pair of hypotheses that seem similar, confirm there are at
-      least 3 evidence items where their relative likelihoods diverge by 2× or more. If not,
-      you are not discriminating enough — reconsider those items.
+      Before finishing: for each pair of hypotheses that seem similar, check whether the
+      evidence actually distinguishes them. Where items genuinely discriminate, make sure
+      their likelihoods diverge accordingly; where the evidence truly cannot tell two
+      hypotheses apart, leave those items non-discriminating rather than forcing a split.
+      Do not manufacture divergence to hit a count.

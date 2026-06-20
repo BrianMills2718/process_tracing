@@ -122,6 +122,24 @@ the system isn't forced to crown a listed story. Default off (keeps unit math/te
 explicit); pipeline enables it; report renders it. Validated on the live french_rev
 vectors (H0 present in posteriors/ranking/report). 100 passed; make check green.
 
+## Adversarial code review (round 2) — fixes applied
+
+- **DEFECT: fake-counterevidence quota.** Prompt Rule B ("AT LEAST 5 items a rival
+  must lead") removed — it manufactured weaknesses and was impossible for <5 items.
+  Replaced with honest "report one-sidedness as one-sided." Discrimination check
+  de-quota'd too.
+- **DEFECT: interpretive cap not enforced.** Prompt said interpretive max:min ≤5 but
+  code applied 20. Now enforced: `INTERPRETIVE_LR_CAP=5`, per-item `caps` threaded
+  through `lr_matrix`/`run_bayesian_update`; pipeline sets it from evidence_type.
+- **DEFECT: diagnostic_type not an enum** → `DiagnosticType` Literal.
+- **DEFECT: relative_likelihood accepted inf/nan** → `allow_inf_nan=False`.
+- **DEFECT: duplicate upstream ids** → model validators on ExtractionResult
+  (evidence) and HypothesisSpace (hypotheses).
+- **GAP: synthesis truth-labeling** → pass4 prompt now says "comparative support",
+  not "posterior probability", with a degenerate-support caveat.
+- **GAP: stale sprint doc** → the Slice-3 design block updated to softmax + pairwise cap.
+- Tests added for every code-enforced fix. 106 passed; make check green.
+
 ## SPRINT COMPLETE (scoped slices)
 
 All non-deferred slices done, verified, and live-validated. Branch
@@ -137,10 +155,12 @@ critic/auditor + ablation, trace-production model, provenance guards.
   relevance, justification}`; `TestingResult{evidence_likelihoods, prediction_classifications}`.
   Drop `EvidenceEvaluation`/`HypothesisTestResult`.
 - `bayesian`: per item m, per hyp i, derive `LR_{m,i} = relL_i / geomean_j(relL_j)`,
-  clamp to [LR_FLOOR, LR_CAP], relevance-discount (`LR**relevance`; <0.4 ⇒ 1.0).
-  Joint update `post_i ∝ prior_i · Π_m LR_{m,i}`, normalize. **Reuse** EvidenceUpdate/
-  HypothesisPosterior/BayesianResult, robustness, top_drivers, sensitivity unchanged
-  (they operate on the derived per-hyp LRs).
+  cap the per-item PAIRWISE spread to LR_CAP (centered log-LR clamped to ±0.5·log CAP;
+  interpretive evidence capped tighter at INTERPRETIVE_LR_CAP), relevance-discount
+  (`LR**relevance`; <0.4 ⇒ 1.0). Joint update is a log-space softmax
+  `post_i = softmax(log prior_i + Σ_m log LR_{m,i})` — order-invariant, no per-step
+  clamping. **Reuse** EvidenceUpdate/HypothesisPosterior/BayesianResult, robustness,
+  top_drivers, sensitivity (they operate on the derived per-hyp LRs).
 - `pass_test`: ONE matrix call (all hyps + all evidence) → TestingResult.
 - `report`/`pass_absence`/`pipeline`: adapt to new structure (show vector + derived LR).
 - Tests: port test_pt_bayesian/test_pt_schemas/test_pipeline_integration fixtures to vectors.

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from typing import ClassVar, Optional
-from pydantic import BaseModel, Field
+from typing import ClassVar, Literal, Optional
+from pydantic import BaseModel, Field, model_validator
+
+DiagnosticType = Literal["hoop", "smoking_gun", "doubly_decisive", "straw_in_the_wind"]
 
 
 # ── Pass 1: Extraction ──────────────────────────────────────────────
@@ -52,6 +54,17 @@ class TextHypothesis(BaseModel):
     source_text: str = Field(description="Quote from text where this hypothesis appears or is implied")
 
 
+def _require_unique_ids(ids: list[str], label: str) -> None:
+    seen: set[str] = set()
+    dups: set[str] = set()
+    for i in ids:
+        if i in seen:
+            dups.add(i)
+        seen.add(i)
+    if dups:
+        raise ValueError(f"duplicate {label} ids: {sorted(dups)}")
+
+
 class ExtractionResult(BaseModel):
     summary: str = Field(description="2-3 sentence summary of the text")
     actors: list[Actor] = []
@@ -60,6 +73,11 @@ class ExtractionResult(BaseModel):
     evidence: list[Evidence] = []
     hypotheses_in_text: list[TextHypothesis] = []
     causal_edges: list[CausalEdge] = []
+
+    @model_validator(mode="after")
+    def _unique_evidence_ids(self) -> "ExtractionResult":
+        _require_unique_ids([e.id for e in self.evidence], "evidence")
+        return self
 
 
 # ── Pass 2: Hypothesis Space ────────────────────────────────────────
@@ -84,13 +102,18 @@ class HypothesisSpace(BaseModel):
     research_question: str
     hypotheses: list[Hypothesis]
 
+    @model_validator(mode="after")
+    def _unique_hypothesis_ids(self) -> "HypothesisSpace":
+        _require_unique_ids([h.id for h in self.hypotheses], "hypothesis")
+        return self
+
 
 # ── Pass 3: Testing ─────────────────────────────────────────────────
 
 class PredictionClassification(BaseModel):
     prediction_id: str
     hypothesis_id: str
-    diagnostic_type: str = Field(
+    diagnostic_type: DiagnosticType = Field(
         description="One of: hoop, smoking_gun, doubly_decisive, straw_in_the_wind"
     )
     necessity_reasoning: str = Field(
@@ -114,12 +137,13 @@ class HypothesisLikelihood(BaseModel):
     hypothesis_id: str
     relative_likelihood: float = Field(
         gt=0.0,
+        allow_inf_nan=False,
         description="Relative likelihood P(E|H) of THIS evidence under THIS hypothesis, "
         "on a common positive scale shared by all hypotheses for this evidence item. "
         "Larger = this hypothesis predicts this evidence more strongly. Equal across "
-        "hypotheses = uninformative.",
+        "hypotheses = uninformative. Must be a finite positive number.",
     )
-    diagnostic_type: str = Field(
+    diagnostic_type: DiagnosticType = Field(
         description="Van Evera label for how this evidence bears on this hypothesis: "
         "'hoop', 'smoking_gun', 'doubly_decisive', or 'straw_in_the_wind'.",
     )

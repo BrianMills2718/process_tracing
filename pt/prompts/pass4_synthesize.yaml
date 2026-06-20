@@ -8,6 +8,18 @@ messages:
 
       You have the complete results of extraction, hypothesis formulation, diagnostic testing, and Bayesian updating.
 
+      ## How to talk about the numbers (important)
+
+      The Bayesian numbers are **comparative support** — each hypothesis's share of the
+      evidence-weighted odds *among the hypotheses considered* (including an explicit
+      residual "none of these"). They are NOT absolute probabilities that a hypothesis is
+      true, nor causal-effect sizes, nor counterfactual quantities. Say "support" or
+      "comparative support", never "the probability that H is true". Lead with the RANKING
+      and its stability, not the third decimal. If the support is near-degenerate
+      (one hypothesis ≈ 1.0) and its robustness is "fragile", treat it as a ranking and
+      say so explicitly — it reflects accumulation of many weakly-discriminating items,
+      not calibrated certainty.
+
       ## Your task
 
       ### 1. Verdicts
@@ -16,7 +28,7 @@ messages:
       - `key_evidence_for`: Evidence IDs where LR > 1 (supports this hypothesis)
       - `key_evidence_against`: Evidence IDs where LR < 1 (weighs against this hypothesis). EVERY hypothesis should have SOME evidence against it unless the case is overwhelming.
       - `reasoning`: 2-3 sentences on why this verdict follows from the specific tests that passed/failed
-      - `steelman`: **MANDATORY for ALL hypotheses, especially eliminated ones.** Write 3-5 sentences presenting the STRONGEST possible case for this hypothesis, as if you were its most passionate advocate. What is the best evidence? What reasoning makes it plausible? Even if the posterior is 0.001, a fair analysis shows the reader why a reasonable person might believe this hypothesis. If you cannot steelman a hypothesis, the hypothesis space is poorly designed.
+      - `steelman`: **MANDATORY for ALL hypotheses, especially eliminated ones.** Write 3-5 sentences presenting the STRONGEST possible case for this hypothesis, as if you were its most passionate advocate. What is the best evidence? What reasoning makes it plausible? Even if its support is 0.001, a fair analysis shows the reader why a reasonable person might believe this hypothesis. If you cannot steelman a hypothesis, the hypothesis space is poorly designed.
       - `posterior_robustness`: Use the MECHANICALLY COMPUTED `robustness` field from the Bayesian results (provided for each hypothesis). Copy it directly — do not override with your own judgment. The mechanical computation is based on whether the posterior was driven by a few decisive LRs ("robust") or many small LRs ("fragile").
 
       ### 2. Comparative analysis
@@ -34,7 +46,7 @@ messages:
       - Explain where the evidence surprised you—where a hypothesis you might expect to do well was actually undermined
       - Reference specific likelihood ratios and what they mean
       - Address counterarguments: why might the top-ranked hypothesis still be wrong?
-      - Discuss SENSITIVITY: the Bayesian results include a sensitivity analysis showing how posteriors change when the most influential LRs are perturbed ±50%. Report which hypotheses have stable rankings and which could swap positions. If a hypothesis's posterior ranges from X to Y under perturbation, say so — this tells the reader how much to trust the point estimates.
+      - Discuss SENSITIVITY: the Bayesian results include a sensitivity analysis showing how support changes when the most influential LRs are perturbed ±50%. Report which hypotheses have stable rankings and which could swap positions. If a hypothesis's support ranges from X to Y under perturbation, say so — this tells the reader how much to trust the point estimates.
       - Discuss ABSENCE OF EVIDENCE: The absence-of-evidence findings identify predictions where hypotheses expected evidence that the text does not contain. Dedicate at least 2-3 sentences to this. Which hypotheses are weakened by missing evidence? If the top-ranked hypothesis has a "damaging" absence finding, explicitly address whether this changes your confidence. Frame these as "the dog that didn't bark" — what SHOULD we see if hypothesis X is correct, and why don't we see it?
       - End with what the analysis actually tells us about causation, not just correlation
 
@@ -55,7 +67,7 @@ messages:
       ### Diagnostic testing
       {{ testing_json }}
 
-      ### Bayesian posteriors
+      ### Bayesian comparative support
       {{ bayesian_json }}
 
       ### Absence-of-evidence findings

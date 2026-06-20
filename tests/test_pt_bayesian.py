@@ -195,6 +195,21 @@ class TestLRCapping:
         assert h1.final_posterior > h2.final_posterior
         assert h1.final_posterior < 0.99  # cap prevents near-certainty from one item
 
+    def test_interpretive_cap_is_tighter(self):
+        # A per-item cap of 5 bounds the pairwise ratio to 5, not 20.
+        import math
+        lrs = item_lrs(_vec("e1", {"h1": 1e6, "h2": 1.0}), ["h1", "h2"], cap=5.0)
+        assert lrs["h1"] / lrs["h2"] == pytest.approx(5.0)
+        assert lrs["h1"] == pytest.approx(math.sqrt(5.0))
+
+    def test_caps_applied_in_update(self):
+        # Same vector, but capped at 5 via caps -> the update LR reflects the tighter cap.
+        testing = _testing(_vec("e1", {"h1": 1e6, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"], caps={"e1": 5.0})
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        import math
+        assert h1.updates[0].likelihood_ratio == pytest.approx(math.sqrt(5.0), abs=1e-3)
+
 
 # ── Relevance gating ────────────────────────────────────────────────
 

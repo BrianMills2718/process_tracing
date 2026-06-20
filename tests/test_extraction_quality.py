@@ -84,7 +84,7 @@ def test_extraction_sanitizes_non_ascii_evidence_ids():
         evidence=[
             Evidence(id="evi_levée_en_masse", description="a" * 25, source_text="q"),
             Evidence(id="evi_côté", description="b" * 25, source_text="q"),
-            Evidence(id="evi_côté", description="c" * 25, source_text="q"),  # collides after strip
+            Evidence(id="evi_cote", description="c" * 25, source_text="q"),  # distinct raw; collides after strip
         ],
     )
     with patch("pt.pass_extract.call_llm", return_value=messy):

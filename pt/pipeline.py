@@ -9,7 +9,7 @@ from typing import Callable
 from uuid import uuid4
 
 from pt.apply_refinement import apply_refinement
-from pt.bayesian import run_bayesian_update
+from pt.bayesian import INTERPRETIVE_LR_CAP, run_bayesian_update
 from pt.pass_absence import run_absence
 from pt.pass_extract import run_extract
 from pt.pass_hypothesize import run_hypothesize
@@ -127,9 +127,16 @@ def _run_passes_3_plus(
 
     if verbose:
         print(f"{prefix}Bayesian updating...")
+    # Interpretive (scholarly-claim) evidence gets a tighter pairwise cap so it
+    # can't move odds as hard as direct empirical evidence (prompt Rule F, enforced).
+    interpretive_caps = {
+        ev.id: INTERPRETIVE_LR_CAP
+        for ev in extraction.evidence
+        if ev.evidence_type == "interpretive"
+    }
     bayesian = run_bayesian_update(
         testing, [h.id for h in hypothesis_space.hypotheses], priors=priors,
-        include_residual=True,
+        include_residual=True, caps=interpretive_caps,
     )
     if verbose:
         top = bayesian.ranking[0] if bayesian.ranking else "none"
