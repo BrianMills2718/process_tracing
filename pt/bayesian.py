@@ -66,7 +66,10 @@ def _compute_robustness(updates: list[EvidenceUpdate]) -> str:
         return "unknown"
 
     n_decisive = sum(1 for ll in log_lrs if ll > DECISIVE_LR_THRESHOLD)
-    n_weak = sum(1 for ll in log_lrs if ll < WEAK_LR_THRESHOLD)
+    # "Weak" means weakly *informative*, not uninformative: items with LR≈1.0
+    # (e.g. relevance-gated evidence) carry log≈0 and must be excluded, else they
+    # inflate the weak count and spuriously push the classification to "fragile".
+    n_weak = sum(1 for ll in log_lrs if 0.01 < ll < WEAK_LR_THRESHOLD)
     n_informative = sum(1 for ll in log_lrs if ll > 0.01)  # anything not exactly 1.0
 
     if n_informative == 0:
