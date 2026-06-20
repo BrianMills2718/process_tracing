@@ -352,3 +352,34 @@ class TestReportConsistency:
         result = run_bayesian_update(testing, ["h1", "h2"])
         for p in result.posteriors:
             assert p.robustness in ("robust", "fragile", "moderate", "unknown")
+
+
+class TestExecutiveSummary:
+    """Slice 4 + truth-in-labeling: the headline surfaces a support interval and
+    stability flags, framed as comparative support (not absolute probability)."""
+
+    def _result(self):
+        testing = _make_testing()
+        return ProcessTracingResult(
+            extraction=_make_extraction(),
+            hypothesis_space=_make_hypothesis_space(),
+            testing=testing,
+            absence=AbsenceResult(evaluations=[]),
+            bayesian=run_bayesian_update(testing, ["h1", "h2"]),
+            synthesis=_make_synthesis(),
+        )
+
+    def test_no_absolute_probability_overclaim(self):
+        html = generate_report(self._result())
+        assert "Posterior probability after Bayesian updating" not in html
+        assert "Support:" in html
+
+    def test_comparative_support_caveat(self):
+        html = " ".join(generate_report(self._result()).split()).lower()
+        assert "comparative support" in html
+        assert "not absolute probabilities of truth" in html
+
+    def test_support_interval_and_stability_surfaced(self):
+        html = generate_report(self._result())
+        assert "range " in html  # support interval badge
+        assert ("robust to prior" in html) or ("prior-sensitive" in html)

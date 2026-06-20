@@ -245,6 +245,27 @@ def generate_report(result: ProcessTracingResult) -> str:
     top_post = posteriors[top_id].final_posterior if top_id and top_id in posteriors else 0
     top_robust = posteriors[top_id].robustness if top_id and top_id in posteriors else "unknown"
 
+    # Slice 4: surface the support interval + rank/prior stability as the headline.
+    top_sens = sensitivity.get(top_id) if top_id else None
+    interval_badge = ""
+    if top_sens:
+        rank_txt = "rank-stable" if top_sens.rank_stable else "rank NOT stable"
+        interval_badge = (
+            f'<span class="badge bg-light text-dark border" data-bs-toggle="tooltip" '
+            f'title="Support range when the most influential likelihoods are perturbed ±50%, and whether the ranking holds.">'
+            f'range {top_sens.posterior_low:.3f}–{top_sens.posterior_high:.3f} · {rank_txt}</span>'
+        )
+    prior_badge = ""
+    ps = result.bayesian.prior_sensitivity
+    if ps:
+        ptxt = "robust to prior" if ps.stable_under_prior_perturbation else "prior-sensitive"
+        pcolor = "bg-success" if ps.stable_under_prior_perturbation else "bg-warning text-dark"
+        prior_badge = (
+            f'<span class="badge {pcolor}" data-bs-toggle="tooltip" '
+            f'title="Whether the top hypothesis stays on top when each prior is up/down-weighted {ps.perturbation_factor:g}×.">'
+            f'{ptxt}</span>'
+        )
+
     exec_summary = f"""
     <div class="card mb-4 shadow-sm">
       <div class="card-header bg-primary text-white"><h4 class="mb-0">Executive Summary</h4></div>
@@ -252,14 +273,20 @@ def generate_report(result: ProcessTracingResult) -> str:
         <p><strong>Research Question:</strong> {_esc(result.hypothesis_space.research_question)}</p>
         <p><strong>Top Hypothesis:</strong> {_esc(top_h.description) if top_h else 'N/A'}
            <span class="badge bg-warning text-dark"
-             data-bs-toggle="tooltip" title="Posterior probability after Bayesian updating with all evidence">
-             Posterior: {top_post:.3f}</span>
+             data-bs-toggle="tooltip" title="Comparative support: normalized odds across the listed hypotheses after Bayesian updating. NOT an absolute probability that the hypothesis is true, nor a causal-effect estimate.">
+             Support: {top_post:.3f}</span>
+           {interval_badge}
            {_robustness_badge(top_robust)}
+           {prior_badge}
            {'<span class="badge bg-info" data-bs-toggle="tooltip" title="This analysis includes an analytical refinement pass (second reading)">Refined</span>' if result.is_refined else ''}</p>
         <p><strong>Hypotheses evaluated:</strong> {len(result.hypothesis_space.hypotheses)} &nbsp;|&nbsp;
            <strong>Evidence items:</strong> {len(result.extraction.evidence)} &nbsp;|&nbsp;
            <strong>Causal edges:</strong> {len(result.extraction.causal_edges)}</p>
         <p>{_esc(result.extraction.summary)}</p>
+        <p class="small text-muted mb-0"><em>How to read the numbers:</em> values are <strong>comparative support</strong> &mdash;
+           each hypothesis's share of the evidence-weighted odds <em>among the hypotheses listed here</em>. They are not
+           absolute probabilities of truth, not causal-effect sizes, and not counterfactual quantities; a hypothesis not
+           on the list cannot be supported. Read the ranking and the support range / robustness / stability flags, not the third decimal.</p>
       </div>
     </div>"""
 

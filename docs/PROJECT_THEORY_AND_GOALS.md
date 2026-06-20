@@ -78,13 +78,26 @@ When describing outputs (reports, commits, user text):
 
 ## 6. Proven-vs-planned ledger (condensed; full table in WP §9)
 
-**Implemented & sound (reuse):** extraction, hypothesis generation, Van Evera diagnostic classification, mechanical robustness, LR-sensitivity, cross-case CausalQueries bridge, report shell (security-fixed), harness/tests. Truth-in-labeling shipped (Slice 1, PR #5).
+**Implemented (this rebuild, live-validated where noted):**
+- LLM boundary on `llm_client.call_llm_structured` (live smoke ✓).
+- **Coherent likelihood vectors** — per-evidence vector across hypotheses, geomean-derived
+  per-hyp LRs, joint normalization (Slice 3; live-validated on french_revolution.txt ✓).
+- **Researcher-settable priors + prior-sensitivity** — CLI `--priors`, `PriorSensitivity` (Slice 2).
+- **Posterior interval + rank-stability + prior-stability** surfaced in the report headline (Slice 4).
+- **Truth-in-labeling** — report says "Support" (comparative), not "posterior probability."
+- Reused & intact: extraction, hypothesis generation, Van Evera classification, mechanical
+  robustness, sensitivity, cross-case CausalQueries bridge, report shell, harness/tests.
 
-**Partial:** single-text Bayesian update exists but is the *pseudo* form (two-way LRs, uniform `1/n`, point posteriors); `top_drivers` computed but no auditor consumes them; absence pass is qualitative-only.
+**Partial:** absence pass is qualitative-only (observability grading deferred); Van Evera
+labels carried per-cell but `prediction_classifications` not yet repopulated by the new pass.
 
-**Planned (this rebuild):** coherent likelihood vectors; researcher priors + prior-sensitivity; bands + posterior intervals + rank-stability; evidence-graph lineage clustering; qualitative critic pass + ablation switch; `llm_client.call_llm_structured` boundary; provenance guards.
+**Planned / deferred (per build plan & cutter):** full band *elicitation* + joint Monte-Carlo
+propagation; evidence-graph dependence clustering; the qualitative critic/auditor pass +
+ablation switch; trace-production model; post-selection & prior-provenance guards;
+cross-cluster shared-error sampling. These are optimum-scope; the first build approximates or defers them.
 
-**Not claimed:** no methodological validation has been run. Until the ablation (WP §8) executes, this is an *auditable inference architecture*, not a *validated* one.
+**Not claimed:** no methodological validation (the WP §8 auditor ablation) has been run. This is
+an *auditable inference architecture*, not a *validated* one.
 
 ## 7. Build sequence
 

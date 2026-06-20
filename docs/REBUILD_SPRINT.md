@@ -53,9 +53,13 @@ harness.
 - [x] Spec doc (PROJECT_THEORY_AND_GOALS.md) — committed
 - [x] LLM boundary → call_llm_structured — committed + live-smoke validated
 - [x] Slice 3 — coherent likelihood vector (MVP) — deterministic green + live-validated
-- [ ] Slice 4 — bands + posterior interval + rank-stability
+- [x] Slice 4 — posterior interval + rank-stability + prior-stability surfaced in exec
+      summary (shrunk per cutter: reuse existing sensitivity intervals; full band
+      elicitation + joint Monte Carlo deferred as optimum-only). Truth-in-labeling
+      applied here too (rebuilt report says "Support", not "Posterior probability").
 - [x] Slice 2 — researcher priors + prior-sensitivity (CLI --priors, pipeline threading, PriorSensitivity)
-- [ ] Integration live run + report adaptation
+- [x] Integration — Slice 2/4 report rendering validated on the live french_rev vectors
+      (no new LLM calls): prior_sensitivity populated, interval/badges render, all checks pass
 - [ ] Ledger + docs update; open PR
 
 ## Slice 3 design (locked)
