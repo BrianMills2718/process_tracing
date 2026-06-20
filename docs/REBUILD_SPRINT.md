@@ -154,10 +154,25 @@ Deterministic: collapse < partial < independent (unit-tested). 109 passed; make 
 at moderate ρ turns the degenerate 0.997 into a non-degenerate posterior — the overconfidence
 lever works on real magnitudes.
 
-**Open: live LLM-behavior confirmation is quota-blocked** (Gemini free-tier quota hit after many
-runs today). Re-run `python -m pt input_text/revolutions/french_revolution.txt -o output/x` when
-quota resets (or with a paid key) to confirm the LLM clusters broadly enough. Per-hypothesis ρ
-remains the deferred refinement.
+**Live LLM-behavior confirmation — DONE (2026-06-20, via OpenRouter** to bypass the Gemini
+free-tier quota: `--model openrouter/google/gemini-2.5-flash`, french_revolution.txt, 78 evidence
+× 5 hyps, 220s). Two findings:
+
+1. **The LLM DOES cluster broadly, as designed.** 14 dependence clusters covering 59/78 items
+   (76%), sizes 8/8/5/5/4×6/3×3/2×2, with ρ spread across 0.4–0.7 keyed to shared
+   condition/event/mechanism sub-narratives. So the partial-pooling input the math relies on is
+   actually produced in practice, not just in the deterministic demo.
+2. **Yet the posterior is still degenerate** (top h4=0.9995, *fragile*; overconfidence banner
+   fired; report reads "ranking"). Broad clustering at the *moderate* ρ the LLM assigns (0.4–0.7)
+   is NOT enough to de-degenerate a dense 78-item text: 14 moderate-ρ clusters + 19 unclustered
+   items still accumulate to ~1.0. The earlier deterministic demo de-degenerated only because it
+   used a *single* cluster at *high* ρ.
+
+Conclusion: mechanism validated end-to-end (priors, prior_sensitivity, top_drivers, robustness,
+banner all work via OpenRouter), and the known overconfidence limit is now confirmed on real LLM
+output. **Per-hypothesis ρ and/or stronger pooling (higher ρ, or a learned ρ) is the load-bearing
+next refinement** — moderate uniform ρ is demonstrably insufficient on dense texts. Until then the
+honest read remains: ranking, not calibrated probability (which the banner states).
 
 ## SPRINT COMPLETE (scoped slices)
 
