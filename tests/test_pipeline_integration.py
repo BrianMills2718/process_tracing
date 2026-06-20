@@ -439,3 +439,32 @@ class TestReportConsistency:
         result = run_bayesian_update(testing)
         for p in result.posteriors:
             assert p.robustness in ("robust", "fragile", "moderate", "unknown")
+
+
+class TestReportLabeling:
+    """The report must present the numbers as comparative support over the listed
+    hypotheses, not as absolute 'posterior probabilities' (truth-in-labeling)."""
+
+    def _result(self):
+        testing = _make_testing()
+        return ProcessTracingResult(
+            extraction=_make_extraction(),
+            hypothesis_space=_make_hypothesis_space(),
+            testing=testing,
+            absence=AbsenceResult(evaluations=[]),
+            bayesian=run_bayesian_update(testing),
+            synthesis=_make_synthesis(),
+        )
+
+    def test_no_absolute_probability_overclaim(self):
+        html = generate_report(self._result())
+        # The misleading absolute-probability framing must be gone.
+        assert "Posterior probability after Bayesian updating" not in html
+        assert "Final probability after Bayesian updating" not in html
+
+    def test_comparative_support_caveat_present(self):
+        # Normalize whitespace so line-wrapped phrases still match.
+        html = " ".join(generate_report(self._result()).split()).lower()
+        assert "comparative support" in html
+        # The reader is told what the numbers are not.
+        assert "not absolute probabilities of truth" in html

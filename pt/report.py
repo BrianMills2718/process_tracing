@@ -257,14 +257,18 @@ def generate_report(result: ProcessTracingResult) -> str:
         <p><strong>Research Question:</strong> {_esc(result.hypothesis_space.research_question)}</p>
         <p><strong>Top Hypothesis:</strong> {_esc(top_h.description) if top_h else 'N/A'}
            <span class="badge bg-warning text-dark"
-             data-bs-toggle="tooltip" title="Posterior probability after Bayesian updating with all evidence">
-             Posterior: {top_post:.3f}</span>
+             data-bs-toggle="tooltip" title="Comparative support: normalized odds across the listed hypotheses after Bayesian updating. NOT an absolute probability that the hypothesis is true, nor a causal-effect estimate.">
+             Support: {top_post:.3f}</span>
            {_robustness_badge(top_robust)}
            {'<span class="badge bg-info" data-bs-toggle="tooltip" title="This analysis includes an analytical refinement pass (second reading)">Refined</span>' if result.is_refined else ''}</p>
         <p><strong>Hypotheses evaluated:</strong> {len(result.hypothesis_space.hypotheses)} &nbsp;|&nbsp;
            <strong>Evidence items:</strong> {len(result.extraction.evidence)} &nbsp;|&nbsp;
            <strong>Causal edges:</strong> {len(result.extraction.causal_edges)}</p>
         <p>{_esc(result.extraction.summary)}</p>
+        <p class="small text-muted mb-0"><em>How to read the numbers:</em> values are <strong>comparative support</strong> &mdash;
+           each hypothesis's share of the evidence-weighted odds <em>among the hypotheses listed here</em>. They are not
+           absolute probabilities of truth, not causal-effect sizes, and not counterfactual quantities; a hypothesis not
+           on the list cannot be supported. Read the ranking and the robustness/sensitivity flags, not the third decimal.</p>
       </div>
     </div>"""
 
@@ -384,8 +388,8 @@ def generate_report(result: ProcessTracingResult) -> str:
             {_th("ID")}
             {_th("Hypothesis")}
             {_th("Source")}
-            {_th("Prior", "Starting probability before any evidence is considered")}
-            {_th("Posterior", "Final probability after Bayesian updating with all evidence")}
+            {_th("Prior", "Starting support before any evidence is considered (uniform across hypotheses by default)")}
+            {_th("Support", "Comparative support: normalized odds across the listed hypotheses after Bayesian updating — not an absolute probability of truth")}
             {_th("Status")}
             {_th("Robustness", "Whether the posterior is driven by few decisive tests (robust) or many weak ones (fragile)")}
             {_th("Sensitivity", "Range of posterior values under ±50% perturbation of the most influential evidence")}
@@ -686,7 +690,7 @@ def generate_report(result: ProcessTracingResult) -> str:
     bayesian_section = f"""
     <div class="card mb-4 shadow-sm">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h4 class="mb-0" data-bs-toggle="tooltip" title="Starting from equal priors, each evidence item updates the posterior probability via its likelihood ratio. LR > 1 increases support, LR < 1 decreases it.">Bayesian Update Summary</h4>
+        <h4 class="mb-0" data-bs-toggle="tooltip" title="Starting from the prior, each evidence item updates the comparative support via its likelihood ratio. LR > 1 increases support, LR < 1 decreases it. The result is support relative to the listed hypotheses, not an absolute probability.">Bayesian Update Summary</h4>
         <button class="btn btn-sm btn-outline-primary section-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#bayesianBody">Expand</button>
       </div>
       <div class="collapse" id="bayesianBody">
