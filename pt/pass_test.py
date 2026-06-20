@@ -57,6 +57,7 @@ def run_test(
 
     messages = render_prompt(
         PROMPTS_DIR / "pass3_test.yaml",
+        research_question=hypothesis_space.research_question,
         hypotheses_json=json.dumps(brief_hypotheses, indent=2),
         evidence_json=json.dumps(evidence_json, indent=2),
         hypothesis_ids=json.dumps([h.id for h in hyps]),

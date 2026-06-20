@@ -8,6 +8,19 @@ messages:
       assess EVERY evidence item against ALL competing hypotheses at once, producing a
       coherent *likelihood vector* per evidence item.
 
+      ## Research question (the outcome you are explaining)
+
+      {{ research_question }}
+
+      ## Step 0 — anchor the focal period (do this FIRST, before scoring anything)
+
+      Identify the OUTCOME the research question asks about and its approximate date/period
+      (e.g. "the Directory's collapse, 1799"). This focal period is the anchor for all
+      temporal-relevance scoring below. Evidence is only as relevant as it is causally
+      proximate to THIS outcome — not to the broader topic. An item that predates the focal
+      institution/mechanism's very existence cannot directly explain why that institution
+      later failed; treat it as background at most (see Relevance scoring).
+
       ## What you produce
 
       For each evidence item, output `hypothesis_likelihoods`: one entry per hypothesis with
@@ -93,11 +106,35 @@ messages:
       guard against overconfidence from piling up correlated evidence; prefer to
       cluster when in doubt.
 
-      ## Relevance scoring
-      - decades before the outcome: 0.3–0.5 | years before: 0.5–0.7 | same period: 0.8–1.0
+      ## Relevance scoring (anchor temporal distance to the FOCAL PERIOD from Step 0)
+      Measure temporal distance from the outcome's date, NOT from the broad topic:
+      - same period as the outcome (within ~a year or two): 0.8–1.0
+      - a few years before the outcome: 0.5–0.7
+      - many years / decades before the outcome: 0.2–0.4 (background context, near or below the
+        informativeness gate)
+      - PREDATES the focal institution/mechanism's existence: cap at 0.4. Such an item is a
+        long-run precondition of the broader topic, not evidence about why the focal outcome
+        occurred — unless it directly bears on the proximate mechanism, in which case say so in
+        the justification and keep it modest.
       - different causal domain than a hypothesis: reduce by 0.2–0.4
       - circular (restates a hypothesis): 0.1
-      Use the LOWER of temporal and causal-domain fit.
+      Use the LOWER of temporal and causal-domain fit. Do NOT let a vivid but temporally distant
+      event drive the verdict for a narrowly-dated outcome.
+
+      ## Diagnostic type must match the likelihood magnitude (no straw-in-the-wind monoculture)
+      `diagnostic_type` is not decorative — it must be consistent with the ratios you assign:
+      - `straw_in_the_wind` — mildly tilts the vector (favored:rest ratio ≲ 2×). Most items.
+      - `hoop` — the favored hypothesis predicts this near-certainly; its ABSENCE would hurt that
+        hypothesis. Presence is necessary-ish, not sufficient.
+      - `smoking_gun` — very unlikely UNLESS the favored hypothesis holds, so presence strongly
+        confirms it (ratio ≥ ~5× for the favored hypothesis over rivals).
+      - `doubly_decisive` — both very likely if true AND very unlikely if false (large ratio,
+        rare).
+      A serious analysis identifies the FEW genuinely decisive items (smoking_gun / hoop /
+      doubly_decisive) rather than labelling everything `straw_in_the_wind`. If you find yourself
+      marking nearly every cell as straw, you have not finished discriminating — re-examine which
+      items a hypothesis truly stakes its case on. Conversely, do NOT inflate a label beyond its
+      ratio: a 1.5× tilt is a straw, not a smoking gun.
 
       ## Hypotheses (assign a likelihood for EACH, for EVERY evidence item)
 
