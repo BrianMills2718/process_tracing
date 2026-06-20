@@ -31,13 +31,25 @@ tryCatch({
   input_text <- paste(readLines("stdin", warn = FALSE), collapse = "\n")
   input <- fromJSON(input_text, simplifyVector = FALSE)
 
-  # Build data frame from input, converting NULL to NA
+  # Build data frame from input, converting NULL to NA.
+  # Bind rows by NAME, not position: the union of keys defines the columns and
+  # every row is reindexed to that fixed order. This prevents silent column
+  # transposition if any row's keys arrive in a different order. (The Python
+  # side also normalizes order; this is defense-in-depth.)
+  all_names <- unique(unlist(lapply(input$data, names)))
+  if (is.null(all_names)) {
+    stop("input data has no named variables")
+  }
   df_list <- lapply(input$data, function(row) {
-    lapply(row, function(val) {
+    vals <- lapply(all_names, function(nm) {
+      val <- row[[nm]]
       if (is.null(val)) NA_integer_ else as.integer(val)
     })
+    names(vals) <- all_names
+    vals
   })
   df <- do.call(rbind.data.frame, df_list)
+  names(df) <- all_names
 
   # Create the causal model
   model <- make_model(input$model_statement)

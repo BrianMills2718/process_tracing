@@ -95,8 +95,9 @@ def apply_refinement(
     for ri in refinement.reinterpreted_evidence:
         ev = ev_by_id.get(ri.evidence_id)
         if ev is None:
-            # A target removed as spurious in this same delta is a legitimate no-op;
-            # anything else is a dangling reference and must fail loud.
+            # A target removed as spurious in this same delta is a legitimate
+            # no-op; anything else is a dangling reference (e.g. a hallucinated
+            # id) and must fail loud rather than be silently dropped.
             if ri.evidence_id in spurious_ev_ids:
                 continue
             raise ValueError(
@@ -133,6 +134,8 @@ def apply_refinement(
     for hr in refinement.hypothesis_refinements:
         h = h_by_id.get(hr.hypothesis_id)
         if h is None:
+            # Hypotheses are never removed by a refinement delta, so a missing
+            # target is always a dangling reference — fail loud.
             raise ValueError(
                 f"Refinement: hypothesis refinement targets unknown hypothesis id '{hr.hypothesis_id}'"
             )
