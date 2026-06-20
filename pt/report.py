@@ -24,16 +24,6 @@ def _status_color(status: str) -> str:
     }.get(status, "#6c757d")
 
 
-def _status_bg(status: str) -> str:
-    return {
-        "strongly_supported": "bg-success",
-        "supported": "bg-success bg-opacity-75",
-        "weakened": "bg-warning",
-        "eliminated": "bg-danger",
-        "indeterminate": "bg-secondary",
-    }.get(status, "bg-secondary")
-
-
 _DIAGNOSTIC_TOOLTIPS = {
     "hoop": "Hoop test: necessary but not sufficient. Failing eliminates the hypothesis; passing keeps it alive but doesn't confirm it.",
     "smoking_gun": "Smoking gun: sufficient but not necessary. Passing strongly confirms the hypothesis; failing doesn't eliminate it.",

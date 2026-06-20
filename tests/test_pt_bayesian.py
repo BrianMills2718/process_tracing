@@ -9,14 +9,8 @@ reciprocal) — coherent by construction.
 import pytest
 
 from pt.bayesian import (
-    CLAMP_MAX,
-    CLAMP_MIN,
     LR_CAP,
-    LR_FLOOR,
-    _clamp,
     _compute_robustness,
-    _odds,
-    _prob,
     _top_drivers,
     item_lrs,
     run_bayesian_update,
@@ -51,44 +45,6 @@ def _testing(*items: EvidenceLikelihood) -> TestingResult:
 
 
 # ── _clamp ───────────────────────────────────────────────────────────
-
-
-class TestClamp:
-    def test_within_range(self):
-        assert _clamp(0.5) == 0.5
-
-    def test_floor(self):
-        assert _clamp(0.0) == CLAMP_MIN
-        assert _clamp(-1.0) == CLAMP_MIN
-
-    def test_ceiling(self):
-        assert _clamp(1.0) == CLAMP_MAX
-        assert _clamp(2.0) == CLAMP_MAX
-
-    def test_at_boundaries(self):
-        assert _clamp(CLAMP_MIN) == CLAMP_MIN
-        assert _clamp(CLAMP_MAX) == CLAMP_MAX
-
-
-# ── _odds / _prob roundtrip ─────────────────────────────────────────
-
-
-class TestOddsProb:
-    def test_roundtrip(self):
-        for p in [0.1, 0.25, 0.5, 0.75, 0.9]:
-            assert abs(_prob(_odds(p)) - p) < 1e-6
-
-    def test_odds_of_half(self):
-        assert _odds(0.5) == pytest.approx(1.0)
-
-    def test_odds_of_high_prob(self):
-        assert _odds(0.9) == pytest.approx(9.0)
-
-    def test_prob_of_one(self):
-        assert _prob(1.0) == pytest.approx(0.5)
-
-    def test_extreme_odds_clamped(self):
-        assert _prob(1e10) == CLAMP_MAX
 
 
 # ── Coherence: derived pairwise ratios are consistent ───────────────
@@ -151,7 +107,6 @@ class TestJointUpdate:
 class TestLRCapping:
     def test_constants(self):
         assert LR_CAP == 20.0
-        assert LR_FLOOR == pytest.approx(0.05)
 
     def test_strong_evidence_capped_on_pairwise_spread(self):
         # Cap bounds a single item's PAIRWISE max:min ratio to LR_CAP, not each

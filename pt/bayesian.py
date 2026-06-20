@@ -1,4 +1,4 @@
-"""Pure math: coherent multi-hypothesis Bayesian updating in odds space.
+"""Pure math: coherent multi-hypothesis Bayesian updating via log-space softmax.
 
 The testing pass elicits, per evidence item, a *likelihood vector* across all
 hypotheses (relative likelihoods on a shared scale). For each item we derive a
@@ -6,10 +6,15 @@ per-hypothesis likelihood ratio against the vector's geometric mean:
 
     LR_{m,i} = relative_likelihood_{m,i} / geomean_j(relative_likelihood_{m,j})
 
-clamped to [LR_FLOOR, LR_CAP] and relevance-discounted. Because every LR for an
-item comes from one vector, the pairwise ratios are coherent by construction
-(reciprocity/transitivity hold). The posterior is the joint multinomial update
-`post_i ∝ prior_i · Π_m LR_{m,i}`, normalized across hypotheses.
+The per-item *pairwise* spread is capped to LR_CAP (each centered log-LR clamped
+to ±0.5·log(LR_CAP)), then relevance-discounted. Because every LR for an item is
+derived from one vector, the pairwise ratios are coherent by construction
+(reciprocity/transitivity hold).
+
+The posterior is the joint multinomial update, computed in log space and
+softmax-normalized so it is **order-invariant** (no per-step clamping):
+
+    log w_i = log(prior_i) + Σ_m log(LR_{m,i});   posterior_i = softmax(log w)_i
 
 No LLM here — deterministic and unit-tested (per the LLM-first exception).
 """
@@ -28,10 +33,7 @@ from pt.schemas import (
     TestingResult,
 )
 
-CLAMP_MIN = 0.001
-CLAMP_MAX = 0.999
-LR_CAP = 20.0
-LR_FLOOR = 1.0 / LR_CAP  # 0.05
+LR_CAP = 20.0  # bound on a single item's pairwise max:min likelihood ratio
 
 RELEVANCE_GATE = 0.4  # below this, an item is uninformative (LR forced to 1.0)
 
@@ -43,19 +45,6 @@ DECISIVE_COUNT_FOR_ROBUST = 3  # Need at least this many decisive items
 # Sensitivity
 PERTURB_FACTOR = 0.5  # ±50% perturbation on log-LR
 TOP_DRIVERS_COUNT = 5  # Number of most influential LRs to perturb
-
-
-def _clamp(p: float) -> float:
-    return max(CLAMP_MIN, min(CLAMP_MAX, p))
-
-
-def _odds(p: float) -> float:
-    p = _clamp(p)
-    return p / (1.0 - p)
-
-
-def _prob(odds: float) -> float:
-    return _clamp(odds / (1.0 + odds))
 
 
 def hypothesis_ids_from_testing(testing: TestingResult) -> list[str]:

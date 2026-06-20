@@ -90,13 +90,13 @@ Options:
 | File | Purpose | LLM? |
 |------|---------|------|
 | `pt/schemas.py` | Pydantic models for all pipeline data | No |
-| `pt/llm.py` | LiteLLM abstraction, structured output parsing | Yes |
+| `pt/llm.py` | LLM boundary — delegates to `llm_client.call_llm_structured` | Yes |
 | `pt/prompts/*.yaml` | YAML/Jinja2 prompt templates (loaded via `llm_client.render_prompt()`) | — |
 | `pt/pass_extract.py` | Pass 1: Evidence extraction | Yes |
 | `pt/pass_hypothesize.py` | Pass 2: Hypothesis generation | Yes |
-| `pt/pass_test.py` | Pass 3: Diagnostic testing (one call per hypothesis) | Yes |
+| `pt/pass_test.py` | Pass 3: likelihood-vector elicitation (one matrix call: per-evidence vector across all hypotheses) | Yes |
 | `pt/pass_absence.py` | Pass 3b: Absence-of-evidence evaluation (all hypotheses, single call) | Yes |
-| `pt/bayesian.py` | Pass 3.5: Bayesian updating (pure math, no LLM) | No |
+| `pt/bayesian.py` | Pass 3.5: coherent joint update (log-space softmax, pure math, no LLM) | No |
 | `pt/pass_synthesize.py` | Pass 4: Written synthesis | Yes |
 | `pt/pass_refine.py` | Pass 5: Analytical refinement (second reading) | Yes |
 | `pt/apply_refinement.py` | Apply refinement delta to extraction + hypotheses | No |
@@ -113,10 +113,21 @@ Options:
 | `scripts/cq_runner.R` | R side of CQ bridge (~100 lines) | No |
 | `models/skocpol_revolution.yaml` | Example theory-driven causal model (Skocpol) | No |
 
-### Key Design Decisions (v5h)
+### Inference-core rebuild (current)
 
-- **LR cap at 20.0**: Prevents single evidence items from dominating. `LR_CAP = 20.0`, `LR_FLOOR = 0.05`.
-- **Relevance gating**: Evidence with `relevance < 0.4` is forced to `LR = 1.0` (uninformative). Above 0.4, soft discount via `lr = exp(relevance * log(capped_lr))`.
+The single-text testing/update core was rebuilt to be **coherent**. Canonical spec:
+`docs/PROJECT_THEORY_AND_GOALS.md`; methodology: `docs/WHITEPAPER_optimal_automated_process_tracing.md`;
+build plan: `docs/BUILDPLAN_pragmatic_process_tracing.md`; status log: `docs/REBUILD_SPRINT.md`.
+
+- **Likelihood *vectors*, not two-way LRs**: Pass 3 makes **one matrix call** — for each evidence item it emits a relative-likelihood vector across *all* hypotheses (`pt/schemas.py: EvidenceLikelihood`). Per-hypothesis LRs are derived as `relative_likelihood / geomean(vector)`, so pairwise ratios are coherent by construction. `pass_test` fails loud on incomplete/duplicate/unknown vectors.
+- **Coherent joint update**: `pt/bayesian.py` uses a log-space softmax (`post_i = softmax(log prior_i + Σ log LR_i)`) — **order-invariant**, no per-step clamping. (Replaced the earlier per-hypothesis binary-odds-then-normalize, which was order-dependent.)
+- **Pairwise LR cap = 20**: bounds a single item's max:min ratio across hypotheses (`LR_CAP`, each centered log-LR clamped to ±0.5·log 20). Does **not** bound aggregate overconfidence — see below.
+- **Researcher priors + sensitivity**: CLI `--priors` (JSON, validated fail-loud); `PriorSensitivity` reports robustness to ±2× prior swings. Report shows comparative **support** (not "posterior probability"), support intervals, and rank/prior stability.
+- **Known limitation (load-bearing)**: the joint update over many conditionally-dependent items is **overconfident** (Naive-Bayes). **Evidence-dependence clustering is required** to fix magnitudes; until then read results as a *ranking* (the report shows an overconfidence banner). Residual hypothesis `H0` is not yet implemented (estimand incomplete).
+
+### Earlier design decisions (pre-rebuild; some superseded)
+
+- **Relevance gating**: Evidence with `relevance < 0.4` is forced to `LR = 1.0` (uninformative). Above 0.4, soft discount on the log scale of the centered LR.
 - **Relevance = min(temporal, causal-domain)**: Not just "how recent" but "how on-topic for this hypothesis."
 - **Anti-circularity**: Hypotheses cannot be derived from interpretive evidence. Circular evidence gets `relevance = 0.1`.
 - **Anti-tautology**: Hypotheses must specify causal mechanisms, not describe outcomes.
