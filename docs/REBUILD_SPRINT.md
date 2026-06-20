@@ -98,6 +98,22 @@ Still open from the review: residual **H0** not implemented (estimand incomplete
 contract violation, was already marked Partial); white-paper/build-plan docs live on
 PR #4's branch, not this one (broken cross-branch reference in PROJECT_THEORY).
 
+## Slice 5 (dependence clustering) — done, with an honest limit
+
+Implemented: matrix call also returns `dependence_clusters`; `bayesian` collapses
+each cluster to one effective observation (log-average); `pass_test` validates
+clusters fail-loud; evidence ids ASCII-sanitized at extraction (fixed a real
+fail-loud catch: `evi_levée_…` mangled to a newline in the round-trip).
+
+**Live finding (important):** on french_revolution the LLM clustered only 13/74
+items (6 clusters), so the top support is still **0.997** — clustering removes
+*duplicate* double-counting but NOT the structural Naive-Bayes overconfidence from
+the ~67 non-duplicate-but-correlated items. The overconfidence **banner fires**
+(honest: "read as ranking"). The real magnitude fix is the optimum's
+partial-pooling / cross-cluster shared-error model (still deferred). Net state:
+coherent + duplicate-safe + honestly-flagged; magnitude still rank-only on dense
+texts. Order-invariance and ranking are sound. make check green; 96 passed.
+
 ## SPRINT COMPLETE (scoped slices)
 
 All non-deferred slices done, verified, and live-validated. Branch

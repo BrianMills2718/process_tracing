@@ -144,11 +144,32 @@ class EvidenceLikelihood(BaseModel):
     )
 
 
+class EvidenceCluster(BaseModel):
+    """A group of evidence items that are NOT conditionally independent.
+
+    Items sharing the same source/document lineage, the same originating event, or
+    the same underlying fact carry overlapping information; multiplying their
+    likelihoods would double-count. The Bayesian update collapses each cluster to a
+    single effective observation (log-average of member vectors).
+    """
+    evidence_ids: list[str] = Field(
+        description="Two or more evidence ids that share a source, event, or underlying "
+        "fact and therefore carry overlapping (non-independent) information."
+    )
+    reason: str = Field(description="Why these items are dependent (shared source/event/fact).")
+
+
 class TestingResult(BaseModel):
     __test__: ClassVar[bool] = False
 
     evidence_likelihoods: list[EvidenceLikelihood] = Field(
         description="Per-evidence likelihood vectors across all hypotheses.",
+    )
+    dependence_clusters: list[EvidenceCluster] = Field(
+        default_factory=list,
+        description="Groups of conditionally-dependent evidence items. Each cluster is "
+        "collapsed to one effective observation in the update to avoid double-counting. "
+        "Items not in any cluster are treated as independent.",
     )
     prediction_classifications: list[PredictionClassification] = Field(
         default_factory=list,

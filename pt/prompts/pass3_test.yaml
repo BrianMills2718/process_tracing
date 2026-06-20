@@ -71,6 +71,18 @@ messages:
       not who said it; do not systematically favor one speaker. Points where opposing speakers
       AGREE are stronger.
 
+      ## Dependence clustering (prevents double-counting)
+
+      Also output `dependence_clusters`: groups of evidence items that are NOT
+      conditionally independent — they share a source/document, describe the same
+      originating event, or restate the same underlying fact, so they carry
+      OVERLAPPING information. Each cluster needs >= 2 distinct evidence ids and a
+      brief `reason`. An item may appear in at most one cluster; items that are
+      genuinely independent observations belong in NO cluster. Be conservative:
+      cluster only when the items would double-count if treated as independent
+      (e.g., five reports of one speech, or several phrasings of the same fact).
+      Each cluster will be collapsed to a single effective observation.
+
       ## Relevance scoring
       - decades before the outcome: 0.3–0.5 | years before: 0.5–0.7 | same period: 0.8–1.0
       - different causal domain than a hypothesis: reduce by 0.2–0.4

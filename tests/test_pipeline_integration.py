@@ -381,6 +381,37 @@ class TestVectorCompleteness:
         result = self._run_with(_make_testing())
         assert len(result.evidence_likelihoods) == 4
 
+    def test_rejects_cluster_with_unknown_evidence(self):
+        from pt.schemas import EvidenceCluster
+        t = _make_testing()
+        t.dependence_clusters = [EvidenceCluster(evidence_ids=["evi_debt", "evi_ghost"], reason="x")]
+        with pytest.raises(ValueError, match="unknown evidence"):
+            self._run_with(t)
+
+    def test_rejects_cluster_with_one_member(self):
+        from pt.schemas import EvidenceCluster
+        t = _make_testing()
+        t.dependence_clusters = [EvidenceCluster(evidence_ids=["evi_debt", "evi_debt"], reason="x")]
+        with pytest.raises(ValueError, match=">=2 distinct"):
+            self._run_with(t)
+
+    def test_rejects_overlapping_clusters(self):
+        from pt.schemas import EvidenceCluster
+        t = _make_testing()
+        t.dependence_clusters = [
+            EvidenceCluster(evidence_ids=["evi_debt", "evi_tax_revolt"], reason="x"),
+            EvidenceCluster(evidence_ids=["evi_tax_revolt", "evi_elite_plot"], reason="y"),
+        ]
+        with pytest.raises(ValueError, match="multiple dependence clusters"):
+            self._run_with(t)
+
+    def test_accepts_valid_cluster(self):
+        from pt.schemas import EvidenceCluster
+        t = _make_testing()
+        t.dependence_clusters = [EvidenceCluster(evidence_ids=["evi_debt", "evi_tax_revolt"], reason="x")]
+        result = self._run_with(t)
+        assert len(result.dependence_clusters) == 1
+
 
 class TestExecutiveSummary:
     """Slice 4 + truth-in-labeling: the headline surfaces a support interval and

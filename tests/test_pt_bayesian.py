@@ -16,6 +16,7 @@ from pt.bayesian import (
     run_bayesian_update,
 )
 from pt.schemas import (
+    EvidenceCluster,
     EvidenceLikelihood,
     EvidenceUpdate,
     HypothesisLikelihood,
@@ -40,8 +41,8 @@ def _vec(evidence_id: str, likelihoods: dict[str, float], relevance: float = 1.0
     )
 
 
-def _testing(*items: EvidenceLikelihood) -> TestingResult:
-    return TestingResult(evidence_likelihoods=list(items))
+def _testing(*items: EvidenceLikelihood, clusters: list[EvidenceCluster] | None = None) -> TestingResult:
+    return TestingResult(evidence_likelihoods=list(items), dependence_clusters=clusters or [])
 
 
 # ── _clamp ───────────────────────────────────────────────────────────
@@ -69,6 +70,35 @@ class TestCoherence:
         lrs = item_lrs(_vec("e1", {"h1": 0.5, "h2": 0.5, "h3": 0.5}), ["h1", "h2", "h3"])
         for h in ("h1", "h2", "h3"):
             assert lrs[h] == pytest.approx(1.0, abs=1e-9)
+
+
+class TestDependenceClustering:
+    """A dependence cluster is collapsed to one effective observation, so correlated
+    evidence is not double-counted (the overconfidence fix)."""
+
+    def test_cluster_collapses_duplicates_to_one(self):
+        # Five identical items, all in one cluster, must give the SAME posterior as one item.
+        five = [_vec(f"d{i}", {"h1": 0.95, "h2": 0.05}) for i in range(5)]
+        cluster = EvidenceCluster(evidence_ids=[f"d{i}" for i in range(5)], reason="same fact")
+        clustered = run_bayesian_update(_testing(*five, clusters=[cluster]), ["h1", "h2"])
+        single = run_bayesian_update(_testing(_vec("d0", {"h1": 0.95, "h2": 0.05})), ["h1", "h2"])
+        c_h1 = next(p.final_posterior for p in clustered.posteriors if p.hypothesis_id == "h1")
+        s_h1 = next(p.final_posterior for p in single.posteriors if p.hypothesis_id == "h1")
+        assert c_h1 == pytest.approx(s_h1, abs=1e-6)
+
+    def test_uncollapsed_duplicates_are_overconfident(self):
+        # Without clustering, five duplicates pile up (the bug clustering fixes).
+        five = [_vec(f"d{i}", {"h1": 0.95, "h2": 0.05}) for i in range(5)]
+        no_cluster = run_bayesian_update(_testing(*five), ["h1", "h2"])
+        h1 = next(p.final_posterior for p in no_cluster.posteriors if p.hypothesis_id == "h1")
+        assert h1 > 0.99  # much more extreme than a single item
+
+    def test_cluster_trail_has_one_entry_per_cluster(self):
+        five = [_vec(f"d{i}", {"h1": 0.95, "h2": 0.05}) for i in range(5)]
+        cluster = EvidenceCluster(evidence_ids=[f"d{i}" for i in range(5)], reason="same fact")
+        result = run_bayesian_update(_testing(*five, clusters=[cluster]), ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert len(h1.updates) == 1  # 5 items -> 1 effective observation
 
 
 class TestJointUpdate:

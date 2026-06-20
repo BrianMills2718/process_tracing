@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -14,16 +16,45 @@ from pt.schemas import ExtractionResult
 PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 
+def _ascii_id(raw: str) -> str:
+    """Normalize an LLM-assigned id to an ASCII-safe identifier.
+
+    Non-ASCII characters (e.g. 'é' in 'evi_levée_...') get mangled when ids round-trip
+    through later LLM calls, which then fails the fail-loud id-matching in pass_test.
+    Strip accents and restrict to [A-Za-z0-9_].
+    """
+    decomposed = unicodedata.normalize("NFKD", raw)
+    ascii_str = decomposed.encode("ascii", "ignore").decode("ascii")
+    cleaned = re.sub(r"[^A-Za-z0-9_]+", "_", ascii_str).strip("_")
+    return cleaned or "id"
+
+
+def _sanitize_evidence_ids(extraction: ExtractionResult) -> ExtractionResult:
+    """Make evidence ids ASCII-safe and unique so they survive later LLM round-trips."""
+    seen: set[str] = set()
+    for ev in extraction.evidence:
+        new_id = _ascii_id(ev.id)
+        if new_id in seen:
+            suffix = 2
+            while f"{new_id}_{suffix}" in seen:
+                suffix += 1
+            new_id = f"{new_id}_{suffix}"
+        seen.add(new_id)
+        ev.id = new_id
+    return extraction
+
+
 def run_extract(text: str, *, model: str | None = None, trace_id: str | None = None) -> ExtractionResult:
     """Extract causal graph from text."""
     if trace_id is None:
         trace_id = hashlib.sha256(text.encode()).hexdigest()[:8]
     messages = render_prompt(PROMPTS_DIR / "pass1_extract.yaml", text=text)
     kwargs: dict[str, Any] = {"model": model} if model else {}
-    return call_llm(
+    result = call_llm(
         messages[0]["content"],
         ExtractionResult,
         task="process_tracing.extract",
         trace_id=trace_id,
         **kwargs,
     )
+    return _sanitize_evidence_ids(result)

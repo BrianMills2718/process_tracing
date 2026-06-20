@@ -98,5 +98,21 @@ def run_test(
             f"testing: evidence coverage mismatch — missing {sorted(missing)}, extra {sorted(extra)}"
         )
 
-    print(f"  {len(seen_ev_ids)}/{len(evidence)} evidence items vectorized across {len(hyps)} hypotheses")
+    # Validate dependence clusters: known evidence ids, >=2 members, no item in two clusters.
+    clustered: set[str] = set()
+    for cluster in result.dependence_clusters:
+        ids = cluster.evidence_ids
+        unknown = set(ids) - expected_ev_ids
+        if unknown:
+            raise ValueError(f"testing: dependence cluster references unknown evidence {sorted(unknown)}")
+        if len(set(ids)) < 2:
+            raise ValueError(f"testing: dependence cluster must have >=2 distinct members, got {ids}")
+        overlap = clustered & set(ids)
+        if overlap:
+            raise ValueError(f"testing: evidence in multiple dependence clusters: {sorted(overlap)}")
+        clustered |= set(ids)
+
+    n_clusters = len(result.dependence_clusters)
+    print(f"  {len(seen_ev_ids)}/{len(evidence)} evidence items vectorized across {len(hyps)} hypotheses"
+          f" ({n_clusters} dependence clusters covering {len(clustered)} items)")
     return result

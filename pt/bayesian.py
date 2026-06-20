@@ -111,6 +111,49 @@ def lr_matrix(
     ]
 
 
+def _collapse_clusters(
+    matrix: list[tuple[str, dict[str, float]]],
+    clusters: list,
+    hypothesis_ids: list[str],
+) -> list[tuple[str, dict[str, float]]]:
+    """Collapse each dependence cluster to ONE effective observation.
+
+    Conditionally-dependent evidence (same source/event/fact) carries overlapping
+    information; multiplying its likelihoods double-counts. Each cluster's per-item
+    LR vectors are combined by log-average (geometric mean), so a cluster of k
+    items contributes like a single observation in the direction of its members.
+    Items not in any cluster are unchanged. Order is preserved (a cluster takes
+    the position of its first member).
+    """
+    if not clusters:
+        return matrix
+    row_by_id = dict(matrix)
+    member_to_cluster: dict[str, int] = {}
+    for ci, c in enumerate(clusters):
+        for eid in c.evidence_ids:
+            member_to_cluster.setdefault(eid, ci)
+
+    out: list[tuple[str, dict[str, float]]] = []
+    emitted: set[int] = set()
+    for eid, lrs in matrix:
+        cidx = member_to_cluster.get(eid)
+        if cidx is None:
+            out.append((eid, lrs))
+            continue
+        if cidx in emitted:
+            continue  # cluster already represented at its first member's position
+        emitted.add(cidx)
+        members = [m for m in clusters[cidx].evidence_ids if m in row_by_id]
+        combined = {
+            h: math.exp(
+                sum(math.log(max(row_by_id[m][h], 1e-300)) for m in members) / len(members)
+            )
+            for h in hypothesis_ids
+        }
+        out.append((members[0], combined))  # representative id = first member
+    return out
+
+
 def _compute_robustness(updates: list[EvidenceUpdate]) -> str:
     """Classify a posterior as 'robust', 'fragile', or 'moderate' from its LR spread.
 
@@ -218,7 +261,8 @@ def run_bayesian_update(
     else:
         prior_by_id = {h: 1.0 / n for h in hypothesis_ids}
 
-    matrix = lr_matrix(testing, hypothesis_ids)
+    # Collapse dependence clusters first so correlated evidence isn't double-counted.
+    matrix = _collapse_clusters(lr_matrix(testing, hypothesis_ids), testing.dependence_clusters, hypothesis_ids)
 
     # Joint update: accumulate log weights and softmax-normalize after every item.
     # The trail records the *joint* (normalized) posterior of each hypothesis after
