@@ -44,7 +44,17 @@ def main() -> None:
         "--json-only", action="store_true",
         help="Output JSON only, skip HTML report",
     )
+    parser.add_argument(
+        "--max-budget", type=float, default=None,
+        help="Per-call LLM budget cap in dollars (default: PT_MAX_BUDGET or 1.0)",
+    )
     args = parser.parse_args()
+
+    if args.max_budget is not None:
+        if args.max_budget <= 0:
+            print("Error: --max-budget must be greater than 0", file=sys.stderr)
+            sys.exit(1)
+        os.environ["PT_MAX_BUDGET"] = str(args.max_budget)
 
     # Validate inputs
     for path in args.inputs:

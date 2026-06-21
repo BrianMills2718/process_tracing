@@ -6,14 +6,17 @@ pytest test suite organized by test type.
 
 ```
 tests/
-├── test_pt_schemas.py          # Pydantic model contract tests
-├── test_pt_bayesian.py         # Deterministic Bayesian math tests
-├── test_pipeline_integration.py # Deterministic pipeline/report integration tests
-├── test_extraction_quality.py  # Deterministic extraction contract tests
-├── test_pt_llm.py             # LLM boundary contract tests
-├── test_litellm_structured.py # Opt-in live LiteLLM smoke tests
-└── test_instructor_approach.py # Opt-in live structured-output smoke tests
+├── test_pt_schemas.py           # Pydantic model contract tests (likelihood vectors etc.)
+├── test_pt_bayesian.py          # Deterministic math: coherent joint update, cap, priors, sensitivity
+├── test_pipeline_integration.py # Pipeline/report integration; vector-completeness fail-loud; labeling
+├── test_extraction_quality.py   # Deterministic extraction contract tests
+└── test_pt_llm.py               # LLM boundary contract tests + opt-in live structured smoke
 ```
+
+Live smoke tests are gated behind `PT_RUN_LIVE_LLM_TESTS=1` (currently the
+`call_llm_structured` smoke in `test_pt_llm.py`). The old standalone
+`test_litellm_structured.py` / `test_instructor_approach.py` were removed when the
+LLM boundary moved to `llm_client.call_llm_structured`.
 
 ## Running Tests
 

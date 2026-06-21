@@ -38,28 +38,40 @@ def apply_refinement(
     ev_by_id = {e.id: e for e in ext.evidence}
     h_by_id = {h.id: h for h in hs.hypotheses}
 
-    # 1. Remove spurious evidence
+    # 1. Remove spurious evidence (fail loud on unknown targets; report ACTUAL removals)
     spurious_ev_ids = {
         s.item_id for s in refinement.spurious_extractions if s.item_type == "evidence"
     }
+    unknown_spurious_ev = spurious_ev_ids - {e.id for e in ext.evidence}
+    if unknown_spurious_ev:
+        raise ValueError(
+            f"Refinement: spurious evidence ids not found: {sorted(unknown_spurious_ev)}"
+        )
     if spurious_ev_ids:
+        before = len(ext.evidence)
         ext.evidence = [e for e in ext.evidence if e.id not in spurious_ev_ids]
         if verbose:
-            print(f"  Refinement: removed {len(spurious_ev_ids)} spurious evidence items")
+            print(f"  Refinement: removed {before - len(ext.evidence)} spurious evidence items")
 
-    # 2. Remove spurious causal edges
+    # 2. Remove spurious causal edges (fail loud on unknown targets)
     spurious_edge_ids = {
         s.item_id for s in refinement.spurious_extractions if s.item_type == "causal_edge"
     }
+    unknown_spurious_edge = spurious_edge_ids - {
+        f"{e.source_id}->{e.target_id}" for e in ext.causal_edges
+    }
+    if unknown_spurious_edge:
+        raise ValueError(
+            f"Refinement: spurious causal-edge ids not found: {sorted(unknown_spurious_edge)}"
+        )
     if spurious_edge_ids:
         before = len(ext.causal_edges)
         ext.causal_edges = [
             e for e in ext.causal_edges
             if f"{e.source_id}->{e.target_id}" not in spurious_edge_ids
         ]
-        removed = before - len(ext.causal_edges)
         if verbose:
-            print(f"  Refinement: removed {removed} spurious causal edges")
+            print(f"  Refinement: removed {before - len(ext.causal_edges)} spurious causal edges")
 
     # 3. Add new evidence (validate no ID collisions)
     existing_ids = {e.id for e in ext.evidence}
@@ -89,7 +101,7 @@ def apply_refinement(
             if ri.evidence_id in spurious_ev_ids:
                 continue
             raise ValueError(
-                f"Reinterpretation targets unknown evidence id '{ri.evidence_id}'"
+                f"Refinement: reinterpretation targets unknown evidence id '{ri.evidence_id}'"
             )
         ev.evidence_type = ri.new_type
         if ri.updated_description:
@@ -97,8 +109,19 @@ def apply_refinement(
     if refinement.reinterpreted_evidence and verbose:
         print(f"  Refinement: reinterpreted {len(refinement.reinterpreted_evidence)} evidence items")
 
-    # 5. Add new causal edges
+    # 5. Add new causal edges (validate endpoints are known nodes)
+    valid_endpoints = (
+        {e.id for e in ext.events}
+        | {a.id for a in ext.actors}
+        | {m.id for m in ext.mechanisms}
+        | {e.id for e in ext.evidence}
+    )
     for nce in refinement.new_causal_edges:
+        for endpoint in (nce.source_id, nce.target_id):
+            if endpoint not in valid_endpoints:
+                raise ValueError(
+                    f"Refinement: new causal edge endpoint '{endpoint}' is not a known node"
+                )
         ext.causal_edges.append(CausalEdge(
             source_id=nce.source_id,
             target_id=nce.target_id,
@@ -107,14 +130,14 @@ def apply_refinement(
     if refinement.new_causal_edges and verbose:
         print(f"  Refinement: added {len(refinement.new_causal_edges)} new causal edges")
 
-    # 6. Apply hypothesis refinements
+    # 6. Apply hypothesis refinements (fail loud on unknown target)
     for hr in refinement.hypothesis_refinements:
         h = h_by_id.get(hr.hypothesis_id)
         if h is None:
             # Hypotheses are never removed by a refinement delta, so a missing
             # target is always a dangling reference — fail loud.
             raise ValueError(
-                f"Hypothesis refinement targets unknown hypothesis id '{hr.hypothesis_id}'"
+                f"Refinement: hypothesis refinement targets unknown hypothesis id '{hr.hypothesis_id}'"
             )
 
         if hr.refinement_type == "merge_suggestion":

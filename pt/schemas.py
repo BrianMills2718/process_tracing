@@ -2,8 +2,16 @@
 
 from __future__ import annotations
 
-from typing import ClassVar, Optional
-from pydantic import BaseModel, Field
+from typing import ClassVar, Literal, Optional
+from pydantic import BaseModel, Field, model_validator
+
+DiagnosticType = Literal["hoop", "smoking_gun", "doubly_decisive", "straw_in_the_wind"]
+EvidenceType = Literal["empirical", "interpretive"]
+Severity = Literal["damaging", "notable", "minor"]
+RefinementType = Literal["sharpen_mechanism", "add_prediction", "reframe", "merge_suggestion"]
+VerdictStatus = Literal[
+    "strongly_supported", "supported", "weakened", "eliminated", "indeterminate"
+]
 
 
 # ── Pass 1: Extraction ──────────────────────────────────────────────
@@ -30,7 +38,7 @@ class Evidence(BaseModel):
     id: str = Field(description="Unique identifier, e.g. 'evi_tax_records'")
     description: str
     source_text: str = Field(description="Direct quote from the input text")
-    evidence_type: str = Field(
+    evidence_type: EvidenceType = Field(
         default="empirical",
         description="'empirical' for facts/events/actions, 'interpretive' for historian arguments/scholarly claims"
     )
@@ -52,6 +60,17 @@ class TextHypothesis(BaseModel):
     source_text: str = Field(description="Quote from text where this hypothesis appears or is implied")
 
 
+def _require_unique_ids(ids: list[str], label: str) -> None:
+    seen: set[str] = set()
+    dups: set[str] = set()
+    for i in ids:
+        if i in seen:
+            dups.add(i)
+        seen.add(i)
+    if dups:
+        raise ValueError(f"duplicate {label} ids: {sorted(dups)}")
+
+
 class ExtractionResult(BaseModel):
     summary: str = Field(description="2-3 sentence summary of the text")
     actors: list[Actor] = []
@@ -60,6 +79,11 @@ class ExtractionResult(BaseModel):
     evidence: list[Evidence] = []
     hypotheses_in_text: list[TextHypothesis] = []
     causal_edges: list[CausalEdge] = []
+
+    @model_validator(mode="after")
+    def _unique_evidence_ids(self) -> "ExtractionResult":
+        _require_unique_ids([e.id for e in self.evidence], "evidence")
+        return self
 
 
 # ── Pass 2: Hypothesis Space ────────────────────────────────────────
@@ -84,13 +108,18 @@ class HypothesisSpace(BaseModel):
     research_question: str
     hypotheses: list[Hypothesis]
 
+    @model_validator(mode="after")
+    def _unique_hypothesis_ids(self) -> "HypothesisSpace":
+        _require_unique_ids([h.id for h in self.hypotheses], "hypothesis")
+        return self
+
 
 # ── Pass 3: Testing ─────────────────────────────────────────────────
 
 class PredictionClassification(BaseModel):
     prediction_id: str
     hypothesis_id: str
-    diagnostic_type: str = Field(
+    diagnostic_type: DiagnosticType = Field(
         description="One of: hoop, smoking_gun, doubly_decisive, straw_in_the_wind"
     )
     necessity_reasoning: str = Field(
@@ -101,40 +130,88 @@ class PredictionClassification(BaseModel):
     )
 
 
-class EvidenceEvaluation(BaseModel):
-    prediction_id: Optional[str] = Field(
-        None, description="ID of the most relevant prediction, or null if no prediction directly applies"
-    )
-    evidence_id: str
+class HypothesisLikelihood(BaseModel):
+    """Relative likelihood of one evidence item under one hypothesis.
+
+    Values are on a common positive scale across all hypotheses for the *same*
+    evidence item — only the ratios between hypotheses matter. Equal values across
+    hypotheses ⇒ the evidence is uninformative. Eliciting the whole vector at once
+    (rather than independent pairwise ratios) is what keeps the likelihoods
+    coherent: every pairwise ratio is derived from one vector, so reciprocity and
+    transitivity hold by construction.
+    """
     hypothesis_id: str
-    finding: str = Field(description="'pass', 'fail', or 'ambiguous'")
-    p_e_given_h: float = Field(
-        ge=0.0, le=1.0,
-        description="Probability of observing this evidence if the hypothesis is true"
+    relative_likelihood: float = Field(
+        gt=0.0,
+        allow_inf_nan=False,
+        description="Relative likelihood P(E|H) of THIS evidence under THIS hypothesis, "
+        "on a common positive scale shared by all hypotheses for this evidence item. "
+        "Larger = this hypothesis predicts this evidence more strongly. Equal across "
+        "hypotheses = uninformative. Must be a finite positive number.",
     )
-    p_e_given_not_h: float = Field(
-        ge=0.0, le=1.0,
-        description="Probability of observing this evidence if the hypothesis is false"
+    diagnostic_type: DiagnosticType = Field(
+        description="Van Evera label for how this evidence bears on this hypothesis: "
+        "'hoop', 'smoking_gun', 'doubly_decisive', or 'straw_in_the_wind'.",
     )
-    justification: str = Field(
-        description="Why these probability estimates are appropriate"
+
+
+class EvidenceLikelihood(BaseModel):
+    """One evidence item's likelihood vector across all competing hypotheses."""
+    evidence_id: str
+    hypothesis_likelihoods: list[HypothesisLikelihood] = Field(
+        description="Exactly one entry per hypothesis — the relative likelihood of this "
+        "evidence under each, on a shared scale.",
     )
     relevance: float = Field(
         default=1.0, ge=0.0, le=1.0,
-        description="How relevant this evidence is to the hypothesis (considering temporal proximity, causal domain, and specificity). 0.0=completely irrelevant, 1.0=directly relevant."
+        description="How relevant/discriminating this evidence is (temporal proximity, "
+        "causal domain, specificity). 0.0=irrelevant, 1.0=directly relevant. Below 0.4 the "
+        "item is treated as uninformative regardless of the vector.",
+    )
+    justification: str = Field(
+        description="Why these relative likelihoods — covering both the causal story and how "
+        "the evidence was produced (solicited/recorded/survived).",
     )
 
 
-class HypothesisTestResult(BaseModel):
-    hypothesis_id: str
-    prediction_classifications: list[PredictionClassification]
-    evidence_evaluations: list[EvidenceEvaluation]
+class EvidenceCluster(BaseModel):
+    """A group of evidence items that are NOT conditionally independent.
+
+    Items sharing the same source/document lineage, the same originating event, or
+    the same underlying fact carry overlapping information; multiplying their
+    likelihoods would double-count. The Bayesian update collapses each cluster to a
+    single effective observation (log-average of member vectors).
+    """
+    evidence_ids: list[str] = Field(
+        description="Two or more evidence ids that share a source, event, mechanism, or "
+        "underlying sub-narrative and therefore carry overlapping (non-independent) information."
+    )
+    reason: str = Field(description="Why these items are dependent (shared source/event/mechanism).")
+    dependence_strength: float = Field(
+        default=1.0, ge=0.0, le=1.0, allow_inf_nan=False,
+        description="How redundant the members are (0=independent, 1=fully redundant). "
+        "1.0 for duplicates/same-source copies; ~0.5–0.8 for items about the same event or "
+        "mechanism that still add some independent signal. Sets the cluster's effective "
+        "observation count k_eff = 1 + (k-1)(1-dependence_strength).",
+    )
 
 
 class TestingResult(BaseModel):
     __test__: ClassVar[bool] = False
 
-    hypothesis_tests: list[HypothesisTestResult]
+    evidence_likelihoods: list[EvidenceLikelihood] = Field(
+        description="Per-evidence likelihood vectors across all hypotheses.",
+    )
+    dependence_clusters: list[EvidenceCluster] = Field(
+        default_factory=list,
+        description="Groups of conditionally-dependent evidence items. Each cluster is "
+        "collapsed to one effective observation in the update to avoid double-counting. "
+        "Items not in any cluster are treated as independent.",
+    )
+    prediction_classifications: list[PredictionClassification] = Field(
+        default_factory=list,
+        description="Optional Van Evera classification of hypothesis predictions.",
+    )
 
 
 # ── Bayesian Update ─────────────────────────────────────────────────
@@ -171,12 +248,28 @@ class SensitivityEntry(BaseModel):
     rank_stable: bool = Field(description="True if this hypothesis keeps its rank across all perturbations")
 
 
+class PriorSensitivity(BaseModel):
+    """Whether the ranking survives reasonable changes to the prior."""
+    top_hypothesis_id: str
+    stable_under_prior_perturbation: bool = Field(
+        description="True if the top-ranked hypothesis stays top when each hypothesis's "
+        "prior is independently up- and down-weighted by the perturbation factor."
+    )
+    perturbation_factor: float = Field(
+        default=2.0, description="Multiplicative factor applied to each prior."
+    )
+
+
 class BayesianResult(BaseModel):
     posteriors: list[HypothesisPosterior]
     ranking: list[str] = Field(description="Hypothesis IDs ordered by final posterior, highest first")
     sensitivity: list[SensitivityEntry] = Field(
         default_factory=list,
         description="How posteriors change when the most influential LRs are perturbed ±50%"
+    )
+    prior_sensitivity: Optional[PriorSensitivity] = Field(
+        default=None,
+        description="Whether the top-ranked hypothesis is robust to changes in the prior."
     )
 
 
@@ -187,7 +280,7 @@ class AbsenceEvaluation(BaseModel):
     prediction_id: str
     missing_evidence: str = Field(description="What predicted evidence is absent from the text")
     reasoning: str = Field(description="Why absence is informative given the text's scope")
-    severity: str = Field(description="'damaging', 'notable', or 'minor'")
+    severity: Severity = Field(description="'damaging', 'notable', or 'minor'")
     would_be_extractable: bool = Field(
         description="Would this evidence appear in a text of this scope if it existed?"
     )
@@ -203,15 +296,15 @@ class NewEvidence(BaseModel):
     id: str = Field(description="Must use 'evi_ref_' prefix to distinguish from original extraction")
     description: str
     source_text: str = Field(description="Direct quote from input text")
-    evidence_type: str = Field(default="empirical", description="'empirical' or 'interpretive'")
+    evidence_type: EvidenceType = Field(default="empirical", description="'empirical' or 'interpretive'")
     approximate_date: Optional[str] = None
     rationale: str = Field(description="Why missed initially, why it matters now")
 
 
 class ReinterpretedEvidence(BaseModel):
     evidence_id: str
-    original_type: str
-    new_type: str
+    original_type: EvidenceType
+    new_type: EvidenceType
     reinterpretation: str
     updated_description: Optional[str] = None
 
@@ -225,13 +318,15 @@ class NewCausalEdge(BaseModel):
 
 class SpuriousExtraction(BaseModel):
     item_id: str = Field(description="Evidence ID or 'source_id->target_id' for edges")
-    item_type: str = Field(description="'evidence' or 'causal_edge'")
+    item_type: Literal["evidence", "causal_edge"] = Field(
+        description="'evidence' or 'causal_edge'"
+    )
     reason: str
 
 
 class HypothesisRefinement(BaseModel):
     hypothesis_id: str
-    refinement_type: str = Field(
+    refinement_type: RefinementType = Field(
         description="'sharpen_mechanism', 'add_prediction', 'reframe', or 'merge_suggestion'"
     )
     description: str
@@ -259,7 +354,7 @@ class RefinementResult(BaseModel):
 
 class HypothesisVerdict(BaseModel):
     hypothesis_id: str
-    status: str = Field(description="'strongly_supported', 'supported', 'weakened', 'eliminated', or 'indeterminate'")
+    status: VerdictStatus = Field(description="'strongly_supported', 'supported', 'weakened', 'eliminated', or 'indeterminate'")
     key_evidence_for: list[str] = Field(description="Evidence IDs that support this hypothesis")
     key_evidence_against: list[str] = Field(description="Evidence IDs that weigh against this hypothesis")
     reasoning: str
@@ -287,6 +382,10 @@ class SynthesisResult(BaseModel):
 # ── Combined Result ─────────────────────────────────────────────────
 
 class ProcessTracingResult(BaseModel):
+    source_text_sha256: Optional[str] = Field(
+        default=None,
+        description="SHA-256 of the exact input text used for this analysis",
+    )
     extraction: ExtractionResult
     hypothesis_space: HypothesisSpace
     testing: TestingResult

@@ -1,103 +1,197 @@
-"""Tests for pt/bayesian.py — pure math, no LLM calls needed."""
+"""Tests for pt/bayesian.py — coherent multi-hypothesis math, no LLM calls.
 
-import math
+The testing pass produces per-evidence likelihood vectors. For one evidence item
+with vector {h_i: v_i}, the derived per-hypothesis LR is v_i / geomean(v), so for
+two hypotheses {h1: a, h2: b} the LR for h1 is sqrt(a/b) (and h2's is its
+reciprocal) — coherent by construction.
+"""
 
 import pytest
 
 from pt.bayesian import (
-    CLAMP_MAX,
-    CLAMP_MIN,
     LR_CAP,
-    LR_FLOOR,
-    _clamp,
+    RESIDUAL_ID,
     _compute_robustness,
-    _odds,
-    _prob,
     _top_drivers,
-    compute_effective_lr,
+    item_lrs,
     run_bayesian_update,
 )
 from pt.schemas import (
-    EvidenceEvaluation,
+    EvidenceCluster,
+    EvidenceLikelihood,
     EvidenceUpdate,
-    HypothesisTestResult,
+    HypothesisLikelihood,
     TestingResult,
 )
 
 
-# ── Helper to build test data ───────────────────────────────────────
+# ── Helpers to build vector test data ───────────────────────────────
 
 
-def _make_eval(
-    evidence_id: str = "e1",
-    hypothesis_id: str = "h1",
-    p_e_given_h: float = 0.8,
-    p_e_given_not_h: float = 0.2,
-    relevance: float = 1.0,
-) -> EvidenceEvaluation:
-    return EvidenceEvaluation(
+def _vec(evidence_id: str, likelihoods: dict[str, float], relevance: float = 1.0) -> EvidenceLikelihood:
+    return EvidenceLikelihood(
         evidence_id=evidence_id,
-        hypothesis_id=hypothesis_id,
-        finding="pass",
-        p_e_given_h=p_e_given_h,
-        p_e_given_not_h=p_e_given_not_h,
-        justification="test",
+        hypothesis_likelihoods=[
+            HypothesisLikelihood(
+                hypothesis_id=h, relative_likelihood=v, diagnostic_type="straw_in_the_wind"
+            )
+            for h, v in likelihoods.items()
+        ],
         relevance=relevance,
+        justification="test",
     )
 
 
-def _make_testing(*hypothesis_evals: tuple[str, list[EvidenceEvaluation]]) -> TestingResult:
-    """Build TestingResult from (hypothesis_id, [evals]) pairs."""
-    tests = []
-    for h_id, evals in hypothesis_evals:
-        tests.append(HypothesisTestResult(
-            hypothesis_id=h_id,
-            prediction_classifications=[],
-            evidence_evaluations=evals,
-        ))
-    return TestingResult(hypothesis_tests=tests)
+def _testing(*items: EvidenceLikelihood, clusters: list[EvidenceCluster] | None = None) -> TestingResult:
+    return TestingResult(evidence_likelihoods=list(items), dependence_clusters=clusters or [])
 
 
 # ── _clamp ───────────────────────────────────────────────────────────
 
 
-class TestClamp:
-    def test_within_range(self):
-        assert _clamp(0.5) == 0.5
-
-    def test_floor(self):
-        assert _clamp(0.0) == CLAMP_MIN
-        assert _clamp(-1.0) == CLAMP_MIN
-
-    def test_ceiling(self):
-        assert _clamp(1.0) == CLAMP_MAX
-        assert _clamp(2.0) == CLAMP_MAX
-
-    def test_at_boundaries(self):
-        assert _clamp(CLAMP_MIN) == CLAMP_MIN
-        assert _clamp(CLAMP_MAX) == CLAMP_MAX
+# ── Coherence: derived pairwise ratios are consistent ───────────────
 
 
-# ── _odds / _prob roundtrip ─────────────────────────────────────────
+class TestCoherence:
+    def test_two_hypothesis_lr_is_sqrt_ratio(self):
+        lrs = item_lrs(_vec("e1", {"h1": 16.0, "h2": 1.0}), ["h1", "h2"])
+        assert lrs["h1"] == pytest.approx(4.0, abs=1e-6)   # sqrt(16/1)
+        assert lrs["h2"] == pytest.approx(0.25, abs=1e-6)  # reciprocal
+
+    def test_three_hypothesis_ratios_are_transitive(self):
+        lrs = item_lrs(_vec("e1", {"h1": 8.0, "h2": 2.0, "h3": 1.0}), ["h1", "h2", "h3"])
+        # Pairwise ratios are derived from one vector, so transitivity holds.
+        r12 = lrs["h1"] / lrs["h2"]
+        r23 = lrs["h2"] / lrs["h3"]
+        r13 = lrs["h1"] / lrs["h3"]
+        assert r12 * r23 == pytest.approx(r13, rel=1e-9)
+        assert r12 == pytest.approx(4.0, rel=1e-9)  # 8/2
+
+    def test_flat_vector_is_uninformative(self):
+        lrs = item_lrs(_vec("e1", {"h1": 0.5, "h2": 0.5, "h3": 0.5}), ["h1", "h2", "h3"])
+        for h in ("h1", "h2", "h3"):
+            assert lrs[h] == pytest.approx(1.0, abs=1e-9)
 
 
-class TestOddsProb:
-    def test_roundtrip(self):
-        for p in [0.1, 0.25, 0.5, 0.75, 0.9]:
-            assert abs(_prob(_odds(p)) - p) < 1e-6
+class TestDependenceClustering:
+    """A dependence cluster is collapsed to one effective observation, so correlated
+    evidence is not double-counted (the overconfidence fix)."""
 
-    def test_odds_of_half(self):
-        assert _odds(0.5) == pytest.approx(1.0)
+    def test_cluster_collapses_duplicates_to_one(self):
+        # Five identical items, all in one cluster, must give the SAME posterior as one item.
+        five = [_vec(f"d{i}", {"h1": 0.95, "h2": 0.05}) for i in range(5)]
+        cluster = EvidenceCluster(evidence_ids=[f"d{i}" for i in range(5)], reason="same fact")
+        clustered = run_bayesian_update(_testing(*five, clusters=[cluster]), ["h1", "h2"])
+        single = run_bayesian_update(_testing(_vec("d0", {"h1": 0.95, "h2": 0.05})), ["h1", "h2"])
+        c_h1 = next(p.final_posterior for p in clustered.posteriors if p.hypothesis_id == "h1")
+        s_h1 = next(p.final_posterior for p in single.posteriors if p.hypothesis_id == "h1")
+        assert c_h1 == pytest.approx(s_h1, abs=1e-6)
 
-    def test_odds_of_high_prob(self):
-        assert _odds(0.9) == pytest.approx(9.0)
+    def test_uncollapsed_duplicates_are_overconfident(self):
+        # Without clustering, five duplicates pile up (the bug clustering fixes).
+        five = [_vec(f"d{i}", {"h1": 0.95, "h2": 0.05}) for i in range(5)]
+        no_cluster = run_bayesian_update(_testing(*five), ["h1", "h2"])
+        h1 = next(p.final_posterior for p in no_cluster.posteriors if p.hypothesis_id == "h1")
+        assert h1 > 0.99  # much more extreme than a single item
 
-    def test_prob_of_one(self):
-        assert _prob(1.0) == pytest.approx(0.5)
+    def test_cluster_trail_has_one_entry_per_cluster(self):
+        five = [_vec(f"d{i}", {"h1": 0.95, "h2": 0.05}) for i in range(5)]
+        cluster = EvidenceCluster(evidence_ids=[f"d{i}" for i in range(5)], reason="same fact")
+        result = run_bayesian_update(_testing(*five, clusters=[cluster]), ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert len(h1.updates) == 1  # 5 items -> 1 effective observation
 
-    def test_extreme_odds_clamped(self):
-        # Very large odds should clamp to CLAMP_MAX
-        assert _prob(1e10) == CLAMP_MAX
+    def _h1_post(self, rho):
+        five = [_vec(f"d{i}", {"h1": 0.9, "h2": 0.1}) for i in range(5)]
+        cluster = EvidenceCluster(evidence_ids=[f"d{i}" for i in range(5)], reason="r", dependence_strength=rho)
+        r = run_bayesian_update(_testing(*five, clusters=[cluster]), ["h1", "h2"])
+        return next(p.final_posterior for p in r.posteriors if p.hypothesis_id == "h1")
+
+    def test_rho_one_is_full_collapse(self):
+        single = run_bayesian_update(_testing(_vec("d0", {"h1": 0.9, "h2": 0.1})), ["h1", "h2"])
+        s_h1 = next(p.final_posterior for p in single.posteriors if p.hypothesis_id == "h1")
+        assert self._h1_post(1.0) == pytest.approx(s_h1, abs=1e-6)
+
+    def test_rho_zero_is_independent(self):
+        five = [_vec(f"d{i}", {"h1": 0.9, "h2": 0.1}) for i in range(5)]
+        indep = run_bayesian_update(_testing(*five), ["h1", "h2"])  # no cluster
+        i_h1 = next(p.final_posterior for p in indep.posteriors if p.hypothesis_id == "h1")
+        assert self._h1_post(0.0) == pytest.approx(i_h1, abs=1e-6)
+
+    def test_partial_pooling_is_between(self):
+        collapse = self._h1_post(1.0)
+        independent = self._h1_post(0.0)
+        partial = self._h1_post(0.5)
+        assert collapse < partial < independent  # 0.5 sits strictly between
+
+
+class TestResidualHypothesis:
+    """Opt-in residual H0 makes the partition exhaustive (estimand completeness)."""
+
+    def test_default_excludes_residual(self):
+        result = run_bayesian_update(_testing(_vec("e1", {"h1": 9.0, "h2": 1.0})), ["h1", "h2"])
+        assert all(p.hypothesis_id != RESIDUAL_ID for p in result.posteriors)
+
+    def test_residual_present_when_enabled(self):
+        result = run_bayesian_update(
+            _testing(_vec("e1", {"h1": 9.0, "h2": 1.0})), ["h1", "h2"], include_residual=True
+        )
+        ids = {p.hypothesis_id for p in result.posteriors}
+        assert RESIDUAL_ID in ids
+        assert RESIDUAL_ID in result.ranking
+
+    def test_residual_uniform_with_no_evidence(self):
+        # No informative evidence -> uniform over {h1, h2, H0} = 1/3 each.
+        result = run_bayesian_update(_testing(), ["h1", "h2"], include_residual=True)
+        for p in result.posteriors:
+            assert p.final_posterior == pytest.approx(1 / 3, abs=0.01)
+
+    def test_residual_has_flat_likelihood(self):
+        result = run_bayesian_update(
+            _testing(_vec("e1", {"h1": 9.0, "h2": 1.0})), ["h1", "h2"], include_residual=True
+        )
+        h0 = next(p for p in result.posteriors if p.hypothesis_id == RESIDUAL_ID)
+        assert all(u.likelihood_ratio == pytest.approx(1.0) for u in h0.updates)
+
+    def test_residual_with_researcher_priors(self):
+        # Priors cover only the listed hypotheses; residual still gets reserve mass.
+        result = run_bayesian_update(
+            _testing(_vec("e1", {"h1": 1.0, "h2": 1.0})), ["h1", "h2"],
+            priors={"h1": 3.0, "h2": 1.0}, include_residual=True,
+        )
+        ids = {p.hypothesis_id for p in result.posteriors}
+        assert RESIDUAL_ID in ids
+        assert sum(p.final_posterior for p in result.posteriors) == pytest.approx(1.0, abs=1e-6)
+
+
+class TestJointUpdate:
+    """The update must be a coherent joint multinomial update (softmax of summed
+    log-LRs), not per-hypothesis binary odds with post-hoc normalization."""
+
+    def test_matches_closed_form_softmax(self):
+        # {h1:16, h2:1}: LRs 4 and 0.25; joint posterior = 4/(4+0.25) = 0.941,
+        # NOT the binary-odds-then-normalize value of 0.8.
+        result = run_bayesian_update(_testing(_vec("e1", {"h1": 16.0, "h2": 1.0})), ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.final_posterior == pytest.approx(4.0 / 4.25, abs=1e-3)
+
+    def test_order_invariant(self):
+        # 5 strongly-pro-h1 items then 5 strongly-anti-h1 items must give the SAME
+        # posterior regardless of order (the old binary-odds path gave 0.001 / 0.999 / 0.5).
+        pro = [_vec(f"p{i}", {"h1": 100.0, "h2": 1.0}) for i in range(5)]
+        anti = [_vec(f"a{i}", {"h1": 1.0, "h2": 100.0}) for i in range(5)]
+
+        def post(items):
+            r = run_bayesian_update(_testing(*items), ["h1", "h2"])
+            return next(p.final_posterior for p in r.posteriors if p.hypothesis_id == "h1")
+
+        forward = post(pro + anti)
+        reverse = post(anti + pro)
+        alternating = post([x for pair in zip(pro, anti) for x in pair])
+        assert forward == pytest.approx(reverse, abs=1e-6)
+        assert forward == pytest.approx(alternating, abs=1e-6)
+        # symmetric pro/anti -> back to 0.5
+        assert forward == pytest.approx(0.5, abs=1e-6)
 
 
 # ── LR capping ───────────────────────────────────────────────────────
@@ -106,20 +200,38 @@ class TestOddsProb:
 class TestLRCapping:
     def test_constants(self):
         assert LR_CAP == 20.0
-        assert LR_FLOOR == pytest.approx(0.05)
 
-    def test_strong_evidence_capped(self):
-        """A single piece of very strong evidence shouldn't dominate."""
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.99, p_e_given_not_h=0.01)]),
-            ("h2", [_make_eval(p_e_given_h=0.01, p_e_given_not_h=0.99)]),
-        )
-        result = run_bayesian_update(testing)
-        h1_post = next(p for p in result.posteriors if p.hypothesis_id == "h1")
-        h2_post = next(p for p in result.posteriors if p.hypothesis_id == "h2")
-        # h1 should win but not with extreme ratio due to capping
-        assert h1_post.final_posterior > h2_post.final_posterior
-        assert h1_post.final_posterior < 0.99  # cap prevents near-certainty from single item
+    def test_strong_evidence_capped_on_pairwise_spread(self):
+        # Cap bounds a single item's PAIRWISE max:min ratio to LR_CAP, not each
+        # centered LR independently. {1e6, 1} -> {sqrt(CAP), 1/sqrt(CAP)}, ratio == CAP.
+        import math
+        lrs = item_lrs(_vec("e1", {"h1": 1e6, "h2": 1.0}), ["h1", "h2"])
+        assert lrs["h1"] == pytest.approx(math.sqrt(LR_CAP))
+        assert lrs["h2"] == pytest.approx(1.0 / math.sqrt(LR_CAP))
+        assert lrs["h1"] / lrs["h2"] == pytest.approx(LR_CAP)
+
+    def test_single_item_does_not_reach_certainty(self):
+        testing = _testing(_vec("e1", {"h1": 1e6, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        h2 = next(p for p in result.posteriors if p.hypothesis_id == "h2")
+        assert h1.final_posterior > h2.final_posterior
+        assert h1.final_posterior < 0.99  # cap prevents near-certainty from one item
+
+    def test_interpretive_cap_is_tighter(self):
+        # A per-item cap of 5 bounds the pairwise ratio to 5, not 20.
+        import math
+        lrs = item_lrs(_vec("e1", {"h1": 1e6, "h2": 1.0}), ["h1", "h2"], cap=5.0)
+        assert lrs["h1"] / lrs["h2"] == pytest.approx(5.0)
+        assert lrs["h1"] == pytest.approx(math.sqrt(5.0))
+
+    def test_caps_applied_in_update(self):
+        # Same vector, but capped at 5 via caps -> the update LR reflects the tighter cap.
+        testing = _testing(_vec("e1", {"h1": 1e6, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"], caps={"e1": 5.0})
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        import math
+        assert h1.updates[0].likelihood_ratio == pytest.approx(math.sqrt(5.0), abs=1e-3)
 
 
 # ── Relevance gating ────────────────────────────────────────────────
@@ -127,65 +239,37 @@ class TestLRCapping:
 
 class TestRelevanceGating:
     def test_low_relevance_forced_uninformative(self):
-        """Evidence with relevance < 0.4 should have LR forced to 1.0."""
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.9, p_e_given_not_h=0.1, relevance=0.3)]),
-            ("h2", [_make_eval(p_e_given_h=0.1, p_e_given_not_h=0.9, relevance=0.3)]),
-        )
-        result = run_bayesian_update(testing)
-        # Both should stay at uniform prior (0.5) since LR=1.0
+        testing = _testing(_vec("e1", {"h1": 9.0, "h2": 1.0}, relevance=0.3))
+        result = run_bayesian_update(testing, ["h1", "h2"])
         for p in result.posteriors:
             assert p.final_posterior == pytest.approx(0.5, abs=0.01)
 
     def test_high_relevance_has_effect(self):
-        """Evidence with relevance >= 0.4 should shift posteriors."""
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.9, p_e_given_not_h=0.1, relevance=0.9)]),
-            ("h2", [_make_eval(p_e_given_h=0.1, p_e_given_not_h=0.9, relevance=0.9)]),
-        )
-        result = run_bayesian_update(testing)
-        h1_post = next(p for p in result.posteriors if p.hypothesis_id == "h1")
-        h2_post = next(p for p in result.posteriors if p.hypothesis_id == "h2")
-        assert h1_post.final_posterior > 0.5
-        assert h2_post.final_posterior < 0.5
+        testing = _testing(_vec("e1", {"h1": 9.0, "h2": 1.0}, relevance=0.9))
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.final_posterior > 0.5
 
-    def test_public_effective_lr_matches_relevance_gate(self):
-        """Report generation and Bayesian updates share the same public LR helper."""
-        ev_eval = _make_eval(
-            p_e_given_h=1.0,
-            p_e_given_not_h=0.001,
-            relevance=0.39,
-        )
-
-        assert compute_effective_lr(ev_eval) == pytest.approx(1.0)
+    def test_item_lrs_gate_at_below_threshold(self):
+        lrs = item_lrs(_vec("e1", {"h1": 1000.0, "h2": 1.0}, relevance=0.39), ["h1", "h2"])
+        assert lrs["h1"] == pytest.approx(1.0)
+        assert lrs["h2"] == pytest.approx(1.0)
 
     def test_relevance_discount_monotonic(self):
-        """Higher relevance should produce stronger LR effect."""
-        posteriors_at_relevance = {}
+        vals = []
         for rel in [0.4, 0.6, 0.8, 1.0]:
-            testing = _make_testing(
-                ("h1", [_make_eval(p_e_given_h=0.9, p_e_given_not_h=0.1, relevance=rel)]),
-                ("h2", [_make_eval(p_e_given_h=0.5, p_e_given_not_h=0.5, relevance=rel)]),
-            )
-            result = run_bayesian_update(testing)
-            h1_post = next(p for p in result.posteriors if p.hypothesis_id == "h1")
-            posteriors_at_relevance[rel] = h1_post.final_posterior
-
-        # Each step should increase h1's posterior
-        vals = [posteriors_at_relevance[r] for r in [0.4, 0.6, 0.8, 1.0]]
+            testing = _testing(_vec("e1", {"h1": 0.9, "h2": 0.5}, relevance=rel))
+            result = run_bayesian_update(testing, ["h1", "h2"])
+            h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+            vals.append(h1.final_posterior)
         for i in range(len(vals) - 1):
-            assert vals[i] <= vals[i + 1] + 1e-6, f"Relevance {[0.4,0.6,0.8,1.0][i]} -> {[0.4,0.6,0.8,1.0][i+1]} should increase posterior"
+            assert vals[i] <= vals[i + 1] + 1e-6
 
-    def test_relevance_at_boundary(self):
-        """Relevance exactly at 0.4 should NOT be gated (gate is < 0.4)."""
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.9, p_e_given_not_h=0.1, relevance=0.4)]),
-            ("h2", [_make_eval(p_e_given_h=0.1, p_e_given_not_h=0.9, relevance=0.4)]),
-        )
-        result = run_bayesian_update(testing)
-        h1_post = next(p for p in result.posteriors if p.hypothesis_id == "h1")
-        # Should have some effect, not be neutral
-        assert h1_post.final_posterior > 0.5
+    def test_relevance_at_boundary_not_gated(self):
+        testing = _testing(_vec("e1", {"h1": 9.0, "h2": 1.0}, relevance=0.4))
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.final_posterior > 0.5
 
 
 # ── Normalization ────────────────────────────────────────────────────
@@ -193,27 +277,15 @@ class TestRelevanceGating:
 
 class TestNormalization:
     def test_posteriors_sum_to_one(self):
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.8, p_e_given_not_h=0.3)]),
-            ("h2", [_make_eval(p_e_given_h=0.3, p_e_given_not_h=0.8)]),
-            ("h3", [_make_eval(p_e_given_h=0.5, p_e_given_not_h=0.5)]),
-        )
-        result = run_bayesian_update(testing)
+        testing = _testing(_vec("e1", {"h1": 8.0, "h2": 2.0, "h3": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2", "h3"])
         total = sum(p.final_posterior for p in result.posteriors)
         assert total == pytest.approx(1.0, abs=0.01)
 
     def test_many_hypotheses_normalize(self):
-        """Even with 10 hypotheses, posteriors should sum to ~1."""
-        evals_list = [
-            (f"h{i}", [_make_eval(
-                hypothesis_id=f"h{i}",
-                p_e_given_h=0.5 + 0.04 * i,
-                p_e_given_not_h=0.5 - 0.04 * i,
-            )])
-            for i in range(10)
-        ]
-        testing = _make_testing(*evals_list)
-        result = run_bayesian_update(testing)
+        ids = [f"h{i}" for i in range(10)]
+        testing = _testing(_vec("e1", {h: float(i + 1) for i, h in enumerate(ids)}))
+        result = run_bayesian_update(testing, ids)
         total = sum(p.final_posterior for p in result.posteriors)
         assert total == pytest.approx(1.0, abs=0.01)
 
@@ -223,20 +295,13 @@ class TestNormalization:
 
 class TestRanking:
     def test_ranking_order(self):
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.9, p_e_given_not_h=0.1)]),
-            ("h2", [_make_eval(p_e_given_h=0.1, p_e_given_not_h=0.9)]),
-        )
-        result = run_bayesian_update(testing)
+        testing = _testing(_vec("e1", {"h1": 9.0, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"])
         assert result.ranking == ["h1", "h2"]
 
     def test_ranking_with_ties(self):
-        """Equal evidence should produce equal posteriors."""
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.5, p_e_given_not_h=0.5)]),
-            ("h2", [_make_eval(p_e_given_h=0.5, p_e_given_not_h=0.5)]),
-        )
-        result = run_bayesian_update(testing)
+        testing = _testing(_vec("e1", {"h1": 1.0, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"])
         assert len(result.ranking) == 2
         for p in result.posteriors:
             assert p.final_posterior == pytest.approx(0.5, abs=0.01)
@@ -247,103 +312,36 @@ class TestRanking:
 
 class TestEdgeCases:
     def test_empty_testing(self):
-        testing = TestingResult(hypothesis_tests=[])
-        result = run_bayesian_update(testing)
+        result = run_bayesian_update(_testing(), [])
         assert result.posteriors == []
         assert result.ranking == []
 
-    def test_single_hypothesis(self):
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.9, p_e_given_not_h=0.1)]),
-        )
-        result = run_bayesian_update(testing)
-        assert len(result.posteriors) == 1
-        # Single hypothesis normalizes to ~1.0 (clamped to CLAMP_MAX)
-        assert result.posteriors[0].final_posterior == pytest.approx(CLAMP_MAX, abs=0.01)
-
-    def test_no_evidence(self):
-        """Hypothesis with zero evidence items should stay at prior."""
-        testing = _make_testing(
-            ("h1", []),
-            ("h2", []),
-        )
-        result = run_bayesian_update(testing)
+    def test_no_evidence_stays_at_prior(self):
+        result = run_bayesian_update(_testing(), ["h1", "h2"])
         for p in result.posteriors:
             assert p.final_posterior == pytest.approx(0.5, abs=0.01)
 
     def test_compound_bias_protection(self):
-        """Many weakly-anti items shouldn't crush a hypothesis if relevance is low."""
-        # 20 items all slightly against h1, but all low relevance
-        anti_evals = [
-            _make_eval(
-                evidence_id=f"e{i}",
-                p_e_given_h=0.4,
-                p_e_given_not_h=0.6,
-                relevance=0.3,  # below gate threshold
-            )
-            for i in range(20)
-        ]
-        neutral_evals = [
-            _make_eval(
-                evidence_id=f"e{i}",
-                p_e_given_h=0.5,
-                p_e_given_not_h=0.5,
-                relevance=0.3,
-            )
-            for i in range(20)
-        ]
-        testing = _make_testing(
-            ("h1", anti_evals),
-            ("h2", neutral_evals),
-        )
-        result = run_bayesian_update(testing)
-        h1_post = next(p for p in result.posteriors if p.hypothesis_id == "h1")
-        # Should stay near 0.5 because all items are gated
-        assert h1_post.final_posterior == pytest.approx(0.5, abs=0.01)
+        # 20 items slightly against h1, all below the relevance gate -> no shift.
+        items = [_vec(f"e{i}", {"h1": 0.4, "h2": 0.6}, relevance=0.3) for i in range(20)]
+        result = run_bayesian_update(_testing(*items), ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.final_posterior == pytest.approx(0.5, abs=0.01)
 
     def test_compound_bias_with_high_relevance(self):
-        """Many weakly-anti items WITH high relevance should legitimately shift posterior."""
-        anti_evals = [
-            _make_eval(
-                evidence_id=f"e{i}",
-                p_e_given_h=0.4,
-                p_e_given_not_h=0.6,
-                relevance=0.9,
-            )
-            for i in range(20)
-        ]
-        neutral_evals = [
-            _make_eval(
-                evidence_id=f"e{i}",
-                p_e_given_h=0.5,
-                p_e_given_not_h=0.5,
-                relevance=0.9,
-            )
-            for i in range(20)
-        ]
-        testing = _make_testing(
-            ("h1", anti_evals),
-            ("h2", neutral_evals),
-        )
-        result = run_bayesian_update(testing)
-        h1_post = next(p for p in result.posteriors if p.hypothesis_id == "h1")
-        # Should be meaningfully below 0.5 since evidence is genuinely relevant
-        assert h1_post.final_posterior < 0.3
+        items = [_vec(f"e{i}", {"h1": 0.4, "h2": 0.6}, relevance=0.9) for i in range(20)]
+        result = run_bayesian_update(_testing(*items), ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.final_posterior < 0.3
 
     def test_update_trail_recorded(self):
-        """Each evidence item should produce an EvidenceUpdate in the trail."""
-        evals = [
-            _make_eval(evidence_id="e1", p_e_given_h=0.8, p_e_given_not_h=0.2),
-            _make_eval(evidence_id="e2", p_e_given_h=0.6, p_e_given_not_h=0.4),
-        ]
-        testing = _make_testing(("h1", evals), ("h2", []))
-        result = run_bayesian_update(testing)
-        h1_post = next(p for p in result.posteriors if p.hypothesis_id == "h1")
-        assert len(h1_post.updates) == 2
-        assert h1_post.updates[0].evidence_id == "e1"
-        assert h1_post.updates[1].evidence_id == "e2"
-        # Prior of second update should equal posterior of first
-        assert h1_post.updates[1].prior == h1_post.updates[0].posterior
+        items = [_vec("e1", {"h1": 4.0, "h2": 1.0}), _vec("e2", {"h1": 2.0, "h2": 1.0})]
+        result = run_bayesian_update(_testing(*items), ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert len(h1.updates) == 2
+        assert h1.updates[0].evidence_id == "e1"
+        assert h1.updates[1].evidence_id == "e2"
+        assert h1.updates[1].prior == h1.updates[0].posterior
 
 
 # ── Relevance discount math ─────────────────────────────────────────
@@ -351,53 +349,35 @@ class TestEdgeCases:
 
 class TestRelevanceDiscountMath:
     def test_full_relevance_preserves_lr(self):
-        """At relevance=1.0, LR should equal the capped raw LR."""
-        # LR = 0.8/0.2 = 4.0, capped stays 4.0
-        # At relevance=1.0: lr = exp(1.0 * log(4.0)) = 4.0
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.8, p_e_given_not_h=0.2, relevance=1.0)]),
-            ("h2", [_make_eval(p_e_given_h=0.2, p_e_given_not_h=0.8, relevance=1.0)]),
-        )
-        result = run_bayesian_update(testing)
-        h1_post = next(p for p in result.posteriors if p.hypothesis_id == "h1")
-        # The update LR should be 4.0
-        assert h1_post.updates[0].likelihood_ratio == pytest.approx(4.0, abs=0.01)
+        # sqrt(16/1) = 4.0 at relevance 1.0
+        testing = _testing(_vec("e1", {"h1": 16.0, "h2": 1.0}, relevance=1.0))
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.updates[0].likelihood_ratio == pytest.approx(4.0, abs=0.01)
 
     def test_half_relevance_reduces_lr(self):
-        """At relevance=0.5, LR should be sqrt of capped LR (exp(0.5*log(lr)))."""
-        # LR = 0.8/0.2 = 4.0 → at rel=0.5: exp(0.5*log(4)) = 2.0
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.8, p_e_given_not_h=0.2, relevance=0.5)]),
-            ("h2", [_make_eval(p_e_given_h=0.5, p_e_given_not_h=0.5, relevance=0.5)]),
-        )
-        result = run_bayesian_update(testing)
-        h1_post = next(p for p in result.posteriors if p.hypothesis_id == "h1")
-        assert h1_post.updates[0].likelihood_ratio == pytest.approx(2.0, abs=0.01)
+        # base LR 4.0 -> at relevance 0.5: 4**0.5 = 2.0
+        testing = _testing(_vec("e1", {"h1": 16.0, "h2": 1.0}, relevance=0.5))
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.updates[0].likelihood_ratio == pytest.approx(2.0, abs=0.01)
 
     def test_lr_below_one_with_relevance(self):
-        """Anti-hypothesis LR should also be discounted toward 1.0 by relevance."""
-        # LR = 0.2/0.8 = 0.25, capped stays 0.25
-        # At relevance=0.5: exp(0.5 * log(0.25)) = exp(0.5 * -1.386) = exp(-0.693) = 0.5
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.2, p_e_given_not_h=0.8, relevance=0.5)]),
-            ("h2", [_make_eval(p_e_given_h=0.5, p_e_given_not_h=0.5, relevance=0.5)]),
-        )
-        result = run_bayesian_update(testing)
-        h1_post = next(p for p in result.posteriors if p.hypothesis_id == "h1")
-        assert h1_post.updates[0].likelihood_ratio == pytest.approx(0.5, abs=0.01)
+        # base LR sqrt(1/16)=0.25 -> at relevance 0.5: 0.25**0.5 = 0.5
+        testing = _testing(_vec("e1", {"h1": 1.0, "h2": 16.0}, relevance=0.5))
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.updates[0].likelihood_ratio == pytest.approx(0.5, abs=0.01)
 
 
-# ── Robustness computation ─────────────────────────────────────────
+# ── Robustness computation (operates on EvidenceUpdate, unchanged) ──
 
 
 class TestRobustness:
     def _make_update(self, lr: float, eid: str = "e1") -> EvidenceUpdate:
-        return EvidenceUpdate(
-            evidence_id=eid, likelihood_ratio=lr, prior=0.5, posterior=0.5
-        )
+        return EvidenceUpdate(evidence_id=eid, likelihood_ratio=lr, prior=0.5, posterior=0.5)
 
     def test_robust_few_decisive(self):
-        """A few decisive LRs (>5 or <0.2) should be 'robust'."""
         updates = [
             self._make_update(10.0, "e1"),
             self._make_update(0.1, "e2"),
@@ -407,7 +387,6 @@ class TestRobustness:
         assert _compute_robustness(updates) == "robust"
 
     def test_fragile_many_weak(self):
-        """Many weak LRs (0.5-2.0) should be 'fragile'."""
         updates = [self._make_update(0.8, f"e{i}") for i in range(15)]
         assert _compute_robustness(updates) == "fragile"
 
@@ -415,40 +394,19 @@ class TestRobustness:
         assert _compute_robustness([]) == "unknown"
 
     def test_unknown_all_uninformative(self):
-        """LR=1.0 items contribute nothing."""
         updates = [self._make_update(1.0, f"e{i}") for i in range(10)]
         assert _compute_robustness(updates) == "unknown"
 
     def test_uninformative_items_do_not_force_fragile(self):
-        """Moderate-strength evidence diluted with relevance-gated LR=1.0 items
-        must not be misclassified 'fragile' just because the uninformative items
-        outnumber the informative ones."""
         updates = (
-            [self._make_update(3.0, f"m{i}") for i in range(4)]   # moderate, informative
-            + [self._make_update(1.0, f"u{i}") for i in range(10)]  # uninformative
+            [self._make_update(3.0, f"m{i}") for i in range(4)]
+            + [self._make_update(1.0, f"u{i}") for i in range(10)]
         )
-        # Before the fix the 10 LR=1.0 items inflated the weak count → "fragile".
         assert _compute_robustness(updates) != "fragile"
 
-    def test_moderate_mixed(self):
-        """Mix of decisive and weak should be 'moderate'."""
-        updates = [
-            self._make_update(6.0, "e1"),
-            self._make_update(1.2, "e2"),
-            self._make_update(0.9, "e3"),
-            self._make_update(1.1, "e4"),
-            self._make_update(0.85, "e5"),
-        ]
-        result = _compute_robustness(updates)
-        assert result in ("moderate", "robust")  # depends on exact thresholds
-
     def test_robustness_populated_in_result(self):
-        """run_bayesian_update should populate robustness field."""
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.95, p_e_given_not_h=0.05)]),
-            ("h2", [_make_eval(p_e_given_h=0.05, p_e_given_not_h=0.95)]),
-        )
-        result = run_bayesian_update(testing)
+        testing = _testing(_vec("e1", {"h1": 19.0, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"])
         for p in result.posteriors:
             assert p.robustness in ("robust", "fragile", "moderate", "unknown")
 
@@ -465,18 +423,11 @@ class TestTopDrivers:
             EvidenceUpdate(evidence_id="e4", likelihood_ratio=2.0, prior=0.5, posterior=0.7),
         ]
         drivers = _top_drivers(updates, n=2)
-        # e2 (LR=10, |log|=2.30) and e3 (LR=0.1, |log|=2.30) are most influential
         assert set(drivers) == {"e2", "e3"}
 
     def test_top_drivers_populated_in_result(self):
-        testing = _make_testing(
-            ("h1", [
-                _make_eval(evidence_id="e1", p_e_given_h=0.95, p_e_given_not_h=0.05),
-                _make_eval(evidence_id="e2", p_e_given_h=0.5, p_e_given_not_h=0.5),
-            ]),
-            ("h2", []),
-        )
-        result = run_bayesian_update(testing)
+        items = [_vec("e1", {"h1": 0.95, "h2": 0.05}), _vec("e2", {"h1": 0.5, "h2": 0.5})]
+        result = run_bayesian_update(_testing(*items), ["h1", "h2"])
         h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
         assert "e1" in h1.top_drivers
 
@@ -486,65 +437,95 @@ class TestTopDrivers:
 
 class TestSensitivity:
     def test_sensitivity_populated(self):
-        """Result should include sensitivity entries for each hypothesis."""
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.9, p_e_given_not_h=0.1)]),
-            ("h2", [_make_eval(p_e_given_h=0.1, p_e_given_not_h=0.9)]),
-        )
-        result = run_bayesian_update(testing)
+        testing = _testing(_vec("e1", {"h1": 9.0, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"])
         assert len(result.sensitivity) == 2
         for s in result.sensitivity:
             assert s.posterior_low <= s.baseline_posterior <= s.posterior_high
 
     def test_sensitivity_with_uninformative_evidence(self):
-        """Uninformative evidence should produce no perturbation range."""
-        testing = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.5, p_e_given_not_h=0.5)]),
-            ("h2", [_make_eval(p_e_given_h=0.5, p_e_given_not_h=0.5)]),
-        )
-        result = run_bayesian_update(testing)
+        testing = _testing(_vec("e1", {"h1": 0.5, "h2": 0.5}))
+        result = run_bayesian_update(testing, ["h1", "h2"])
         for s in result.sensitivity:
             assert s.posterior_low == pytest.approx(s.posterior_high, abs=0.01)
             assert s.rank_stable is True
 
     def test_sensitivity_range_wider_with_decisive_evidence(self):
-        """Decisive evidence should produce wider perturbation range."""
-        # Strong evidence
-        strong = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.95, p_e_given_not_h=0.05)]),
-            ("h2", [_make_eval(p_e_given_h=0.05, p_e_given_not_h=0.95)]),
-        )
-        # Weak evidence
-        weak = _make_testing(
-            ("h1", [_make_eval(p_e_given_h=0.55, p_e_given_not_h=0.45)]),
-            ("h2", [_make_eval(p_e_given_h=0.45, p_e_given_not_h=0.55)]),
-        )
-        strong_result = run_bayesian_update(strong)
-        weak_result = run_bayesian_update(weak)
-
+        strong = _testing(_vec("e1", {"h1": 0.95, "h2": 0.05}))
+        weak = _testing(_vec("e1", {"h1": 0.55, "h2": 0.45}))
+        strong_result = run_bayesian_update(strong, ["h1", "h2"])
+        weak_result = run_bayesian_update(weak, ["h1", "h2"])
         strong_range = strong_result.sensitivity[0].posterior_high - strong_result.sensitivity[0].posterior_low
         weak_range = weak_result.sensitivity[0].posterior_high - weak_result.sensitivity[0].posterior_low
         assert strong_range > weak_range
 
     def test_empty_testing_no_sensitivity(self):
-        testing = TestingResult(hypothesis_tests=[])
-        result = run_bayesian_update(testing)
+        result = run_bayesian_update(_testing(), [])
         assert result.sensitivity == []
 
     def test_rank_stability_flag(self):
-        """When one hypothesis dominates, rank should be stable."""
-        testing = _make_testing(
-            ("h1", [
-                _make_eval(evidence_id="e1", p_e_given_h=0.95, p_e_given_not_h=0.05),
-                _make_eval(evidence_id="e2", p_e_given_h=0.90, p_e_given_not_h=0.10),
-                _make_eval(evidence_id="e3", p_e_given_h=0.85, p_e_given_not_h=0.15),
-            ]),
-            ("h2", [
-                _make_eval(evidence_id="e1", p_e_given_h=0.05, p_e_given_not_h=0.95),
-                _make_eval(evidence_id="e2", p_e_given_h=0.10, p_e_given_not_h=0.90),
-                _make_eval(evidence_id="e3", p_e_given_h=0.15, p_e_given_not_h=0.85),
-            ]),
-        )
-        result = run_bayesian_update(testing)
+        items = [
+            _vec("e1", {"h1": 0.95, "h2": 0.05}),
+            _vec("e2", {"h1": 0.90, "h2": 0.10}),
+            _vec("e3", {"h1": 0.85, "h2": 0.15}),
+        ]
+        result = run_bayesian_update(_testing(*items), ["h1", "h2"])
         h1_sens = next(s for s in result.sensitivity if s.hypothesis_id == "h1")
         assert h1_sens.rank_stable is True
+
+
+# ── Researcher priors + prior sensitivity ───────────────────────────
+
+
+class TestPriors:
+    def test_uniform_default(self):
+        # No evidence + no priors -> uniform.
+        result = run_bayesian_update(_testing(), ["h1", "h2", "h3"])
+        for p in result.posteriors:
+            assert p.final_posterior == pytest.approx(1 / 3, abs=0.01)
+
+    def test_non_uniform_priors_shift_posteriors(self):
+        # Uninformative evidence -> posterior reflects the (normalized) prior.
+        testing = _testing(_vec("e1", {"h1": 1.0, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"], priors={"h1": 3.0, "h2": 1.0})
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.final_posterior == pytest.approx(0.75, abs=0.01)
+        assert h1.prior == pytest.approx(0.75, abs=0.01)
+
+    def test_priors_need_not_be_normalized(self):
+        testing = _testing(_vec("e1", {"h1": 1.0, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"], priors={"h1": 30.0, "h2": 10.0})
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        assert h1.final_posterior == pytest.approx(0.75, abs=0.01)
+
+    def test_prior_sensitivity_populated(self):
+        testing = _testing(_vec("e1", {"h1": 9.0, "h2": 1.0}))
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        assert result.prior_sensitivity is not None
+        assert result.prior_sensitivity.top_hypothesis_id == result.ranking[0]
+
+    def test_prior_sensitivity_stable_when_evidence_dominant(self):
+        items = [_vec(f"e{i}", {"h1": 0.95, "h2": 0.05}) for i in range(4)]
+        result = run_bayesian_update(_testing(*items), ["h1", "h2"])
+        assert result.prior_sensitivity.stable_under_prior_perturbation is True
+
+    def test_prior_sensitivity_unstable_when_evidence_weak(self):
+        # Near-tie evidence: a 2x prior swing flips the leader.
+        testing = _testing(_vec("e1", {"h1": 1.05, "h2": 1.0}, relevance=0.5))
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        assert result.prior_sensitivity.stable_under_prior_perturbation is False
+
+    def test_priors_reject_unknown_hypothesis(self):
+        testing = _testing(_vec("e1", {"h1": 2.0, "h2": 1.0}))
+        with pytest.raises(ValueError, match="unknown"):
+            run_bayesian_update(testing, ["h1", "h2"], priors={"h1": 1.0, "h2": 1.0, "h9": 1.0})
+
+    def test_priors_reject_missing_hypothesis(self):
+        testing = _testing(_vec("e1", {"h1": 2.0, "h2": 1.0}))
+        with pytest.raises(ValueError, match="missing"):
+            run_bayesian_update(testing, ["h1", "h2"], priors={"h1": 1.0})
+
+    def test_priors_reject_nonpositive_weight(self):
+        testing = _testing(_vec("e1", {"h1": 2.0, "h2": 1.0}))
+        with pytest.raises(ValueError, match="positive"):
+            run_bayesian_update(testing, ["h1", "h2"], priors={"h1": 1.0, "h2": 0.0})

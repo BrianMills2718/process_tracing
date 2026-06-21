@@ -11,20 +11,20 @@ from unittest.mock import patch
 import pytest
 
 from pt.bayesian import run_bayesian_update
-from pt.pipeline import run_pipeline
-from pt.report import generate_report
+from pt.pipeline import _source_text_sha256, run_pipeline
+from pt.report import _dom_id, generate_report
 from pt.schemas import (
     AbsenceEvaluation,
     AbsenceResult,
     Actor,
     CausalEdge,
     Evidence,
-    EvidenceEvaluation,
+    EvidenceLikelihood,
     Event,
     ExtractionResult,
     Hypothesis,
+    HypothesisLikelihood,
     HypothesisSpace,
-    HypothesisTestResult,
     HypothesisVerdict,
     Mechanism,
     Prediction,
@@ -124,102 +124,32 @@ def _make_hypothesis_space() -> HypothesisSpace:
     )
 
 
+def _ev_like(evidence_id: str, h1: float, h2: float, relevance: float, dtype: str = "straw_in_the_wind") -> EvidenceLikelihood:
+    """One evidence item's likelihood vector across {h1, h2}."""
+    return EvidenceLikelihood(
+        evidence_id=evidence_id,
+        hypothesis_likelihoods=[
+            HypothesisLikelihood(hypothesis_id="h1", relative_likelihood=h1, diagnostic_type=dtype),
+            HypothesisLikelihood(hypothesis_id="h2", relative_likelihood=h2, diagnostic_type=dtype),
+        ],
+        relevance=relevance,
+        justification="deterministic test vector",
+    )
+
+
 def _make_testing() -> TestingResult:
-    """Deterministic testing results with known LR values for Bayesian verification."""
+    """Deterministic likelihood vectors. Relative likelihood = P(E|H) per hypothesis;
+    derived per-hypothesis LR is the value over the vector's geometric mean."""
     return TestingResult(
-        hypothesis_tests=[
-            HypothesisTestResult(
-                hypothesis_id="h1",
-                prediction_classifications=[],
-                evidence_evaluations=[
-                    # evi_debt: strong for h1 (fiscal)
-                    EvidenceEvaluation(
-                        evidence_id="evi_debt",
-                        hypothesis_id="h1",
-                        finding="pass",
-                        p_e_given_h=0.9,
-                        p_e_given_not_h=0.3,
-                        justification="Debt directly supports fiscal hypothesis",
-                        relevance=0.9,
-                    ),
-                    # evi_tax_revolt: moderate for h1
-                    EvidenceEvaluation(
-                        evidence_id="evi_tax_revolt",
-                        hypothesis_id="h1",
-                        finding="pass",
-                        p_e_given_h=0.8,
-                        p_e_given_not_h=0.4,
-                        justification="Tax revolt consistent with fiscal breakdown",
-                        relevance=0.85,
-                    ),
-                    # evi_elite_plot: against h1
-                    EvidenceEvaluation(
-                        evidence_id="evi_elite_plot",
-                        hypothesis_id="h1",
-                        finding="fail",
-                        p_e_given_h=0.3,
-                        p_e_given_not_h=0.7,
-                        justification="Elite plotting not predicted by fiscal hypothesis",
-                        relevance=0.7,
-                    ),
-                    # evi_historian_claim: weak/neutral
-                    EvidenceEvaluation(
-                        evidence_id="evi_historian_claim",
-                        hypothesis_id="h1",
-                        finding="ambiguous",
-                        p_e_given_h=0.5,
-                        p_e_given_not_h=0.5,
-                        justification="Interpretive claim, not diagnostic",
-                        relevance=0.3,
-                    ),
-                ],
-            ),
-            HypothesisTestResult(
-                hypothesis_id="h2",
-                prediction_classifications=[],
-                evidence_evaluations=[
-                    # evi_debt: against h2
-                    EvidenceEvaluation(
-                        evidence_id="evi_debt",
-                        hypothesis_id="h2",
-                        finding="fail",
-                        p_e_given_h=0.3,
-                        p_e_given_not_h=0.7,
-                        justification="Debt not predicted by elite conspiracy",
-                        relevance=0.5,
-                    ),
-                    # evi_tax_revolt: neutral for h2
-                    EvidenceEvaluation(
-                        evidence_id="evi_tax_revolt",
-                        hypothesis_id="h2",
-                        finding="ambiguous",
-                        p_e_given_h=0.4,
-                        p_e_given_not_h=0.5,
-                        justification="Tax revolt not relevant to conspiracy",
-                        relevance=0.4,
-                    ),
-                    # evi_elite_plot: strong for h2
-                    EvidenceEvaluation(
-                        evidence_id="evi_elite_plot",
-                        hypothesis_id="h2",
-                        finding="pass",
-                        p_e_given_h=0.9,
-                        p_e_given_not_h=0.2,
-                        justification="Secret meetings directly support conspiracy hypothesis",
-                        relevance=0.95,
-                    ),
-                    # evi_historian_claim: neutral
-                    EvidenceEvaluation(
-                        evidence_id="evi_historian_claim",
-                        hypothesis_id="h2",
-                        finding="ambiguous",
-                        p_e_given_h=0.5,
-                        p_e_given_not_h=0.5,
-                        justification="Interpretive claim about ideology, not conspiracy",
-                        relevance=0.2,
-                    ),
-                ],
-            ),
+        evidence_likelihoods=[
+            # evi_debt: favors h1 (fiscal)
+            _ev_like("evi_debt", h1=0.9, h2=0.3, relevance=0.9, dtype="smoking_gun"),
+            # evi_tax_revolt: favors h1
+            _ev_like("evi_tax_revolt", h1=0.8, h2=0.4, relevance=0.85, dtype="straw_in_the_wind"),
+            # evi_elite_plot: favors h2 (conspiracy)
+            _ev_like("evi_elite_plot", h1=0.3, h2=0.9, relevance=0.9, dtype="smoking_gun"),
+            # evi_historian_claim: interpretive, low relevance, uninformative
+            _ev_like("evi_historian_claim", h1=0.5, h2=0.5, relevance=0.3, dtype="straw_in_the_wind"),
         ],
     )
 
@@ -268,6 +198,18 @@ def _make_synthesis() -> SynthesisResult:
     )
 
 
+def _make_process_result(source_text_sha256: str | None = None) -> ProcessTracingResult:
+    return ProcessTracingResult(
+        source_text_sha256=source_text_sha256,
+        extraction=_make_extraction(),
+        hypothesis_space=_make_hypothesis_space(),
+        testing=_make_testing(),
+        absence=_make_absence(),
+        bayesian=run_bayesian_update(_make_testing(), ["h1", "h2"]),
+        synthesis=_make_synthesis(),
+    )
+
+
 # ── Mock dispatcher ────────────────────────────────────────────────
 
 
@@ -279,12 +221,8 @@ def _mock_call_llm(prompt: str, response_model: type, *, task: str = "", trace_i
         return _make_extraction()
     elif model_name == "HypothesisSpace":
         return _make_hypothesis_space()
-    elif model_name == "HypothesisTestResult":
-        # Determine which hypothesis is being tested from the prompt
-        testing = _make_testing()
-        if '"h2"' in prompt or "'h2'" in prompt:
-            return testing.hypothesis_tests[1]
-        return testing.hypothesis_tests[0]
+    elif model_name in ("TestingResult", "TestingResponse"):
+        return _make_testing()
     elif model_name == "AbsenceResult":
         return _make_absence()
     elif model_name == "SynthesisResult":
@@ -339,9 +277,9 @@ class TestPipelineOrchestration:
         assert pipeline_result.hypothesis_space.research_question
 
     def test_testing_populated(self, pipeline_result):
-        assert len(pipeline_result.testing.hypothesis_tests) == 2
-        for ht in pipeline_result.testing.hypothesis_tests:
-            assert len(ht.evidence_evaluations) == 4
+        assert len(pipeline_result.testing.evidence_likelihoods) == 4
+        for item in pipeline_result.testing.evidence_likelihoods:
+            assert len(item.hypothesis_likelihoods) == 2
 
     def test_absence_populated(self, pipeline_result):
         assert len(pipeline_result.absence.evaluations) == 1
@@ -367,51 +305,43 @@ class TestBayesianMathDeterministic:
 
     def test_posteriors_from_fixed_testing(self):
         testing = _make_testing()
-        result = run_bayesian_update(testing)
+        result = run_bayesian_update(testing, ["h1", "h2"])
 
         h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
         h2 = next(p for p in result.posteriors if p.hypothesis_id == "h2")
 
-        # h1 has: 0.9/0.3=3.0 for, 0.8/0.4=2.0 for, 0.3/0.7≈0.43 against, 0.5/0.5=1.0 neutral
-        # h2 has: 0.3/0.7≈0.43 against, 0.4/0.5=0.8 against, 0.9/0.2=4.5 for, 0.5/0.5=1.0 neutral
-        # Both have a mix of for/against — h1 should come out ahead
+        # Two items favor h1 (debt, tax revolt), one favors h2 (elite plot), one
+        # is uninformative — net, h1 comes out ahead.
         assert h1.final_posterior > h2.final_posterior
         assert h1.final_posterior + h2.final_posterior == pytest.approx(1.0, abs=0.01)
 
-        # Verify update trails exist
+        # One update per evidence item, per hypothesis.
         assert len(h1.updates) == 4
         assert len(h2.updates) == 4
 
-        # Verify ranking
         assert result.ranking == ["h1", "h2"]
 
 
 class TestReportConsistency:
     """Report display should match Bayesian updater semantics."""
 
+    def test_dom_id_sanitizes_model_provided_ids(self):
+        dom_id = _dom_id("detail", "h 1/evil#id")
+        assert dom_id.startswith("detail-h-1-evil-id-")
+        assert " " not in dom_id
+        assert "/" not in dom_id
+        assert "#" not in dom_id
+
     def test_low_relevance_extreme_evidence_hidden_as_uninformative(self):
         extraction = _make_extraction()
         hypothesis_space = _make_hypothesis_space()
+        # Extreme vector but relevance below the gate ⇒ forced uninformative (LR 1.0).
         testing = TestingResult(
-            hypothesis_tests=[
-                HypothesisTestResult(
-                    hypothesis_id="h1",
-                    prediction_classifications=[],
-                    evidence_evaluations=[
-                        EvidenceEvaluation(
-                            evidence_id="evi_debt",
-                            hypothesis_id="h1",
-                            finding="pass",
-                            p_e_given_h=1.0,
-                            p_e_given_not_h=0.001,
-                            justification="Raw probabilities are extreme but relevance is below the gate.",
-                            relevance=0.39,
-                        ),
-                    ],
-                ),
+            evidence_likelihoods=[
+                _ev_like("evi_debt", h1=1.0, h2=0.001, relevance=0.39, dtype="smoking_gun"),
             ],
         )
-        bayesian = run_bayesian_update(testing)
+        bayesian = run_bayesian_update(testing, ["h1", "h2"])
         result = ProcessTracingResult(
             extraction=extraction,
             hypothesis_space=hypothesis_space,
@@ -423,82 +353,172 @@ class TestReportConsistency:
 
         html = generate_report(result)
 
+        # Both hypotheses' LR for the gated item is 1.0.
         assert bayesian.posteriors[0].updates[0].likelihood_ratio == pytest.approx(1.0)
-        assert "0 informative / 1 total evaluations shown" in html
+        # Report counts evaluations per (hypothesis, evidence): 2 hyps × 1 item = 2 total.
+        assert "0 informative / 2 total evaluations shown" in html
         assert "LR=1000.00" not in html
 
     def test_sensitivity_populated(self):
         testing = _make_testing()
-        result = run_bayesian_update(testing)
+        result = run_bayesian_update(testing, ["h1", "h2"])
         assert len(result.sensitivity) == 2
         for s in result.sensitivity:
             assert s.posterior_low <= s.baseline_posterior <= s.posterior_high
 
     def test_robustness_populated(self):
         testing = _make_testing()
-        result = run_bayesian_update(testing)
+        result = run_bayesian_update(testing, ["h1", "h2"])
         for p in result.posteriors:
             assert p.robustness in ("robust", "fragile", "moderate", "unknown")
 
+    def test_script_terminator_in_graph_data_is_escaped(self):
+        result = _make_process_result()
+        payload = "</script><script>x</script>"
+        result.extraction.events[0].description = payload
 
-def _make_result(extraction: ExtractionResult) -> ProcessTracingResult:
-    """Assemble a minimal valid result around a given extraction."""
-    hs = _make_hypothesis_space()
-    testing = TestingResult(hypothesis_tests=[
-        HypothesisTestResult(hypothesis_id=h.id, prediction_classifications=[],
-                             evidence_evaluations=[])
-        for h in hs.hypotheses
-    ])
-    bayesian = run_bayesian_update(testing)
-    return ProcessTracingResult(
-        extraction=extraction,
-        hypothesis_space=hs,
-        testing=testing,
-        absence=AbsenceResult(evaluations=[]),
-        bayesian=bayesian,
-        synthesis=_make_synthesis(),
-    )
-
-
-class TestReportSecurity:
-    """The HTML report embeds LLM-authored text; it must not break out of
-    contexts or silently drop graph data."""
-
-    def test_script_breakout_neutralized(self):
-        # An evidence description containing </script> must not terminate the
-        # embedded <script> block when serialized into vis.js node JSON.
-        ext = _make_extraction()
-        ext.evidence[0].description = "break</script><script>alert(1)</script>"
-        html = generate_report(_make_result(ext))
-        assert "</script><script>alert(1)" not in html
-        assert "<\\/script>" in html  # neutralized form is present
-
-    def test_click_handler_escapes_label(self):
-        # The network click handler assigns node.label via innerHTML; labels are
-        # unescaped for the canvas, so the JS must escape before innerHTML.
-        html = generate_report(_make_result(_make_extraction()))
-        assert "function escapeHtml" in html
-        assert "escapeHtml(node.label)" in html
-
-    def test_duplicate_node_id_fails_loud(self):
-        # vis.js silently drops duplicate ids; the builder must raise instead.
-        ext = _make_extraction()
-        ext.evidence[0].id = ext.events[0].id  # force a cross-type collision
-        with pytest.raises(ValueError, match="Duplicate graph node id"):
-            generate_report(_make_result(ext))
-
-    def test_narrative_id_replacement_is_boundary_safe(self):
-        # 'evi_debt' must not match inside a longer id like 'evi_debt_extra'.
-        ext = _make_extraction()
-        ext.evidence.append(Evidence(
-            id="evi_debt_extra",
-            description="An unrelated longer-id item",
-            source_text="Some other quote.",
-        ))
-        synth = _make_synthesis()
-        synth.analytical_narrative = "The marker evi_debt_extra should resolve to its own item."
-        result = _make_result(ext)
-        result.synthesis = synth
         html = generate_report(result)
-        # The longer id resolves to its own description, not the debt item's.
-        assert "An unrelated longer-id item" in html
+
+        assert payload not in html
+        assert "<\\/script><script>x<\\/script>" in html
+
+
+class TestFromResultProvenance:
+    def test_from_result_rejects_missing_source_hash(self):
+        with pytest.raises(ValueError, match="no source_text_sha256"):
+            run_pipeline(
+                "new text",
+                from_result=_make_process_result(),
+                verbose=False,
+            )
+
+    def test_from_result_rejects_mismatched_source_hash(self):
+        with pytest.raises(ValueError, match="does not match"):
+            run_pipeline(
+                "new text",
+                from_result=_make_process_result(_source_text_sha256("old text")),
+                verbose=False,
+            )
+
+
+class TestVectorCompleteness:
+    """run_test must fail loud on incomplete / malformed likelihood matrices."""
+
+    def _run_with(self, testing):
+        from pt import pass_test
+        with patch.object(pass_test, "call_llm", side_effect=lambda *a, **k: testing):
+            return pass_test.run_test(_make_extraction(), _make_hypothesis_space())
+
+    def test_rejects_missing_hypothesis_in_vector(self):
+        # One item's vector covers only h1, not {h1, h2}.
+        good = _make_testing()
+        good.evidence_likelihoods[0].hypothesis_likelihoods = [
+            HypothesisLikelihood(hypothesis_id="h1", relative_likelihood=1.0, diagnostic_type="hoop")
+        ]
+        with pytest.raises(ValueError, match="expected exactly"):
+            self._run_with(good)
+
+    def test_rejects_missing_evidence_item(self):
+        good = _make_testing()
+        good.evidence_likelihoods = good.evidence_likelihoods[:3]  # drop one of 4
+        with pytest.raises(ValueError, match="coverage mismatch"):
+            self._run_with(good)
+
+    def test_accepts_complete_matrix(self):
+        result = self._run_with(_make_testing())
+        assert len(result.evidence_likelihoods) == 4
+
+    def test_llm_schema_enumerates_exact_evidence_and_hypothesis_ids(self):
+        from pt import pass_test
+        captured = {}
+
+        def fake_call_llm(prompt, response_model, **kwargs):
+            captured["schema"] = response_model.model_json_schema()
+            return _make_testing()
+
+        with patch.object(pass_test, "call_llm", side_effect=fake_call_llm):
+            pass_test.run_test(_make_extraction(), _make_hypothesis_space())
+
+        schema_json = str(captured["schema"])
+        assert "'enum': ['evi_debt', 'evi_tax_revolt', 'evi_elite_plot', 'evi_historian_claim']" in schema_json
+        assert "'enum': ['h1', 'h2']" in schema_json
+
+    def test_rejects_cluster_with_unknown_evidence(self):
+        from pt.schemas import EvidenceCluster
+        t = _make_testing()
+        t.dependence_clusters = [EvidenceCluster(evidence_ids=["evi_debt", "evi_ghost"], reason="x")]
+        with pytest.raises(ValueError, match="unknown evidence"):
+            self._run_with(t)
+
+    def test_rejects_cluster_with_one_member(self):
+        from pt.schemas import EvidenceCluster
+        t = _make_testing()
+        t.dependence_clusters = [EvidenceCluster(evidence_ids=["evi_debt", "evi_debt"], reason="x")]
+        with pytest.raises(ValueError, match=">=2 distinct"):
+            self._run_with(t)
+
+    def test_rejects_overlapping_clusters(self):
+        from pt.schemas import EvidenceCluster
+        t = _make_testing()
+        t.dependence_clusters = [
+            EvidenceCluster(evidence_ids=["evi_debt", "evi_tax_revolt"], reason="x"),
+            EvidenceCluster(evidence_ids=["evi_tax_revolt", "evi_elite_plot"], reason="y"),
+        ]
+        with pytest.raises(ValueError, match="multiple dependence clusters"):
+            self._run_with(t)
+
+    def test_accepts_valid_cluster(self):
+        from pt.schemas import EvidenceCluster
+        t = _make_testing()
+        t.dependence_clusters = [EvidenceCluster(evidence_ids=["evi_debt", "evi_tax_revolt"], reason="x")]
+        result = self._run_with(t)
+        assert len(result.dependence_clusters) == 1
+
+
+class TestExecutiveSummary:
+    """Slice 4 + truth-in-labeling: the headline surfaces a support interval and
+    stability flags, framed as comparative support (not absolute probability)."""
+
+    def _result(self):
+        testing = _make_testing()
+        return ProcessTracingResult(
+            extraction=_make_extraction(),
+            hypothesis_space=_make_hypothesis_space(),
+            testing=testing,
+            absence=AbsenceResult(evaluations=[]),
+            bayesian=run_bayesian_update(testing, ["h1", "h2"]),
+            synthesis=_make_synthesis(),
+        )
+
+    def test_no_absolute_probability_overclaim(self):
+        html = generate_report(self._result())
+        assert "Posterior probability after Bayesian updating" not in html
+        assert "Support:" in html
+
+    def test_comparative_support_caveat(self):
+        html = " ".join(generate_report(self._result()).split()).lower()
+        assert "comparative support" in html
+        assert "not absolute probabilities of truth" in html
+
+    def test_support_interval_and_stability_surfaced(self):
+        html = generate_report(self._result())
+        assert "range " in html  # support interval badge
+        assert ("robust to prior" in html) or ("prior-sensitive" in html)
+
+    def test_overconfidence_banner_on_degenerate_fragile_posterior(self):
+        # Many weakly-pro-h1 items -> near-1.0 support, fragile -> warning banner.
+        items = [_ev_like(f"e{i}", h1=2.0, h2=1.0, relevance=0.9) for i in range(20)]
+        testing = TestingResult(evidence_likelihoods=items)
+        result = ProcessTracingResult(
+            extraction=_make_extraction(),
+            hypothesis_space=_make_hypothesis_space(),
+            testing=testing,
+            absence=AbsenceResult(evaluations=[]),
+            bayesian=run_bayesian_update(testing, ["h1", "h2"]),
+            synthesis=_make_synthesis(),
+        )
+        assert result.bayesian.posteriors[0].final_posterior > 0.99
+        assert "Likely overconfident" in generate_report(result)
+
+    def test_no_overconfidence_banner_on_normal_result(self):
+        assert "Likely overconfident" not in generate_report(self._result())

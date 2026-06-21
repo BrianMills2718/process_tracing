@@ -74,3 +74,22 @@ def test_extraction_preserves_source_quotes_and_meaningful_descriptions():
         assert evidence.source_text
         assert evidence.source_text in _source_text()
         assert len(evidence.description) >= 20
+
+
+def test_extraction_sanitizes_non_ascii_evidence_ids():
+    """LLM-assigned ids with accents/whitespace are normalized to ASCII so they
+    survive later LLM round-trips (the fail-loud id match in pass_test)."""
+    messy = ExtractionResult(
+        summary="x",
+        evidence=[
+            Evidence(id="evi_levée_en_masse", description="a" * 25, source_text="q"),
+            Evidence(id="evi_côté", description="b" * 25, source_text="q"),
+            Evidence(id="evi_cote", description="c" * 25, source_text="q"),  # distinct raw; collides after strip
+        ],
+    )
+    with patch("pt.pass_extract.call_llm", return_value=messy):
+        extraction = run_extract("text " * 50, trace_id="t")
+    ids = [e.id for e in extraction.evidence]
+    assert ids == ["evi_levee_en_masse", "evi_cote", "evi_cote_2"]
+    for i in ids:
+        assert i.isascii()

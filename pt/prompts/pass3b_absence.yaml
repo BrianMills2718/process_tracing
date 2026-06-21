@@ -32,9 +32,17 @@ messages:
 
       Reserve "damaging" for cases where the hypothesis's central claim is undermined. If extracted evidence partially covers the prediction, the severity is at most "notable."
 
+      **Severity is capped by extractability.** A finding may only be "damaging" if `would_be_extractable` is true — i.e. the text genuinely would have carried this evidence if it existed. If the missing evidence is the kind this genre would NOT contain regardless of the hypothesis's truth, the absence tells you about the source, not the hypothesis: set `would_be_extractable` to false and severity to "minor".
+
       ## Key judgment: `would_be_extractable`
 
-      Would this evidence appear in a text of this genre if it existed in the historical record? Set to false if the missing evidence would require specialized sources beyond this text's scope.
+      Would this evidence appear in a text of THIS genre if it existed in the historical record? Set to **false** whenever the missing evidence is, by its nature, not the kind a summary/overview/tertiary text records, for example:
+      - **covert, secret, or clandestine** actions (e.g. secret coup planning, conspiracies, back-channel deals)
+      - **private or internal** material (private correspondence, diaries, meeting minutes, internal deliberations)
+      - **unrecorded subjective states** (what "the public felt", individuals' private motives, undocumented sentiment)
+      - **specialized quantitative or archival** data (econometric series, police files, military archives)
+
+      A general overview reports public events, legislation, prominent figures, and outcomes. It does NOT reveal what someone secretly planned or privately intended — so the silence of such a text about clandestine or internal evidence is uninformative, not damaging. Only set `would_be_extractable` true when a text of this scope routinely records this kind of fact.
 
       ## Data
 
@@ -47,6 +55,6 @@ messages:
       ### Hypotheses and their predictions
       {{ hypotheses_json }}
 
-      ### Testing summary (which predictions had relevant evidence)
-      This shows which predictions were linked to relevant evidence during testing. Use it as a starting point, but always verify against the extracted evidence list — some evidence may address a prediction without being formally linked to it.
+      ### Substantive evidence (items the testing pass found relevant)
+      These are the evidence ids the testing pass treated as substantive (relevance ≥ 0.6). Use them to focus on what the text actually addresses, but always verify against the full extracted evidence list above — an item below this threshold may still partially address a prediction.
       {{ testing_summary_json }}

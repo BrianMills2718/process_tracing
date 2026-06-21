@@ -1,4 +1,23 @@
-"""Pure math: Bayesian updating in odds space."""
+"""Pure math: coherent multi-hypothesis Bayesian updating via log-space softmax.
+
+The testing pass elicits, per evidence item, a *likelihood vector* across all
+hypotheses (relative likelihoods on a shared scale). For each item we derive a
+per-hypothesis likelihood ratio against the vector's geometric mean:
+
+    LR_{m,i} = relative_likelihood_{m,i} / geomean_j(relative_likelihood_{m,j})
+
+The per-item *pairwise* spread is capped to LR_CAP (each centered log-LR clamped
+to ±0.5·log(LR_CAP)), then relevance-discounted. Because every LR for an item is
+derived from one vector, the pairwise ratios are coherent by construction
+(reciprocity/transitivity hold).
+
+The posterior is the joint multinomial update, computed in log space and
+softmax-normalized so it is **order-invariant** (no per-step clamping):
+
+    log w_i = log(prior_i) + Σ_m log(LR_{m,i});   posterior_i = softmax(log w)_i
+
+No LLM here — deterministic and unit-tested (per the LLM-first exception).
+"""
 
 from __future__ import annotations
 
@@ -6,16 +25,20 @@ import math
 
 from pt.schemas import (
     BayesianResult,
+    EvidenceLikelihood,
     EvidenceUpdate,
     HypothesisPosterior,
+    PriorSensitivity,
     SensitivityEntry,
     TestingResult,
 )
 
-CLAMP_MIN = 0.001
-CLAMP_MAX = 0.999
-LR_CAP = 20.0
-LR_FLOOR = 1.0 / LR_CAP  # 0.05
+LR_CAP = 20.0  # bound on a single item's pairwise max:min likelihood ratio
+INTERPRETIVE_LR_CAP = 5.0  # tighter bound for interpretive (scholarly-claim) evidence
+
+RELEVANCE_GATE = 0.4  # below this, an item is uninformative (LR forced to 1.0)
+
+RESIDUAL_ID = "H0_residual"  # explicit "none of the listed explanations" hypothesis
 
 # Robustness thresholds
 DECISIVE_LR_THRESHOLD = 1.6   # |log(LR)| > 1.6 means LR > 5.0 or < 0.2
@@ -27,36 +50,140 @@ PERTURB_FACTOR = 0.5  # ±50% perturbation on log-LR
 TOP_DRIVERS_COUNT = 5  # Number of most influential LRs to perturb
 
 
-def _clamp(p: float) -> float:
-    return max(CLAMP_MIN, min(CLAMP_MAX, p))
+def hypothesis_ids_from_testing(testing: TestingResult) -> list[str]:
+    """Union of hypothesis ids appearing in the likelihood vectors, first-seen order.
+
+    Prefer passing the canonical hypothesis list to run_bayesian_update; this is a
+    fallback when only the testing result is available.
+    """
+    seen: list[str] = []
+    s: set[str] = set()
+    for item in testing.evidence_likelihoods:
+        for hl in item.hypothesis_likelihoods:
+            if hl.hypothesis_id not in s:
+                s.add(hl.hypothesis_id)
+                seen.append(hl.hypothesis_id)
+    return seen
 
 
-def _odds(p: float) -> float:
-    p = _clamp(p)
-    return p / (1.0 - p)
+def item_lrs(
+    item: EvidenceLikelihood, hypothesis_ids: list[str], cap: float = LR_CAP
+) -> dict[str, float]:
+    """Per-hypothesis effective LR for one evidence item, derived from its vector.
+
+    Each hypothesis's LR is its relative likelihood over the vector's geometric
+    mean (so the LRs are centered, geomean 1). The per-item **pairwise** spread is
+    capped: each centered log-LR is clamped to ±0.5·log(cap), so no single
+    evidence item can move any pair of hypotheses by more than ``cap``:1. (The
+    caller passes a tighter cap for interpretive evidence.) Then a soft relevance
+    discount is applied on the log scale; an item below the relevance gate, or a
+    hypothesis absent from the vector, contributes LR 1.0.
+    """
+    half_log_cap = 0.5 * math.log(cap)
+    by_id = {
+        hl.hypothesis_id: max(hl.relative_likelihood, 1e-9)
+        for hl in item.hypothesis_likelihoods
+    }
+    present = [by_id[h] for h in hypothesis_ids if h in by_id]
+    if not present:
+        return {h: 1.0 for h in hypothesis_ids}
+    log_geo = sum(math.log(v) for v in present) / len(present)
+    rel = item.relevance
+    out: dict[str, float] = {}
+    for h in hypothesis_ids:
+        v = by_id.get(h)
+        if v is None:
+            out[h] = 1.0
+            continue
+        log_lr = math.log(v) - log_geo
+        log_lr = max(-half_log_cap, min(half_log_cap, log_lr))  # cap pairwise spread
+        if rel < RELEVANCE_GATE:
+            log_lr = 0.0
+        else:
+            log_lr *= rel  # soft relevance discount on the log scale
+        out[h] = math.exp(log_lr)
+    return out
 
 
-def _prob(odds: float) -> float:
-    return _clamp(odds / (1.0 + odds))
+def lr_matrix(
+    testing: TestingResult,
+    hypothesis_ids: list[str],
+    caps: dict[str, float] | None = None,
+) -> list[tuple[str, dict[str, float]]]:
+    """Effective LRs for every (evidence item, hypothesis), in evidence order.
+
+    ``caps`` optionally maps an evidence_id to a tighter pairwise cap (e.g.
+    interpretive evidence is capped at INTERPRETIVE_LR_CAP); default is LR_CAP.
+    """
+    caps = caps or {}
+    return [
+        (item.evidence_id, item_lrs(item, hypothesis_ids, caps.get(item.evidence_id, LR_CAP)))
+        for item in testing.evidence_likelihoods
+    ]
 
 
-def compute_effective_lr(ev_eval) -> float:
-    """Compute the effective LR for an evidence evaluation (same logic as main update)."""
-    p_e_h = max(ev_eval.p_e_given_h, 0.001)
-    p_e_nh = max(ev_eval.p_e_given_not_h, 0.001)
-    raw_lr = p_e_h / p_e_nh
-    capped_lr = max(LR_FLOOR, min(LR_CAP, raw_lr))
-    tr = ev_eval.relevance
-    if tr < 0.4:
-        return 1.0
-    return math.exp(tr * math.log(capped_lr)) if capped_lr > 0 else capped_lr
+def _pool_clusters(
+    matrix: list[tuple[str, dict[str, float]]],
+    clusters: list,
+    hypothesis_ids: list[str],
+) -> list[tuple[str, dict[str, float]]]:
+    """Partially pool each dependence cluster into one effective observation.
+
+    Conditionally-dependent evidence (same source/event/mechanism) carries
+    overlapping information; treating its members as independent double-counts. Each
+    cluster contributes an **effective count** of observations via the standard
+    design-effect formula:
+
+        k_eff = 1 + (k - 1) * (1 - dependence_strength)
+
+    (dependence_strength=1 ⇒ k_eff=1, full collapse; =0 ⇒ k_eff=k, independence.)
+    The cluster emits one row whose LR is the member geometric-mean raised to k_eff,
+    so it contributes ``k_eff`` effective observations to the joint log-update.
+    Items not in any cluster are unchanged; a cluster takes its first member's slot.
+
+    Limitation: dependence_strength is a single scalar per cluster (same across
+    hypotheses). Per-hypothesis redundancy (a cluster redundant under one hypothesis
+    but informative under another) is a deferred refinement.
+    """
+    if not clusters:
+        return matrix
+    row_by_id = dict(matrix)
+    member_to_cluster: dict[str, int] = {}
+    for ci, c in enumerate(clusters):
+        for eid in c.evidence_ids:
+            member_to_cluster.setdefault(eid, ci)
+
+    out: list[tuple[str, dict[str, float]]] = []
+    emitted: set[int] = set()
+    for eid, lrs in matrix:
+        cidx = member_to_cluster.get(eid)
+        if cidx is None:
+            out.append((eid, lrs))
+            continue
+        if cidx in emitted:
+            continue  # cluster already represented at its first member's position
+        emitted.add(cidx)
+        cluster = clusters[cidx]
+        members = [m for m in cluster.evidence_ids if m in row_by_id]
+        k = len(members)
+        rho = getattr(cluster, "dependence_strength", 1.0)
+        k_eff = 1.0 + (k - 1) * (1.0 - rho)
+        combined = {
+            h: math.exp(
+                k_eff * (sum(math.log(max(row_by_id[m][h], 1e-300)) for m in members) / k)
+            )
+            for h in hypothesis_ids
+        }
+        out.append((members[0], combined))  # representative id = first member
+    return out
 
 
 def _compute_robustness(updates: list[EvidenceUpdate]) -> str:
-    """Determine if posterior is 'robust' or 'fragile' from LR distribution.
+    """Classify a posterior as 'robust', 'fragile', or 'moderate' from its LR spread.
 
-    Robust: posterior driven by a few decisive LRs (|log(LR)| > 1.6, i.e. LR > 5 or < 0.2).
-    Fragile: posterior driven by accumulation of many weak LRs (|log(LR)| < 0.7).
+    Robust: driven by a few decisive LRs (|log(LR)| > 1.6).
+    Fragile: driven by many *informative-but-weak* LRs (0 < |log(LR)| < 0.7).
+    Uninformative (LR≈1) items are excluded from the weak count.
     """
     if not updates:
         return "unknown"
@@ -66,19 +193,14 @@ def _compute_robustness(updates: list[EvidenceUpdate]) -> str:
         return "unknown"
 
     n_decisive = sum(1 for ll in log_lrs if ll > DECISIVE_LR_THRESHOLD)
-    # "Weak" means weakly *informative*, not uninformative: items with LR≈1.0
-    # (e.g. relevance-gated evidence) carry log≈0 and must be excluded, else they
-    # inflate the weak count and spuriously push the classification to "fragile".
     n_weak = sum(1 for ll in log_lrs if 0.01 < ll < WEAK_LR_THRESHOLD)
-    n_informative = sum(1 for ll in log_lrs if ll > 0.01)  # anything not exactly 1.0
+    n_informative = sum(1 for ll in log_lrs if ll > 0.01)
 
     if n_informative == 0:
         return "unknown"
 
-    # Total log-odds movement from decisive items vs weak items
     decisive_impact = sum(ll for ll in log_lrs if ll > DECISIVE_LR_THRESHOLD)
     total_impact = sum(log_lrs)
-
     if total_impact < 0.01:
         return "unknown"
 
@@ -93,7 +215,7 @@ def _compute_robustness(updates: list[EvidenceUpdate]) -> str:
 
 
 def _top_drivers(updates: list[EvidenceUpdate], n: int = 3) -> list[str]:
-    """Return evidence IDs of the N most influential LR updates."""
+    """Evidence IDs of the N most influential LR updates."""
     scored = [
         (abs(math.log(u.likelihood_ratio)) if u.likelihood_ratio > 0 else 0, u.evidence_id)
         for u in updates
@@ -102,134 +224,228 @@ def _top_drivers(updates: list[EvidenceUpdate], n: int = 3) -> list[str]:
     return [eid for _, eid in scored[:n]]
 
 
-def _posterior_from_lrs(prior: float, lrs: list[float]) -> float:
-    """Compute posterior from a list of LRs (used for sensitivity)."""
-    current = prior
-    for lr in lrs:
-        current = _prob(_odds(current) * lr)
-    return current
+def _joint_posteriors(
+    per_hyp_lrs: dict[str, list[float]],
+    hypothesis_ids: list[str],
+    prior_by_id: dict[str, float],
+) -> dict[str, float]:
+    """Coherent joint posterior via log-space softmax (order-invariant).
 
-
-def run_bayesian_update(testing: TestingResult) -> BayesianResult:
-    """Compute posterior probabilities via sequential Bayes updates.
-
-    - Uniform priors (1/n).
-    - For each hypothesis, apply every evidence evaluation as a likelihood ratio update.
-    - Normalize across hypotheses at the end.
-    - Compute mechanical robustness and sensitivity analysis.
+    log w_i = log(prior_i) + Σ_m log(LR_{m,i}); posterior_i = softmax(log w)_i.
+    No per-step clamping, so the result depends only on the *set* of evidence, not
+    its order — this is the actual multinomial update over the hypothesis set.
     """
-    n = len(testing.hypothesis_tests)
+    log_w = {
+        h: math.log(max(prior_by_id[h], 1e-300))
+        + sum(math.log(max(lr, 1e-300)) for lr in per_hyp_lrs[h])
+        for h in hypothesis_ids
+    }
+    m = max(log_w.values())
+    exps = {h: math.exp(log_w[h] - m) for h in hypothesis_ids}
+    z = sum(exps.values())
+    return {h: exps[h] / z for h in hypothesis_ids}
+
+
+def run_bayesian_update(
+    testing: TestingResult,
+    hypothesis_ids: list[str] | None = None,
+    priors: dict[str, float] | None = None,
+    include_residual: bool = False,
+    caps: dict[str, float] | None = None,
+) -> BayesianResult:
+    """Compute posteriors via a coherent joint multinomial update.
+
+    Args:
+        testing: per-evidence likelihood vectors.
+        hypothesis_ids: the canonical hypothesis universe (so hypotheses with no
+            discriminating evidence still receive a posterior = their prior).
+            Falls back to the union found in the vectors.
+        priors: optional researcher prior per the *listed* hypotheses (need not be
+            normalized); defaults to uniform.
+        include_residual: if True, add an explicit residual hypothesis
+            (``RESIDUAL_ID``) to make the partition exhaustive. It carries reserve
+            prior mass and a flat (uninformative) likelihood — it competes on prior
+            alone, so a leading listed hypothesis must beat "an unspecified
+            alternative". The system is never forced to crown a listed story.
+    """
+    if hypothesis_ids is None:
+        hypothesis_ids = hypothesis_ids_from_testing(testing)
+    listed_ids = list(hypothesis_ids)
+    n = len(listed_ids)
     if n == 0:
         return BayesianResult(posteriors=[], ranking=[])
 
-    uniform_prior = 1.0 / n
-    posteriors: list[HypothesisPosterior] = []
+    if priors:
+        # Fail loud: priors must cover exactly the LISTED hypotheses with positive,
+        # finite weights — no silent zero-filling of omitted/unknown hypotheses.
+        known = set(listed_ids)
+        unknown = set(priors) - known
+        missing = known - set(priors)
+        if unknown:
+            raise ValueError(f"priors reference unknown hypotheses: {sorted(unknown)}")
+        if missing:
+            raise ValueError(f"priors missing weights for hypotheses: {sorted(missing)}")
+        for h, w in priors.items():
+            if not math.isfinite(w) or w <= 0:
+                raise ValueError(f"prior for '{h}' must be a positive finite weight, got {w}")
+        weights = {h: float(priors[h]) for h in listed_ids}
+    else:
+        weights = {h: 1.0 for h in listed_ids}
 
-    for ht in testing.hypothesis_tests:
-        current_prob = uniform_prior
-        updates: list[EvidenceUpdate] = []
+    hypothesis_ids = listed_ids
+    if include_residual:
+        # Reserve a "typical hypothesis" worth of prior mass for the residual.
+        weights[RESIDUAL_ID] = sum(weights.values()) / n
+        hypothesis_ids = listed_ids + [RESIDUAL_ID]
 
-        for ev_eval in ht.evidence_evaluations:
-            lr = compute_effective_lr(ev_eval)
+    total_prior = sum(weights.values())
+    prior_by_id = {h: weights[h] / total_prior for h in hypothesis_ids}
 
-            prior_for_update = current_prob
-            current_odds = _odds(current_prob) * lr
-            current_prob = _prob(current_odds)
+    # Partially pool dependence clusters so correlated evidence isn't double-counted.
+    matrix = _pool_clusters(
+        lr_matrix(testing, hypothesis_ids, caps), testing.dependence_clusters, hypothesis_ids
+    )
 
-            updates.append(EvidenceUpdate(
-                evidence_id=ev_eval.evidence_id,
-                prediction_id=ev_eval.prediction_id,
-                likelihood_ratio=round(lr, 4),
-                prior=round(prior_for_update, 6),
-                posterior=round(current_prob, 6),
+    # Joint update: accumulate log weights and softmax-normalize after every item.
+    # The trail records the *joint* (normalized) posterior of each hypothesis after
+    # each evidence item, so it is order-invariant and the columns sum to 1.
+    log_w = {h: math.log(max(prior_by_id[h], 1e-300)) for h in hypothesis_ids}
+
+    def _softmax(weights: dict[str, float]) -> dict[str, float]:
+        m = max(weights.values())
+        exps = {h: math.exp(weights[h] - m) for h in hypothesis_ids}
+        z = sum(exps.values())
+        return {h: exps[h] / z for h in hypothesis_ids}
+
+    prev_post = _softmax(log_w)  # = normalized prior
+    trails: dict[str, list[EvidenceUpdate]] = {h: [] for h in hypothesis_ids}
+    for evidence_id, lrs in matrix:
+        for h in hypothesis_ids:
+            log_w[h] += math.log(max(lrs[h], 1e-300))
+        cur_post = _softmax(log_w)
+        for h in hypothesis_ids:
+            trails[h].append(EvidenceUpdate(
+                evidence_id=evidence_id,
+                prediction_id=None,
+                likelihood_ratio=round(lrs[h], 4),
+                prior=round(prev_post[h], 6),
+                posterior=round(cur_post[h], 6),
             ))
+        prev_post = cur_post
 
-        posteriors.append(HypothesisPosterior(
-            hypothesis_id=ht.hypothesis_id,
-            prior=round(uniform_prior, 6),
-            updates=updates,
-            final_posterior=current_prob,
-            robustness=_compute_robustness(updates),
-            top_drivers=_top_drivers(updates),
-        ))
+    final_post = _softmax(log_w)
+    posteriors = [
+        HypothesisPosterior(
+            hypothesis_id=h,
+            prior=round(prior_by_id[h], 6),
+            updates=trails[h],
+            final_posterior=round(final_post[h], 6),
+            robustness=_compute_robustness(trails[h]),
+            top_drivers=_top_drivers(trails[h]),
+        )
+        for h in hypothesis_ids
+    ]
 
-    # Normalize so posteriors sum to 1
-    total = sum(p.final_posterior for p in posteriors)
-    if total > 0:
-        for p in posteriors:
-            p.final_posterior = round(_clamp(p.final_posterior / total), 6)
-
-    # Rank by posterior (highest first)
     ranking = sorted(posteriors, key=lambda p: p.final_posterior, reverse=True)
     ranking_ids = [p.hypothesis_id for p in ranking]
 
-    # Sensitivity analysis: perturb top drivers ±50% on log-LR scale
-    sensitivity = _run_sensitivity(testing, posteriors, uniform_prior)
+    sensitivity = _run_sensitivity(matrix, hypothesis_ids, posteriors, prior_by_id)
+    prior_sens = _prior_sensitivity(matrix, hypothesis_ids, prior_by_id, ranking_ids[0]) if ranking_ids else None
 
-    return BayesianResult(posteriors=posteriors, ranking=ranking_ids, sensitivity=sensitivity)
+    return BayesianResult(
+        posteriors=posteriors,
+        ranking=ranking_ids,
+        sensitivity=sensitivity,
+        prior_sensitivity=prior_sens,
+    )
+
+
+def _normalized_posteriors(
+    matrix: list[tuple[str, dict[str, float]]],
+    hypothesis_ids: list[str],
+    prior_by_id: dict[str, float],
+) -> dict[str, float]:
+    """Final joint posteriors for a given prior (no update trail)."""
+    per_hyp = {h: [lrs[h] for _, lrs in matrix] for h in hypothesis_ids}
+    return _joint_posteriors(per_hyp, hypothesis_ids, prior_by_id)
+
+
+def _prior_sensitivity(
+    matrix: list[tuple[str, dict[str, float]]],
+    hypothesis_ids: list[str],
+    prior_by_id: dict[str, float],
+    baseline_top: str,
+    factor: float = 2.0,
+) -> PriorSensitivity:
+    """Is the top-ranked hypothesis robust to up/down-weighting each prior by `factor`?"""
+    stable = True
+    for h in hypothesis_ids:
+        for f in (factor, 1.0 / factor):
+            pert = dict(prior_by_id)
+            pert[h] = pert[h] * f
+            tot = sum(pert.values())
+            if tot <= 0:
+                continue
+            pert = {k: v / tot for k, v in pert.items()}
+            post = _normalized_posteriors(matrix, hypothesis_ids, pert)
+            if max(post, key=lambda k: post[k]) != baseline_top:
+                stable = False
+    return PriorSensitivity(
+        top_hypothesis_id=baseline_top,
+        stable_under_prior_perturbation=stable,
+        perturbation_factor=factor,
+    )
 
 
 def _run_sensitivity(
-    testing: TestingResult,
+    matrix: list[tuple[str, dict[str, float]]],
+    hypothesis_ids: list[str],
     posteriors: list[HypothesisPosterior],
-    uniform_prior: float,
+    prior_by_id: dict[str, float],
 ) -> list[SensitivityEntry]:
-    """Perturb the most influential LRs per hypothesis and measure posterior stability.
-
-    For each hypothesis, find its top-N most influential evidence items (by |log(LR)|),
-    then perturb those ±50% on the log-LR scale. Report how the normalized posterior
-    changes and whether the ranking is affected.
-    """
-    n_hyp = len(testing.hypothesis_tests)
+    """Perturb each hypothesis's most influential LRs ±50% on log-scale and measure
+    posterior stability and rank stability under perturbation."""
+    n_hyp = len(hypothesis_ids)
     if n_hyp == 0:
         return []
 
-    # Precompute all effective LRs: lrs[h_idx][e_idx]
-    all_lrs: list[list[float]] = []
-    for ht in testing.hypothesis_tests:
-        all_lrs.append([compute_effective_lr(ev) for ev in ht.evidence_evaluations])
+    # all_lrs[h_idx] = list of this hypothesis's LRs across evidence items
+    all_lrs: dict[str, list[float]] = {h: [lrs[h] for _, lrs in matrix] for h in hypothesis_ids}
 
-    # For each hypothesis, find its top drivers (per-hypothesis, not global)
-    per_hyp_top: list[set[int]] = []
-    for h_idx, lrs in enumerate(all_lrs):
-        scored = [(abs(math.log(lr)) if lr > 0 else 0, e_idx) for e_idx, lr in enumerate(lrs)]
+    # per-hypothesis top driver evidence indices (by |log LR|)
+    per_hyp_top: dict[str, set[int]] = {}
+    for h in hypothesis_ids:
+        scored = [
+            (abs(math.log(lr)) if lr > 0 else 0.0, e_idx)
+            for e_idx, lr in enumerate(all_lrs[h])
+        ]
         scored.sort(reverse=True)
-        top_indices = {e_idx for _, e_idx in scored[:TOP_DRIVERS_COUNT] if _ > 0.01}
-        per_hyp_top.append(top_indices)
+        per_hyp_top[h] = {e_idx for mag, e_idx in scored[:TOP_DRIVERS_COUNT] if mag > 0.01}
 
     baseline_ranking = [p.hypothesis_id for p in sorted(
         posteriors, key=lambda p: p.final_posterior, reverse=True
     )]
 
     entries: list[SensitivityEntry] = []
-    for target_idx, target_p in enumerate(posteriors):
-        # Collect which evidence indices to perturb: this hypothesis's top drivers
-        # PLUS top drivers of immediate rivals (adjacent in ranking)
-        perturb_set: set[tuple[int, int]] = set()
-        for e_idx in per_hyp_top[target_idx]:
-            perturb_set.add((target_idx, e_idx))
+    for target in posteriors:
+        target_id = target.hypothesis_id
+        # perturb target's own top drivers plus every rival's top drivers
+        perturb: set[tuple[str, int]] = {(target_id, e) for e in per_hyp_top[target_id]}
+        for h in hypothesis_ids:
+            if h != target_id:
+                for e in per_hyp_top[h]:
+                    perturb.add((h, e))
 
-        # Also perturb rivals' top drivers that affect target
-        for h_idx in range(n_hyp):
-            if h_idx != target_idx:
-                for e_idx in per_hyp_top[h_idx]:
-                    perturb_set.add((h_idx, e_idx))
-
-        # Compute best/worst posteriors for ALL hypotheses under perturbation
-        best_raw: dict[str, float] = {}
-        worst_raw: dict[str, float] = {}
-
-        for h_idx, ht in enumerate(testing.hypothesis_tests):
+        best_raw: dict[str, list[float]] = {}
+        worst_raw: dict[str, list[float]] = {}
+        for h in hypothesis_ids:
             best_lrs: list[float] = []
             worst_lrs: list[float] = []
-
-            for e_idx, lr in enumerate(all_lrs[h_idx]):
+            for e_idx, lr in enumerate(all_lrs[h]):
                 log_lr = math.log(lr) if lr > 0 else 0.0
-
-                if (h_idx, e_idx) in perturb_set and abs(log_lr) > 0.01:
-                    # "Favorable" = this LR direction helps the target hypothesis
-                    favorable = (h_idx == target_idx and log_lr >= 0) or (
-                        h_idx != target_idx and log_lr < 0
+                if (h, e_idx) in perturb and abs(log_lr) > 0.01:
+                    favorable = (h == target_id and log_lr >= 0) or (
+                        h != target_id and log_lr < 0
                     )
                     if favorable:
                         best_lrs.append(math.exp(log_lr * (1 + PERTURB_FACTOR)))
@@ -240,31 +456,25 @@ def _run_sensitivity(
                 else:
                     best_lrs.append(lr)
                     worst_lrs.append(lr)
+            best_raw[h] = best_lrs
+            worst_raw[h] = worst_lrs
 
-            h_id = ht.hypothesis_id
-            best_raw[h_id] = _posterior_from_lrs(uniform_prior, best_lrs)
-            worst_raw[h_id] = _posterior_from_lrs(uniform_prior, worst_lrs)
+        best_norm = _joint_posteriors(best_raw, hypothesis_ids, prior_by_id)
+        worst_norm = _joint_posteriors(worst_raw, hypothesis_ids, prior_by_id)
 
-        # Normalize
-        best_total = sum(best_raw.values())
-        worst_total = sum(worst_raw.values())
-        best_norm = {k: _clamp(v / best_total) for k, v in best_raw.items()} if best_total > 0 else best_raw
-        worst_norm = {k: _clamp(v / worst_total) for k, v in worst_raw.items()} if worst_total > 0 else worst_raw
-
-        target_id = target_p.hypothesis_id
         best_rank = sorted(best_norm, key=lambda k: best_norm[k], reverse=True)
         worst_rank = sorted(worst_norm, key=lambda k: worst_norm[k], reverse=True)
-
         baseline_pos = baseline_ranking.index(target_id)
-        best_pos = best_rank.index(target_id)
-        worst_pos = worst_rank.index(target_id)
 
         entries.append(SensitivityEntry(
             hypothesis_id=target_id,
-            baseline_posterior=target_p.final_posterior,
-            posterior_low=round(worst_norm.get(target_id, target_p.final_posterior), 6),
-            posterior_high=round(best_norm.get(target_id, target_p.final_posterior), 6),
-            rank_stable=(best_pos == baseline_pos and worst_pos == baseline_pos),
+            baseline_posterior=target.final_posterior,
+            posterior_low=round(worst_norm.get(target_id, target.final_posterior), 6),
+            posterior_high=round(best_norm.get(target_id, target.final_posterior), 6),
+            rank_stable=(
+                best_rank.index(target_id) == baseline_pos
+                and worst_rank.index(target_id) == baseline_pos
+            ),
         ))
 
     return entries

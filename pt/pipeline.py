@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
@@ -9,7 +10,7 @@ from typing import Callable
 from uuid import uuid4
 
 from pt.apply_refinement import apply_refinement
-from pt.bayesian import run_bayesian_update
+from pt.bayesian import INTERPRETIVE_LR_CAP, run_bayesian_update
 from pt.pass_absence import run_absence
 from pt.pass_extract import run_extract
 from pt.pass_hypothesize import run_hypothesize
@@ -22,6 +23,28 @@ from pt.schemas import (
     ProcessTracingResult,
     RefinementResult,
 )
+
+
+def _source_text_sha256(text: str) -> str:
+    """Hash the exact source text used for the analysis."""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _validate_from_result_source(text: str, from_result: ProcessTracingResult) -> str:
+    """Return current source hash or raise when cached analysis provenance differs."""
+    current_hash = _source_text_sha256(text)
+    cached_hash = from_result.source_text_sha256
+    if cached_hash is None:
+        raise ValueError(
+            "--from-result file has no source_text_sha256 provenance; regenerate "
+            "the result with the current code before refining from it"
+        )
+    if cached_hash != current_hash:
+        raise ValueError(
+            "--from-result source_text_sha256 does not match the input text "
+            f"(result={cached_hash}, input={current_hash})"
+        )
+    return current_hash
 
 
 def _default_review(hypothesis_space: HypothesisSpace, output_dir: str | None) -> HypothesisSpace:
@@ -105,6 +128,7 @@ def _run_passes_3_plus(
     verbose: bool = True,
     pass_label: str = "",
     trace_id: str | None = None,
+    priors: dict[str, float] | None = None,
 ) -> tuple:
     """Run passes 3, 3b, Bayesian, and 4. Returns (testing, absence, bayesian, synthesis)."""
     prefix = f"{pass_label} " if pass_label else ""
@@ -113,8 +137,8 @@ def _run_passes_3_plus(
         print(f"{prefix}Pass 3: Diagnostic testing ({len(hypothesis_space.hypotheses)} hypotheses)...")
     testing = run_test(extraction, hypothesis_space, model=model, trace_id=trace_id)
     if verbose:
-        total_evals = sum(len(ht.evidence_evaluations) for ht in testing.hypothesis_tests)
-        print(f"  {total_evals} evidence evaluations across all hypotheses")
+        print(f"  {len(testing.evidence_likelihoods)} evidence likelihood vectors "
+              f"across {len(hypothesis_space.hypotheses)} hypotheses")
 
     if verbose:
         print(f"{prefix}Pass 3b: Evaluating absence of evidence...")
@@ -126,13 +150,23 @@ def _run_passes_3_plus(
 
     if verbose:
         print(f"{prefix}Bayesian updating...")
-    bayesian = run_bayesian_update(testing)
+    # Interpretive (scholarly-claim) evidence gets a tighter pairwise cap so it
+    # can't move odds as hard as direct empirical evidence (prompt Rule F, enforced).
+    interpretive_caps = {
+        ev.id: INTERPRETIVE_LR_CAP
+        for ev in extraction.evidence
+        if ev.evidence_type == "interpretive"
+    }
+    bayesian = run_bayesian_update(
+        testing, [h.id for h in hypothesis_space.hypotheses], priors=priors,
+        include_residual=True, caps=interpretive_caps,
+    )
     if verbose:
         top = bayesian.ranking[0] if bayesian.ranking else "none"
         top_post = next(
             (p.final_posterior for p in bayesian.posteriors if p.hypothesis_id == top), 0
         )
-        print(f"  Top hypothesis: {top} (posterior: {top_post:.3f})")
+        print(f"  Top hypothesis: {top} (support: {top_post:.3f})")
 
     if verbose:
         print(f"{prefix}Pass 4: Synthesizing analysis...")
@@ -152,9 +186,11 @@ def run_pipeline(
     review_fn: Callable[[HypothesisSpace, str | None], HypothesisSpace] | None = None,
     output_dir: str | None = None,
     theories: str | None = None,
+    research_question: str | None = None,
     refine: bool = False,
     from_result: ProcessTracingResult | None = None,
     trace_id: str | None = None,
+    priors: dict[str, float] | None = None,
 ) -> ProcessTracingResult:
     """Run the full process tracing pipeline.
 
@@ -166,12 +202,15 @@ def run_pipeline(
         review_fn: Custom review function. Defaults to interactive CLI review.
         output_dir: Directory for writing review files.
         theories: Optional plain-text theoretical frameworks for hypothesis generation.
+        research_question: Optional researcher-pinned research question. Pins the outcome to
+            explain (reproducible across runs); when None the LLM selects it.
         refine: If True, run analytical refinement after initial pipeline, then re-run passes 3+.
         from_result: Load extraction + hypothesis_space from existing result, skip passes 1-2. Implies refine.
     """
     t0 = time.time()
     if trace_id is None:
         trace_id = uuid4().hex[:8]
+    source_text_sha256 = _source_text_sha256(text)
 
     # Input validation — catch garbage/trivial input before burning 9+ LLM calls
     if from_result is None:
@@ -185,6 +224,7 @@ def run_pipeline(
 
     if from_result is not None:
         refine = True
+        source_text_sha256 = _validate_from_result_source(text, from_result)
         extraction = from_result.extraction
         hypothesis_space = from_result.hypothesis_space
         if verbose:
@@ -201,7 +241,10 @@ def run_pipeline(
         if verbose:
             extra = " (with user theories)" if theories else ""
             print(f"Pass 2/4: Building hypothesis space{extra}...")
-        hypothesis_space = run_hypothesize(extraction, model=model, theories=theories, trace_id=trace_id)
+        hypothesis_space = run_hypothesize(
+            extraction, model=model, theories=theories,
+            research_question=research_question, trace_id=trace_id,
+        )
         if verbose:
             print(f"  {len(hypothesis_space.hypotheses)} hypotheses "
                   f"(text + rivals), research question: {hypothesis_space.research_question[:80]}...")
@@ -214,6 +257,7 @@ def run_pipeline(
     # Run passes 3-4 (initial)
     testing, absence, bayesian, synthesis = _run_passes_3_plus(
         extraction, hypothesis_space, text, model=model, verbose=verbose, trace_id=trace_id,
+        priors=priors,
     )
 
     refinement_result = None
@@ -256,7 +300,7 @@ def run_pipeline(
             print("\nRe-running passes 3-4 with refined data...")
         testing, absence, bayesian, synthesis = _run_passes_3_plus(
             extraction, hypothesis_space, text, model=model, verbose=verbose,
-            pass_label="[Refined]", trace_id=trace_id,
+            pass_label="[Refined]", trace_id=trace_id, priors=priors,
         )
 
     elapsed = time.time() - t0
@@ -264,6 +308,7 @@ def run_pipeline(
         print(f"\nPipeline complete in {elapsed:.1f}s")
 
     return ProcessTracingResult(
+        source_text_sha256=source_text_sha256,
         extraction=extraction,
         hypothesis_space=hypothesis_space,
         testing=testing,

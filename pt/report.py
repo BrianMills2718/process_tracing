@@ -2,16 +2,40 @@
 
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import math
+import re
 
-from pt.bayesian import compute_effective_lr
-from pt.schemas import PredictionClassification, ProcessTracingResult
+from pt.bayesian import INTERPRETIVE_LR_CAP, RESIDUAL_ID, lr_matrix
+from pt.schemas import Hypothesis, PredictionClassification, ProcessTracingResult
+
+
+def _interpretive_caps(result: ProcessTracingResult) -> dict[str, float]:
+    """Per-evidence interpretive caps, matching what the Bayesian update applied,
+    so the report's displayed LRs agree with the model."""
+    return {
+        ev.id: INTERPRETIVE_LR_CAP
+        for ev in result.extraction.evidence
+        if ev.evidence_type == "interpretive"
+    }
 
 
 def _esc(s: str) -> str:
     return html.escape(str(s))
+
+
+def _json_for_script(value: object) -> str:
+    """Serialize JSON safely for embedding directly inside a script tag."""
+    return json.dumps(value).replace("</", "<\\/").replace("<!--", "<\\!--")
+
+
+def _dom_id(prefix: str, value: str) -> str:
+    """Build a stable, selector-safe HTML id from model-provided IDs."""
+    slug = re.sub(r"[^A-Za-z0-9_-]+", "-", value).strip("-_") or "id"
+    digest = hashlib.sha1(value.encode("utf-8")).hexdigest()[:8]
+    return f"{prefix}-{slug[:48]}-{digest}"
 
 
 def _status_color(status: str) -> str:
@@ -22,16 +46,6 @@ def _status_color(status: str) -> str:
         "eliminated": "#d9534f",
         "indeterminate": "#6c757d",
     }.get(status, "#6c757d")
-
-
-def _status_bg(status: str) -> str:
-    return {
-        "strongly_supported": "bg-success",
-        "supported": "bg-success bg-opacity-75",
-        "weakened": "bg-warning",
-        "eliminated": "bg-danger",
-        "indeterminate": "bg-secondary",
-    }.get(status, "bg-secondary")
 
 
 _DIAGNOSTIC_TOOLTIPS = {
@@ -65,12 +79,6 @@ def _diagnostic_badge(dtype: str) -> str:
         f'data-bs-toggle="tooltip" data-bs-placement="top" title="{tip}">'
         f'{label}</span>'
     )
-
-
-def _finding_badge(finding: str) -> str:
-    colors = {"pass": "#28a745", "fail": "#dc3545", "ambiguous": "#f0ad4e"}
-    color = colors.get(finding, "#6c757d")
-    return f'<span class="badge" style="background:{color}">{_esc(finding)}</span>'
 
 
 def _robustness_badge(robustness: str) -> str:
@@ -127,19 +135,15 @@ def _render_narrative(text: str, ev_map: dict) -> str:
         import re
         escaped = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', escaped)
         escaped = re.sub(r'\*(.+?)\*', r'<em>\1</em>', escaped)
-        # Replace evidence IDs with human-readable descriptions. Match on
-        # identifier boundaries (not substring) so 'h1' does not match inside
-        # 'h10' / 'evi_1' inside 'evi_12'.
+        # Replace evidence IDs with human-readable descriptions
         for eid, ev in ev_map.items():
             esc_eid = _esc(eid)
-            desc = _esc(ev.description[:60])
-            repl = (
-                f'<abbr class="text-primary" data-bs-toggle="tooltip" '
-                f'title="{_esc(ev.source_text[:200])}">{desc}</abbr>'
-            )
-            escaped = re.sub(
-                rf'(?<![\w]){re.escape(esc_eid)}(?![\w])', lambda _m: repl, escaped
-            )
+            if esc_eid in escaped:
+                desc = _esc(ev.description[:60])
+                escaped = escaped.replace(
+                    esc_eid,
+                    f'<abbr class="text-primary" data-bs-toggle="tooltip" title="{_esc(ev.source_text[:200])}">{desc}</abbr>'
+                )
         out.append(f"<p>{escaped}</p>")
     return "\n".join(out)
 
@@ -150,57 +154,48 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
     edges: list[dict[str, object]] = []
     ext = result.extraction
     posteriors = {p.hypothesis_id: p.final_posterior for p in result.bayesian.posteriors}
-    node_ids: set[str] = set()
-
-    def _add_node(node: dict[str, object]) -> None:
-        # vis.js DataSet silently drops/overwrites duplicate ids (and their
-        # edges), so a cross-type id collision would lose graph data with no
-        # signal. Fail loud instead — ids are LLM-assigned and not guaranteed
-        # unique across events/actors/evidence/mechanisms/hypotheses.
-        nid = str(node["id"])
-        if nid in node_ids:
-            raise ValueError(
-                f"Duplicate graph node id '{nid}' across extraction entities; "
-                f"node ids must be globally unique for the network report."
-            )
-        node_ids.add(nid)
-        nodes.append(node)
+    node_ids = set()
 
     for e in ext.events:
-        _add_node({
+        nodes.append({
             "id": e.id, "label": e.description[:40], "title": _esc(e.description),
             "color": "#66b3ff", "shape": "dot", "size": 15, "group": "event",
         })
+        node_ids.add(e.id)
 
     for a in ext.actors:
-        _add_node({
+        nodes.append({
             "id": a.id, "label": a.name[:30], "title": _esc(a.description),
             "color": "#ff99cc", "shape": "dot", "size": 12, "group": "actor",
             "hidden": True,
         })
+        node_ids.add(a.id)
 
     for ev in ext.evidence:
-        _add_node({
+        nodes.append({
             "id": ev.id, "label": ev.description[:40], "title": _esc(ev.source_text[:200]),
             "color": "#ff6666", "shape": "diamond", "size": 10, "group": "evidence",
         })
+        node_ids.add(ev.id)
 
     for m in ext.mechanisms:
-        _add_node({
+        nodes.append({
             "id": m.id, "label": m.description[:40], "title": _esc(m.description),
             "color": "#99ff99", "shape": "dot", "size": 12, "group": "mechanism",
             "hidden": True,
         })
+        node_ids.add(m.id)
 
     for h in result.hypothesis_space.hypotheses:
         post = posteriors.get(h.id, 0)
         size = 15 + post * 30
-        _add_node({
+        nodes.append({
             "id": h.id, "label": f"{h.id}: {h.description[:30]}",
-            "title": _esc(f"{h.description}\nPosterior: {post:.3f}"),
+            "title": _esc(f"{h.description}\nSupport: {post:.3f}"),
             "color": "#ffcc00", "shape": "star", "size": int(size),
             "group": "hypothesis",
         })
+        node_ids.add(h.id)
 
     # Causal edges from extraction
     for ce in ext.causal_edges:
@@ -211,19 +206,21 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
                 "color": {"color": "#999"}, "group": "causal",
             })
 
-    # Evidence-hypothesis edges from testing
-    for ht in result.testing.hypothesis_tests:
-        for ev_eval in ht.evidence_evaluations:
-            if ev_eval.evidence_id not in node_ids or ht.hypothesis_id not in node_ids:
+    # Evidence-hypothesis edges from the likelihood matrix (same caps as the update)
+    hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    for evidence_id, lrs in lr_matrix(result.testing, hyp_ids, _interpretive_caps(result)):
+        if evidence_id not in node_ids:
+            continue
+        for hyp_id, lr in lrs.items():
+            if hyp_id not in node_ids:
                 continue
-            lr = compute_effective_lr(ev_eval)
             if 0.67 <= lr <= 1.5:
                 continue  # Skip uninformative
             log_lr = abs(math.log(max(lr, 0.01)))
             width = max(0.5, min(4, log_lr))
             color = "#28a745" if lr > 1 else "#dc3545"
             edges.append({
-                "from": ev_eval.evidence_id, "to": ht.hypothesis_id,
+                "from": evidence_id, "to": hyp_id,
                 "arrows": "to", "width": round(width, 1),
                 "color": {"color": color, "opacity": 0.6},
                 "group": "evidence_link",
@@ -239,20 +236,27 @@ def generate_report(result: ProcessTracingResult) -> str:
     posteriors = {p.hypothesis_id: p for p in result.bayesian.posteriors}
     sensitivity = {s.hypothesis_id: s for s in result.bayesian.sensitivity}
     h_map = {h.id: h for h in result.hypothesis_space.hypotheses}
+    # The residual hypothesis is added only at the Bayesian stage; give the report a
+    # description so it renders in the posterior table / network.
+    if any(p.hypothesis_id == RESIDUAL_ID for p in result.bayesian.posteriors) and RESIDUAL_ID not in h_map:
+        h_map[RESIDUAL_ID] = Hypothesis(
+            id=RESIDUAL_ID,
+            description="None of the listed explanations (other cause, or a genuinely conjunctural combination)",
+            source="residual",
+            theoretical_basis="Exhaustiveness: reserve mass so the listed set need not contain the truth.",
+            causal_mechanism="(residual — no specific mechanism)",
+            observable_predictions=[],
+        )
     ev_map = {e.id: e for e in result.extraction.evidence}
 
     vis_nodes, vis_edges = _build_vis_data(result)
-    # Neutralize "</script>" (and "<!--") breakout when this JSON is embedded in
-    # a <script> block. "<\/" is valid JSON-in-JS and parses identically, but
-    # the HTML parser no longer sees a closing script tag in LLM-authored text.
-    nodes_json = json.dumps(vis_nodes).replace("</", "<\\/").replace("<!--", "<\\!--")
-    edges_json = json.dumps(vis_edges).replace("</", "<\\/").replace("<!--", "<\\!--")
+    nodes_json = _json_for_script(vis_nodes)
+    edges_json = _json_for_script(vis_edges)
 
-    # -- Build prediction lookup: hypothesis_id -> prediction_id -> PredictionClassification
+    # -- Build prediction lookup: (hypothesis_id, prediction_id) -> PredictionClassification
     pred_class_map: dict[tuple[str, str], PredictionClassification] = {}
-    for ht in result.testing.hypothesis_tests:
-        for pc in ht.prediction_classifications:
-            pred_class_map[(ht.hypothesis_id, pc.prediction_id)] = pc
+    for pc in result.testing.prediction_classifications:
+        pred_class_map[(pc.hypothesis_id, pc.prediction_id)] = pc
 
     # -- Build prediction descriptions: pred_id -> description
     pred_desc_map: dict[str, str] = {}
@@ -266,21 +270,62 @@ def generate_report(result: ProcessTracingResult) -> str:
     top_post = posteriors[top_id].final_posterior if top_id and top_id in posteriors else 0
     top_robust = posteriors[top_id].robustness if top_id and top_id in posteriors else "unknown"
 
+    # Slice 4: surface the support interval + rank/prior stability as the headline.
+    top_sens = sensitivity.get(top_id) if top_id else None
+    interval_badge = ""
+    if top_sens:
+        rank_txt = "rank-stable" if top_sens.rank_stable else "rank NOT stable"
+        interval_badge = (
+            f'<span class="badge bg-light text-dark border" data-bs-toggle="tooltip" '
+            f'title="Support range when the most influential likelihoods are perturbed ±50%, and whether the ranking holds.">'
+            f'range {top_sens.posterior_low:.3f}–{top_sens.posterior_high:.3f} · {rank_txt}</span>'
+        )
+    prior_badge = ""
+    ps = result.bayesian.prior_sensitivity
+    if ps:
+        ptxt = "robust to prior" if ps.stable_under_prior_perturbation else "prior-sensitive"
+        pcolor = "bg-success" if ps.stable_under_prior_perturbation else "bg-warning text-dark"
+        prior_badge = (
+            f'<span class="badge {pcolor}" data-bs-toggle="tooltip" '
+            f'title="Whether the top hypothesis stays on top when each prior is up/down-weighted {ps.perturbation_factor:g}×.">'
+            f'{ptxt}</span>'
+        )
+
+    # Honest overconfidence flag: a near-degenerate top support that is still "fragile"
+    # after dependence pooling means the items weren't grouped strongly enough to offset
+    # accumulation. Treat such a result as a ranking, not a calibrated number.
+    overconfidence_banner = ""
+    if top_post > 0.99 and top_robust == "fragile":
+        overconfidence_banner = (
+            '<div class="alert alert-warning mb-3"><strong>⚠ Likely overconfident.</strong> '
+            'The top support is near-degenerate and the posterior is <em>fragile</em> — driven by '
+            'accumulation of many weakly-discriminating (and possibly correlated) evidence items. '
+            'Dependence pooling is applied, but if it did not group these items strongly enough the '
+            'magnitude remains unreliable. Read this as a <strong>ranking</strong>, not a calibrated probability.</div>'
+        )
+
     exec_summary = f"""
     <div class="card mb-4 shadow-sm">
       <div class="card-header bg-primary text-white"><h4 class="mb-0">Executive Summary</h4></div>
       <div class="card-body">
+        {overconfidence_banner}
         <p><strong>Research Question:</strong> {_esc(result.hypothesis_space.research_question)}</p>
         <p><strong>Top Hypothesis:</strong> {_esc(top_h.description) if top_h else 'N/A'}
            <span class="badge bg-warning text-dark"
-             data-bs-toggle="tooltip" title="Posterior probability after Bayesian updating with all evidence">
-             Posterior: {top_post:.3f}</span>
+             data-bs-toggle="tooltip" title="Comparative support: normalized odds across the listed hypotheses after Bayesian updating. NOT an absolute probability that the hypothesis is true, nor a causal-effect estimate.">
+             Support: {top_post:.3f}</span>
+           {interval_badge}
            {_robustness_badge(top_robust)}
+           {prior_badge}
            {'<span class="badge bg-info" data-bs-toggle="tooltip" title="This analysis includes an analytical refinement pass (second reading)">Refined</span>' if result.is_refined else ''}</p>
         <p><strong>Hypotheses evaluated:</strong> {len(result.hypothesis_space.hypotheses)} &nbsp;|&nbsp;
            <strong>Evidence items:</strong> {len(result.extraction.evidence)} &nbsp;|&nbsp;
            <strong>Causal edges:</strong> {len(result.extraction.causal_edges)}</p>
         <p>{_esc(result.extraction.summary)}</p>
+        <p class="small text-muted mb-0"><em>How to read the numbers:</em> values are <strong>comparative support</strong> &mdash;
+           each hypothesis's share of the evidence-weighted odds <em>among the hypotheses listed here</em>. They are not
+           absolute probabilities of truth, not causal-effect sizes, and not counterfactual quantities; a hypothesis not
+           on the list cannot be supported. Read the ranking and the support range / robustness / stability flags, not the third decimal.</p>
       </div>
     </div>"""
 
@@ -360,6 +405,7 @@ def generate_report(result: ProcessTracingResult) -> str:
             source_badge_class = "bg-warning text-dark"
         elif "theory" in hyp.source.lower():
             source_badge_class = "bg-purple"
+        detail_id = _dom_id("detail", hid)
 
         h_rows.append(f"""
         <tr>
@@ -373,10 +419,10 @@ def generate_report(result: ProcessTracingResult) -> str:
           <td>{_robustness_badge(p.robustness)}</td>
           <td><span data-bs-toggle="tooltip" title="Posterior range under ±50% perturbation of top drivers">{sens_range}</span> {rank_badge}</td>
           <td>
-            <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#detail-{_esc(hid)}" role="button">Details</a>
+            <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#{detail_id}" role="button">Details</a>
           </td>
         </tr>
-        <tr class="collapse" id="detail-{_esc(hid)}">
+        <tr class="collapse" id="{detail_id}">
           <td colspan="10" class="bg-light">
             <div class="row p-2">
               <div class="col-md-4"><strong>Causal Mechanism:</strong><br>{mechanism_html}</div>
@@ -400,8 +446,8 @@ def generate_report(result: ProcessTracingResult) -> str:
             {_th("ID")}
             {_th("Hypothesis")}
             {_th("Source")}
-            {_th("Prior", "Starting probability before any evidence is considered")}
-            {_th("Posterior", "Final probability after Bayesian updating with all evidence")}
+            {_th("Prior", "Starting support before any evidence is considered (uniform across hypotheses by default)")}
+            {_th("Support", "Comparative support: normalized odds across the listed hypotheses after Bayesian updating — not an absolute probability of truth")}
             {_th("Status")}
             {_th("Robustness", "Whether the posterior is driven by few decisive tests (robust) or many weak ones (fragile)")}
             {_th("Sensitivity", "Range of posterior values under ±50% perturbation of the most influential evidence")}
@@ -449,7 +495,7 @@ def generate_report(result: ProcessTracingResult) -> str:
             <div><strong>{_esc(hid)}</strong>: {_esc(hyp.description[:80])}
               {_robustness_badge(p.robustness)}</div>
             <div class="text-end">
-              <span class="badge bg-primary">Posterior: {baseline:.3f}</span>
+              <span class="badge bg-primary">Support: {baseline:.3f}</span>
               {'<span class="badge bg-' + ('success' if s.rank_stable else 'warning') + '">Rank ' + ('stable' if s.rank_stable else 'unstable') + '</span>' if s else ''}
             </div>
           </div>
@@ -476,118 +522,86 @@ def generate_report(result: ProcessTracingResult) -> str:
     </div>"""
 
     # ===== Section 5: Diagnostic Test Matrix (Accordion by hypothesis) =====
+    # Built from the coherent likelihood vectors: per evidence item the relative
+    # likelihood under each hypothesis, and the derived per-hypothesis LR
+    # (relative_likelihood / geometric mean of the item's vector).
+    hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    matrix = dict(lr_matrix(result.testing, hyp_ids, _interpretive_caps(result)))  # evidence_id -> {hyp_id: lr}
+    # evidence_id -> {hyp_id: (relative_likelihood, diagnostic_type)}, plus item meta
+    vec_by_ev: dict[str, dict] = {}
+    for item in result.testing.evidence_likelihoods:
+        vec_by_ev[item.evidence_id] = {
+            "relevance": item.relevance,
+            "justification": item.justification,
+            "cells": {
+                hl.hypothesis_id: (hl.relative_likelihood, hl.diagnostic_type)
+                for hl in item.hypothesis_likelihoods
+            },
+        }
+
     test_accordion_items = []
     total_evals = 0
     informative_evals = 0
 
-    for ht in result.testing.hypothesis_tests:
-        hyp = h_map.get(ht.hypothesis_id)
-        h_label = f"{ht.hypothesis_id}: {hyp.description[:60]}" if hyp else ht.hypothesis_id
-
-        # Group evaluations by prediction_id
-        by_pred: dict[str | None, list] = {}
-        for ev_eval in ht.evidence_evaluations:
+    for h in result.hypothesis_space.hypotheses:
+        h_label = f"{h.id}: {h.description[:60]}"
+        matrix_rows: list[tuple[float, str]] = []
+        for evidence_id, lrs in matrix.items():
+            lr = lrs.get(h.id, 1.0)
             total_evals += 1
-            lr = compute_effective_lr(ev_eval)
             if 0.9 < lr < 1.1:
                 continue
             informative_evals += 1
-            pid = ev_eval.prediction_id
-            by_pred.setdefault(pid, []).append((ev_eval, lr))
+            matrix_rows.append((lr, evidence_id))
+        matrix_rows.sort(key=lambda x: abs(math.log(max(x[0], 0.01))), reverse=True)
 
-        # Sort each group by |log(LR)| descending
-        for pid in by_pred:
-            by_pred[pid].sort(key=lambda x: abs(math.log(max(x[1], 0.01))), reverse=True)
+        body = f"""
+            <table class="table table-sm table-bordered mb-0 sortable-table">
+              <thead><tr>
+                {_th("Evidence")}
+                {_th("Direction", "Whether this evidence favors (LR>1) or weighs against (LR<1) this hypothesis relative to the others")}
+                {_th("Rel. likelihood", "Relative likelihood of this evidence under this hypothesis on the item's shared scale (only ratios across hypotheses matter)")}
+                {_th("LR", "Derived likelihood ratio: relative likelihood / geometric mean across hypotheses, after relevance gating and capping. LR>1 favors this hypothesis")}
+                {_th("Diagnostic", "Van Evera character of this evidence for this hypothesis")}
+                {_th("Relevance", "How discriminating this evidence is (0-1). Below 0.4 = forced uninformative")}
+                {_th("Justification")}
+              </tr></thead>
+              <tbody>"""
+        for lr, evidence_id in matrix_rows:
+            ev = ev_map.get(evidence_id)
+            ev_label = ev.description[:80] if ev else evidence_id
+            meta = vec_by_ev.get(evidence_id, {})
+            rel_like, dtype = meta.get("cells", {}).get(h.id, (None, "straw_in_the_wind"))
+            relevance = meta.get("relevance", 1.0)
+            justification = meta.get("justification", "")
+            lr_color = "#28a745" if lr > 1.1 else "#dc3545"
+            direction = "favors" if lr > 1.1 else "against"
+            dir_color = "#28a745" if lr > 1.1 else "#dc3545"
+            rel_like_str = f"{rel_like:.2f}" if rel_like is not None else "—"
+            body += f"""
+                <tr>
+                  <td class="small" data-bs-toggle="tooltip" title="{_esc(ev.source_text[:200]) if ev else ''}">{_esc(ev_label)}</td>
+                  <td><span class="badge" style="background:{dir_color}">{direction}</span></td>
+                  <td>{rel_like_str}</td>
+                  <td><strong style="color:{lr_color}">{lr:.2f}</strong></td>
+                  <td>{_diagnostic_badge(dtype)}</td>
+                  <td>{relevance:.2f}</td>
+                  <td class="small">{_esc(justification)}</td>
+                </tr>"""
+        body += "</tbody></table>"
 
-        # Build inner HTML
-        inner_html = ""
-        # First: predictions with evaluations
-        for pid, evals in by_pred.items():
-            if pid is None:
-                continue
-            pred_class = pred_class_map.get((ht.hypothesis_id, pid))
-            dtype = pred_class.diagnostic_type if pred_class else "unknown"
-            pred_desc = pred_desc_map.get(pid, pid)
-            inner_html += f"""
-            <div class="mb-3">
-              <div class="fw-bold small text-muted mb-1">
-                {_diagnostic_badge(dtype)}
-                <span class="ms-1">{_esc(pred_desc[:120])}</span>
-              </div>
-              <table class="table table-sm table-bordered mb-0 sortable-table">
-                <thead><tr>
-                  {_th("Evidence")}
-                  {_th("Finding")}
-                  {_th("P(E|H)", "Probability of observing this evidence if the hypothesis is true")}
-                  {_th("P(E|~H)", "Probability of observing this evidence if the hypothesis is false")}
-                  {_th("LR", "Effective likelihood ratio after relevance gating and capping. LR>1 supports, LR<1 opposes the hypothesis")}
-                  {_th("Relevance", "How relevant this evidence is to the hypothesis (0-1). Below 0.4 = forced uninformative")}
-                  {_th("Justification")}
-                </tr></thead>
-                <tbody>"""
-            for ev_eval, lr in evals:
-                ev = ev_map.get(ev_eval.evidence_id)
-                ev_label = ev.description[:80] if ev else ev_eval.evidence_id
-                lr_color = "#28a745" if lr > 1.1 else "#dc3545"
-                inner_html += f"""
-                  <tr>
-                    <td class="small" data-bs-toggle="tooltip" title="{_esc(ev.source_text[:200]) if ev else ''}">{_esc(ev_label)}</td>
-                    <td>{_finding_badge(ev_eval.finding)}</td>
-                    <td>{ev_eval.p_e_given_h:.2f}</td>
-                    <td>{ev_eval.p_e_given_not_h:.2f}</td>
-                    <td><strong style="color:{lr_color}">{lr:.2f}</strong></td>
-                    <td>{ev_eval.relevance:.2f}</td>
-                    <td class="small">{_esc(ev_eval.justification)}</td>
-                  </tr>"""
-            inner_html += "</tbody></table></div>"
-
-        # Unlinked evidence (prediction_id is None)
-        if None in by_pred:
-            evals = by_pred[None]
-            inner_html += f"""
-            <div class="mb-3">
-              <div class="fw-bold small text-muted mb-1">Unlinked Evidence
-                <span class="badge bg-secondary" data-bs-toggle="tooltip" title="Evidence not mapped to a specific prediction. Diagnostic type determined by the overall relationship to the hypothesis.">No specific prediction</span>
-              </div>
-              <table class="table table-sm table-bordered mb-0 sortable-table">
-                <thead><tr>
-                  {_th("Evidence")}
-                  {_th("Finding")}
-                  {_th("P(E|H)", "Probability of observing this evidence if the hypothesis is true")}
-                  {_th("P(E|~H)", "Probability of observing this evidence if the hypothesis is false")}
-                  {_th("LR", "Effective likelihood ratio after relevance gating and capping. LR>1 supports, LR<1 opposes the hypothesis")}
-                  {_th("Relevance", "How relevant this evidence is to the hypothesis (0-1). Below 0.4 = forced uninformative")}
-                  {_th("Justification")}
-                </tr></thead>
-                <tbody>"""
-            for ev_eval, lr in evals:
-                ev = ev_map.get(ev_eval.evidence_id)
-                ev_label = ev.description[:80] if ev else ev_eval.evidence_id
-                lr_color = "#28a745" if lr > 1.1 else "#dc3545"
-                inner_html += f"""
-                  <tr>
-                    <td class="small" data-bs-toggle="tooltip" title="{_esc(ev.source_text[:200]) if ev else ''}">{_esc(ev_label)}</td>
-                    <td>{_finding_badge(ev_eval.finding)}</td>
-                    <td>{ev_eval.p_e_given_h:.2f}</td>
-                    <td>{ev_eval.p_e_given_not_h:.2f}</td>
-                    <td><strong style="color:{lr_color}">{lr:.2f}</strong></td>
-                    <td>{ev_eval.relevance:.2f}</td>
-                    <td class="small">{_esc(ev_eval.justification)}</td>
-                  </tr>"""
-            inner_html += "</tbody></table></div>"
-
-        hyp_eval_count = sum(len(v) for v in by_pred.values())
-        collapsed = "" if ht == result.testing.hypothesis_tests[0] else "collapsed"
-        show = "show" if ht == result.testing.hypothesis_tests[0] else ""
+        collapsed = "" if h == result.hypothesis_space.hypotheses[0] else "collapsed"
+        show = "show" if h == result.hypothesis_space.hypotheses[0] else ""
+        test_id = _dom_id("test", h.id)
         test_accordion_items.append(f"""
         <div class="accordion-item">
           <h2 class="accordion-header">
-            <button class="accordion-button {collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#test-{_esc(ht.hypothesis_id)}">
-              {_esc(h_label)} <span class="badge bg-info ms-2">{hyp_eval_count} informative</span>
+            <button class="accordion-button {collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#{test_id}">
+              {_esc(h_label)} <span class="badge bg-info ms-2">{len(matrix_rows)} informative</span>
             </button>
           </h2>
-          <div id="test-{_esc(ht.hypothesis_id)}" class="accordion-collapse collapse {show}" data-bs-parent="#testAccordion">
-            <div class="accordion-body">{inner_html}</div>
+          <div id="{test_id}" class="accordion-collapse collapse {show}" data-bs-parent="#testAccordion">
+            <div class="accordion-body">{body}</div>
           </div>
         </div>""")
 
@@ -597,7 +611,7 @@ def generate_report(result: ProcessTracingResult) -> str:
     test_matrix = f"""
     <div class="card mb-4 shadow-sm">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h4 class="mb-0" data-bs-toggle="tooltip" title="Each piece of evidence is evaluated against each hypothesis using Van Evera's diagnostic tests. The likelihood ratio (LR) measures how much the evidence shifts the probability.">Diagnostic Test Matrix</h4>
+        <h4 class="mb-0" data-bs-toggle="tooltip" title="Each evidence item gets a likelihood vector across all hypotheses; the per-hypothesis LR is derived from that vector (relative likelihood over the geometric mean), so the comparisons are coherent.">Diagnostic Test Matrix</h4>
         <button class="btn btn-sm btn-outline-primary section-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#testMatrixBody">Expand</button>
       </div>
       <div class="collapse" id="testMatrixBody">
@@ -652,6 +666,8 @@ def generate_report(result: ProcessTracingResult) -> str:
             </svg>"""
         else:
             sparkline_svg = ""
+        trail_graph_id = _dom_id("trailGraph", p_obj.hypothesis_id)
+        trail_table_id = _dom_id("trail", p_obj.hypothesis_id)
 
         # Build collapsible update trail table
         trail_rows = ""
@@ -683,15 +699,15 @@ def generate_report(result: ProcessTracingResult) -> str:
             <span style="position:absolute;right:8px;top:1px;font-size:0.8em;font-weight:bold">{p_obj.prior:.3f} → {p_obj.final_posterior:.3f}</span>
           </div>
           <div class="mt-1">
-            <a class="btn btn-sm btn-link p-0" data-bs-toggle="collapse" href="#trailGraph-{_esc(p_obj.hypothesis_id)}">Show update graph</a>
+            <a class="btn btn-sm btn-link p-0" data-bs-toggle="collapse" href="#{trail_graph_id}">Show update graph</a>
             <span class="text-muted mx-1">|</span>
-            <a class="btn btn-sm btn-link p-0" data-bs-toggle="collapse" href="#trail-{_esc(p_obj.hypothesis_id)}">Show update table</a>
+            <a class="btn btn-sm btn-link p-0" data-bs-toggle="collapse" href="#{trail_table_id}">Show update table</a>
           </div>
-          <div class="collapse" id="trailGraph-{_esc(p_obj.hypothesis_id)}">
+          <div class="collapse" id="{trail_graph_id}">
             {sparkline_svg}
             <div class="small text-muted mt-1">Each dot is an evidence update. <span style="color:#28a745">Green</span> = LR &gt; 1 (supports). <span style="color:#dc3545">Red</span> = LR &lt; 1 (opposes). Dashed line = prior. Hover dots for details.</div>
           </div>
-          <div class="collapse" id="trail-{_esc(p_obj.hypothesis_id)}">
+          <div class="collapse" id="{trail_table_id}">
             <table class="table table-sm mt-1 sortable-table" style="font-size:0.85em">
               <thead><tr>{_th("Evidence")}{_th("LR", "Likelihood Ratio after relevance gating and capping")}{_th("Cumulative Posterior", "Running posterior after this update")}</tr></thead>
               <tbody>{trail_rows}</tbody>
@@ -702,7 +718,7 @@ def generate_report(result: ProcessTracingResult) -> str:
     bayesian_section = f"""
     <div class="card mb-4 shadow-sm">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h4 class="mb-0" data-bs-toggle="tooltip" title="Starting from equal priors, each evidence item updates the posterior probability via its likelihood ratio. LR > 1 increases support, LR < 1 decreases it.">Bayesian Update Summary</h4>
+        <h4 class="mb-0" data-bs-toggle="tooltip" title="Starting from the prior, each evidence item updates the comparative support via its likelihood ratio. LR > 1 increases support, LR < 1 decreases it. The result is support relative to the listed hypotheses, not an absolute probability.">Bayesian Update Summary</h4>
         <button class="btn btn-sm btn-outline-primary section-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#bayesianBody">Expand</button>
       </div>
       <div class="collapse" id="bayesianBody">
@@ -1135,6 +1151,14 @@ document.querySelectorAll('.sortable-table').forEach(function(table) {{
 document.addEventListener('DOMContentLoaded', function() {{
   var nodesData = {nodes_json};
   var edgesData = {edges_json};
+  function escapeHtml(value) {{
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }}
   var nodes = new vis.DataSet(nodesData);
   var edges = new vis.DataSet(edgesData);
   var container = document.getElementById('network');
@@ -1159,18 +1183,11 @@ document.addEventListener('DOMContentLoaded', function() {{
     interaction: {{hover: true, tooltipDelay: 200, zoomView: true, dragView: true}}
   }});
 
-  function escapeHtml(s) {{
-    return String(s).replace(/[&<>"']/g, function(c) {{
-      return {{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c];
-    }});
-  }}
   network.on('click', function(params) {{
     var info = document.getElementById('network-info');
     if (params.nodes.length > 0) {{
       var node = nodes.get(params.nodes[0]);
-      // node.label is raw text (unescaped for canvas rendering); node.title is
-      // already HTML-escaped at build time. Escape label before innerHTML.
-      info.innerHTML = '<strong>' + escapeHtml(node.label) + '</strong><br>' + (node.title || '');
+      info.innerHTML = '<strong>' + escapeHtml(node.label) + '</strong><br>' + escapeHtml(node.title);
       info.className = 'alert alert-info mt-2 small';
     }} else if (params.edges.length > 0) {{
       var edge = edges.get(params.edges[0]);
