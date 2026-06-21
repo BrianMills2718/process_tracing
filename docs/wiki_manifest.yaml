@@ -5,6 +5,10 @@ publish:
     type: ProjectOverview
     title: Process Tracing Overview
     tags: [portfolio, analysis, process-tracing]
+  - path: docs/REVIEWER_WALKTHROUGH.md
+    type: PortfolioGuide
+    title: Process Tracing Reviewer Walkthrough
+    tags: [portfolio, process-tracing, analyst-methods]
   - path: docs/WHITEPAPER_optimal_automated_process_tracing.md
     type: Whitepaper
     tags: [analysis, process-tracing, methodology]
