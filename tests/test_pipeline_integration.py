@@ -12,7 +12,7 @@ import pytest
 
 from pt.bayesian import run_bayesian_update
 from pt.pipeline import _source_text_sha256, run_pipeline
-from pt.report import _build_vis_data, _dom_id, generate_report
+from pt.report import _build_vis_data, _diagnostic_strength_summary, _dom_id, generate_report
 from pt.schemas import (
     AbsenceEvaluation,
     AbsenceResult,
@@ -474,6 +474,42 @@ class TestReportConsistency:
         result = run_bayesian_update(testing, ["h1", "h2"])
         for p in result.posteriors:
             assert p.robustness in ("robust", "fragile", "moderate", "unknown")
+
+    def test_diagnostic_summary_uses_pairwise_spread_after_caps(self):
+        from scripts.audit_result_quality import _diagnostic_strength_stats
+
+        extraction = _make_extraction()
+        extraction.evidence = [
+            Evidence(
+                id="evi_decisive",
+                description="A direct discriminator",
+                source_text="A direct discriminator appeared.",
+                evidence_type="empirical",
+                approximate_date="1799",
+            )
+        ]
+        testing = TestingResult(
+            evidence_likelihoods=[
+                _ev_like(
+                    "evi_decisive",
+                    h1=16.0,
+                    h2=1.0,
+                    relevance=1.0,
+                    dtype="smoking_gun",
+                )
+            ]
+        )
+        result = ProcessTracingResult(
+            extraction=extraction,
+            hypothesis_space=_make_hypothesis_space(),
+            testing=testing,
+            absence=AbsenceResult(evaluations=[]),
+            bayesian=run_bayesian_update(testing, ["h1", "h2"]),
+            synthesis=_make_synthesis(),
+        )
+
+        assert _diagnostic_strength_summary(result)["decisive"] == 1
+        assert _diagnostic_strength_stats(result)["decisive_items"] == 1
 
     def test_script_terminator_in_graph_data_is_escaped(self):
         result = _make_process_result()

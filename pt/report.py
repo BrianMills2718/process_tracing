@@ -504,11 +504,19 @@ def _diagnostic_strength_summary(result: ProcessTracingResult) -> dict[str, int 
     for _, lrs in matrix:
         if not lrs:
             continue
-        strengths.append(max(abs(math.log(max(lr, 0.01))) for lr in lrs.values()))
+        values = [max(lr, 0.01) for lr in lrs.values()]
+        if len(values) < 2:
+            strengths.append(0.0)
+            continue
+        strengths.append(math.log(max(values) / min(values)))
+    decisive_threshold = math.log(5.0)
+    moderate_threshold = math.log(2.0)
     return {
-        "decisive": sum(1 for strength in strengths if strength > 1.6),
-        "moderate": sum(1 for strength in strengths if 0.7 < strength <= 1.6),
-        "weak": sum(1 for strength in strengths if 0.1 < strength <= 0.7),
+        "decisive": sum(1 for strength in strengths if strength >= decisive_threshold),
+        "moderate": sum(
+            1 for strength in strengths if moderate_threshold <= strength < decisive_threshold
+        ),
+        "weak": sum(1 for strength in strengths if 0.1 < strength < moderate_threshold),
         "near_neutral": sum(1 for strength in strengths if strength <= 0.1),
         "max_log_lr": round(max(strengths), 3) if strengths else 0.0,
     }
@@ -620,17 +628,35 @@ def _render_academic_review(
         </tr>"""
         for key, count in triage_counts.items()
     )
-    external_blockers = [
-        "single-source corpus",
-        "weak diagnostic tests",
-        "thin proximate evidence",
-        "broad hypothesis design",
-    ]
+    total_evidence = temporal["total"] or 1
+    proximate_share = temporal["proximate"] / total_evidence
+    high_fragile = top_post >= 0.75 and top_robust == "fragile"
+    too_many_unlinked = network_coverage["isolated_evidence_count"] > len(result.extraction.evidence) * 0.5
+    external_blockers: list[str] = []
+    if single_source_limited:
+        external_blockers.append("single-source corpus")
+    if diagnostic["decisive"] == 0 and diagnostic["moderate"] == 0:
+        external_blockers.append("weak diagnostic tests")
+    elif diagnostic["decisive"] == 0:
+        external_blockers.append("no decisive diagnostic test")
+    if proximate_share < 0.20:
+        external_blockers.append("thin proximate evidence")
+    if temporal["top_driver_background"]:
+        external_blockers.append("background top drivers")
+    if broad_winner:
+        external_blockers.append("broad hypothesis design")
+    if high_fragile:
+        external_blockers.append("high-support fragile winner")
+    if verdict_issues:
+        external_blockers.append("verdict calibration")
+    if too_many_unlinked:
+        external_blockers.append("untriaged isolated evidence")
+    optimal_for_corpus = not external_blockers
     rows = [
         (
             "Input corpus and source base",
-            "Single-text or broad-overview input is not enough for PhD-level causal identification." if single_source_limited else "Source-base limits are not explicitly documented.",
-            "Build a source packet with primary documents, rival secondary accounts, source genre metadata, and a note on what each source can and cannot reveal.",
+            "Single-text or broad-overview input is not enough for PhD-level causal identification." if single_source_limited else "Source scope does not trigger an active cap; limitations are documented in synthesis.",
+            "Build or preserve a source packet with primary documents, rival secondary accounts, source genre metadata, and a note on what each source can and cannot reveal.",
         ),
         (
             "Extraction and provenance",
@@ -639,18 +665,18 @@ def _render_academic_review(
         ),
         (
             "Hypothesis space",
-            "The leading hypothesis is broad or absorptive." if broad_winner else "Hypothesis overlap still requires explicit discriminators.",
-            "Split broad hypotheses into narrower mechanisms and require each rival pair to have at least one observable discriminator.",
+            "The leading hypothesis is broad or absorptive." if broad_winner else "Leading hypothesis is not flagged as broad or absorptive; rival mechanisms are visibly separated.",
+            "Split broad hypotheses when flagged; otherwise preserve pairwise discriminators and keep overlap visible in synthesis.",
         ),
         (
             "Diagnostic tests",
             f"Diagnostic strength: {diagnostic['decisive']} decisive, {diagnostic['moderate']} moderate, {diagnostic['weak']} weak, {diagnostic['near_neutral']} near-neutral items.",
-            "Pre-register hoop and smoking-gun tests before likelihood scoring; seek direct traces unlikely under rival hypotheses.",
+            "Pre-register hoop and smoking-gun tests before likelihood scoring; seek direct traces unlikely under rival hypotheses when decisive counts are low.",
         ),
         (
             "Temporal process sequence",
             f"Only {temporal['proximate']}/{temporal['total']} evidence items are proximate to the focal outcome; background top drivers: {len(temporal['top_driver_background'])}.",
-            "Construct a dated mechanism sequence for the final decision window and distinguish enabling background from proximate causal action.",
+            "Construct and preserve a dated mechanism sequence for the final decision window; distinguish enabling background from proximate causal action.",
         ),
         (
             "Bayesian update and dependence",
@@ -687,16 +713,38 @@ def _render_academic_review(
     ]
     steps_html = "".join(f"<li>{_esc(step)}</li>" for step in optimal_steps)
     blockers_html = "".join(f"<li>{_esc(blocker)}</li>" for blocker in external_blockers)
-    return f"""
-    <div class="card mb-4 shadow-sm border-danger">
-      <div class="card-header bg-danger text-white"><h4 class="mb-0">Academic PhD Review</h4></div>
-      <div class="card-body">
-        <p><strong>Current scholarly status:</strong> exploratory process-tracing output under a limited input text. It is useful for hypothesis generation and audit planning, not yet a PhD-level causal demonstration.</p>
+    if optimal_for_corpus:
+        status_text = (
+            "PhD-review-ready under the current corpus. This is not a claim of historical truth; "
+            "it means the report, source scope, temporal sequence, discriminators, and diagnostic "
+            "tests clear the active audit gates."
+        )
+        gate_html = """
+        <div class="alert alert-success">
+          <strong>Optimality Gate:</strong> optimal_for_current_corpus. Next iteration mode:
+          <strong>none</strong>. No active academic evidence caps remain.
+        </div>"""
+        proceed_html = "<p class=\"small mb-0\">No required iteration remains under the current corpus. Future work should add archival sources only if the research question needs stronger external validation.</p>"
+    else:
+        status_text = (
+            "Exploratory process-tracing output under a limited input corpus. It is useful for "
+            "hypothesis generation and audit planning, not yet a PhD-level causal demonstration."
+        )
+        gate_html = f"""
         <div class="alert alert-danger">
           <strong>Optimality Gate:</strong> not optimal for a PhD-level causal claim. Next iteration mode:
           <strong>collect or design evidence</strong>, not report polishing. Blocking conditions:
           <ul class="mb-0">{blockers_html}</ul>
-        </div>
+        </div>"""
+        proceed_html = f"<ol>{steps_html}</ol>"
+    card_border = "border-success" if optimal_for_corpus else "border-danger"
+    header_class = "bg-success" if optimal_for_corpus else "bg-danger"
+    return f"""
+    <div class="card mb-4 shadow-sm {card_border}">
+      <div class="card-header {header_class} text-white"><h4 class="mb-0">Academic PhD Review</h4></div>
+      <div class="card-body">
+        <p><strong>Current scholarly status:</strong> {_esc(status_text)}</p>
+        {gate_html}
         <h5>Recommendations by Pipeline Output</h5>
         <div class="table-responsive">
           <table class="table table-sm table-bordered">
@@ -721,7 +769,7 @@ def _render_academic_review(
           </table>
         </div>
         <h5>Proceed Until Optimal</h5>
-        <ol>{steps_html}</ol>
+        {proceed_html}
       </div>
     </div>"""
 

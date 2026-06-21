@@ -195,13 +195,19 @@ def _diagnostic_strength_stats(result: ProcessTracingResult) -> dict[str, Any]:
     for _, lrs in lr_matrix(result.testing, hypothesis_ids, interpretive_caps):
         if not lrs:
             continue
-        strengths.append(
-            max(abs(math.log(max(lr, 0.01))) for lr in lrs.values())
-        )
+        values = [max(lr, 0.01) for lr in lrs.values()]
+        if len(values) < 2:
+            strengths.append(0.0)
+            continue
+        strengths.append(math.log(max(values) / min(values)))
+    decisive_threshold = math.log(5.0)
+    moderate_threshold = math.log(2.0)
     return {
-        "decisive_items": sum(1 for s in strengths if s > 1.6),
-        "moderate_items": sum(1 for s in strengths if 0.7 < s <= 1.6),
-        "weak_items": sum(1 for s in strengths if 0.1 < s <= 0.7),
+        "decisive_items": sum(1 for s in strengths if s >= decisive_threshold),
+        "moderate_items": sum(
+            1 for s in strengths if moderate_threshold <= s < decisive_threshold
+        ),
+        "weak_items": sum(1 for s in strengths if 0.1 < s < moderate_threshold),
         "near_neutral_items": sum(1 for s in strengths if s <= 0.1),
         "max_log_lr": round(max(strengths), 3) if strengths else 0.0,
     }
