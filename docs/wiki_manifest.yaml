@@ -9,6 +9,10 @@ publish:
     type: PortfolioGuide
     title: Process Tracing Reviewer Walkthrough
     tags: [portfolio, process-tracing, analyst-methods]
+  - path: docs/portfolio/FRENCH_DIRECTORY_COLLAPSE_CASE_BUNDLE.md
+    type: PortfolioEvidence
+    title: French Directory Collapse Case Bundle
+    tags: [portfolio, process-tracing, analyst-methods, evidence]
   - path: docs/WHITEPAPER_optimal_automated_process_tracing.md
     type: Whitepaper
     tags: [analysis, process-tracing, methodology]

@@ -8,7 +8,9 @@ This project is the strongest analyst-facing portfolio evidence because it opera
 
 ## Walkthrough Shape
 
-Use one question, one evidence set, and one final report path:
+Use one question, one evidence set, and one final report path. The current
+reviewer-safe case bundle is
+`docs/portfolio/FRENCH_DIRECTORY_COLLAPSE_CASE_BUNDLE.md`.
 
 1. Start with a case question that has rival explanations.
 2. Extract actors, events, mechanisms, causal edges, and evidence records.
@@ -25,6 +27,7 @@ Use one question, one evidence set, and one final report path:
 | `docs/WHITEPAPER_optimal_automated_process_tracing.md` | Explains the methodology and why the workflow is analytically meaningful |
 | `docs/ontology.md` | Shows the typed analytic objects behind the workflow |
 | `evidence/*.md` | Shows how claims are grounded in inspectable evidence artifacts |
+| `docs/portfolio/FRENCH_DIRECTORY_COLLAPSE_CASE_BUNDLE.md` | Shows one public-source question through evidence, hypothesis updates, absence checks, and report paths |
 
 ## Analyst Differentiator
 
@@ -32,4 +35,7 @@ The useful portfolio signal is the method architecture: process tracing becomes 
 
 ## Caveat
 
-The methodology evidence is stronger than product polish. Before external sharing, use a small sanitized case and show the path from question to evidence diagnostics to hypothesis updates without relying on hidden session context.
+The methodology evidence is stronger than product polish. The French Directory
+case bundle is safe for reviewer orientation because it uses public historical
+source material, but it is still a compact excerpt. For a full demo, rerun the
+pipeline and inspect the generated `result.json` and `report.html`.
