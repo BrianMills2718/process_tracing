@@ -2,17 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Optional
+import re
+from typing import Literal, Optional
 
 import yaml  # type: ignore[import-untyped]
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # ── Causal Model Specification ─────────────────────────────────────
 
+_R_IDENTIFIER_PATTERN = r"^[A-Za-z][A-Za-z0-9_]*$"
+_R_IDENTIFIER_RE = re.compile(_R_IDENTIFIER_PATTERN)
+
 
 class CausalVariable(BaseModel):
-    name: str = Field(description="Valid R identifier, e.g. 'fiscal_crisis'")
+    name: str = Field(
+        pattern=_R_IDENTIFIER_PATTERN,
+        description="Valid R identifier, e.g. 'fiscal_crisis'",
+    )
     description: str = Field(description="What 1 means")
     description_zero: str = Field(description="What 0 means")
     observable_indicators: list[str] = Field(
@@ -22,8 +29,8 @@ class CausalVariable(BaseModel):
 
 
 class CausalEdgeSpec(BaseModel):
-    parent: str
-    child: str
+    parent: str = Field(pattern=_R_IDENTIFIER_PATTERN)
+    child: str = Field(pattern=_R_IDENTIFIER_PATTERN)
 
 
 class CausalModelSpec(BaseModel):
@@ -45,6 +52,13 @@ class CausalModelSpec(BaseModel):
     def variable_names(self) -> list[str]:
         return [v.name for v in self.variables]
 
+    @model_validator(mode="after")
+    def _valid_dag_contract(self) -> "CausalModelSpec":
+        errors = self.validate_dag()
+        if errors:
+            raise ValueError(f"invalid causal model: {errors}")
+        return self
+
     @property
     def dagitty_statement(self) -> str:
         """Generate a DAGitty/CausalQueries model statement like 'X -> M -> Y'."""
@@ -56,7 +70,16 @@ class CausalModelSpec(BaseModel):
     def validate_dag(self) -> list[str]:
         """Return a list of validation errors (empty = valid)."""
         errors: list[str] = []
-        names = set(self.variable_names)
+        variable_names = self.variable_names
+        names = set(variable_names)
+
+        duplicates = sorted({name for name in variable_names if variable_names.count(name) > 1})
+        if duplicates:
+            errors.append(f"duplicate variable names: {duplicates}")
+
+        invalid_names = sorted(name for name in variable_names if not _R_IDENTIFIER_RE.match(name))
+        if invalid_names:
+            errors.append(f"invalid R identifiers: {invalid_names}")
 
         if self.outcome_variable not in names:
             errors.append(f"outcome_variable '{self.outcome_variable}' not in variables")
@@ -120,8 +143,8 @@ class CausalModelSpec(BaseModel):
 
 
 class VariableCoding(BaseModel):
-    variable_name: str
-    value: Optional[int] = Field(
+    variable_name: str = Field(pattern=_R_IDENTIFIER_PATTERN)
+    value: Literal[0, 1] | None = Field(
         default=None,
         description="0, 1, or null (NA if insufficient evidence)",
     )
@@ -144,6 +167,18 @@ class CaseBinarization(BaseModel):
     codings: list[VariableCoding]
     analyst_notes: str = ""
 
+    @model_validator(mode="after")
+    def _unique_codings(self) -> "CaseBinarization":
+        seen: set[str] = set()
+        duplicates: set[str] = set()
+        for coding in self.codings:
+            if coding.variable_name in seen:
+                duplicates.add(coding.variable_name)
+            seen.add(coding.variable_name)
+        if duplicates:
+            raise ValueError(f"duplicate variable codings: {sorted(duplicates)}")
+        return self
+
     def to_row(
         self, variable_order: Optional[list[str]] = None
     ) -> dict[str, Optional[int]]:
@@ -156,9 +191,21 @@ class CaseBinarization(BaseModel):
         whatever order the LLM emitted codings, which can silently transpose
         columns when the data frame is bound row-wise in R (rbind is positional).
         """
-        coded = {c.variable_name: c.value for c in self.codings}
+        coded: dict[str, Optional[int]] = {}
+        for coding in self.codings:
+            if coding.variable_name in coded:
+                raise ValueError(
+                    f"duplicate variable coding in {self.case_id}: {coding.variable_name}"
+                )
+            coded[coding.variable_name] = coding.value
         if variable_order is None:
             return coded
+        allowed = set(variable_order)
+        unknown = sorted(set(coded) - allowed)
+        if unknown:
+            raise ValueError(
+                f"binarization for {self.case_id} has variables not in model: {unknown}"
+            )
         return {name: coded.get(name) for name in variable_order}
 
 

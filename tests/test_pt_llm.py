@@ -11,7 +11,7 @@ import os
 import pytest
 from pydantic import BaseModel, Field
 
-from pt.llm import LLMError, call_llm
+from pt.llm import DEFAULT_MAX_BUDGET, LLMError, call_llm
 
 
 class _StructuredSmokeResult(BaseModel):
@@ -47,7 +47,7 @@ def test_call_llm_delegates_to_structured(monkeypatch):
     # Required observability kwargs are forwarded.
     assert captured["kwargs"]["task"] == "pt.test"
     assert captured["kwargs"]["trace_id"] == "abc123"
-    assert "max_budget" in captured["kwargs"]
+    assert captured["kwargs"]["max_budget"] == DEFAULT_MAX_BUDGET
     # System + user messages are assembled; the prompt is the user content.
     assert captured["messages"][0]["role"] == "system"
     assert captured["messages"][1]["role"] == "user"
@@ -62,6 +62,17 @@ def test_call_llm_fails_loud(monkeypatch):
 
     with pytest.raises(LLMError):
         call_llm("Why?", _StructuredSmokeResult, task="pt.test", trace_id="abc123")
+
+
+def test_call_llm_rejects_unlimited_budget():
+    with pytest.raises(ValueError, match="max_budget"):
+        call_llm(
+            "Why?",
+            _StructuredSmokeResult,
+            task="pt.test",
+            trace_id="abc123",
+            max_budget=0,
+        )
 
 
 @pytest.mark.skipif(

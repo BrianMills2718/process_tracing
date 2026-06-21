@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pytest
 
 from pt.bayesian import run_bayesian_update
-from pt.pipeline import run_pipeline
+from pt.pipeline import _source_text_sha256, run_pipeline
 from pt.report import generate_report
 from pt.schemas import (
     AbsenceEvaluation,
@@ -198,6 +198,18 @@ def _make_synthesis() -> SynthesisResult:
     )
 
 
+def _make_process_result(source_text_sha256: str | None = None) -> ProcessTracingResult:
+    return ProcessTracingResult(
+        source_text_sha256=source_text_sha256,
+        extraction=_make_extraction(),
+        hypothesis_space=_make_hypothesis_space(),
+        testing=_make_testing(),
+        absence=_make_absence(),
+        bayesian=run_bayesian_update(_make_testing(), ["h1", "h2"]),
+        synthesis=_make_synthesis(),
+    )
+
+
 # ── Mock dispatcher ────────────────────────────────────────────────
 
 
@@ -352,6 +364,34 @@ class TestReportConsistency:
         result = run_bayesian_update(testing, ["h1", "h2"])
         for p in result.posteriors:
             assert p.robustness in ("robust", "fragile", "moderate", "unknown")
+
+    def test_script_terminator_in_graph_data_is_escaped(self):
+        result = _make_process_result()
+        payload = "</script><script>x</script>"
+        result.extraction.events[0].description = payload
+
+        html = generate_report(result)
+
+        assert payload not in html
+        assert "<\\/script><script>x<\\/script>" in html
+
+
+class TestFromResultProvenance:
+    def test_from_result_rejects_missing_source_hash(self):
+        with pytest.raises(ValueError, match="no source_text_sha256"):
+            run_pipeline(
+                "new text",
+                from_result=_make_process_result(),
+                verbose=False,
+            )
+
+    def test_from_result_rejects_mismatched_source_hash(self):
+        with pytest.raises(ValueError, match="does not match"):
+            run_pipeline(
+                "new text",
+                from_result=_make_process_result(_source_text_sha256("old text")),
+                verbose=False,
+            )
 
 
 class TestVectorCompleteness:

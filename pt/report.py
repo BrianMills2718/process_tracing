@@ -24,6 +24,11 @@ def _esc(s: str) -> str:
     return html.escape(str(s))
 
 
+def _json_for_script(value: object) -> str:
+    """Serialize JSON safely for embedding directly inside a script tag."""
+    return json.dumps(value).replace("</", "<\\/").replace("<!--", "<\\!--")
+
+
 def _status_color(status: str) -> str:
     return {
         "strongly_supported": "#28a745",
@@ -236,8 +241,8 @@ def generate_report(result: ProcessTracingResult) -> str:
     ev_map = {e.id: e for e in result.extraction.evidence}
 
     vis_nodes, vis_edges = _build_vis_data(result)
-    nodes_json = json.dumps(vis_nodes)
-    edges_json = json.dumps(vis_edges)
+    nodes_json = _json_for_script(vis_nodes)
+    edges_json = _json_for_script(vis_edges)
 
     # -- Build prediction lookup: (hypothesis_id, prediction_id) -> PredictionClassification
     pred_class_map: dict[tuple[str, str], PredictionClassification] = {}
@@ -1133,6 +1138,14 @@ document.querySelectorAll('.sortable-table').forEach(function(table) {{
 document.addEventListener('DOMContentLoaded', function() {{
   var nodesData = {nodes_json};
   var edgesData = {edges_json};
+  function escapeHtml(value) {{
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }}
   var nodes = new vis.DataSet(nodesData);
   var edges = new vis.DataSet(edgesData);
   var container = document.getElementById('network');
@@ -1161,11 +1174,11 @@ document.addEventListener('DOMContentLoaded', function() {{
     var info = document.getElementById('network-info');
     if (params.nodes.length > 0) {{
       var node = nodes.get(params.nodes[0]);
-      info.innerHTML = '<strong>' + node.label + '</strong><br>' + (node.title || '');
+      info.innerHTML = '<strong>' + escapeHtml(node.label) + '</strong><br>' + escapeHtml(node.title);
       info.className = 'alert alert-info mt-2 small';
     }} else if (params.edges.length > 0) {{
       var edge = edges.get(params.edges[0]);
-      info.innerHTML = '<strong>Edge:</strong> ' + (edge.label || edge.title || 'relationship');
+      info.innerHTML = '<strong>Edge:</strong> ' + escapeHtml(edge.label || edge.title || 'relationship');
       info.className = 'alert alert-secondary mt-2 small';
     }}
   }});

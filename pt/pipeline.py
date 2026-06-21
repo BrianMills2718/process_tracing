@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
@@ -22,6 +23,28 @@ from pt.schemas import (
     ProcessTracingResult,
     RefinementResult,
 )
+
+
+def _source_text_sha256(text: str) -> str:
+    """Hash the exact source text used for the analysis."""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _validate_from_result_source(text: str, from_result: ProcessTracingResult) -> str:
+    """Return current source hash or raise when cached analysis provenance differs."""
+    current_hash = _source_text_sha256(text)
+    cached_hash = from_result.source_text_sha256
+    if cached_hash is None:
+        raise ValueError(
+            "--from-result file has no source_text_sha256 provenance; regenerate "
+            "the result with the current code before refining from it"
+        )
+    if cached_hash != current_hash:
+        raise ValueError(
+            "--from-result source_text_sha256 does not match the input text "
+            f"(result={cached_hash}, input={current_hash})"
+        )
+    return current_hash
 
 
 def _default_review(hypothesis_space: HypothesisSpace, output_dir: str | None) -> HypothesisSpace:
@@ -187,6 +210,7 @@ def run_pipeline(
     t0 = time.time()
     if trace_id is None:
         trace_id = uuid4().hex[:8]
+    source_text_sha256 = _source_text_sha256(text)
 
     # Input validation — catch garbage/trivial input before burning 9+ LLM calls
     if from_result is None:
@@ -200,6 +224,7 @@ def run_pipeline(
 
     if from_result is not None:
         refine = True
+        source_text_sha256 = _validate_from_result_source(text, from_result)
         extraction = from_result.extraction
         hypothesis_space = from_result.hypothesis_space
         if verbose:
@@ -283,6 +308,7 @@ def run_pipeline(
         print(f"\nPipeline complete in {elapsed:.1f}s")
 
     return ProcessTracingResult(
+        source_text_sha256=source_text_sha256,
         extraction=extraction,
         hypothesis_space=hypothesis_space,
         testing=testing,

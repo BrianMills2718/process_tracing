@@ -27,6 +27,7 @@ load_dotenv(override=True)
 T = TypeVar("T", bound=BaseModel)
 
 DEFAULT_MODEL = os.getenv("PT_MODEL") or os.getenv("GEMINI_MODEL") or "gemini-2.5-flash"
+DEFAULT_MAX_BUDGET = float(os.getenv("PT_MAX_BUDGET", "1.0"))
 
 MAX_RETRIES = 3
 
@@ -50,7 +51,7 @@ def call_llm(
     trace_id: str,
     model: str = DEFAULT_MODEL,
     temperature: float = 0.3,
-    max_budget: float = 0,
+    max_budget: float | None = None,
     system: str = _SYSTEM,
 ) -> T:
     """Call the LLM and return a validated instance of ``response_model``.
@@ -63,6 +64,12 @@ def call_llm(
         {"role": "system", "content": system},
         {"role": "user", "content": prompt},
     ]
+    resolved_budget = DEFAULT_MAX_BUDGET if max_budget is None else max_budget
+    if resolved_budget <= 0:
+        raise ValueError(
+            "max_budget must be greater than 0. Set PT_MAX_BUDGET or pass "
+            "max_budget explicitly."
+        )
 
     t0 = time.time()
     try:
@@ -74,7 +81,7 @@ def call_llm(
             temperature=temperature,
             task=task,
             trace_id=trace_id,
-            max_budget=max_budget,
+            max_budget=resolved_budget,
         )
     except Exception as e:  # fail loud — no silent fallback
         raise LLMError(f"LLM structured call failed: {e}") from e

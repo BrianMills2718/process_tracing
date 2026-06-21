@@ -25,6 +25,47 @@ class _BinarizationResponse(BaseModel):
     analyst_notes: str = ""
 
 
+def _validate_binarization_contract(
+    *,
+    case_id: str,
+    codings: list[VariableCoding],
+    causal_model: CausalModelSpec,
+    extraction: ExtractionResult,
+) -> None:
+    """Fail loud when LLM codings cannot form the model's case row."""
+    coded_names = [c.variable_name for c in codings]
+    duplicate_names = sorted({name for name in coded_names if coded_names.count(name) > 1})
+    if duplicate_names:
+        raise ValueError(
+            f"Binarization for {case_id} has duplicate variable codings: {duplicate_names}"
+        )
+
+    coded_vars = set(coded_names)
+    model_vars = set(causal_model.variable_names)
+    missing = sorted(model_vars - coded_vars)
+    if missing:
+        raise ValueError(
+            f"Binarization for {case_id} missing variables: {missing}"
+        )
+    unknown = sorted(coded_vars - model_vars)
+    if unknown:
+        raise ValueError(
+            f"Binarization for {case_id} includes variables not in model: {unknown}"
+        )
+
+    valid_evidence_ids = {e.id for e in extraction.evidence}
+    unknown_evidence_ids = sorted({
+        evidence_id
+        for coding in codings
+        for evidence_id in coding.evidence_ids
+        if evidence_id not in valid_evidence_ids
+    })
+    if unknown_evidence_ids:
+        raise ValueError(
+            f"Binarization for {case_id} cites unknown evidence ids: {unknown_evidence_ids}"
+        )
+
+
 def binarize_case(
     *,
     case_id: str,
@@ -95,14 +136,12 @@ def binarize_case(
         **kwargs,
     )
 
-    # Validate: every model variable must be coded
-    coded_vars = {c.variable_name for c in result.codings}
-    model_vars = set(causal_model.variable_names)
-    missing = model_vars - coded_vars
-    if missing:
-        raise ValueError(
-            f"Binarization for {case_id} missing variables: {missing}"
-        )
+    _validate_binarization_contract(
+        case_id=case_id,
+        codings=result.codings,
+        causal_model=causal_model,
+        extraction=extraction,
+    )
 
     # Enforce confidence < 0.5 → null
     for coding in result.codings:

@@ -39,11 +39,11 @@ def _run_single_case(
 ) -> ProcessTracingResult:
     """Run single-text pipeline for one case, with caching.
 
-    The cache is keyed on the input text content (sha256) AND the resolved
-    model id, not just the existence of result.json. A cached result is reused
-    only when both match — otherwise it is recomputed. Without this, re-running
-    with a different --model, or with edited input text under the same path,
-    silently returned the previous (wrong) extraction.
+    The cache is keyed on the input text content (sha256), the resolved model
+    id, and the user theory text. A cached result is reused only when all match
+    — otherwise it is recomputed. Without this, re-running with a different
+    --model, edited input text, or changed --theories silently returned the
+    previous (wrong) extraction.
     """
     from pt.llm import DEFAULT_MODEL
 
@@ -60,6 +60,10 @@ def _run_single_case(
     cache_key = {
         "text_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
         "model": effective_model,
+        "theories_sha256": (
+            hashlib.sha256(theories.encode("utf-8")).hexdigest()
+            if theories is not None else None
+        ),
     }
 
     if os.path.isfile(result_path):
@@ -71,7 +75,7 @@ def _run_single_case(
             print(f"  Cache hit: {result_path}")
             with open(result_path, "r", encoding="utf-8") as f:
                 return ProcessTracingResult.model_validate(json.load(f))
-        reason = "model or input text changed" if cached_key else "no cache key recorded"
+        reason = "model, input text, or theories changed" if cached_key else "no cache key recorded"
         print(f"  Cache stale ({reason}) — recomputing {result_path}")
 
     os.makedirs(case_output_dir, exist_ok=True)
@@ -146,7 +150,18 @@ def _apply_confidence_threshold(
     rows: list[dict[str, int | None]] = []
     for b in binarizations:
         coded: dict[str, int | None] = {}
+        seen: set[str] = set()
+        allowed = set(variable_order) if variable_order is not None else None
         for c in b.codings:
+            if c.variable_name in seen:
+                raise ValueError(
+                    f"duplicate variable coding in {b.case_id}: {c.variable_name}"
+                )
+            seen.add(c.variable_name)
+            if allowed is not None and c.variable_name not in allowed:
+                raise ValueError(
+                    f"binarization for {b.case_id} has variable not in model: {c.variable_name}"
+                )
             if c.confidence < threshold:
                 coded[c.variable_name] = None
                 if c.value is not None:
@@ -183,7 +198,11 @@ def _run_sensitivity(
             else:
                 # R is present: a failure here is a real error, not graceful
                 # degradation, so let it propagate (fail loud per project policy).
-                cq_result = run_causal_queries(causal_model, df)
+                cq_result = run_causal_queries(
+                    causal_model,
+                    df,
+                    case_ids=[b.case_id for b in binarizations],
+                )
 
         runs.append(BinarizationSensitivityRun(
             confidence_threshold=threshold,
@@ -356,7 +375,11 @@ def run_multi_pipeline(
             # R is present: any failure is a real error (bad model, Stan crash,
             # malformed data) and must fail loud, not silently produce empty
             # estimands that read downstream as a successful run.
-            cq_result = run_causal_queries(causal_model, data_frame)
+            cq_result = run_causal_queries(
+                causal_model,
+                data_frame,
+                case_ids=[b.case_id for b in binarizations],
+            )
             print(f"  Population estimands: {len(cq_result.population_estimands)}")
             print(f"  Case-level estimands: {len(cq_result.case_level_estimands)}")
 

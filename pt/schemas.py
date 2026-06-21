@@ -380,6 +380,10 @@ class SynthesisResult(BaseModel):
 # ── Combined Result ─────────────────────────────────────────────────
 
 class ProcessTracingResult(BaseModel):
+    source_text_sha256: Optional[str] = Field(
+        default=None,
+        description="SHA-256 of the exact input text used for this analysis",
+    )
     extraction: ExtractionResult
     hypothesis_space: HypothesisSpace
     testing: TestingResult
