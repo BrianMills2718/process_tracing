@@ -7,9 +7,20 @@ import html
 import json
 import math
 import re
+from typing import TypedDict
 
 from pt.bayesian import INTERPRETIVE_LR_CAP, RESIDUAL_ID, lr_matrix
-from pt.schemas import Hypothesis, PredictionClassification, ProcessTracingResult
+from pt.schemas import Evidence, Hypothesis, HypothesisPosterior, PredictionClassification, ProcessTracingResult
+
+
+class _TemporalAudit(TypedDict):
+    """Temporal proximity summary for the report audit card."""
+    focal_year: int | None
+    proximate: int
+    background: int
+    unknown: int
+    total: int
+    top_driver_background: list[str]
 
 
 def _interpretive_caps(result: ProcessTracingResult) -> dict[str, float]:
@@ -146,6 +157,209 @@ def _render_narrative(text: str, ev_map: dict) -> str:
                 )
         out.append(f"<p>{escaped}</p>")
     return "\n".join(out)
+
+
+def _first_year(value: str | None) -> int | None:
+    """Extract the first plausible four-digit year from free-text dates."""
+    if not value:
+        return None
+    match = re.search(r"\b(1[5-9]\d{2}|20\d{2})\b", value)
+    return int(match.group(1)) if match else None
+
+
+def _focal_year(result: ProcessTracingResult) -> int | None:
+    """Infer the outcome year for temporal-proximity reporting."""
+    years: list[int] = []
+    for text in (result.hypothesis_space.research_question, result.extraction.summary):
+        years.extend(int(y) for y in re.findall(r"\b(1[5-9]\d{2}|20\d{2})\b", text))
+    if years:
+        return max(years)
+    evidence_years = [
+        year for ev in result.extraction.evidence
+        if (year := _first_year(ev.approximate_date)) is not None
+    ]
+    return max(evidence_years) if evidence_years else None
+
+
+def _temporal_evidence_mix(
+    result: ProcessTracingResult,
+    top_id: str | None,
+    ev_map: dict[str, Evidence],
+    posteriors: dict[str, HypothesisPosterior],
+) -> _TemporalAudit:
+    """Summarize proximate/background evidence and background top drivers."""
+    focal_year = _focal_year(result)
+    proximate = 0
+    background = 0
+    unknown = 0
+    if focal_year is None:
+        unknown = len(result.extraction.evidence)
+    else:
+        for ev in result.extraction.evidence:
+            year = _first_year(ev.approximate_date)
+            if year is None:
+                unknown += 1
+            elif year >= focal_year - 2:
+                proximate += 1
+            elif year < focal_year - 5:
+                background += 1
+
+    top_driver_background: list[str] = []
+    top = posteriors.get(top_id) if top_id else None
+    if focal_year is not None and top:
+        for evidence_id in top.top_drivers:
+            driver_ev = ev_map.get(evidence_id)
+            year = _first_year(driver_ev.approximate_date) if driver_ev else None
+            if year is not None and year < focal_year - 5:
+                top_driver_background.append(evidence_id)
+
+    return {
+        "focal_year": focal_year,
+        "proximate": proximate,
+        "background": background,
+        "unknown": unknown,
+        "total": len(result.extraction.evidence),
+        "top_driver_background": top_driver_background,
+    }
+
+
+def _effective_evidence_count(result: ProcessTracingResult) -> tuple[float, int]:
+    """Estimate effective observations after dependence-cluster pooling."""
+    clustered: set[str] = set()
+    cluster_effective = 0.0
+    for cluster in result.testing.dependence_clusters:
+        members = list(dict.fromkeys(cluster.evidence_ids))
+        clustered.update(members)
+        k = len(members)
+        rho = cluster.dependence_strength
+        cluster_effective += 1.0 + (k - 1) * (1.0 - rho)
+    unclustered = len([ev for ev in result.extraction.evidence if ev.id not in clustered])
+    return unclustered + cluster_effective, len(clustered)
+
+
+def _verdict_calibration_issues(
+    result: ProcessTracingResult,
+    posteriors: dict[str, HypothesisPosterior],
+) -> list[str]:
+    """Find synthesis labels that overstate low comparative support."""
+    issues: list[str] = []
+    for verdict in result.synthesis.verdicts:
+        posterior = posteriors.get(verdict.hypothesis_id)
+        support = posterior.final_posterior if posterior else None
+        if support is None:
+            continue
+        if verdict.status in {"supported", "strongly_supported"} and support < 0.10:
+            issues.append(
+                f"{verdict.hypothesis_id} is labeled {verdict.status.replace('_', ' ')} "
+                f"with comparative support {support:.3f}"
+            )
+    return issues
+
+
+def _broad_winning_hypothesis(top_h: Hypothesis | None) -> bool:
+    """Flag winners whose framing may absorb rival mechanisms."""
+    if top_h is None:
+        return False
+    text = f"{top_h.description} {top_h.causal_mechanism}".lower()
+    broad_terms = ["vacuum", "combined", "across", "all social", "confluence", "multiple"]
+    return any(term in text for term in broad_terms)
+
+
+def _render_output_quality_audit(
+    result: ProcessTracingResult,
+    *,
+    top_id: str | None,
+    top_h: Hypothesis | None,
+    top_post: float,
+    top_robust: str,
+    posteriors: dict[str, HypothesisPosterior],
+    ev_map: dict[str, Evidence],
+) -> str:
+    """Render caveats that keep the report from overstating its own evidence."""
+    temporal = _temporal_evidence_mix(result, top_id, ev_map, posteriors)
+    effective_count, clustered_count = _effective_evidence_count(result)
+    verdict_issues = _verdict_calibration_issues(result, posteriors)
+    damaging_absences = [ae for ae in result.absence.evaluations if ae.severity == "damaging"]
+    total_evidence = len(result.extraction.evidence)
+    cluster_count = len(result.testing.dependence_clusters)
+    cards: list[str] = []
+
+    if top_post >= 0.75 and top_robust == "fragile":
+        cards.append(f"""
+        <div class="alert alert-warning mb-2">
+          <strong>High Support, Fragile.</strong>
+          The top hypothesis has comparative support {top_post:.3f}, but the robustness label is fragile.
+          Treat the magnitude as provisional and read it with the sensitivity range and rank-stable flag.
+        </div>""")
+
+    bg_drivers = temporal["top_driver_background"]
+    bg_driver_text = ""
+    if bg_drivers:
+        labels = ", ".join(_esc(eid) for eid in bg_drivers)
+        bg_driver_text = (
+            f"<br><strong>background top-driver:</strong> {labels}. "
+            "These influential items are background context rather than proximate outcome evidence."
+        )
+    focal = temporal["focal_year"] if temporal["focal_year"] is not None else "not inferred"
+    cards.append(f"""
+    <div class="alert alert-light border mb-2">
+      <strong>Temporal Evidence Mix.</strong>
+      Focal year: {_esc(str(focal))}. Proximate evidence: {temporal["proximate"]}/{temporal["total"]};
+      background evidence: {temporal["background"]}/{temporal["total"]}; unknown dates:
+      {temporal["unknown"]}/{temporal["total"]}.{bg_driver_text}
+    </div>""")
+
+    cards.append(f"""
+    <div class="alert alert-light border mb-2">
+      <strong>Effective Evidence vs raw counts.</strong>
+      The report lists {total_evidence} raw counts of evidence items, but dependence cluster pooling estimates
+      about {effective_count:.1f} effective evidence observations. Dependence: {cluster_count} cluster(s),
+      {clustered_count} clustered item(s). Raw counts can overstate corroboration when items share a source,
+      event, or mechanism.
+    </div>""")
+
+    if verdict_issues:
+        issues = "<br>".join(_esc(issue) for issue in verdict_issues)
+        cards.append(f"""
+        <div class="alert alert-warning mb-2">
+          <strong>Verdict Calibration.</strong>
+          {issues}. Read this as a secondary mechanism caveat, not as a standalone winning explanation.
+        </div>""")
+
+    if _broad_winning_hypothesis(top_h):
+        cards.append("""
+        <div class="alert alert-warning mb-2">
+          <strong>Broad Winning Hypothesis.</strong>
+          The leading hypothesis is broad enough to absorb mechanisms from rivals. Interpret the win as a
+          comparative umbrella explanation unless the diagnostic matrix identifies evidence that separates it
+          from narrower alternatives.
+        </div>""")
+
+    if damaging_absences:
+        cards.append(f"""
+        <div class="alert alert-warning mb-2">
+          <strong>Source-scope Absence.</strong>
+          {len(damaging_absences)} damaging absence finding(s) depend on whether the input text's scope should
+          contain the missing micro-evidence. Broad overview texts may omit such details even when the mechanism
+          is real, so absence should be read with source-scope caution.
+        </div>""")
+
+    if not cards:
+        cards.append("""
+        <div class="alert alert-success mb-2">
+          <strong>No major output-quality caveats triggered.</strong>
+          Contract checks, temporal proximity, robustness, dependence, verdict calibration, and absence handling
+          did not raise visible report warnings.
+        </div>""")
+
+    return f"""
+    <div class="card mb-4 shadow-sm border-warning">
+      <div class="card-header bg-warning text-dark"><h4 class="mb-0">Output Quality Audit</h4></div>
+      <div class="card-body">
+        <p class="small text-muted mb-3">This audit highlights conditions that can make a ranked result misleading even when the pipeline contract is valid.</p>
+        {''.join(cards)}
+      </div>
+    </div>"""
 
 
 def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict]]:
@@ -297,8 +511,8 @@ def generate_report(result: ProcessTracingResult) -> str:
     overconfidence_banner = ""
     if top_post > 0.99 and top_robust == "fragile":
         overconfidence_banner = (
-            '<div class="alert alert-warning mb-3"><strong>⚠ Likely overconfident.</strong> '
-            'The top support is near-degenerate and the posterior is <em>fragile</em> — driven by '
+            '<div class="alert alert-warning mb-3"><strong>Likely overconfident.</strong> '
+            'The top support is near-degenerate and the posterior is <em>fragile</em> - driven by '
             'accumulation of many weakly-discriminating (and possibly correlated) evidence items. '
             'Dependence pooling is applied, but if it did not group these items strongly enough the '
             'magnitude remains unreliable. Read this as a <strong>ranking</strong>, not a calibrated probability.</div>'
@@ -328,6 +542,16 @@ def generate_report(result: ProcessTracingResult) -> str:
            on the list cannot be supported. Read the ranking and the support range / robustness / stability flags, not the third decimal.</p>
       </div>
     </div>"""
+
+    output_quality_audit = _render_output_quality_audit(
+        result,
+        top_id=top_id,
+        top_h=top_h,
+        top_post=top_post,
+        top_robust=top_robust,
+        posteriors=posteriors,
+        ev_map=ev_map,
+    )
 
     # ===== Section 2: Interactive Network =====
     network_section = f"""
@@ -391,6 +615,11 @@ def generate_report(result: ProcessTracingResult) -> str:
             continue
         verdict = next((v for v in result.synthesis.verdicts if v.hypothesis_id == hid), None)
         status = verdict.status if verdict else "indeterminate"
+        status_cell = _status_badge(status)
+        if status in {"supported", "strongly_supported"} and p.final_posterior < 0.10:
+            status_cell += (
+                '<div class="small text-warning mt-1">secondary mechanism; low comparative support</div>'
+            )
         sens_range = f"[{s.posterior_low:.3f}, {s.posterior_high:.3f}]" if s else "N/A"
         rank_badge = f'<span class="badge bg-{"success" if s and s.rank_stable else "warning"} bg-opacity-75" data-bs-toggle="tooltip" title="{"Rank is stable under sensitivity perturbation" if s and s.rank_stable else "Rank may change under sensitivity perturbation"}">{"Stable" if s and s.rank_stable else "Unstable"}</span>' if s else ""
         steelman_html = _esc(verdict.steelman) if verdict else ""
@@ -415,7 +644,7 @@ def generate_report(result: ProcessTracingResult) -> str:
           <td><span class="badge {source_badge_class}" data-bs-toggle="tooltip" title="{_esc(hyp.theoretical_basis)}">{_esc(source_label)}</span></td>
           <td>{p.prior:.3f}</td>
           <td><strong>{p.final_posterior:.3f}</strong></td>
-          <td>{_status_badge(status)}</td>
+          <td>{status_cell}</td>
           <td>{_robustness_badge(p.robustness)}</td>
           <td><span data-bs-toggle="tooltip" title="Posterior range under ±50% perturbation of top drivers">{sens_range}</span> {rank_badge}</td>
           <td>
@@ -1063,6 +1292,7 @@ def generate_report(result: ProcessTracingResult) -> str:
     <button class="btn btn-sm btn-outline-secondary" id="expand-all-btn">Expand All Sections</button>
   </div>
   {exec_summary}
+  {output_quality_audit}
   {network_section}
   {comparison_table}
   {robustness_section}

@@ -292,7 +292,16 @@ endif
 	@python $(SCRIPTS_META)/complete_plan.py --plan $(PLAN)
 
 # --- Quality ---
-.PHONY: dead-code clean
+.PHONY: audit-result dead-code clean
+
+audit-result:  ## Grade a result/report pair (RESULT=path REPORT=path [FOCAL_YEAR=1799])
+ifndef RESULT
+	$(error RESULT is required. Usage: make audit-result RESULT=output/run/result.json REPORT=output/run/report.html)
+endif
+ifndef REPORT
+	$(error REPORT is required. Usage: make audit-result RESULT=output/run/result.json REPORT=output/run/report.html)
+endif
+	@PYTHONPATH=. python scripts/audit_result_quality.py "$(RESULT)" --report "$(REPORT)" $(if $(FOCAL_YEAR),--focal-year "$(FOCAL_YEAR)",)
 
 dead-code:  ## Run dead code detection
 	@python $(SCRIPTS_META)/check_dead_code.py
