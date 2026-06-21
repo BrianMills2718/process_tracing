@@ -1,0 +1,372 @@
+18 Brumaire Multi-Source Process-Tracing Packet
+
+Purpose
+
+This is a curated multi-source packet for rerunning the process-tracing pipeline
+on the French Revolution's terminal outcome: the 18 Brumaire coup and the
+creation of the Consulate in November-December 1799. It is a deliberately
+combined corpus, not one standalone historical document. It combines primary
+legal and proclamation texts with secondary and critical accounts so the
+pipeline can distinguish background
+conditions, proximate decisions, military coercion, constitutional design, and
+post-coup legitimation.
+
+Research question
+
+Why did the French Revolution culminate in Napoleon Bonaparte's 18 Brumaire coup
+and the Consulate rather than a stable parliamentary republic, a revived
+Jacobin-dominated republic, or a royalist restoration?
+
+Source groups
+
+Source A. Brumaire: Bonaparte's Justification, dated 10 November 1799, reprinted
+by Liberty, Equality, Fraternity from John Hall Stewart, A Documentary Survey of
+the French Revolution.
+URL: https://revolution.chnm.org/d/461
+
+Source B. Brumaire Decree, dated 10 November 1799, and Proclamation of the
+Consuls, dated 12 November 1799, reprinted by The Napoleon Series from Frank
+Maloy Anderson, The Constitutions and Other Select Documents Illustrative of the
+History of France, 1789-1901.
+URL: https://www.napoleon-series.org/research/government/legislation/c_brumaire.html
+
+Source C. Constitution of the Year VIII, dated 13 December 1799, reprinted by
+The Napoleon Series from Frank Maloy Anderson.
+URL: https://www.napoleon-series.org/research/government/legislation/c_constitution8.html
+
+Source D. Eymeric Job, "18 Brumaire: the context and course of a coup d'Etat,"
+Fondation Napoleon.
+URL: https://www.napoleon.org/en/history-of-the-two-empires/articles/18-brumaire-the-context-and-course-of-a-coup-detat/
+
+Source E. Malcolm Crook, "The Myth of the 18th Brumaire," H-France Napoleon
+Forum.
+URL: https://h-france.net/the-myth-of-the-18th-brumaire/
+
+Temporal evidence sequence
+
+1795: The Directory replaced the Thermidorian Convention. Source D says the new
+regime was built around a five-member executive, the Council of Ancients, and
+the Council of Five Hundred. Its constitutional design tried to avoid both
+one-man tyranny and uncontrolled democratic radicalism.
+
+1795: Source D describes the Directory's mission, in Antoine Thibaudeau's words,
+as a "middle way" between monarchy and demagogy. This matters because the
+Directory was not designed as a purely military regime; its collapse needs a
+specific causal explanation.
+
+1795-1797: Source D lists early stresses on the Directory: Babeuf's Conspiracy
+of Equals, continuing insurrection in the Vendee, General Pichegru's royalist
+defection, and the coup of 18 Fructidor Year V on 4 September 1797. These facts
+support a structural-instability hypothesis, but they are temporally background
+conditions unless tied to the 1799 decision window.
+
+5 October 1795: Source D says Bonaparte gained regime confidence by suppressing
+a royalist insurrection on 13 Vendemiaire Year IV. This is early agency evidence
+for Bonaparte as a military solution available to civilian politicians.
+
+2 March 1796: Source D records that the Directory appointed Bonaparte commander
+of the Army of Italy. His later victories in Italy increased his popularity and
+influence among elite political actors.
+
+1796-1797: Source D says Bonaparte won against Austrian commanders at Montenotte,
+Lodi, Arcole, and Rivoli, expanded French influence in Italy, and negotiated
+with dynastic rulers. This supports the claim that he had exceptional military
+prestige before Brumaire.
+
+March 1798: Source D says the Directory appointed Bonaparte commander of the
+Egypt expedition. This removed him from Paris before the final crisis but kept
+him attached to military glory.
+
+1-2 August 1798 and 1799: Source D states that the British destroyed most of the
+French fleet at the Nile, the Cairo garrison faced revolt, plague spread during
+the Syrian campaign, and the siege of Acre failed. These facts complicate a
+simple hero narrative because Bonaparte's eastern campaign produced serious
+military and logistical failures.
+
+25 July 1799: Source D says Bonaparte defeated Ottoman forces at Aboukir. This
+provided a success that could be reported in France despite the Egyptian
+campaign's broader difficulties.
+
+23 August 1799: Source D says Bonaparte left Egypt aboard La Muiron with trusted
+men and generals, leaving Kleber in command. The timing is important: Bonaparte
+returned to France during the Directory's political and military crisis.
+
+8 October 1799: Source D says Bonaparte landed at Frejus and was cheered on the
+way to Paris. The same source says France faced renewed war and the Second
+Coalition. This provides both a popularity cue and a crisis cue.
+
+May 1799: Source D says Abbe Sieyes was elected a director on 27 Floreal Year
+VII, or 16 May 1799, and soon looked for constitutional change toward a stronger
+executive.
+
+1799 before Brumaire: Source D says Sieyes had support from financial-sector
+figures Claude Perier and Jean-Frederic Perregaux. It also says he searched for
+a military backer because he wanted a coup but needed force behind it.
+
+1799 before Brumaire: Source D says Sieyes hesitated to bring Bonaparte into the
+plot because he saw him as dangerous and ambitious. It adds that alternatives
+were weak: Jourdan and Macdonald were too close to Jacobins, Moreau was
+reluctant and suspected of royalist leanings, and Hoche and Joubert had died on
+campaign. This is strong discriminating evidence for an elite-revisionist
+mechanism: Bonaparte was recruited as a risky instrument, not initially as the
+sole architect.
+
+1799 before Brumaire: Source D says negotiations between Sieyes and Bonaparte
+began in mutual distrust. Talleyrand and Roederer received concrete parts of the
+plan as powerful safeguards and operators.
+
+Weeks before 18 Brumaire: Source D says conspirators met at Bonaparte's apartment
+on Rue de la Victoire to plan the coup. They set the date as 18 Brumaire Year
+VIII, or 9 November 1799.
+
+17 Brumaire Year VIII: Source D says Bonaparte invited General Lefebvre, commander
+of the Paris garrison, and loyal officers to assemble at Rue de la Victoire at
+7 a.m. the next day, armed and in dress uniform. This is proximate agency evidence
+that military coordination was prepared before the official transfer to
+Saint-Cloud.
+
+18 Brumaire, 7 a.m.: Source D says the coup began with conspirators spreading a
+rumor of a Jacobin plot. The rumor helped ratify a decree moving the assemblies
+to Saint-Cloud.
+
+18 Brumaire: Source D says Bonaparte received command of the army's 17th Division,
+which was nominally to protect the assemblies. The same source states that this
+gave him freedom to act.
+
+18 Brumaire, around 10 a.m.: Source D says Bonaparte addressed the Council of
+Ancients, defended his vision of the Republic, and said nothing in defense of
+the Constitution. This directly supports a constitutional-break mechanism.
+
+18 Brumaire: Source D says Ducos and Sieyes resigned as directors. Gohier and
+Moulin suspected a trap and refused to resign. Bonaparte then used Moreau and
+three hundred men to "protect" them at the Luxembourg, neutralizing opposition
+inside the Directory.
+
+18 Brumaire: Source D says Sieyes's military pawns were positioned across Paris:
+officers watched the Ministry of War, Lannes and Berruyer guarded key sites,
+Murat and Sebastiani watched the Palais Bourbon and Pont de la Concorde,
+Macdonald went to Versailles, and Serurier moved the legislative guard to
+Saint-Cloud. This is direct evidence of a planned coercive perimeter.
+
+18 Brumaire: Source D says Barras waited to see which way politics would turn
+until Talleyrand obtained his resignation. By the evening, the Directory had lost
+its executive body.
+
+18 Brumaire, evening: Source D says the conspirators still needed the assemblies
+to vote for a new constitution. This is a key hoop test: if the plot were purely
+military from the start, parliamentary ratification would matter less; if it was
+a constitutional coup, assembly consent was initially central.
+
+19 Brumaire: Source E says the second day was crucial because surprise had been
+lost. Many Council members saw through the claimed threat that had justified the
+move and suspected a trap.
+
+19 Brumaire, early session: Source D says a significant Jacobin presence surprised
+the plotters. The session began late, increasing tension. Debrel insisted that
+deputies renew their vows to the Constitution of Year III, and they did so.
+
+19 Brumaire: Source D says Bonaparte interrupted the Ancients, spoke incoherently,
+and was poorly received. When challenged about the Constitution, he answered that
+the deputies themselves had destroyed it through prior coups. The room erupted.
+
+19 Brumaire: Source D says Bonaparte entered the Council of Five Hundred with
+armed grenadiers, provoking cries against dictatorship, unlawful action, and
+tyranny. The same source says Murat, Leclerc, and grenadiers prevented further
+deterioration.
+
+19 Brumaire: Source E says Bonaparte lost composure in the chambers, met growing
+resistance, and almost fainted after the confrontation in the Council of Five
+Hundred. This critical secondary account contradicts later heroic images of a
+calm, surgical coup.
+
+19 Brumaire: Source E says Lucien Bonaparte saved the day by calling on troops to
+defend his brother. Source D similarly says Lucien left the assembly, addressed
+soldiers theatrically, and helped justify military intervention.
+
+19 Brumaire: Source D says Lucien declared to the soldiers that he would resist
+his own brother if Napoleon violated French liberty. The speech reframed military
+intervention as defense of liberty rather than coercion against deputies.
+
+19 Brumaire: Source D says Murat entered the Orangerie and announced that the
+deputies had been dissolved. Deputies panicked and some reportedly fled. This is
+smoking-gun style evidence for the military-coercion mechanism because the
+legislative body did not freely complete the process before force intervened.
+
+19 Brumaire, evening: Source D says several hundred members of the Council of Five
+Hundred were rounded up and a session finally began around 21:00. Chazal proposed
+endorsing the two days' events, abolishing the Directory, and creating an
+executive commission with Sieyes, Ducos, and Bonaparte.
+
+10 November 1799: Source B says the Brumaire Decree declared that the Directory
+was no more and named Sieyes, Roger-Ducos, and General Bonaparte as Consuls of
+the French Republic. The decree also invested the commission with directorial
+power, charged it with administrative order, internal tranquility, and peace, and
+adjourned the legislative body until 20 February 1800.
+
+10 November 1799: Source B says each council was to appoint a commission of
+twenty-five members, and those commissions would handle urgent police,
+legislation, and finance matters. This shows an effort to legalize the coup
+through reduced legislative commissions rather than a full representative
+assembly.
+
+10 November 1799: Source B says the commissions were charged with constitutional
+changes meant to consolidate sovereignty, the representative system, liberty,
+equality, security, and property. This is official legitimating language. It
+supports a republican-restoration frame but cannot by itself prove the actual
+mechanism.
+
+10 November 1799: Source A says Bonaparte's public justification claimed that
+Parisian authorities were divided, that the Constitution was "half destroyed,"
+and that all parties asked for his support. He presented himself as refusing to
+be one party's man.
+
+10 November 1799: Source A says Bonaparte claimed the Council of Elders summoned
+him and gave him control of forces to secure legislative independence. This is
+important as a self-exculpatory source: it is direct evidence of the official
+narrative, not direct proof of the underlying cause.
+
+10 November 1799: Source A says Bonaparte claimed assassins inside Saint-Cloud
+threatened deputies, attacked him, and forced guards to clear the hall. This
+claim is evidence about post-coup legitimation and news management; its
+credibility should be tested against Sources D and E.
+
+12 November 1799: Source B says the Consuls' proclamation framed the Constitution
+of Year III as having perished because it could not protect rights or support
+itself. It blamed ambitious factions for dividing the Republic and promised a
+re-established republic founded on equality, liberty, and representation.
+
+December 1799: Source C says the Constitution of Year VIII created citizenship
+lists in which citizens chose trustworthy local names, then departmental lists,
+then national lists. Public offices were drawn from these lists. This design
+preserved a voting vocabulary while filtering actual selection through notables
+and higher institutions.
+
+December 1799: Source C says the Conservative Senate had eighty life members and
+would choose legislators, tribunes, consuls, judges of cassation, and account
+commissioners from the national list. The Senate's sittings were not public.
+
+December 1799: Source C says Sieyes and Roger-Ducos, the retiring consuls, were
+appointed to the Senate and would join with the second and third consuls to
+appoint the majority of the Senate. This is direct institutional evidence of
+elite self-reproduction inside the new constitution.
+
+December 1799: Source C says the Tribunate could discuss proposed laws, but the
+Legislative Body voted by secret ballot without discussion. The government could
+withdraw or modify proposals during discussion.
+
+December 1799: Source C names Bonaparte as First Consul, Cambaceres as Second
+Consul, and Lebrun as Third Consul. It says the First Consul had special duties
+and prerogatives.
+
+December 1799: Source C says the First Consul promulgated laws and appointed or
+dismissed ministers, high diplomatic agents, army and navy officers, local
+administrators, and government commissioners before tribunals. The Second and
+Third Consuls had consultative voices; after they recorded opinions, the First
+Consul's decision sufficed. This is direct evidence that the final constitutional
+outcome concentrated power in Bonaparte.
+
+December 1799: Source C says the government proposed laws and made regulations to
+secure execution. It controlled internal security, external defense, the armed
+forces, and foreign relations.
+
+December 1799: Source C says the public force was essentially obedient and no
+armed body could deliberate. This institutionalizes military subordination to the
+new state while the coup itself had relied on military intervention.
+
+December 1799: Source C says constitutional authority could be suspended in cases
+of armed rebellion or disturbances threatening state security. This provides a
+legal emergency channel inside the new order.
+
+December 1799 and after: Source E argues that the Bonapartist story turned the
+coup into a myth of national rescue, but the Directory had more to offer than the
+poor image propagated by successors. Crook says the coup nearly miscarried and
+Bonaparte's authority was consolidated gradually rather than immediately.
+
+1795-1799: Source E says the Directory had republican and pluralistic features:
+a male taxpaying franchise of about five million, departmental electoral
+colleges, annual legislative contests, some press freedom, and Year VII elections
+that were endorsed rather than overturned. This evidence challenges an inevitable
+collapse thesis.
+
+1799: Source E says Bonaparte himself helped create the crisis because the
+military reverses of 1799 followed from his adventurism in the Middle East. This
+is direct counterevidence against a simple "Napoleon saved France from a crisis
+he did not shape" narrative.
+
+1799 before Brumaire: Source E says many recently elected deputies believed
+constitutional revision was the alternative to Jacobin terror or royalist
+restoration. This supports the claim that fear of extremes mattered to elites,
+but does not by itself prove that fear made military dictatorship necessary.
+
+1799 before Brumaire: Source E says Sieyes's original plan was to persuade the
+two councils to yield power voluntarily to a revisionary commission. Bonaparte's
+role was intended to be subordinate.
+
+19 Brumaire and after: Source E says recourse to military force strengthened
+Bonaparte's hand. He then shaped the new constitution in a more personalist
+direction, creating what Crook calls a coup within the original coup.
+
+December 1799: Source E says the Constitution of Year VIII dropped the Declaration
+of Rights and made references to liberty and equality increasingly perfunctory.
+This is interpretive evidence about authoritarian constitutional design, supported
+by the constitutional provisions in Source C.
+
+1799-1802: Source E says the new order was not immediately secure. Responses
+ranged from republican relief to royalist expectation and widespread apathy. The
+constitutional plebiscite showed indifference, and Crook says Lucien Bonaparte
+effectively doubled disappointing vote returns.
+
+1800-1801: Source E says broader popularity came later through victory at
+Marengo, repression against lawlessness, and reconciliation with the Catholic
+Church through the Concordat of 1801. This implies that the Consulate's durable
+legitimacy was built after the coup rather than fully present before it.
+
+Discriminating evidence map
+
+Elite constitutional-revision mechanism. Strong evidence would show Sieyes and
+revisionist civilians initiating the plan, recruiting a military figure because
+constitutional change needed force, seeking assembly or commission approval, and
+designing a stronger executive. The strongest packet evidence is Sieyes's May
+1799 directorship, his search for a military backer, the lack of acceptable
+alternatives to Bonaparte, the planned commissions, and the decree's
+constitutional language.
+
+Bonapartist personalist-military mechanism. Strong evidence would show Bonaparte
+using armed control, personal prestige, Lucien's legislative role, Murat's force,
+and the final Constitution to convert a broader revisionist plot into his own
+rule. The strongest packet evidence is the assembly resistance on 19 Brumaire,
+Murat's dispersal of deputies, Lucien's speech to soldiers, the evening roundup
+of deputies, and the Constitution's concentration of appointment and decision
+power in the First Consul.
+
+Structural collapse/security-crisis mechanism. Strong evidence would show that
+war, factionalism, prior coups, and fear of Jacobin or royalist threats made the
+Directory unable to survive even without Bonaparte's individual actions. The
+packet includes war, Second Coalition, prior disturbances, and official claims of
+constitutional failure. But the critical sources also show the Directory had
+ongoing elections, some pluralism, and possible liberal development.
+
+Popular-demand/order mechanism. Strong evidence would show broad popular demand
+for Bonaparte or mass legitimation before the institutional outcome. The packet
+contains cheering at Frejus and official claims of republican salvation, but the
+critical account stresses apathy, uncertain regional interpretations, and
+post-hoc plebiscite manipulation. This mechanism should not win unless the
+pipeline finds independent evidence of mass demand.
+
+Royalist-restoration avoidance mechanism. Strong evidence would show elites chose
+Bonaparte mainly to prevent restoration. The packet contains Pichegru's royalist
+defection, fear of royalist restoration, and Bonaparte's earlier suppression of a
+royalist insurrection. But the final institutional design empowered Bonaparte
+rather than merely blocking royalists.
+
+Source limitations and next evidence needs
+
+This packet improves over a general encyclopedia-style input, but it is still a
+curated excerpt packet. A publication-ready inquiry would add private
+correspondence from Sieyes, Talleyrand, Roederer, Lucien Bonaparte, Moreau, and
+Barras; minutes or voting records from the Councils; military orders and troop
+movement records; police reports on the Jacobin-plot rumor; local press and
+departmental responses; and raw plebiscite returns. These would test whether the
+decisive mechanism was elite constitutional revision, Bonapartist military
+coercion, structural regime collapse, fear of extremes, or popular demand for
+order.
