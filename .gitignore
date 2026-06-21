@@ -68,6 +68,7 @@ nul
 
 # Ignore environment variable files
 .env
+.claude/hook_log.jsonl
 
 # Testing
 .coverage
