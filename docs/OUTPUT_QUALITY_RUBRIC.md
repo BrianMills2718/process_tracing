@@ -28,7 +28,7 @@ not misled by the ranking.
 | Evidence weighting and dependence | 15 | Report distinguishes raw counts from effective/weighted evidence; dependence clusters and weak-evidence accumulation are visible. |
 | Hypothesis discrimination | 10 | Broad or absorptive winning hypotheses are flagged when they overlap rival mechanisms; remaining discriminators are named. |
 | Source-scope and absence calibration | 10 | Damaging absence findings are caveated when the source is broad and may not contain the missing micro-evidence. |
-| Report usability and safety | 5 | HTML is safe to open, collapsibles work with model-provided IDs, and the audit is visible without reading JSON. |
+| Report usability and safety | 5 | HTML is safe to open, collapsibles work with model-provided IDs, the top-ranked hypothesis is visually connected to its supporting evidence, and the audit is visible without reading JSON. |
 
 ## Scope Limits
 

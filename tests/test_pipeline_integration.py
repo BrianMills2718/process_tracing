@@ -12,7 +12,7 @@ import pytest
 
 from pt.bayesian import run_bayesian_update
 from pt.pipeline import _source_text_sha256, run_pipeline
-from pt.report import _dom_id, generate_report
+from pt.report import _build_vis_data, _dom_id, generate_report
 from pt.schemas import (
     AbsenceEvaluation,
     AbsenceResult,
@@ -503,12 +503,30 @@ class TestReportConsistency:
             "secondary mechanism",
             "broad winning hypothesis",
             "source-scope absence",
+            "top driver edge",
         ]:
             assert phrase in normalized
 
         audit = audit_result(result, html, focal_year_override=1799)
         assert audit["grade"] == "A"
         assert audit["score"] >= 90
+        assert audit["categories"]["report_usability_and_safety"]["top_graph_connected"] is True
+
+    def test_network_keeps_weak_top_driver_edges_visible(self):
+        result = _make_audit_stress_result()
+        top_id = result.bayesian.ranking[0]
+        top = next(p for p in result.bayesian.posteriors if p.hypothesis_id == top_id)
+
+        nodes, edges = _build_vis_data(result)
+        node_ids = {node["id"] for node in nodes}
+        top_driver_edges = [
+            edge for edge in edges
+            if edge.get("to") == top_id and edge.get("from") in set(top.top_drivers)
+        ]
+
+        assert top_id in node_ids
+        assert top_driver_edges
+        assert any("top driver edge" in edge.get("title", "") for edge in top_driver_edges)
 
 
 class TestFromResultProvenance:

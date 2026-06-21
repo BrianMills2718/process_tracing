@@ -368,6 +368,7 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
     edges: list[dict[str, object]] = []
     ext = result.extraction
     posteriors = {p.hypothesis_id: p.final_posterior for p in result.bayesian.posteriors}
+    posterior_objs = {p.hypothesis_id: p for p in result.bayesian.posteriors}
     node_ids = set()
 
     for e in ext.events:
@@ -422,24 +423,34 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
 
     # Evidence-hypothesis edges from the likelihood matrix (same caps as the update)
     hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    top_driver_pairs = {
+        (hyp_id, evidence_id)
+        for hyp_id, posterior in posterior_objs.items()
+        if hyp_id in hyp_ids
+        for evidence_id in posterior.top_drivers
+    }
     for evidence_id, lrs in lr_matrix(result.testing, hyp_ids, _interpretive_caps(result)):
         if evidence_id not in node_ids:
             continue
         for hyp_id, lr in lrs.items():
             if hyp_id not in node_ids:
                 continue
-            if 0.67 <= lr <= 1.5:
+            is_top_driver = (hyp_id, evidence_id) in top_driver_pairs
+            if 0.67 <= lr <= 1.5 and not is_top_driver:
                 continue  # Skip uninformative
             log_lr = abs(math.log(max(lr, 0.01)))
-            width = max(0.5, min(4, log_lr))
+            width = max(0.9 if is_top_driver else 0.5, min(4, log_lr))
             color = "#28a745" if lr > 1 else "#dc3545"
-            edges.append({
+            edge: dict[str, object] = {
                 "from": evidence_id, "to": hyp_id,
                 "arrows": "to", "width": round(width, 1),
-                "color": {"color": color, "opacity": 0.6},
+                "color": {"color": color, "opacity": 0.85 if is_top_driver else 0.6},
                 "group": "evidence_link",
-                "title": f"LR={lr:.2f}",
-            })
+                "title": f"LR={lr:.2f}" + ("; top driver edge" if is_top_driver else ""),
+            }
+            if is_top_driver and 0.67 <= lr <= 1.5:
+                edge["dashes"] = [5, 5]
+            edges.append(edge)
 
     return nodes, edges
 
@@ -590,7 +601,7 @@ def generate_report(result: ProcessTracingResult) -> str:
               <span style="display:inline-block;width:12px;height:3px;background:#28a745;vertical-align:middle"></span>/<span style="display:inline-block;width:12px;height:3px;background:#dc3545;vertical-align:middle"></span> Evidence Links</label>
           </div>
           <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="toggle-isolated">
+            <input class="form-check-input" type="checkbox" id="toggle-isolated" checked>
             <label class="form-check-label" for="toggle-isolated">Hide isolated nodes</label>
           </div>
           <div class="btn-group btn-group-sm ms-auto">
@@ -600,7 +611,7 @@ def generate_report(result: ProcessTracingResult) -> str:
           </div>
         </div>
         <div id="network" style="width:100%;height:600px;border:1px solid #ddd;border-radius:4px"></div>
-        <div id="network-info" class="alert alert-light mt-2 small">Click a node for details. Green edges = supporting evidence (LR &gt; 1). Red edges = opposing evidence (LR &lt; 1).</div>
+        <div id="network-info" class="alert alert-light mt-2 small">Click a node for details. Green edges = supporting evidence (LR &gt; 1). Red edges = opposing evidence (LR &lt; 1). A dashed top driver edge is shown even when the LR is weak because it is one of that hypothesis's largest updates.</div>
       </div>
       </div>
     </div>"""
@@ -1439,22 +1450,41 @@ document.addEventListener('DOMContentLoaded', function() {{
     network.fit();
   }});
 
+  var evLinkCb = document.getElementById('toggle-evidence_link');
+  var isolatedCb = document.getElementById('toggle-isolated');
+
+  function edgeVisible(edge) {{
+    if (edge.group === 'evidence_link' && evLinkCb && !evLinkCb.checked) return false;
+    return !edge.hidden;
+  }}
+
+  function updateNodeVisibility() {{
+    var connected = new Set();
+    edges.forEach(function(e) {{
+      if (edgeVisible(e)) {{
+        connected.add(e.from);
+        connected.add(e.to);
+      }}
+    }});
+    var hideIsolated = isolatedCb && isolatedCb.checked;
+    var updates = [];
+    nodes.forEach(function(n) {{
+      var groupCb = document.getElementById('toggle-' + n.group);
+      var groupVisible = !groupCb || groupCb.checked;
+      var isIsolated = !connected.has(n.id);
+      updates.push({{id: n.id, hidden: !groupVisible || (hideIsolated && isIsolated)}});
+    }});
+    nodes.update(updates);
+  }}
+
   // Toggle node groups
   ['event','hypothesis','evidence','actor','mechanism'].forEach(function(group) {{
     var cb = document.getElementById('toggle-' + group);
     if (!cb) return;
-    cb.addEventListener('change', function() {{
-      var show = cb.checked;
-      var updates = [];
-      nodes.forEach(function(n) {{
-        if (n.group === group) updates.push({{id: n.id, hidden: !show}});
-      }});
-      nodes.update(updates);
-    }});
+    cb.addEventListener('change', updateNodeVisibility);
   }});
 
   // Toggle evidence link edges
-  var evLinkCb = document.getElementById('toggle-evidence_link');
   if (evLinkCb) {{
     evLinkCb.addEventListener('change', function() {{
       var show = evLinkCb.checked;
@@ -1463,33 +1493,16 @@ document.addEventListener('DOMContentLoaded', function() {{
         if (e.group === 'evidence_link') updates.push({{id: e.id, hidden: !show}});
       }});
       edges.update(updates);
+      updateNodeVisibility();
     }});
   }}
 
   // Toggle isolated nodes (nodes with no visible edges)
-  var isolatedCb = document.getElementById('toggle-isolated');
   if (isolatedCb) {{
-    isolatedCb.addEventListener('change', function() {{
-      var hideIsolated = isolatedCb.checked;
-      // Build set of node IDs that have at least one visible edge
-      var connected = new Set();
-      edges.forEach(function(e) {{
-        if (!e.hidden) {{
-          connected.add(e.from);
-          connected.add(e.to);
-        }}
-      }});
-      var updates = [];
-      nodes.forEach(function(n) {{
-        // Don't touch nodes already hidden by group toggles
-        var groupCb = document.getElementById('toggle-' + n.group);
-        if (groupCb && !groupCb.checked) return;
-        var isIsolated = !connected.has(n.id);
-        if (isIsolated) updates.push({{id: n.id, hidden: hideIsolated}});
-      }});
-      nodes.update(updates);
-    }});
+    isolatedCb.addEventListener('change', updateNodeVisibility);
   }}
+
+  updateNodeVisibility();
 }});
 </script>
 </body>

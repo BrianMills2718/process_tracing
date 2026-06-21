@@ -145,6 +145,37 @@ def _broad_winner_risk(result: ProcessTracingResult) -> bool:
     return any(term in text for term in broad_terms)
 
 
+def _network_visual_stats(result: ProcessTracingResult) -> dict[str, Any]:
+    from pt.report import _build_vis_data
+
+    nodes, edges = _build_vis_data(result)
+    node_ids = {str(node["id"]) for node in nodes}
+    degree = {node_id: 0 for node_id in node_ids}
+    for edge in edges:
+        source = str(edge["from"])
+        target = str(edge["to"])
+        degree[source] = degree.get(source, 0) + 1
+        degree[target] = degree.get(target, 0) + 1
+
+    top_id = result.bayesian.ranking[0] if result.bayesian.ranking else None
+    top_degree = degree.get(top_id or "", 0)
+    top_in_graph = top_id in node_ids if top_id else True
+    top_graph_connected = top_id is None or (top_in_graph and top_degree > 0)
+    isolated_count = sum(1 for node_id in node_ids if degree.get(node_id, 0) == 0)
+    isolated_share = isolated_count / len(node_ids) if node_ids else 0.0
+
+    return {
+        "node_count": len(node_ids),
+        "edge_count": len(edges),
+        "isolated_count": isolated_count,
+        "isolated_share": round(isolated_share, 3),
+        "top_id": top_id,
+        "top_in_graph": top_in_graph,
+        "top_degree": top_degree,
+        "top_graph_connected": top_graph_connected,
+    }
+
+
 def audit_result(
     result: ProcessTracingResult,
     report_html: str,
@@ -278,11 +309,17 @@ def audit_result(
     }
     score += source_points
 
+    network = _network_visual_stats(result)
+    network_legend_visible = _report_has(report_html, "top driver edge")
     safe = "</script><script>" not in report_html and 'id="detail-' in report_html
+    visual_ok = network["top_graph_connected"] and network_legend_visible
     categories["report_usability_and_safety"] = {
-        "points": 5 if safe else 2,
+        "points": 5 if safe and visual_ok else 2 if safe else 0,
         "max": 5,
         "safe": safe,
+        "visual_ok": visual_ok,
+        "network_legend_visible": network_legend_visible,
+        **network,
     }
     score += categories["report_usability_and_safety"]["points"]
 
