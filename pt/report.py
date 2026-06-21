@@ -7,7 +7,7 @@ import html
 import json
 import math
 import re
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from pt.bayesian import INTERPRETIVE_LR_CAP, RESIDUAL_ID, lr_matrix
 from pt.schemas import Evidence, Hypothesis, HypothesisPosterior, PredictionClassification, ProcessTracingResult
@@ -514,6 +514,79 @@ def _diagnostic_strength_summary(result: ProcessTracingResult) -> dict[str, int 
     }
 
 
+def _evidence_triage_summary(result: ProcessTracingResult) -> dict[str, Any]:
+    """Classify extracted evidence by how it is used in the current analysis."""
+    focal_year = _focal_year(result)
+    hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    matrix = dict(lr_matrix(result.testing, hyp_ids, _interpretive_caps(result)))
+    by_item = {item.evidence_id: item for item in result.testing.evidence_likelihoods}
+    top_driver_ids = {
+        evidence_id
+        for posterior in result.bayesian.posteriors
+        for evidence_id in posterior.top_drivers
+    }
+    counts = {
+        "top_driver": 0,
+        "displayed_discriminator": 0,
+        "background_weak_signal": 0,
+        "low_relevance": 0,
+        "near_neutral": 0,
+        "tested_unlinked": 0,
+    }
+    labels = {
+        "top_driver": "Top driver",
+        "displayed_discriminator": "Displayed discriminator",
+        "background_weak_signal": "Background weak signal",
+        "low_relevance": "Low relevance",
+        "near_neutral": "Near-neutral",
+        "tested_unlinked": "Tested, not displayed",
+    }
+    actions = {
+        "top_driver": "Audit source quality and temporal proximity before treating as mechanism evidence.",
+        "displayed_discriminator": "Check whether the signal is independent or shares a source/mechanism with other items.",
+        "background_weak_signal": "Keep as enabling context unless paired with proximate mechanism traces.",
+        "low_relevance": "Do not use as causal support without a better relevance justification.",
+        "near_neutral": "Move to inventory/context unless a new hypothesis makes it discriminating.",
+        "tested_unlinked": "Classify manually as background, discarded, or pending a sharper test.",
+    }
+    samples: dict[str, list[str]] = {key: [] for key in counts}
+
+    for evidence in result.extraction.evidence:
+        item = by_item.get(evidence.id)
+        lrs = matrix.get(evidence.id, {})
+        max_strength = max(
+            (abs(math.log(max(lr, 0.01))) for lr in lrs.values()),
+            default=0.0,
+        )
+        displayed = evidence.id in top_driver_ids or any(
+            not (0.67 <= lr <= 1.5) for lr in lrs.values()
+        )
+        year = _first_year(evidence.approximate_date)
+        if evidence.id in top_driver_ids:
+            bucket = "top_driver"
+        elif displayed:
+            bucket = "displayed_discriminator"
+        elif item is not None and item.relevance < 0.4:
+            bucket = "low_relevance"
+        elif max_strength <= 0.1:
+            bucket = "near_neutral"
+        elif focal_year is not None and year is not None and year < focal_year - 5:
+            bucket = "background_weak_signal"
+        else:
+            bucket = "tested_unlinked"
+
+        counts[bucket] += 1
+        if len(samples[bucket]) < 3:
+            samples[bucket].append(f"{evidence.id}: {evidence.description[:80]}")
+
+    return {
+        "counts": counts,
+        "labels": labels,
+        "actions": actions,
+        "samples": samples,
+    }
+
+
 def _render_academic_review(
     result: ProcessTracingResult,
     *,
@@ -535,6 +608,24 @@ def _render_academic_review(
         for term in ("single historical text", "single source", "single text")
     )
     broad_winner = _broad_winning_hypothesis(top_h)
+    triage = _evidence_triage_summary(result)
+    triage_counts = triage["counts"]
+    triage_rows = "".join(
+        f"""
+        <tr>
+          <td><strong>{_esc(triage['labels'][key])}</strong></td>
+          <td>{count}</td>
+          <td>{_esc('; '.join(triage['samples'][key]) or 'None')}</td>
+          <td>{_esc(triage['actions'][key])}</td>
+        </tr>"""
+        for key, count in triage_counts.items()
+    )
+    external_blockers = [
+        "single-source corpus",
+        "weak diagnostic tests",
+        "thin proximate evidence",
+        "broad hypothesis design",
+    ]
     rows = [
         (
             "Input corpus and source base",
@@ -595,11 +686,17 @@ def _render_academic_review(
         "Only then upgrade from exploratory ranking to a PhD-level causal claim.",
     ]
     steps_html = "".join(f"<li>{_esc(step)}</li>" for step in optimal_steps)
+    blockers_html = "".join(f"<li>{_esc(blocker)}</li>" for blocker in external_blockers)
     return f"""
     <div class="card mb-4 shadow-sm border-danger">
       <div class="card-header bg-danger text-white"><h4 class="mb-0">Academic PhD Review</h4></div>
       <div class="card-body">
         <p><strong>Current scholarly status:</strong> exploratory process-tracing output under a limited input text. It is useful for hypothesis generation and audit planning, not yet a PhD-level causal demonstration.</p>
+        <div class="alert alert-danger">
+          <strong>Optimality Gate:</strong> not optimal for a PhD-level causal claim. Next iteration mode:
+          <strong>collect or design evidence</strong>, not report polishing. Blocking conditions:
+          <ul class="mb-0">{blockers_html}</ul>
+        </div>
         <h5>Recommendations by Pipeline Output</h5>
         <div class="table-responsive">
           <table class="table table-sm table-bordered">
@@ -609,6 +706,18 @@ def _render_academic_review(
               <th>How to improve</th>
             </tr></thead>
             <tbody>{row_html}</tbody>
+          </table>
+        </div>
+        <h5>Evidence Triage</h5>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead><tr>
+              <th>Class</th>
+              <th>Count</th>
+              <th>Examples</th>
+              <th>Next action</th>
+            </tr></thead>
+            <tbody>{triage_rows}</tbody>
           </table>
         </div>
         <h5>Proceed Until Optimal</h5>

@@ -504,6 +504,8 @@ class TestReportConsistency:
             "not discarded",
             "academic phd review",
             "recommendations by pipeline output",
+            "optimality gate",
+            "evidence triage",
             "proceed until optimal",
             "verdict calibration",
             "secondary mechanism",
@@ -520,6 +522,10 @@ class TestReportConsistency:
         assert audit["academic_cap"] == 76
         assert audit["academic_caps"]
         assert audit["priority_recommendations"]
+        assert audit["optimality"]["status"] == "not_optimal"
+        assert audit["optimality"]["next_iteration_mode"] == "collect_or_design_evidence"
+        assert audit["optimality"]["blocked_by_external_evidence"] is True
+        assert audit["optimality"]["acceptance_criteria"]
         assert audit["categories"]["report_usability_and_safety"]["top_graph_connected"] is True
 
     def test_network_keeps_weak_top_driver_edges_visible(self):

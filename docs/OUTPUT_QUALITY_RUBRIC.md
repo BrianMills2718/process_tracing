@@ -31,7 +31,7 @@ not survive a PhD-level methods critique.
 | Evidence weighting and dependence | 15 | Raw counts are distinguished from effective evidence; dependence clusters, weak-evidence accumulation, and source-lineage risks are visible. |
 | Hypothesis discrimination | 10 | Broad or absorptive winners are flagged; rival hypotheses have explicit discriminators rather than overlapping umbrella mechanisms. |
 | Source-scope and absence calibration | 10 | Absence findings are tied to source genre and archive expectations; broad overview texts cannot support strong damaging absence claims without caveats. |
-| Report usability and safety | 5 | HTML is safe, top-ranked hypotheses are visually connected to support, hidden isolated nodes are disclosed as not discarded, and PhD-level recommendations are visible in the report. |
+| Report usability and safety | 5 | HTML is safe, top-ranked hypotheses are visually connected to support, hidden isolated nodes are disclosed as not discarded, and PhD-level recommendations, evidence triage, and optimality gate are visible in the report. |
 
 ## Academic Evidence Caps
 
@@ -57,6 +57,23 @@ for hypothesis generation, explicit about its limits, and precise about what
 must be collected next. Do not raise the grade by hiding limitations; raise it
 by improving source scope, diagnostic evidence, temporal process evidence, and
 hypothesis discrimination.
+
+## Optimality Gate
+
+Each audit must say whether the output is optimal for the current corpus and
+what kind of iteration is next:
+
+- `optimal_for_current_corpus`: no academic caps remain; the output can be read
+  as PhD-review-ready under the available evidence.
+- `not_optimal` + `repair_report_or_model`: the JSON contains enough information,
+  but the report/model presentation or synthesis needs correction.
+- `not_optimal` + `collect_or_design_evidence`: the remaining blocker requires
+  new source material, sharper discriminators, or pre-specified tests. Report
+  polishing alone must not raise the grade.
+
+The HTML report must include an evidence triage table that classifies extracted
+items as top drivers, displayed discriminators, background weak signals,
+low-relevance items, near-neutral inventory, or tested-but-unlinked evidence.
 
 ## Iteration Protocol
 

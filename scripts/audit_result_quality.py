@@ -219,8 +219,20 @@ def _academic_caps(
     caps: list[dict[str, Any]] = []
     recommendations: list[str] = []
 
-    def add(cap: int, reason: str, recommendation: str) -> None:
-        caps.append({"cap": cap, "reason": reason, "recommendation": recommendation})
+    def add(
+        cap: int,
+        reason: str,
+        recommendation: str,
+        action_type: str,
+        acceptance_criteria: str,
+    ) -> None:
+        caps.append({
+            "cap": cap,
+            "reason": reason,
+            "recommendation": recommendation,
+            "action_type": action_type,
+            "acceptance_criteria": acceptance_criteria,
+        })
         recommendations.append(recommendation)
 
     limitations = " ".join(result.synthesis.limitations).lower()
@@ -229,6 +241,8 @@ def _academic_caps(
             78,
             "The synthesis itself acknowledges a single-source or single-text basis.",
             "Add an explicit source packet: primary documents, hostile/alternative secondary accounts, and source metadata before treating the result as PhD-level causal evidence.",
+            "external_evidence",
+            "At least three independent source groups are represented, including one primary-source group and one rival/critical secondary account.",
         )
 
     diagnostic = _diagnostic_strength_stats(result)
@@ -237,12 +251,16 @@ def _academic_caps(
             76,
             "No evidence item clears even the moderate diagnostic-strength threshold.",
             "Design a small set of pre-specified hoop, smoking-gun, and discriminating straw-in-the-wind tests before rerunning likelihood elicitation.",
+            "test_design",
+            "Each major rival pair has at least one pre-specified discriminator and at least one evidence item reaches moderate diagnostic strength.",
         )
     elif diagnostic["decisive_items"] == 0:
         add(
             84,
             "The result lacks decisive process-tracing tests.",
             "Seek direct traces that would be unlikely under rival hypotheses, not just background facts that weakly favor one story.",
+            "external_evidence",
+            "At least one decisive or multiple moderate diagnostic traces are found for the leading mechanism.",
         )
 
     total = temporal["total"] or 1
@@ -252,12 +270,16 @@ def _academic_caps(
             80,
             f"Only {temporal['proximate']}/{temporal['total']} evidence items are proximate to the focal outcome.",
             "Collect and separately score outcome-proximate evidence from the final decision window; do not let background conditions carry the main causal claim.",
+            "external_evidence",
+            "At least 20% of scored evidence is proximate to the focal outcome and one proximate item is among the leading hypothesis's top drivers.",
         )
     if temporal["top_driver_background"]:
         add(
             82,
             "One or more top drivers are background-context items rather than proximate mechanism traces.",
             "Separate background enabling conditions from mechanism evidence and require at least one proximate top driver for a publication-strength claim.",
+            "model_design",
+            "Top-driver summaries distinguish enabling conditions from mechanism traces, with at least one proximate mechanism trace for the winner.",
         )
 
     if fragility.get("high_fragile"):
@@ -265,6 +287,8 @@ def _academic_caps(
             84,
             "The leading hypothesis has high comparative support but fragile robustness.",
             "Treat the winner as a provisional ranking; seek fewer, stronger discriminating traces and rerun sensitivity after dependence-cluster review.",
+            "external_evidence",
+            "The winning hypothesis is robust or moderate after adding stronger traces and reviewing dependence clusters.",
         )
 
     if _broad_winner_risk(result):
@@ -272,6 +296,8 @@ def _academic_caps(
             84,
             "The winning hypothesis is broad enough to absorb mechanisms from rival explanations.",
             "Split the broad winner into narrower mechanisms or add explicit discriminators so overlap with rivals cannot create an artificial victory.",
+            "hypothesis_design",
+            "The broad hypothesis is split or narrowed, and every rival pair has named discriminating predictions.",
         )
 
     if verdict_issues:
@@ -279,6 +305,8 @@ def _academic_caps(
             86,
             "At least one synthesis verdict overstates a low-posterior hypothesis.",
             "Calibrate verdict labels to comparative support; label low-support but plausible mechanisms as residual or secondary, not supported.",
+            "report_or_synthesis",
+            "No supported/strongly-supported verdict has comparative support below 0.10 unless explicitly labeled secondary.",
         )
 
     if network["isolated_evidence_count"] > len(result.extraction.evidence) * 0.5:
@@ -286,10 +314,37 @@ def _academic_caps(
             88,
             "More than half of extracted evidence items have no displayed graph edge.",
             "Classify unlinked evidence as background, discarded, or pending-test evidence so readers can distinguish unused inventory from causal support.",
+            "report_or_model",
+            "Every unlinked evidence item is triaged as background, near-neutral, low-relevance, discarded, or pending-test evidence.",
         )
 
     academic_cap = min([entry["cap"] for entry in caps], default=100)
     return academic_cap, caps, recommendations
+
+
+def _optimality_status(score: int, academic_caps: list[dict[str, Any]]) -> dict[str, Any]:
+    """Describe whether the output is optimal and what kind of iteration is next."""
+    external_types = {"external_evidence", "test_design", "hypothesis_design"}
+    external_blockers = [
+        cap for cap in academic_caps
+        if cap.get("action_type") in external_types
+    ]
+    if score >= 90 and not academic_caps:
+        return {
+            "status": "optimal_for_current_corpus",
+            "next_iteration_mode": "none",
+            "blocked_by_external_evidence": False,
+            "acceptance_criteria": [],
+        }
+    mode = "collect_or_design_evidence" if external_blockers else "repair_report_or_model"
+    return {
+        "status": "not_optimal",
+        "next_iteration_mode": mode,
+        "blocked_by_external_evidence": bool(external_blockers),
+        "acceptance_criteria": [
+            cap["acceptance_criteria"] for cap in academic_caps
+        ],
+    }
 
 
 def audit_result(
@@ -458,6 +513,8 @@ def audit_result(
         "academic phd review",
         "recommendations by pipeline output",
         "proceed until optimal",
+        "optimality gate",
+        "evidence triage",
     )
     safe = "</script><script>" not in report_html and 'id="detail-' in report_html
     visual_ok = network["top_graph_connected"] and network_legend_visible and academic_review_visible
@@ -484,12 +541,14 @@ def audit_result(
         network=network,
     )
     score = min(base_score, academic_cap)
+    optimality = _optimality_status(score, academic_caps)
 
     return {
         "score": score,
         "base_score": base_score,
         "academic_cap": academic_cap,
         "grade": _grade(score),
+        "optimality": optimality,
         "categories": categories,
         "academic_caps": academic_caps,
         "priority_recommendations": priority_recommendations,
@@ -517,6 +576,10 @@ def _render_text(audit: dict[str, Any]) -> str:
         lines.append("- priority_recommendations:")
         for rec in audit["priority_recommendations"]:
             lines.append(f"  - {rec}")
+    if audit.get("optimality"):
+        lines.append("- optimality:")
+        for key, value in audit["optimality"].items():
+            lines.append(f"  {key}: {value}")
     return "\n".join(lines)
 
 
