@@ -23,12 +23,12 @@ not misled by the ranking.
 |---|---:|---|
 | Contract integrity | 15 | Evidence, hypotheses, vectors, clusters, and report artifacts are structurally consistent; IDs are exact; no silent drops. |
 | Comparative-support discipline | 15 | Report labels support as comparative, not truth probability; verdict labels are calibrated to posterior support or explicitly caveated as secondary mechanisms. |
-| Temporal and causal proximity | 15 | Report shows focal year, proximate evidence share, background evidence share, and whether top drivers are proximate to the outcome. |
+| Temporal and causal proximity | 15 | Report shows focal year, proximate evidence share, background evidence share, whether top drivers are proximate to the outcome, and a chronological event/evidence timeline. |
 | Robustness and fragility | 15 | High-support fragile results are prominently warned; sensitivity interval, rank stability, and prior stability are visible. |
 | Evidence weighting and dependence | 15 | Report distinguishes raw counts from effective/weighted evidence; dependence clusters and weak-evidence accumulation are visible. |
 | Hypothesis discrimination | 10 | Broad or absorptive winning hypotheses are flagged when they overlap rival mechanisms; remaining discriminators are named. |
 | Source-scope and absence calibration | 10 | Damaging absence findings are caveated when the source is broad and may not contain the missing micro-evidence. |
-| Report usability and safety | 5 | HTML is safe to open, collapsibles work with model-provided IDs, the top-ranked hypothesis is visually connected to its supporting evidence, and the audit is visible without reading JSON. |
+| Report usability and safety | 5 | HTML is safe to open, collapsibles work with model-provided IDs, the top-ranked hypothesis is visually connected to its supporting evidence, hidden isolated nodes are disclosed as not discarded, and the audit is visible without reading JSON. |
 
 ## Scope Limits
 

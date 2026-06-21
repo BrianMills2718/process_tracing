@@ -162,12 +162,17 @@ def _network_visual_stats(result: ProcessTracingResult) -> dict[str, Any]:
     top_in_graph = top_id in node_ids if top_id else True
     top_graph_connected = top_id is None or (top_in_graph and top_degree > 0)
     isolated_count = sum(1 for node_id in node_ids if degree.get(node_id, 0) == 0)
+    evidence_ids = {ev.id for ev in result.extraction.evidence}
+    isolated_evidence_count = sum(
+        1 for evidence_id in evidence_ids if degree.get(evidence_id, 0) == 0
+    )
     isolated_share = isolated_count / len(node_ids) if node_ids else 0.0
 
     return {
         "node_count": len(node_ids),
         "edge_count": len(edges),
         "isolated_count": isolated_count,
+        "isolated_evidence_count": isolated_evidence_count,
         "isolated_share": round(isolated_share, 3),
         "top_id": top_id,
         "top_in_graph": top_in_graph,
@@ -226,7 +231,12 @@ def audit_result(
     score += categories["comparative_support_discipline"]["points"]
 
     temporal = _temporal_stats(result, _focal_year(result, focal_year_override))
-    temporal_visible = _report_has(report_html, "temporal evidence mix", "proximate")
+    temporal_visible = _report_has(
+        report_html,
+        "temporal evidence mix",
+        "proximate",
+        "temporal causal timeline",
+    )
     background_visible = (not temporal["top_driver_background"]) or _report_has(
         report_html, "background top-driver"
     )
@@ -310,7 +320,7 @@ def audit_result(
     score += source_points
 
     network = _network_visual_stats(result)
-    network_legend_visible = _report_has(report_html, "top driver edge")
+    network_legend_visible = _report_has(report_html, "top driver edge", "not discarded")
     safe = "</script><script>" not in report_html and 'id="detail-' in report_html
     visual_ok = network["top_graph_connected"] and network_legend_visible
     categories["report_usability_and_safety"] = {

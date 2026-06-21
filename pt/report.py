@@ -23,6 +23,16 @@ class _TemporalAudit(TypedDict):
     top_driver_background: list[str]
 
 
+class _NetworkCoverage(TypedDict):
+    """Connectivity summary for the network coverage audit."""
+    node_count: int
+    edge_count: int
+    isolated_node_count: int
+    isolated_evidence_count: int
+    top_id: str | None
+    top_degree: int
+
+
 def _interpretive_caps(result: ProcessTracingResult) -> dict[str, float]:
     """Per-evidence interpretive caps, matching what the Bayesian update applied,
     so the report's displayed LRs agree with the model."""
@@ -237,6 +247,30 @@ def _effective_evidence_count(result: ProcessTracingResult) -> tuple[float, int]
     return unclustered + cluster_effective, len(clustered)
 
 
+def _network_coverage(
+    result: ProcessTracingResult,
+    nodes: list[dict[str, object]],
+    edges: list[dict[str, object]],
+) -> _NetworkCoverage:
+    """Summarize what the network hides or connects."""
+    degree = {str(node["id"]): 0 for node in nodes}
+    for edge in edges:
+        source = str(edge["from"])
+        target = str(edge["to"])
+        degree[source] = degree.get(source, 0) + 1
+        degree[target] = degree.get(target, 0) + 1
+    evidence_ids = {ev.id for ev in result.extraction.evidence}
+    top_id = result.bayesian.ranking[0] if result.bayesian.ranking else None
+    return {
+        "node_count": len(nodes),
+        "edge_count": len(edges),
+        "isolated_node_count": sum(1 for node_id in degree if degree[node_id] == 0),
+        "isolated_evidence_count": sum(1 for evidence_id in evidence_ids if degree.get(evidence_id, 0) == 0),
+        "top_id": top_id,
+        "top_degree": degree.get(top_id or "", 0),
+    }
+
+
 def _verdict_calibration_issues(
     result: ProcessTracingResult,
     posteriors: dict[str, HypothesisPosterior],
@@ -274,6 +308,7 @@ def _render_output_quality_audit(
     top_robust: str,
     posteriors: dict[str, HypothesisPosterior],
     ev_map: dict[str, Evidence],
+    network_coverage: _NetworkCoverage,
 ) -> str:
     """Render caveats that keep the report from overstating its own evidence."""
     temporal = _temporal_evidence_mix(result, top_id, ev_map, posteriors)
@@ -318,6 +353,17 @@ def _render_output_quality_audit(
       event, or mechanism.
     </div>""")
 
+    cards.append(f"""
+    <div class="alert alert-light border mb-2">
+      <strong>Network Coverage.</strong>
+      The causal network has {network_coverage["node_count"]} nodes and {network_coverage["edge_count"]} edges.
+      The first view hides {network_coverage["isolated_node_count"]} isolated nodes by default, but they are
+      <strong>not discarded</strong>; the network toggle restores them and the Evidence Inventory keeps the full list.
+      {network_coverage["isolated_evidence_count"]} evidence item(s) currently have no visual edge because they are
+      not top drivers and do not clear the displayed LR threshold. Top hypothesis {_esc(str(network_coverage["top_id"]))}
+      has visual degree {network_coverage["top_degree"]}.
+    </div>""")
+
     if verdict_issues:
         issues = "<br>".join(_esc(issue) for issue in verdict_issues)
         cards.append(f"""
@@ -358,6 +404,94 @@ def _render_output_quality_audit(
       <div class="card-body">
         <p class="small text-muted mb-3">This audit highlights conditions that can make a ranked result misleading even when the pipeline contract is valid.</p>
         {''.join(cards)}
+      </div>
+    </div>"""
+
+
+def _evidence_signal_badge(evidence_id: str, matrix: dict[str, dict[str, float]]) -> str:
+    """Render the strongest displayed Bayesian signal for one evidence item."""
+    lrs = matrix.get(evidence_id, {})
+    if not lrs:
+        return '<span class="badge bg-secondary">not tested</span>'
+    hyp_id, lr = max(
+        lrs.items(),
+        key=lambda item: abs(math.log(max(item[1], 0.01))),
+    )
+    strength = abs(math.log(max(lr, 0.01)))
+    if strength < 0.01:
+        return '<span class="badge bg-secondary">neutral LR 1.00</span>'
+    if lr > 1:
+        return f'<span class="badge bg-success">supports {_esc(hyp_id)} LR {lr:.2f}</span>'
+    return f'<span class="badge bg-danger">opposes {_esc(hyp_id)} LR {lr:.2f}</span>'
+
+
+def _render_temporal_timeline(result: ProcessTracingResult) -> str:
+    """Render a chronological table of extracted events and evidence."""
+    hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    matrix = dict(lr_matrix(result.testing, hyp_ids, _interpretive_caps(result)))
+    top_driver_for: dict[str, list[str]] = {}
+    for posterior in result.bayesian.posteriors:
+        for evidence_id in posterior.top_drivers:
+            top_driver_for.setdefault(evidence_id, []).append(posterior.hypothesis_id)
+
+    edge_counts: dict[str, list[str]] = {}
+    for edge in result.extraction.causal_edges:
+        edge_counts.setdefault(edge.source_id, []).append(f"out: {edge.relationship}")
+        edge_counts.setdefault(edge.target_id, []).append(f"in: {edge.relationship}")
+
+    timeline_rows: list[tuple[tuple[int, int, str], str]] = []
+    for event in result.extraction.events:
+        year = _first_year(event.date)
+        date_label = event.date or "unknown"
+        role = "; ".join(edge_counts.get(event.id, [])) or "no extracted causal edge"
+        row = f"""
+        <tr>
+          <td>{_esc(date_label)}</td>
+          <td><span class="badge bg-primary">Event</span></td>
+          <td><code>{_esc(event.id)}</code><br>{_esc(event.description)}</td>
+          <td class="small">{_esc(role)}</td>
+        </tr>"""
+        timeline_rows.append(((1 if year is None else 0, year or 9999, event.id), row))
+
+    for evidence in result.extraction.evidence:
+        year = _first_year(evidence.approximate_date)
+        date_label = evidence.approximate_date or "unknown"
+        type_class = "bg-info" if evidence.evidence_type == "empirical" else "bg-warning text-dark"
+        top_driver_badges = "".join(
+            f' <span class="badge bg-dark">top driver {_esc(hyp_id)}</span>'
+            for hyp_id in top_driver_for.get(evidence.id, [])
+        )
+        row = f"""
+        <tr>
+          <td>{_esc(date_label)}</td>
+          <td><span class="badge {type_class}">{_esc(evidence.evidence_type.title())}</span></td>
+          <td><code>{_esc(evidence.id)}</code><br>{_esc(evidence.description)}{top_driver_badges}</td>
+          <td class="small">{_evidence_signal_badge(evidence.id, matrix)}</td>
+        </tr>"""
+        timeline_rows.append(((1 if year is None else 0, year or 9999, evidence.id), row))
+
+    rows = "".join(row for _, row in sorted(timeline_rows, key=lambda item: item[0]))
+    return f"""
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Temporal Causal Timeline</h4>
+        <button class="btn btn-sm btn-outline-primary section-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#timelineBody">Collapse</button>
+      </div>
+      <div class="collapse show" id="timelineBody">
+      <div class="card-body">
+        <p class="small text-muted">Extracted events and evidence are ordered by date before the network view. Temporal order is necessary for causal interpretation but is not sufficient by itself; use this with the diagnostic matrix and evidence links.</p>
+        <div class="table-responsive" style="max-height:520px;overflow:auto">
+          <table class="table table-sm table-striped sortable-table" id="timeline-table">
+            <thead><tr>
+              {_th("Date")}
+              {_th("Type")}
+              {_th("Item")}
+              {_th("Causal/Bayesian signal")}
+            </tr></thead>
+            <tbody>{rows}</tbody>
+          </table>
+        </div>
+      </div>
       </div>
     </div>"""
 
@@ -475,6 +609,7 @@ def generate_report(result: ProcessTracingResult) -> str:
     ev_map = {e.id: e for e in result.extraction.evidence}
 
     vis_nodes, vis_edges = _build_vis_data(result)
+    network_coverage = _network_coverage(result, vis_nodes, vis_edges)
     nodes_json = _json_for_script(vis_nodes)
     edges_json = _json_for_script(vis_edges)
 
@@ -562,7 +697,10 @@ def generate_report(result: ProcessTracingResult) -> str:
         top_robust=top_robust,
         posteriors=posteriors,
         ev_map=ev_map,
+        network_coverage=network_coverage,
     )
+
+    temporal_timeline = _render_temporal_timeline(result)
 
     # ===== Section 2: Interactive Network =====
     network_section = f"""
@@ -1304,6 +1442,7 @@ def generate_report(result: ProcessTracingResult) -> str:
   </div>
   {exec_summary}
   {output_quality_audit}
+  {temporal_timeline}
   {network_section}
   {comparison_table}
   {robustness_section}
