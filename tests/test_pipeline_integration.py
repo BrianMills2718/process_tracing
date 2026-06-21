@@ -12,13 +12,14 @@ import pytest
 
 from pt.bayesian import run_bayesian_update
 from pt.pipeline import _source_text_sha256, run_pipeline
-from pt.report import _dom_id, generate_report
+from pt.report import _build_vis_data, _diagnostic_strength_summary, _dom_id, generate_report
 from pt.schemas import (
     AbsenceEvaluation,
     AbsenceResult,
     Actor,
     CausalEdge,
     Evidence,
+    EvidenceCluster,
     EvidenceLikelihood,
     Event,
     ExtractionResult,
@@ -210,6 +211,108 @@ def _make_process_result(source_text_sha256: str | None = None) -> ProcessTracin
     )
 
 
+def _make_audit_stress_result() -> ProcessTracingResult:
+    """A deterministic result that should trigger every output-quality caveat."""
+    extraction = _make_extraction()
+    extraction.summary = (
+        "The crisis culminated in a military coup in 1799 after a decade of legitimacy loss."
+    )
+    evidence: list[Evidence] = []
+    vectors: list[EvidenceLikelihood] = []
+    for idx in range(12):
+        eid = f"evi_background_{idx:02d}"
+        evidence.append(
+            Evidence(
+                id=eid,
+                description=f"Background legitimacy erosion item {idx}",
+                source_text=f"Background legitimacy erosion was visible in 1789 item {idx}.",
+                evidence_type="empirical",
+                approximate_date="1789",
+            )
+        )
+        vectors.append(_ev_like(eid, h1=2.0, h2=1.0, relevance=0.9))
+    for idx in range(2):
+        eid = f"evi_proximate_{idx:02d}"
+        evidence.append(
+            Evidence(
+                id=eid,
+                description=f"Proximate coup maneuver item {idx}",
+                source_text=f"Proximate coup maneuver occurred in 1799 item {idx}.",
+                evidence_type="empirical",
+                approximate_date="1799",
+            )
+        )
+        vectors.append(_ev_like(eid, h1=1.4, h2=1.0, relevance=0.8))
+    extraction.evidence = evidence
+
+    hypothesis_space = _make_hypothesis_space()
+    hypothesis_space.research_question = "Why did the crisis culminate in the 1799 coup rather than reform?"
+    hypothesis_space.hypotheses[0].description = (
+        "A legitimacy vacuum across multiple institutions enabled the coup"
+    )
+    hypothesis_space.hypotheses[0].causal_mechanism = (
+        "A power vacuum across institutions made a decisive coup coalition feasible"
+    )
+
+    testing = TestingResult(
+        evidence_likelihoods=vectors,
+        dependence_clusters=[
+            EvidenceCluster(
+                evidence_ids=["evi_background_00", "evi_background_01", "evi_background_02"],
+                reason="Same background legitimacy-loss sub-narrative",
+                dependence_strength=0.8,
+            )
+        ],
+    )
+    bayesian = run_bayesian_update(testing, ["h1", "h2"])
+    absence = AbsenceResult(
+        evaluations=[
+            AbsenceEvaluation(
+                hypothesis_id="h2",
+                prediction_id="pred_h2_02",
+                missing_evidence="No named conspirators with a concrete operational plan",
+                reasoning="A direct conspiracy account should name agents and planning details",
+                severity="damaging",
+                would_be_extractable=True,
+            )
+        ]
+    )
+    synthesis = SynthesisResult(
+        verdicts=[
+            HypothesisVerdict(
+                hypothesis_id="h1",
+                status="strongly_supported",
+                key_evidence_for=["evi_background_00"],
+                key_evidence_against=[],
+                reasoning="Many weak items favor the broad legitimacy-vacuum account.",
+                steelman="The political order had lost legitimacy before the coup.",
+                posterior_robustness="fragile",
+            ),
+            HypothesisVerdict(
+                hypothesis_id="h2",
+                status="supported",
+                key_evidence_for=["evi_proximate_00"],
+                key_evidence_against=["evi_background_00"],
+                reasoning="Some coup maneuvering evidence exists, but support is low.",
+                steelman="A coup requires agency and planning.",
+                posterior_robustness="fragile",
+            ),
+        ],
+        comparative_analysis="H1 dominates H2, but the winning frame is broad.",
+        analytical_narrative="The result is useful only if caveated as broad, fragile comparative support.",
+        limitations=["Single source", "Background-heavy evidence"],
+        suggested_further_tests=["Find named conspirator correspondence"],
+    )
+    return ProcessTracingResult(
+        extraction=extraction,
+        hypothesis_space=hypothesis_space,
+        testing=testing,
+        absence=absence,
+        bayesian=bayesian,
+        synthesis=synthesis,
+    )
+
+
 # ── Mock dispatcher ────────────────────────────────────────────────
 
 
@@ -372,6 +475,42 @@ class TestReportConsistency:
         for p in result.posteriors:
             assert p.robustness in ("robust", "fragile", "moderate", "unknown")
 
+    def test_diagnostic_summary_uses_pairwise_spread_after_caps(self):
+        from scripts.audit_result_quality import _diagnostic_strength_stats
+
+        extraction = _make_extraction()
+        extraction.evidence = [
+            Evidence(
+                id="evi_decisive",
+                description="A direct discriminator",
+                source_text="A direct discriminator appeared.",
+                evidence_type="empirical",
+                approximate_date="1799",
+            )
+        ]
+        testing = TestingResult(
+            evidence_likelihoods=[
+                _ev_like(
+                    "evi_decisive",
+                    h1=16.0,
+                    h2=1.0,
+                    relevance=1.0,
+                    dtype="smoking_gun",
+                )
+            ]
+        )
+        result = ProcessTracingResult(
+            extraction=extraction,
+            hypothesis_space=_make_hypothesis_space(),
+            testing=testing,
+            absence=AbsenceResult(evaluations=[]),
+            bayesian=run_bayesian_update(testing, ["h1", "h2"]),
+            synthesis=_make_synthesis(),
+        )
+
+        assert _diagnostic_strength_summary(result)["decisive"] == 1
+        assert _diagnostic_strength_stats(result)["decisive_items"] == 1
+
     def test_script_terminator_in_graph_data_is_escaped(self):
         result = _make_process_result()
         payload = "</script><script>x</script>"
@@ -381,6 +520,65 @@ class TestReportConsistency:
 
         assert payload not in html
         assert "<\\/script><script>x<\\/script>" in html
+
+    def test_output_quality_audit_surfaces_adversarial_caveats(self):
+        from scripts.audit_result_quality import audit_result
+
+        result = _make_audit_stress_result()
+        html = generate_report(result)
+        normalized = " ".join(html.lower().split())
+
+        for phrase in [
+            "output quality audit",
+            "high support, fragile",
+            "temporal evidence mix",
+            "temporal causal timeline",
+            "background top-driver",
+            "effective evidence",
+            "raw counts",
+            "network coverage",
+            "not discarded",
+            "academic phd review",
+            "recommendations by pipeline output",
+            "optimality gate",
+            "evidence triage",
+            "proceed until optimal",
+            "verdict calibration",
+            "secondary mechanism",
+            "broad winning hypothesis",
+            "source-scope absence",
+            "top driver edge",
+        ]:
+            assert phrase in normalized
+
+        audit = audit_result(result, html, focal_year_override=1799)
+        assert audit["grade"] == "C"
+        assert audit["score"] == 76
+        assert audit["base_score"] >= 90
+        assert audit["academic_cap"] == 76
+        assert audit["academic_caps"]
+        assert audit["priority_recommendations"]
+        assert audit["optimality"]["status"] == "not_optimal"
+        assert audit["optimality"]["next_iteration_mode"] == "collect_or_design_evidence"
+        assert audit["optimality"]["blocked_by_external_evidence"] is True
+        assert audit["optimality"]["acceptance_criteria"]
+        assert audit["categories"]["report_usability_and_safety"]["top_graph_connected"] is True
+
+    def test_network_keeps_weak_top_driver_edges_visible(self):
+        result = _make_audit_stress_result()
+        top_id = result.bayesian.ranking[0]
+        top = next(p for p in result.bayesian.posteriors if p.hypothesis_id == top_id)
+
+        nodes, edges = _build_vis_data(result)
+        node_ids = {node["id"] for node in nodes}
+        top_driver_edges = [
+            edge for edge in edges
+            if edge.get("to") == top_id and edge.get("from") in set(top.top_drivers)
+        ]
+
+        assert top_id in node_ids
+        assert top_driver_edges
+        assert any("top driver edge" in edge.get("title", "") for edge in top_driver_edges)
 
 
 class TestFromResultProvenance:

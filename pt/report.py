@@ -7,9 +7,30 @@ import html
 import json
 import math
 import re
+from typing import Any, TypedDict
 
 from pt.bayesian import INTERPRETIVE_LR_CAP, RESIDUAL_ID, lr_matrix
-from pt.schemas import Hypothesis, PredictionClassification, ProcessTracingResult
+from pt.schemas import Evidence, Hypothesis, HypothesisPosterior, PredictionClassification, ProcessTracingResult
+
+
+class _TemporalAudit(TypedDict):
+    """Temporal proximity summary for the report audit card."""
+    focal_year: int | None
+    proximate: int
+    background: int
+    unknown: int
+    total: int
+    top_driver_background: list[str]
+
+
+class _NetworkCoverage(TypedDict):
+    """Connectivity summary for the network coverage audit."""
+    node_count: int
+    edge_count: int
+    isolated_node_count: int
+    isolated_evidence_count: int
+    top_id: str | None
+    top_degree: int
 
 
 def _interpretive_caps(result: ProcessTracingResult) -> dict[str, float]:
@@ -148,12 +169,618 @@ def _render_narrative(text: str, ev_map: dict) -> str:
     return "\n".join(out)
 
 
+def _first_year(value: str | None) -> int | None:
+    """Extract the first plausible four-digit year from free-text dates."""
+    if not value:
+        return None
+    match = re.search(r"\b(1[5-9]\d{2}|20\d{2})\b", value)
+    return int(match.group(1)) if match else None
+
+
+def _focal_year(result: ProcessTracingResult) -> int | None:
+    """Infer the outcome year for temporal-proximity reporting."""
+    years: list[int] = []
+    for text in (result.hypothesis_space.research_question, result.extraction.summary):
+        years.extend(int(y) for y in re.findall(r"\b(1[5-9]\d{2}|20\d{2})\b", text))
+    if years:
+        return max(years)
+    evidence_years = [
+        year for ev in result.extraction.evidence
+        if (year := _first_year(ev.approximate_date)) is not None
+    ]
+    return max(evidence_years) if evidence_years else None
+
+
+def _temporal_evidence_mix(
+    result: ProcessTracingResult,
+    top_id: str | None,
+    ev_map: dict[str, Evidence],
+    posteriors: dict[str, HypothesisPosterior],
+) -> _TemporalAudit:
+    """Summarize proximate/background evidence and background top drivers."""
+    focal_year = _focal_year(result)
+    proximate = 0
+    background = 0
+    unknown = 0
+    if focal_year is None:
+        unknown = len(result.extraction.evidence)
+    else:
+        for ev in result.extraction.evidence:
+            year = _first_year(ev.approximate_date)
+            if year is None:
+                unknown += 1
+            elif year >= focal_year - 2:
+                proximate += 1
+            elif year < focal_year - 5:
+                background += 1
+
+    top_driver_background: list[str] = []
+    top = posteriors.get(top_id) if top_id else None
+    if focal_year is not None and top:
+        for evidence_id in top.top_drivers:
+            driver_ev = ev_map.get(evidence_id)
+            year = _first_year(driver_ev.approximate_date) if driver_ev else None
+            if year is not None and year < focal_year - 5:
+                top_driver_background.append(evidence_id)
+
+    return {
+        "focal_year": focal_year,
+        "proximate": proximate,
+        "background": background,
+        "unknown": unknown,
+        "total": len(result.extraction.evidence),
+        "top_driver_background": top_driver_background,
+    }
+
+
+def _effective_evidence_count(result: ProcessTracingResult) -> tuple[float, int]:
+    """Estimate effective observations after dependence-cluster pooling."""
+    clustered: set[str] = set()
+    cluster_effective = 0.0
+    for cluster in result.testing.dependence_clusters:
+        members = list(dict.fromkeys(cluster.evidence_ids))
+        clustered.update(members)
+        k = len(members)
+        rho = cluster.dependence_strength
+        cluster_effective += 1.0 + (k - 1) * (1.0 - rho)
+    unclustered = len([ev for ev in result.extraction.evidence if ev.id not in clustered])
+    return unclustered + cluster_effective, len(clustered)
+
+
+def _network_coverage(
+    result: ProcessTracingResult,
+    nodes: list[dict[str, object]],
+    edges: list[dict[str, object]],
+) -> _NetworkCoverage:
+    """Summarize what the network hides or connects."""
+    degree = {str(node["id"]): 0 for node in nodes}
+    for edge in edges:
+        source = str(edge["from"])
+        target = str(edge["to"])
+        degree[source] = degree.get(source, 0) + 1
+        degree[target] = degree.get(target, 0) + 1
+    evidence_ids = {ev.id for ev in result.extraction.evidence}
+    top_id = result.bayesian.ranking[0] if result.bayesian.ranking else None
+    return {
+        "node_count": len(nodes),
+        "edge_count": len(edges),
+        "isolated_node_count": sum(1 for node_id in degree if degree[node_id] == 0),
+        "isolated_evidence_count": sum(1 for evidence_id in evidence_ids if degree.get(evidence_id, 0) == 0),
+        "top_id": top_id,
+        "top_degree": degree.get(top_id or "", 0),
+    }
+
+
+def _verdict_calibration_issues(
+    result: ProcessTracingResult,
+    posteriors: dict[str, HypothesisPosterior],
+) -> list[str]:
+    """Find synthesis labels that overstate low comparative support."""
+    issues: list[str] = []
+    for verdict in result.synthesis.verdicts:
+        posterior = posteriors.get(verdict.hypothesis_id)
+        support = posterior.final_posterior if posterior else None
+        if support is None:
+            continue
+        if verdict.status in {"supported", "strongly_supported"} and support < 0.10:
+            issues.append(
+                f"{verdict.hypothesis_id} is labeled {verdict.status.replace('_', ' ')} "
+                f"with comparative support {support:.3f}"
+            )
+    return issues
+
+
+def _broad_winning_hypothesis(top_h: Hypothesis | None) -> bool:
+    """Flag winners whose framing may absorb rival mechanisms."""
+    if top_h is None:
+        return False
+    text = f"{top_h.description} {top_h.causal_mechanism}".lower()
+    broad_terms = ["vacuum", "combined", "across", "all social", "confluence", "multiple"]
+    return any(term in text for term in broad_terms)
+
+
+def _render_output_quality_audit(
+    result: ProcessTracingResult,
+    *,
+    top_id: str | None,
+    top_h: Hypothesis | None,
+    top_post: float,
+    top_robust: str,
+    posteriors: dict[str, HypothesisPosterior],
+    ev_map: dict[str, Evidence],
+    network_coverage: _NetworkCoverage,
+) -> str:
+    """Render caveats that keep the report from overstating its own evidence."""
+    temporal = _temporal_evidence_mix(result, top_id, ev_map, posteriors)
+    effective_count, clustered_count = _effective_evidence_count(result)
+    verdict_issues = _verdict_calibration_issues(result, posteriors)
+    damaging_absences = [ae for ae in result.absence.evaluations if ae.severity == "damaging"]
+    total_evidence = len(result.extraction.evidence)
+    cluster_count = len(result.testing.dependence_clusters)
+    cards: list[str] = []
+
+    if top_post >= 0.75 and top_robust == "fragile":
+        cards.append(f"""
+        <div class="alert alert-warning mb-2">
+          <strong>High Support, Fragile.</strong>
+          The top hypothesis has comparative support {top_post:.3f}, but the robustness label is fragile.
+          Treat the magnitude as provisional and read it with the sensitivity range and rank-stable flag.
+        </div>""")
+
+    bg_drivers = temporal["top_driver_background"]
+    bg_driver_text = ""
+    if bg_drivers:
+        labels = ", ".join(_esc(eid) for eid in bg_drivers)
+        bg_driver_text = (
+            f"<br><strong>background top-driver:</strong> {labels}. "
+            "These influential items are background context rather than proximate outcome evidence."
+        )
+    focal = temporal["focal_year"] if temporal["focal_year"] is not None else "not inferred"
+    cards.append(f"""
+    <div class="alert alert-light border mb-2">
+      <strong>Temporal Evidence Mix.</strong>
+      Focal year: {_esc(str(focal))}. Proximate evidence: {temporal["proximate"]}/{temporal["total"]};
+      background evidence: {temporal["background"]}/{temporal["total"]}; unknown dates:
+      {temporal["unknown"]}/{temporal["total"]}.{bg_driver_text}
+    </div>""")
+
+    cards.append(f"""
+    <div class="alert alert-light border mb-2">
+      <strong>Effective Evidence vs raw counts.</strong>
+      The report lists {total_evidence} raw counts of evidence items, but dependence cluster pooling estimates
+      about {effective_count:.1f} effective evidence observations. Dependence: {cluster_count} cluster(s),
+      {clustered_count} clustered item(s). Raw counts can overstate corroboration when items share a source,
+      event, or mechanism.
+    </div>""")
+
+    cards.append(f"""
+    <div class="alert alert-light border mb-2">
+      <strong>Network Coverage.</strong>
+      The causal network has {network_coverage["node_count"]} nodes and {network_coverage["edge_count"]} edges.
+      The first view hides {network_coverage["isolated_node_count"]} isolated nodes by default, but they are
+      <strong>not discarded</strong>; the network toggle restores them and the Evidence Inventory keeps the full list.
+      {network_coverage["isolated_evidence_count"]} evidence item(s) currently have no visual edge because they are
+      not top drivers and do not clear the displayed LR threshold. Top hypothesis {_esc(str(network_coverage["top_id"]))}
+      has visual degree {network_coverage["top_degree"]}.
+    </div>""")
+
+    if verdict_issues:
+        issues = "<br>".join(_esc(issue) for issue in verdict_issues)
+        cards.append(f"""
+        <div class="alert alert-warning mb-2">
+          <strong>Verdict Calibration.</strong>
+          {issues}. Read this as a secondary mechanism caveat, not as a standalone winning explanation.
+        </div>""")
+
+    if _broad_winning_hypothesis(top_h):
+        cards.append("""
+        <div class="alert alert-warning mb-2">
+          <strong>Broad Winning Hypothesis.</strong>
+          The leading hypothesis is broad enough to absorb mechanisms from rivals. Interpret the win as a
+          comparative umbrella explanation unless the diagnostic matrix identifies evidence that separates it
+          from narrower alternatives.
+        </div>""")
+
+    if damaging_absences:
+        cards.append(f"""
+        <div class="alert alert-warning mb-2">
+          <strong>Source-scope Absence.</strong>
+          {len(damaging_absences)} damaging absence finding(s) depend on whether the input text's scope should
+          contain the missing micro-evidence. Broad overview texts may omit such details even when the mechanism
+          is real, so absence should be read with source-scope caution.
+        </div>""")
+
+    if not cards:
+        cards.append("""
+        <div class="alert alert-success mb-2">
+          <strong>No major output-quality caveats triggered.</strong>
+          Contract checks, temporal proximity, robustness, dependence, verdict calibration, and absence handling
+          did not raise visible report warnings.
+        </div>""")
+
+    return f"""
+    <div class="card mb-4 shadow-sm border-warning">
+      <div class="card-header bg-warning text-dark"><h4 class="mb-0">Output Quality Audit</h4></div>
+      <div class="card-body">
+        <p class="small text-muted mb-3">This audit highlights conditions that can make a ranked result misleading even when the pipeline contract is valid.</p>
+        {''.join(cards)}
+      </div>
+    </div>"""
+
+
+def _evidence_signal_badge(evidence_id: str, matrix: dict[str, dict[str, float]]) -> str:
+    """Render the strongest displayed Bayesian signal for one evidence item."""
+    lrs = matrix.get(evidence_id, {})
+    if not lrs:
+        return '<span class="badge bg-secondary">not tested</span>'
+    hyp_id, lr = max(
+        lrs.items(),
+        key=lambda item: abs(math.log(max(item[1], 0.01))),
+    )
+    strength = abs(math.log(max(lr, 0.01)))
+    if strength < 0.01:
+        return '<span class="badge bg-secondary">neutral LR 1.00</span>'
+    if lr > 1:
+        return f'<span class="badge bg-success">supports {_esc(hyp_id)} LR {lr:.2f}</span>'
+    return f'<span class="badge bg-danger">opposes {_esc(hyp_id)} LR {lr:.2f}</span>'
+
+
+def _render_temporal_timeline(result: ProcessTracingResult) -> str:
+    """Render a chronological table of extracted events and evidence."""
+    hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    matrix = dict(lr_matrix(result.testing, hyp_ids, _interpretive_caps(result)))
+    top_driver_for: dict[str, list[str]] = {}
+    for posterior in result.bayesian.posteriors:
+        for evidence_id in posterior.top_drivers:
+            top_driver_for.setdefault(evidence_id, []).append(posterior.hypothesis_id)
+
+    edge_counts: dict[str, list[str]] = {}
+    for edge in result.extraction.causal_edges:
+        edge_counts.setdefault(edge.source_id, []).append(f"out: {edge.relationship}")
+        edge_counts.setdefault(edge.target_id, []).append(f"in: {edge.relationship}")
+
+    timeline_rows: list[tuple[tuple[int, int, str], str]] = []
+    for event in result.extraction.events:
+        year = _first_year(event.date)
+        date_label = event.date or "unknown"
+        role = "; ".join(edge_counts.get(event.id, [])) or "no extracted causal edge"
+        row = f"""
+        <tr>
+          <td>{_esc(date_label)}</td>
+          <td><span class="badge bg-primary">Event</span></td>
+          <td><code>{_esc(event.id)}</code><br>{_esc(event.description)}</td>
+          <td class="small">{_esc(role)}</td>
+        </tr>"""
+        timeline_rows.append(((1 if year is None else 0, year or 9999, event.id), row))
+
+    for evidence in result.extraction.evidence:
+        year = _first_year(evidence.approximate_date)
+        date_label = evidence.approximate_date or "unknown"
+        type_class = "bg-info" if evidence.evidence_type == "empirical" else "bg-warning text-dark"
+        top_driver_badges = "".join(
+            f' <span class="badge bg-dark">top driver {_esc(hyp_id)}</span>'
+            for hyp_id in top_driver_for.get(evidence.id, [])
+        )
+        row = f"""
+        <tr>
+          <td>{_esc(date_label)}</td>
+          <td><span class="badge {type_class}">{_esc(evidence.evidence_type.title())}</span></td>
+          <td><code>{_esc(evidence.id)}</code><br>{_esc(evidence.description)}{top_driver_badges}</td>
+          <td class="small">{_evidence_signal_badge(evidence.id, matrix)}</td>
+        </tr>"""
+        timeline_rows.append(((1 if year is None else 0, year or 9999, evidence.id), row))
+
+    rows = "".join(row for _, row in sorted(timeline_rows, key=lambda item: item[0]))
+    return f"""
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Temporal Causal Timeline</h4>
+        <button class="btn btn-sm btn-outline-primary section-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#timelineBody">Collapse</button>
+      </div>
+      <div class="collapse show" id="timelineBody">
+      <div class="card-body">
+        <p class="small text-muted">Extracted events and evidence are ordered by date before the network view. Temporal order is necessary for causal interpretation but is not sufficient by itself; use this with the diagnostic matrix and evidence links.</p>
+        <div class="table-responsive" style="max-height:520px;overflow:auto">
+          <table class="table table-sm table-striped sortable-table" id="timeline-table">
+            <thead><tr>
+              {_th("Date")}
+              {_th("Type")}
+              {_th("Item")}
+              {_th("Causal/Bayesian signal")}
+            </tr></thead>
+            <tbody>{rows}</tbody>
+          </table>
+        </div>
+      </div>
+      </div>
+    </div>"""
+
+
+def _diagnostic_strength_summary(result: ProcessTracingResult) -> dict[str, int | float]:
+    """Summarize diagnostic strength of evidence likelihood vectors."""
+    hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    matrix = lr_matrix(result.testing, hyp_ids, _interpretive_caps(result))
+    strengths: list[float] = []
+    for _, lrs in matrix:
+        if not lrs:
+            continue
+        values = [max(lr, 0.01) for lr in lrs.values()]
+        if len(values) < 2:
+            strengths.append(0.0)
+            continue
+        strengths.append(math.log(max(values) / min(values)))
+    decisive_threshold = math.log(5.0)
+    moderate_threshold = math.log(2.0)
+    return {
+        "decisive": sum(1 for strength in strengths if strength >= decisive_threshold),
+        "moderate": sum(
+            1 for strength in strengths if moderate_threshold <= strength < decisive_threshold
+        ),
+        "weak": sum(1 for strength in strengths if 0.1 < strength < moderate_threshold),
+        "near_neutral": sum(1 for strength in strengths if strength <= 0.1),
+        "max_log_lr": round(max(strengths), 3) if strengths else 0.0,
+    }
+
+
+def _evidence_triage_summary(result: ProcessTracingResult) -> dict[str, Any]:
+    """Classify extracted evidence by how it is used in the current analysis."""
+    focal_year = _focal_year(result)
+    hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    matrix = dict(lr_matrix(result.testing, hyp_ids, _interpretive_caps(result)))
+    by_item = {item.evidence_id: item for item in result.testing.evidence_likelihoods}
+    top_driver_ids = {
+        evidence_id
+        for posterior in result.bayesian.posteriors
+        for evidence_id in posterior.top_drivers
+    }
+    counts = {
+        "top_driver": 0,
+        "displayed_discriminator": 0,
+        "background_weak_signal": 0,
+        "low_relevance": 0,
+        "near_neutral": 0,
+        "tested_unlinked": 0,
+    }
+    labels = {
+        "top_driver": "Top driver",
+        "displayed_discriminator": "Displayed discriminator",
+        "background_weak_signal": "Background weak signal",
+        "low_relevance": "Low relevance",
+        "near_neutral": "Near-neutral",
+        "tested_unlinked": "Tested, not displayed",
+    }
+    actions = {
+        "top_driver": "Audit source quality and temporal proximity before treating as mechanism evidence.",
+        "displayed_discriminator": "Check whether the signal is independent or shares a source/mechanism with other items.",
+        "background_weak_signal": "Keep as enabling context unless paired with proximate mechanism traces.",
+        "low_relevance": "Do not use as causal support without a better relevance justification.",
+        "near_neutral": "Move to inventory/context unless a new hypothesis makes it discriminating.",
+        "tested_unlinked": "Classify manually as background, discarded, or pending a sharper test.",
+    }
+    samples: dict[str, list[str]] = {key: [] for key in counts}
+
+    for evidence in result.extraction.evidence:
+        item = by_item.get(evidence.id)
+        lrs = matrix.get(evidence.id, {})
+        max_strength = max(
+            (abs(math.log(max(lr, 0.01))) for lr in lrs.values()),
+            default=0.0,
+        )
+        displayed = evidence.id in top_driver_ids or any(
+            not (0.67 <= lr <= 1.5) for lr in lrs.values()
+        )
+        year = _first_year(evidence.approximate_date)
+        if evidence.id in top_driver_ids:
+            bucket = "top_driver"
+        elif displayed:
+            bucket = "displayed_discriminator"
+        elif item is not None and item.relevance < 0.4:
+            bucket = "low_relevance"
+        elif max_strength <= 0.1:
+            bucket = "near_neutral"
+        elif focal_year is not None and year is not None and year < focal_year - 5:
+            bucket = "background_weak_signal"
+        else:
+            bucket = "tested_unlinked"
+
+        counts[bucket] += 1
+        if len(samples[bucket]) < 3:
+            samples[bucket].append(f"{evidence.id}: {evidence.description[:80]}")
+
+    return {
+        "counts": counts,
+        "labels": labels,
+        "actions": actions,
+        "samples": samples,
+    }
+
+
+def _render_academic_review(
+    result: ProcessTracingResult,
+    *,
+    top_id: str | None,
+    top_h: Hypothesis | None,
+    top_post: float,
+    top_robust: str,
+    posteriors: dict[str, HypothesisPosterior],
+    ev_map: dict[str, Evidence],
+    network_coverage: _NetworkCoverage,
+) -> str:
+    """Render a PhD-level methods critique with concrete next steps."""
+    temporal = _temporal_evidence_mix(result, top_id, ev_map, posteriors)
+    diagnostic = _diagnostic_strength_summary(result)
+    verdict_issues = _verdict_calibration_issues(result, posteriors)
+    limitations_text = " ".join(result.synthesis.limitations).lower()
+    single_source_limited = any(
+        term in limitations_text
+        for term in ("single historical text", "single source", "single text")
+    )
+    broad_winner = _broad_winning_hypothesis(top_h)
+    triage = _evidence_triage_summary(result)
+    triage_counts = triage["counts"]
+    triage_rows = "".join(
+        f"""
+        <tr>
+          <td><strong>{_esc(triage['labels'][key])}</strong></td>
+          <td>{count}</td>
+          <td>{_esc('; '.join(triage['samples'][key]) or 'None')}</td>
+          <td>{_esc(triage['actions'][key])}</td>
+        </tr>"""
+        for key, count in triage_counts.items()
+    )
+    total_evidence = temporal["total"] or 1
+    proximate_share = temporal["proximate"] / total_evidence
+    high_fragile = top_post >= 0.75 and top_robust == "fragile"
+    too_many_unlinked = network_coverage["isolated_evidence_count"] > len(result.extraction.evidence) * 0.5
+    external_blockers: list[str] = []
+    if single_source_limited:
+        external_blockers.append("single-source corpus")
+    if diagnostic["decisive"] == 0 and diagnostic["moderate"] == 0:
+        external_blockers.append("weak diagnostic tests")
+    elif diagnostic["decisive"] == 0:
+        external_blockers.append("no decisive diagnostic test")
+    if proximate_share < 0.20:
+        external_blockers.append("thin proximate evidence")
+    if temporal["top_driver_background"]:
+        external_blockers.append("background top drivers")
+    if broad_winner:
+        external_blockers.append("broad hypothesis design")
+    if high_fragile:
+        external_blockers.append("high-support fragile winner")
+    if verdict_issues:
+        external_blockers.append("verdict calibration")
+    if too_many_unlinked:
+        external_blockers.append("untriaged isolated evidence")
+    optimal_for_corpus = not external_blockers
+    rows = [
+        (
+            "Input corpus and source base",
+            "Single-text or broad-overview input is not enough for PhD-level causal identification." if single_source_limited else "Source scope does not trigger an active cap; limitations are documented in synthesis.",
+            "Build or preserve a source packet with primary documents, rival secondary accounts, source genre metadata, and a note on what each source can and cannot reveal.",
+        ),
+        (
+            "Extraction and provenance",
+            f"{len(result.extraction.evidence)} evidence items extracted; {network_coverage['isolated_evidence_count']} currently have no displayed graph edge.",
+            "Classify every evidence item as mechanism trace, background condition, context, discarded, or pending-test evidence; preserve source quote and date confidence.",
+        ),
+        (
+            "Hypothesis space",
+            "The leading hypothesis is broad or absorptive." if broad_winner else "Leading hypothesis is not flagged as broad or absorptive; rival mechanisms are visibly separated.",
+            "Split broad hypotheses when flagged; otherwise preserve pairwise discriminators and keep overlap visible in synthesis.",
+        ),
+        (
+            "Diagnostic tests",
+            f"Diagnostic strength: {diagnostic['decisive']} decisive, {diagnostic['moderate']} moderate, {diagnostic['weak']} weak, {diagnostic['near_neutral']} near-neutral items.",
+            "Pre-register hoop and smoking-gun tests before likelihood scoring; seek direct traces unlikely under rival hypotheses when decisive counts are low.",
+        ),
+        (
+            "Temporal process sequence",
+            f"Only {temporal['proximate']}/{temporal['total']} evidence items are proximate to the focal outcome; background top drivers: {len(temporal['top_driver_background'])}.",
+            "Construct and preserve a dated mechanism sequence for the final decision window; distinguish enabling background from proximate causal action.",
+        ),
+        (
+            "Bayesian update and dependence",
+            f"Top hypothesis {top_id or 'N/A'} has support {top_post:.3f} with robustness {top_robust}.",
+            "Treat high-support fragile results as rankings, not calibrated truth probabilities; audit dependence clusters and rerun sensitivity after adding stronger traces.",
+        ),
+        (
+            "Absence, counterfactuals, and scope",
+            f"{sum(1 for ae in result.absence.evaluations if ae.severity == 'damaging')} damaging absence finding(s); source scope determines whether absence is meaningful.",
+            "Specify the archive or source genre where the missing trace should appear; add counterfactual evidence on failed alternatives and non-events.",
+        ),
+        (
+            "Synthesis and claims",
+            f"{len(verdict_issues)} verdict calibration issue(s) detected.",
+            "Phrase conclusions as exploratory under the present corpus; separate mechanism plausibility from publication-strength causal identification.",
+        ),
+    ]
+    row_html = "".join(
+        f"""
+        <tr>
+          <td><strong>{_esc(output)}</strong></td>
+          <td>{_esc(critique)}</td>
+          <td>{_esc(recommendation)}</td>
+        </tr>"""
+        for output, critique, recommendation in rows
+    )
+    optimal_steps = [
+        "Freeze a sharper research question and focal decision window.",
+        "Assemble a source packet with independent primary and secondary evidence.",
+        "Split broad hypotheses and define pairwise discriminators before testing.",
+        "Collect proximate dated traces for the decisive sequence.",
+        "Rerun likelihood scoring, dependence clustering, sensitivity, and this audit.",
+        "Only then upgrade from exploratory ranking to a PhD-level causal claim.",
+    ]
+    steps_html = "".join(f"<li>{_esc(step)}</li>" for step in optimal_steps)
+    blockers_html = "".join(f"<li>{_esc(blocker)}</li>" for blocker in external_blockers)
+    if optimal_for_corpus:
+        status_text = (
+            "PhD-review-ready under the current corpus. This is not a claim of historical truth; "
+            "it means the report, source scope, temporal sequence, discriminators, and diagnostic "
+            "tests clear the active audit gates."
+        )
+        gate_html = """
+        <div class="alert alert-success">
+          <strong>Optimality Gate:</strong> optimal_for_current_corpus. Next iteration mode:
+          <strong>none</strong>. No active academic evidence caps remain.
+        </div>"""
+        proceed_html = "<p class=\"small mb-0\">No required iteration remains under the current corpus. Future work should add archival sources only if the research question needs stronger external validation.</p>"
+    else:
+        status_text = (
+            "Exploratory process-tracing output under a limited input corpus. It is useful for "
+            "hypothesis generation and audit planning, not yet a PhD-level causal demonstration."
+        )
+        gate_html = f"""
+        <div class="alert alert-danger">
+          <strong>Optimality Gate:</strong> not optimal for a PhD-level causal claim. Next iteration mode:
+          <strong>collect or design evidence</strong>, not report polishing. Blocking conditions:
+          <ul class="mb-0">{blockers_html}</ul>
+        </div>"""
+        proceed_html = f"<ol>{steps_html}</ol>"
+    card_border = "border-success" if optimal_for_corpus else "border-danger"
+    header_class = "bg-success" if optimal_for_corpus else "bg-danger"
+    return f"""
+    <div class="card mb-4 shadow-sm {card_border}">
+      <div class="card-header {header_class} text-white"><h4 class="mb-0">Academic PhD Review</h4></div>
+      <div class="card-body">
+        <p><strong>Current scholarly status:</strong> {_esc(status_text)}</p>
+        {gate_html}
+        <h5>Recommendations by Pipeline Output</h5>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead><tr>
+              <th>Output</th>
+              <th>PhD-level critique</th>
+              <th>How to improve</th>
+            </tr></thead>
+            <tbody>{row_html}</tbody>
+          </table>
+        </div>
+        <h5>Evidence Triage</h5>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead><tr>
+              <th>Class</th>
+              <th>Count</th>
+              <th>Examples</th>
+              <th>Next action</th>
+            </tr></thead>
+            <tbody>{triage_rows}</tbody>
+          </table>
+        </div>
+        <h5>Proceed Until Optimal</h5>
+        {proceed_html}
+      </div>
+    </div>"""
+
+
 def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict]]:
     """Build vis.js nodes and edges including evidence-hypothesis links."""
     nodes: list[dict[str, object]] = []
     edges: list[dict[str, object]] = []
     ext = result.extraction
     posteriors = {p.hypothesis_id: p.final_posterior for p in result.bayesian.posteriors}
+    posterior_objs = {p.hypothesis_id: p for p in result.bayesian.posteriors}
     node_ids = set()
 
     for e in ext.events:
@@ -208,24 +835,34 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
 
     # Evidence-hypothesis edges from the likelihood matrix (same caps as the update)
     hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    top_driver_pairs = {
+        (hyp_id, evidence_id)
+        for hyp_id, posterior in posterior_objs.items()
+        if hyp_id in hyp_ids
+        for evidence_id in posterior.top_drivers
+    }
     for evidence_id, lrs in lr_matrix(result.testing, hyp_ids, _interpretive_caps(result)):
         if evidence_id not in node_ids:
             continue
         for hyp_id, lr in lrs.items():
             if hyp_id not in node_ids:
                 continue
-            if 0.67 <= lr <= 1.5:
+            is_top_driver = (hyp_id, evidence_id) in top_driver_pairs
+            if 0.67 <= lr <= 1.5 and not is_top_driver:
                 continue  # Skip uninformative
             log_lr = abs(math.log(max(lr, 0.01)))
-            width = max(0.5, min(4, log_lr))
+            width = max(0.9 if is_top_driver else 0.5, min(4, log_lr))
             color = "#28a745" if lr > 1 else "#dc3545"
-            edges.append({
+            edge: dict[str, object] = {
                 "from": evidence_id, "to": hyp_id,
                 "arrows": "to", "width": round(width, 1),
-                "color": {"color": color, "opacity": 0.6},
+                "color": {"color": color, "opacity": 0.85 if is_top_driver else 0.6},
                 "group": "evidence_link",
-                "title": f"LR={lr:.2f}",
-            })
+                "title": f"LR={lr:.2f}" + ("; top driver edge" if is_top_driver else ""),
+            }
+            if is_top_driver and 0.67 <= lr <= 1.5:
+                edge["dashes"] = [5, 5]
+            edges.append(edge)
 
     return nodes, edges
 
@@ -250,6 +887,7 @@ def generate_report(result: ProcessTracingResult) -> str:
     ev_map = {e.id: e for e in result.extraction.evidence}
 
     vis_nodes, vis_edges = _build_vis_data(result)
+    network_coverage = _network_coverage(result, vis_nodes, vis_edges)
     nodes_json = _json_for_script(vis_nodes)
     edges_json = _json_for_script(vis_edges)
 
@@ -297,8 +935,8 @@ def generate_report(result: ProcessTracingResult) -> str:
     overconfidence_banner = ""
     if top_post > 0.99 and top_robust == "fragile":
         overconfidence_banner = (
-            '<div class="alert alert-warning mb-3"><strong>⚠ Likely overconfident.</strong> '
-            'The top support is near-degenerate and the posterior is <em>fragile</em> — driven by '
+            '<div class="alert alert-warning mb-3"><strong>Likely overconfident.</strong> '
+            'The top support is near-degenerate and the posterior is <em>fragile</em> - driven by '
             'accumulation of many weakly-discriminating (and possibly correlated) evidence items. '
             'Dependence pooling is applied, but if it did not group these items strongly enough the '
             'magnitude remains unreliable. Read this as a <strong>ranking</strong>, not a calibrated probability.</div>'
@@ -328,6 +966,30 @@ def generate_report(result: ProcessTracingResult) -> str:
            on the list cannot be supported. Read the ranking and the support range / robustness / stability flags, not the third decimal.</p>
       </div>
     </div>"""
+
+    output_quality_audit = _render_output_quality_audit(
+        result,
+        top_id=top_id,
+        top_h=top_h,
+        top_post=top_post,
+        top_robust=top_robust,
+        posteriors=posteriors,
+        ev_map=ev_map,
+        network_coverage=network_coverage,
+    )
+
+    academic_review = _render_academic_review(
+        result,
+        top_id=top_id,
+        top_h=top_h,
+        top_post=top_post,
+        top_robust=top_robust,
+        posteriors=posteriors,
+        ev_map=ev_map,
+        network_coverage=network_coverage,
+    )
+
+    temporal_timeline = _render_temporal_timeline(result)
 
     # ===== Section 2: Interactive Network =====
     network_section = f"""
@@ -366,7 +1028,7 @@ def generate_report(result: ProcessTracingResult) -> str:
               <span style="display:inline-block;width:12px;height:3px;background:#28a745;vertical-align:middle"></span>/<span style="display:inline-block;width:12px;height:3px;background:#dc3545;vertical-align:middle"></span> Evidence Links</label>
           </div>
           <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="toggle-isolated">
+            <input class="form-check-input" type="checkbox" id="toggle-isolated" checked>
             <label class="form-check-label" for="toggle-isolated">Hide isolated nodes</label>
           </div>
           <div class="btn-group btn-group-sm ms-auto">
@@ -376,7 +1038,7 @@ def generate_report(result: ProcessTracingResult) -> str:
           </div>
         </div>
         <div id="network" style="width:100%;height:600px;border:1px solid #ddd;border-radius:4px"></div>
-        <div id="network-info" class="alert alert-light mt-2 small">Click a node for details. Green edges = supporting evidence (LR &gt; 1). Red edges = opposing evidence (LR &lt; 1).</div>
+        <div id="network-info" class="alert alert-light mt-2 small">Click a node for details. Green edges = supporting evidence (LR &gt; 1). Red edges = opposing evidence (LR &lt; 1). A dashed top driver edge is shown even when the LR is weak because it is one of that hypothesis's largest updates.</div>
       </div>
       </div>
     </div>"""
@@ -391,6 +1053,11 @@ def generate_report(result: ProcessTracingResult) -> str:
             continue
         verdict = next((v for v in result.synthesis.verdicts if v.hypothesis_id == hid), None)
         status = verdict.status if verdict else "indeterminate"
+        status_cell = _status_badge(status)
+        if status in {"supported", "strongly_supported"} and p.final_posterior < 0.10:
+            status_cell += (
+                '<div class="small text-warning mt-1">secondary mechanism; low comparative support</div>'
+            )
         sens_range = f"[{s.posterior_low:.3f}, {s.posterior_high:.3f}]" if s else "N/A"
         rank_badge = f'<span class="badge bg-{"success" if s and s.rank_stable else "warning"} bg-opacity-75" data-bs-toggle="tooltip" title="{"Rank is stable under sensitivity perturbation" if s and s.rank_stable else "Rank may change under sensitivity perturbation"}">{"Stable" if s and s.rank_stable else "Unstable"}</span>' if s else ""
         steelman_html = _esc(verdict.steelman) if verdict else ""
@@ -415,7 +1082,7 @@ def generate_report(result: ProcessTracingResult) -> str:
           <td><span class="badge {source_badge_class}" data-bs-toggle="tooltip" title="{_esc(hyp.theoretical_basis)}">{_esc(source_label)}</span></td>
           <td>{p.prior:.3f}</td>
           <td><strong>{p.final_posterior:.3f}</strong></td>
-          <td>{_status_badge(status)}</td>
+          <td>{status_cell}</td>
           <td>{_robustness_badge(p.robustness)}</td>
           <td><span data-bs-toggle="tooltip" title="Posterior range under ±50% perturbation of top drivers">{sens_range}</span> {rank_badge}</td>
           <td>
@@ -1063,6 +1730,9 @@ def generate_report(result: ProcessTracingResult) -> str:
     <button class="btn btn-sm btn-outline-secondary" id="expand-all-btn">Expand All Sections</button>
   </div>
   {exec_summary}
+  {output_quality_audit}
+  {academic_review}
+  {temporal_timeline}
   {network_section}
   {comparison_table}
   {robustness_section}
@@ -1209,22 +1879,41 @@ document.addEventListener('DOMContentLoaded', function() {{
     network.fit();
   }});
 
+  var evLinkCb = document.getElementById('toggle-evidence_link');
+  var isolatedCb = document.getElementById('toggle-isolated');
+
+  function edgeVisible(edge) {{
+    if (edge.group === 'evidence_link' && evLinkCb && !evLinkCb.checked) return false;
+    return !edge.hidden;
+  }}
+
+  function updateNodeVisibility() {{
+    var connected = new Set();
+    edges.forEach(function(e) {{
+      if (edgeVisible(e)) {{
+        connected.add(e.from);
+        connected.add(e.to);
+      }}
+    }});
+    var hideIsolated = isolatedCb && isolatedCb.checked;
+    var updates = [];
+    nodes.forEach(function(n) {{
+      var groupCb = document.getElementById('toggle-' + n.group);
+      var groupVisible = !groupCb || groupCb.checked;
+      var isIsolated = !connected.has(n.id);
+      updates.push({{id: n.id, hidden: !groupVisible || (hideIsolated && isIsolated)}});
+    }});
+    nodes.update(updates);
+  }}
+
   // Toggle node groups
   ['event','hypothesis','evidence','actor','mechanism'].forEach(function(group) {{
     var cb = document.getElementById('toggle-' + group);
     if (!cb) return;
-    cb.addEventListener('change', function() {{
-      var show = cb.checked;
-      var updates = [];
-      nodes.forEach(function(n) {{
-        if (n.group === group) updates.push({{id: n.id, hidden: !show}});
-      }});
-      nodes.update(updates);
-    }});
+    cb.addEventListener('change', updateNodeVisibility);
   }});
 
   // Toggle evidence link edges
-  var evLinkCb = document.getElementById('toggle-evidence_link');
   if (evLinkCb) {{
     evLinkCb.addEventListener('change', function() {{
       var show = evLinkCb.checked;
@@ -1233,33 +1922,16 @@ document.addEventListener('DOMContentLoaded', function() {{
         if (e.group === 'evidence_link') updates.push({{id: e.id, hidden: !show}});
       }});
       edges.update(updates);
+      updateNodeVisibility();
     }});
   }}
 
   // Toggle isolated nodes (nodes with no visible edges)
-  var isolatedCb = document.getElementById('toggle-isolated');
   if (isolatedCb) {{
-    isolatedCb.addEventListener('change', function() {{
-      var hideIsolated = isolatedCb.checked;
-      // Build set of node IDs that have at least one visible edge
-      var connected = new Set();
-      edges.forEach(function(e) {{
-        if (!e.hidden) {{
-          connected.add(e.from);
-          connected.add(e.to);
-        }}
-      }});
-      var updates = [];
-      nodes.forEach(function(n) {{
-        // Don't touch nodes already hidden by group toggles
-        var groupCb = document.getElementById('toggle-' + n.group);
-        if (groupCb && !groupCb.checked) return;
-        var isIsolated = !connected.has(n.id);
-        if (isIsolated) updates.push({{id: n.id, hidden: hideIsolated}});
-      }});
-      nodes.update(updates);
-    }});
+    isolatedCb.addEventListener('change', updateNodeVisibility);
   }}
+
+  updateNodeVisibility();
 }});
 </script>
 </body>

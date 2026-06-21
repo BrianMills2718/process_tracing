@@ -30,7 +30,7 @@ messages:
       - `sharpen_mechanism`: Replace causal_mechanism with a more precise version
       - `add_prediction`: Add new observable predictions informed by the analysis
       - `reframe`: Replace both causal_mechanism and description
-      - `merge_suggestion`: Suggest merging two hypotheses (NOT auto-applied — advisory only)
+      - `merge_suggestion`: Suggest merging two hypotheses (NOT auto-applied — advisory only). For this type only, `hypothesis_id` may be an existing primary hypothesis id or a descriptive advisory id such as `h1_h4_merge_suggestion`.
 
       ### 6. Missing Mechanisms
       Causal chains implied by the evidence pattern but not explicitly extracted. Must quote supporting text.

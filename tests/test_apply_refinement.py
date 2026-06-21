@@ -110,6 +110,21 @@ class TestHypothesisRefinement:
         with pytest.raises(ValueError, match="unknown hypothesis id 'h_ghost'"):
             apply_refinement(_extraction(), _space(), ref, verbose=False)
 
+    def test_merge_suggestion_with_synthetic_id_is_advisory(self):
+        ref = RefinementResult(
+            hypothesis_refinements=[HypothesisRefinement(
+                hypothesis_id="h1_h2_merge_suggestion",
+                refinement_type="merge_suggestion",
+                description="merge h1 and h2 if the mechanisms overlap",
+                updated_causal_mechanism="combined mechanism",
+                new_predictions=[Prediction(id="pred_merge", description="p")],
+            )],
+            analyst_notes="",
+        )
+        _, hs = apply_refinement(_extraction(), _space(), ref, verbose=False)
+        assert hs.hypotheses[0].causal_mechanism == "m"
+        assert hs.hypotheses[0].observable_predictions == []
+
     def test_add_prediction_applies(self):
         ref = RefinementResult(
             hypothesis_refinements=[HypothesisRefinement(

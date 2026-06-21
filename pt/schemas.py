@@ -325,7 +325,13 @@ class SpuriousExtraction(BaseModel):
 
 
 class HypothesisRefinement(BaseModel):
-    hypothesis_id: str
+    hypothesis_id: str = Field(
+        description=(
+            "Existing hypothesis id for state-changing refinements. For "
+            "merge_suggestion, may be an existing id or a descriptive advisory "
+            "id naming the proposed merge, e.g. 'h1_h4_merge_suggestion'."
+        )
+    )
     refinement_type: RefinementType = Field(
         description="'sharpen_mechanism', 'add_prediction', 'reframe', or 'merge_suggestion'"
     )
