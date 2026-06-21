@@ -11,15 +11,126 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from uuid import uuid4
 
 from llm_client import render_prompt
+from pydantic import BaseModel, Field, create_model
 
 from pt.llm import call_llm
-from pt.schemas import ExtractionResult, HypothesisSpace, TestingResult
+from pt.schemas import (
+    DiagnosticType,
+    ExtractionResult,
+    HypothesisSpace,
+    PredictionClassification,
+    TestingResult,
+)
 
 PROMPTS_DIR = Path(__file__).parent / "prompts"
+
+
+def _literal_enum(values: list[str]) -> Any:
+    """Build a Literal type from runtime IDs for JSON-schema enum enforcement."""
+    if not values:
+        raise ValueError("cannot build enum schema from an empty id list")
+    return Literal.__getitem__(tuple(values))
+
+
+def _testing_response_model(
+    *,
+    evidence_ids: list[str],
+    hypothesis_ids: list[str],
+) -> type[BaseModel]:
+    """Create an LLM-facing schema that constrains IDs to this run's contracts."""
+    evidence_id_type = _literal_enum(evidence_ids)
+    hypothesis_id_type = _literal_enum(hypothesis_ids)
+
+    hypothesis_likelihood = create_model(
+        "HypothesisLikelihoodResponse",
+        hypothesis_id=(
+            hypothesis_id_type,
+            Field(description="One of the exact hypothesis ids from this run."),
+        ),
+        relative_likelihood=(
+            float,
+            Field(
+                gt=0.0,
+                allow_inf_nan=False,
+                description="Finite positive relative likelihood on the shared evidence-item scale.",
+            ),
+        ),
+        diagnostic_type=(
+            DiagnosticType,
+            Field(description="Van Evera diagnostic label for this evidence/hypothesis cell."),
+        ),
+    )
+    hypothesis_likelihood_list: Any = list.__class_getitem__(hypothesis_likelihood)
+    evidence_likelihood = create_model(
+        "EvidenceLikelihoodResponse",
+        evidence_id=(
+            evidence_id_type,
+            Field(description="One of the exact evidence ids from this extraction."),
+        ),
+        hypothesis_likelihoods=(
+            hypothesis_likelihood_list,
+            Field(description="Exactly one entry per hypothesis id from this run."),
+        ),
+        relevance=(
+            float,
+            Field(
+                default=1.0,
+                ge=0.0,
+                le=1.0,
+                description="How relevant/discriminating this evidence is.",
+            ),
+        ),
+        justification=(
+            str,
+            Field(description="Why these relative likelihoods were assigned."),
+        ),
+    )
+    evidence_id_list: Any = list.__class_getitem__(evidence_id_type)
+    evidence_cluster = create_model(
+        "EvidenceClusterResponse",
+        evidence_ids=(
+            evidence_id_list,
+            Field(description="Two or more exact evidence ids from this extraction."),
+        ),
+        reason=(str, Field(description="Why these items are conditionally dependent.")),
+        dependence_strength=(
+            float,
+            Field(
+                default=1.0,
+                ge=0.0,
+                le=1.0,
+                allow_inf_nan=False,
+                description="How redundant the members are.",
+            ),
+        ),
+    )
+    evidence_likelihood_list: Any = list.__class_getitem__(evidence_likelihood)
+    evidence_cluster_list: Any = list.__class_getitem__(evidence_cluster)
+    return create_model(
+        "TestingResponse",
+        evidence_likelihoods=(
+            evidence_likelihood_list,
+            Field(description="Per-evidence likelihood vectors across all hypotheses."),
+        ),
+        dependence_clusters=(
+            evidence_cluster_list,
+            Field(
+                default_factory=list,
+                description="Groups of conditionally-dependent evidence items.",
+            ),
+        ),
+        prediction_classifications=(
+            list[PredictionClassification],
+            Field(
+                default_factory=list,
+                description="Optional Van Evera classification of hypothesis predictions.",
+            ),
+        ),
+    )
 
 
 def run_test(
@@ -62,21 +173,28 @@ def run_test(
         evidence_json=json.dumps(evidence_json, indent=2),
         hypothesis_ids=json.dumps([h.id for h in hyps]),
     )
+    expected_hyp_ids = [h.id for h in hyps]
+    expected_ev_ids = [e.id for e in evidence]
+    response_model = _testing_response_model(
+        evidence_ids=expected_ev_ids,
+        hypothesis_ids=expected_hyp_ids,
+    )
     kwargs: dict[str, Any] = {"model": model} if model else {}
-    result = call_llm(
+    raw_result = call_llm(
         messages[0]["content"],
-        TestingResult,
+        response_model,
         task="process_tracing.test",
         trace_id=trace_id,
         **kwargs,
     )
+    result = TestingResult.model_validate(raw_result.model_dump())
 
     # Fail loud: the matrix must be complete and exact — every evidence item present
     # once, and every item's vector covering exactly the hypothesis set (no missing,
     # duplicate, or unknown ids). Silently tolerating gaps would launder bad LLM
     # output as neutral evidence.
-    expected_hyp_ids = {h.id for h in hyps}
-    expected_ev_ids = {e.id for e in evidence}
+    expected_hyp_id_set = set(expected_hyp_ids)
+    expected_ev_id_set = set(expected_ev_ids)
     seen_ev_ids: list[str] = []
     for item in result.evidence_likelihoods:
         seen_ev_ids.append(item.evidence_id)
@@ -85,16 +203,16 @@ def run_test(
             raise ValueError(
                 f"testing: duplicate hypothesis ids in vector for evidence '{item.evidence_id}': {hyp_ids}"
             )
-        if set(hyp_ids) != expected_hyp_ids:
+        if set(hyp_ids) != expected_hyp_id_set:
             raise ValueError(
                 f"testing: evidence '{item.evidence_id}' vector covers {sorted(set(hyp_ids))}, "
-                f"expected exactly {sorted(expected_hyp_ids)}"
+                f"expected exactly {sorted(expected_hyp_id_set)}"
             )
     if len(seen_ev_ids) != len(set(seen_ev_ids)):
         raise ValueError("testing: duplicate evidence ids in likelihood vectors")
-    if set(seen_ev_ids) != expected_ev_ids:
-        missing = expected_ev_ids - set(seen_ev_ids)
-        extra = set(seen_ev_ids) - expected_ev_ids
+    if set(seen_ev_ids) != expected_ev_id_set:
+        missing = expected_ev_id_set - set(seen_ev_ids)
+        extra = set(seen_ev_ids) - expected_ev_id_set
         raise ValueError(
             f"testing: evidence coverage mismatch — missing {sorted(missing)}, extra {sorted(extra)}"
         )
@@ -103,7 +221,7 @@ def run_test(
     clustered: set[str] = set()
     for cluster in result.dependence_clusters:
         ids = cluster.evidence_ids
-        unknown = set(ids) - expected_ev_ids
+        unknown = set(ids) - expected_ev_id_set
         if unknown:
             raise ValueError(f"testing: dependence cluster references unknown evidence {sorted(unknown)}")
         if len(set(ids)) < 2:

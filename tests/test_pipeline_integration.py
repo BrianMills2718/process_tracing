@@ -221,7 +221,7 @@ def _mock_call_llm(prompt: str, response_model: type, *, task: str = "", trace_i
         return _make_extraction()
     elif model_name == "HypothesisSpace":
         return _make_hypothesis_space()
-    elif model_name == "TestingResult":
+    elif model_name in ("TestingResult", "TestingResponse"):
         return _make_testing()
     elif model_name == "AbsenceResult":
         return _make_absence()
@@ -420,6 +420,21 @@ class TestVectorCompleteness:
     def test_accepts_complete_matrix(self):
         result = self._run_with(_make_testing())
         assert len(result.evidence_likelihoods) == 4
+
+    def test_llm_schema_enumerates_exact_evidence_and_hypothesis_ids(self):
+        from pt import pass_test
+        captured = {}
+
+        def fake_call_llm(prompt, response_model, **kwargs):
+            captured["schema"] = response_model.model_json_schema()
+            return _make_testing()
+
+        with patch.object(pass_test, "call_llm", side_effect=fake_call_llm):
+            pass_test.run_test(_make_extraction(), _make_hypothesis_space())
+
+        schema_json = str(captured["schema"])
+        assert "'enum': ['evi_debt', 'evi_tax_revolt', 'evi_elite_plot', 'evi_historian_claim']" in schema_json
+        assert "'enum': ['h1', 'h2']" in schema_json
 
     def test_rejects_cluster_with_unknown_evidence(self):
         from pt.schemas import EvidenceCluster
