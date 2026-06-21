@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import math
+import re
 
 from pt.bayesian import INTERPRETIVE_LR_CAP, RESIDUAL_ID, lr_matrix
 from pt.schemas import Hypothesis, PredictionClassification, ProcessTracingResult
@@ -27,6 +29,13 @@ def _esc(s: str) -> str:
 def _json_for_script(value: object) -> str:
     """Serialize JSON safely for embedding directly inside a script tag."""
     return json.dumps(value).replace("</", "<\\/").replace("<!--", "<\\!--")
+
+
+def _dom_id(prefix: str, value: str) -> str:
+    """Build a stable, selector-safe HTML id from model-provided IDs."""
+    slug = re.sub(r"[^A-Za-z0-9_-]+", "-", value).strip("-_") or "id"
+    digest = hashlib.sha1(value.encode("utf-8")).hexdigest()[:8]
+    return f"{prefix}-{slug[:48]}-{digest}"
 
 
 def _status_color(status: str) -> str:
@@ -396,6 +405,7 @@ def generate_report(result: ProcessTracingResult) -> str:
             source_badge_class = "bg-warning text-dark"
         elif "theory" in hyp.source.lower():
             source_badge_class = "bg-purple"
+        detail_id = _dom_id("detail", hid)
 
         h_rows.append(f"""
         <tr>
@@ -409,10 +419,10 @@ def generate_report(result: ProcessTracingResult) -> str:
           <td>{_robustness_badge(p.robustness)}</td>
           <td><span data-bs-toggle="tooltip" title="Posterior range under ±50% perturbation of top drivers">{sens_range}</span> {rank_badge}</td>
           <td>
-            <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#detail-{_esc(hid)}" role="button">Details</a>
+            <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#{detail_id}" role="button">Details</a>
           </td>
         </tr>
-        <tr class="collapse" id="detail-{_esc(hid)}">
+        <tr class="collapse" id="{detail_id}">
           <td colspan="10" class="bg-light">
             <div class="row p-2">
               <div class="col-md-4"><strong>Causal Mechanism:</strong><br>{mechanism_html}</div>
@@ -582,14 +592,15 @@ def generate_report(result: ProcessTracingResult) -> str:
 
         collapsed = "" if h == result.hypothesis_space.hypotheses[0] else "collapsed"
         show = "show" if h == result.hypothesis_space.hypotheses[0] else ""
+        test_id = _dom_id("test", h.id)
         test_accordion_items.append(f"""
         <div class="accordion-item">
           <h2 class="accordion-header">
-            <button class="accordion-button {collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#test-{_esc(h.id)}">
+            <button class="accordion-button {collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#{test_id}">
               {_esc(h_label)} <span class="badge bg-info ms-2">{len(matrix_rows)} informative</span>
             </button>
           </h2>
-          <div id="test-{_esc(h.id)}" class="accordion-collapse collapse {show}" data-bs-parent="#testAccordion">
+          <div id="{test_id}" class="accordion-collapse collapse {show}" data-bs-parent="#testAccordion">
             <div class="accordion-body">{body}</div>
           </div>
         </div>""")
@@ -655,6 +666,8 @@ def generate_report(result: ProcessTracingResult) -> str:
             </svg>"""
         else:
             sparkline_svg = ""
+        trail_graph_id = _dom_id("trailGraph", p_obj.hypothesis_id)
+        trail_table_id = _dom_id("trail", p_obj.hypothesis_id)
 
         # Build collapsible update trail table
         trail_rows = ""
@@ -686,15 +699,15 @@ def generate_report(result: ProcessTracingResult) -> str:
             <span style="position:absolute;right:8px;top:1px;font-size:0.8em;font-weight:bold">{p_obj.prior:.3f} → {p_obj.final_posterior:.3f}</span>
           </div>
           <div class="mt-1">
-            <a class="btn btn-sm btn-link p-0" data-bs-toggle="collapse" href="#trailGraph-{_esc(p_obj.hypothesis_id)}">Show update graph</a>
+            <a class="btn btn-sm btn-link p-0" data-bs-toggle="collapse" href="#{trail_graph_id}">Show update graph</a>
             <span class="text-muted mx-1">|</span>
-            <a class="btn btn-sm btn-link p-0" data-bs-toggle="collapse" href="#trail-{_esc(p_obj.hypothesis_id)}">Show update table</a>
+            <a class="btn btn-sm btn-link p-0" data-bs-toggle="collapse" href="#{trail_table_id}">Show update table</a>
           </div>
-          <div class="collapse" id="trailGraph-{_esc(p_obj.hypothesis_id)}">
+          <div class="collapse" id="{trail_graph_id}">
             {sparkline_svg}
             <div class="small text-muted mt-1">Each dot is an evidence update. <span style="color:#28a745">Green</span> = LR &gt; 1 (supports). <span style="color:#dc3545">Red</span> = LR &lt; 1 (opposes). Dashed line = prior. Hover dots for details.</div>
           </div>
-          <div class="collapse" id="trail-{_esc(p_obj.hypothesis_id)}">
+          <div class="collapse" id="{trail_table_id}">
             <table class="table table-sm mt-1 sortable-table" style="font-size:0.85em">
               <thead><tr>{_th("Evidence")}{_th("LR", "Likelihood Ratio after relevance gating and capping")}{_th("Cumulative Posterior", "Running posterior after this update")}</tr></thead>
               <tbody>{trail_rows}</tbody>

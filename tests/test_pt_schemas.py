@@ -15,6 +15,7 @@ from pt.schemas import (
     HypothesisPosterior,
     HypothesisSpace,
     ProcessTracingResult,
+    SpuriousExtraction,
     SynthesisResult,
     TestingResult,
 )
@@ -37,6 +38,12 @@ class TestEvidence:
     def test_evidence_type_rejects_invalid(self):
         with pytest.raises(ValidationError):
             Evidence(id="e1", description="test", source_text="quote", evidence_type="anecdotal")
+
+
+class TestRefinementSchemas:
+    def test_spurious_extraction_rejects_invalid_item_type(self):
+        with pytest.raises(ValidationError):
+            SpuriousExtraction(item_id="evi_1", item_type="unknown", reason="x")
 
 
 def _likelihood(relevance: float = 1.0) -> EvidenceLikelihood:

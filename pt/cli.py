@@ -22,7 +22,14 @@ def main() -> None:
     parser.add_argument("--refine", action="store_true", help="Run analytical refinement after initial pipeline, then re-run passes 3+")
     parser.add_argument("--from-result", default=None, help="Path to existing result.json; skips passes 1-2, implies --refine")
     parser.add_argument("--priors", default=None, help="Path to JSON file mapping hypothesis_id -> prior weight (need not sum to 1). Default: uniform.")
+    parser.add_argument("--max-budget", type=float, default=None, help="Per-call LLM budget cap in dollars (default: PT_MAX_BUDGET or 1.0)")
     args = parser.parse_args()
+
+    if args.max_budget is not None:
+        if args.max_budget <= 0:
+            print("Error: --max-budget must be greater than 0", file=sys.stderr)
+            sys.exit(1)
+        os.environ["PT_MAX_BUDGET"] = str(args.max_budget)
 
     if not os.path.isfile(args.input):
         print(f"Error: file not found: {args.input}", file=sys.stderr)

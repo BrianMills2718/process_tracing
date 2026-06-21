@@ -12,7 +12,7 @@ import pytest
 
 from pt.bayesian import run_bayesian_update
 from pt.pipeline import _source_text_sha256, run_pipeline
-from pt.report import generate_report
+from pt.report import _dom_id, generate_report
 from pt.schemas import (
     AbsenceEvaluation,
     AbsenceResult,
@@ -324,6 +324,13 @@ class TestBayesianMathDeterministic:
 
 class TestReportConsistency:
     """Report display should match Bayesian updater semantics."""
+
+    def test_dom_id_sanitizes_model_provided_ids(self):
+        dom_id = _dom_id("detail", "h 1/evil#id")
+        assert dom_id.startswith("detail-h-1-evil-id-")
+        assert " " not in dom_id
+        assert "/" not in dom_id
+        assert "#" not in dom_id
 
     def test_low_relevance_extreme_evidence_hidden_as_uninformative(self):
         extraction = _make_extraction()

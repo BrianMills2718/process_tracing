@@ -318,7 +318,9 @@ class NewCausalEdge(BaseModel):
 
 class SpuriousExtraction(BaseModel):
     item_id: str = Field(description="Evidence ID or 'source_id->target_id' for edges")
-    item_type: str = Field(description="'evidence' or 'causal_edge'")
+    item_type: Literal["evidence", "causal_edge"] = Field(
+        description="'evidence' or 'causal_edge'"
+    )
     reason: str
 
 
