@@ -130,8 +130,16 @@ def apply_refinement(
     if refinement.new_causal_edges and verbose:
         print(f"  Refinement: added {len(refinement.new_causal_edges)} new causal edges")
 
-    # 6. Apply hypothesis refinements (fail loud on unknown target)
+    # 6. Apply hypothesis refinements. Advisory merge suggestions are not state
+    # changes, so they may name a synthetic pair such as "h1_h4_merge_suggestion".
+    # State-changing refinements still fail loud on unknown targets.
     for hr in refinement.hypothesis_refinements:
+        if hr.refinement_type == "merge_suggestion":
+            if verbose:
+                print(f"  Refinement: MERGE SUGGESTION for {hr.hypothesis_id} — {hr.description}")
+                print(f"    (Not auto-applied. Review and merge manually if appropriate.)")
+            continue
+
         h = h_by_id.get(hr.hypothesis_id)
         if h is None:
             # Hypotheses are never removed by a refinement delta, so a missing
@@ -139,12 +147,6 @@ def apply_refinement(
             raise ValueError(
                 f"Refinement: hypothesis refinement targets unknown hypothesis id '{hr.hypothesis_id}'"
             )
-
-        if hr.refinement_type == "merge_suggestion":
-            if verbose:
-                print(f"  Refinement: MERGE SUGGESTION for {hr.hypothesis_id} — {hr.description}")
-                print(f"    (Not auto-applied. Review and merge manually if appropriate.)")
-            continue
 
         if hr.refinement_type == "sharpen_mechanism":
             if hr.updated_causal_mechanism:
