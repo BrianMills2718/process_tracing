@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+from typing import Any, Literal
 
 from llm_client import render_prompt
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, create_model
 
 from pt.llm import DEFAULT_MODEL, call_llm
 from pt.schemas import BayesianResult, ExtractionResult
@@ -23,6 +24,63 @@ class _BinarizationResponse(BaseModel):
     the model does not waste tokens generating values that are overwritten."""
     codings: list[VariableCoding]
     analyst_notes: str = ""
+
+
+def _literal_enum(values: list[str]) -> Any:
+    """Build a Literal type from runtime IDs for JSON-schema enum enforcement."""
+    if not values:
+        raise ValueError("cannot build enum schema from an empty id list")
+    return Literal.__getitem__(tuple(values))
+
+
+def _binarization_response_model(
+    *,
+    variable_names: list[str],
+    evidence_ids: list[str],
+) -> type[BaseModel]:
+    """Create an LLM-facing schema constrained to this model and extraction."""
+    variable_name_type = _literal_enum(variable_names)
+    evidence_id_type: Any = _literal_enum(evidence_ids) if evidence_ids else str
+    evidence_id_list: Any = list.__class_getitem__(evidence_id_type)
+
+    variable_coding = create_model(
+        "VariableCodingResponse",
+        variable_name=(
+            variable_name_type,
+            Field(description="One of the exact variable names in the causal model."),
+        ),
+        value=(
+            Literal[0, 1] | None,
+            Field(default=None, description="0, 1, or null when evidence is insufficient."),
+        ),
+        confidence=(
+            float,
+            Field(ge=0.0, le=1.0, description="Confidence in this coding."),
+        ),
+        justification=(
+            str,
+            Field(description="Justification citing extracted evidence IDs."),
+        ),
+        evidence_ids=(
+            evidence_id_list,
+            Field(
+                default_factory=list,
+                description="Exact evidence IDs from this extraction that support the coding.",
+            ),
+        ),
+    )
+    variable_coding_list: Any = list.__class_getitem__(variable_coding)
+    return create_model(
+        "BinarizationResponse",
+        codings=(
+            variable_coding_list,
+            Field(description="Exactly one coding per causal model variable."),
+        ),
+        analyst_notes=(
+            str,
+            Field(default="", description="Notes on difficult coding decisions."),
+        ),
+    )
 
 
 def _validate_binarization_contract(
@@ -128,13 +186,18 @@ def binarize_case(
     kwargs: dict = {}
     if model is not None:
         kwargs["model"] = model
-    result = call_llm(
+    response_model = _binarization_response_model(
+        variable_names=causal_model.variable_names,
+        evidence_ids=[e.id for e in extraction.evidence],
+    )
+    raw_result = call_llm(
         messages[0]["content"],
-        _BinarizationResponse,
+        response_model,
         task=f"process_tracing.binarize.{case_id}",
         trace_id=trace_id,
         **kwargs,
     )
+    result = _BinarizationResponse.model_validate(raw_result.model_dump())
 
     _validate_binarization_contract(
         case_id=case_id,

@@ -15,7 +15,11 @@ from pydantic import ValidationError
 
 from pt.cq_bridge import is_r_available
 from pt.multi_pipeline import _apply_confidence_threshold, _run_single_case, run_multi_pipeline
-from pt.pass_binarize import _BinarizationResponse, _validate_binarization_contract
+from pt.pass_binarize import (
+    _BinarizationResponse,
+    _binarization_response_model,
+    _validate_binarization_contract,
+)
 from pt.schemas_multi import (
     CaseBinarization,
     CausalEdgeSpec,
@@ -130,6 +134,15 @@ class TestBinarizeResponseSchema:
         # the LLM is asked to fill (CLAUDE.md: exclude system ids from LLM schema).
         props = set(_BinarizationResponse.model_json_schema()["properties"])
         assert props == {"codings", "analyst_notes"}
+
+    def test_dynamic_schema_enumerates_variables_and_evidence_ids(self):
+        schema = _binarization_response_model(
+            variable_names=["fiscal_crisis", "revolution"],
+            evidence_ids=["evi_1", "evi_2"],
+        ).model_json_schema()
+        schema_text = str(schema)
+        assert "'enum': ['fiscal_crisis', 'revolution']" in schema_text
+        assert "'enum': ['evi_1', 'evi_2']" in schema_text
 
 
 class TestCrossCaseValidation:
