@@ -37,6 +37,10 @@ not survive a PhD-level methods critique.
 
 These caps override the surface score. A report that satisfies every display
 requirement can still be capped when the underlying scholarly evidence is weak.
+Diagnostic strength is measured as the post-cap, relevance-discounted pairwise
+LR spread for each evidence item (`max(LR) / min(LR)` across hypotheses), not as
+one hypothesis's centered LR against the vector mean. This keeps the gate aligned
+with Van Evera-style discrimination between rivals.
 
 | Cap | Trigger | Required improvement |
 |---:|---|---|
