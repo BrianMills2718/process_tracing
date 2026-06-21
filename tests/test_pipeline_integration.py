@@ -502,6 +502,9 @@ class TestReportConsistency:
             "raw counts",
             "network coverage",
             "not discarded",
+            "academic phd review",
+            "recommendations by pipeline output",
+            "proceed until optimal",
             "verdict calibration",
             "secondary mechanism",
             "broad winning hypothesis",
@@ -511,8 +514,12 @@ class TestReportConsistency:
             assert phrase in normalized
 
         audit = audit_result(result, html, focal_year_override=1799)
-        assert audit["grade"] == "A"
-        assert audit["score"] >= 90
+        assert audit["grade"] == "C"
+        assert audit["score"] == 76
+        assert audit["base_score"] >= 90
+        assert audit["academic_cap"] == 76
+        assert audit["academic_caps"]
+        assert audit["priority_recommendations"]
         assert audit["categories"]["report_usability_and_safety"]["top_graph_connected"] is True
 
     def test_network_keeps_weak_top_driver_edges_visible(self):

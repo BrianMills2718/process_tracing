@@ -496,6 +496,127 @@ def _render_temporal_timeline(result: ProcessTracingResult) -> str:
     </div>"""
 
 
+def _diagnostic_strength_summary(result: ProcessTracingResult) -> dict[str, int | float]:
+    """Summarize diagnostic strength of evidence likelihood vectors."""
+    hyp_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    matrix = lr_matrix(result.testing, hyp_ids, _interpretive_caps(result))
+    strengths: list[float] = []
+    for _, lrs in matrix:
+        if not lrs:
+            continue
+        strengths.append(max(abs(math.log(max(lr, 0.01))) for lr in lrs.values()))
+    return {
+        "decisive": sum(1 for strength in strengths if strength > 1.6),
+        "moderate": sum(1 for strength in strengths if 0.7 < strength <= 1.6),
+        "weak": sum(1 for strength in strengths if 0.1 < strength <= 0.7),
+        "near_neutral": sum(1 for strength in strengths if strength <= 0.1),
+        "max_log_lr": round(max(strengths), 3) if strengths else 0.0,
+    }
+
+
+def _render_academic_review(
+    result: ProcessTracingResult,
+    *,
+    top_id: str | None,
+    top_h: Hypothesis | None,
+    top_post: float,
+    top_robust: str,
+    posteriors: dict[str, HypothesisPosterior],
+    ev_map: dict[str, Evidence],
+    network_coverage: _NetworkCoverage,
+) -> str:
+    """Render a PhD-level methods critique with concrete next steps."""
+    temporal = _temporal_evidence_mix(result, top_id, ev_map, posteriors)
+    diagnostic = _diagnostic_strength_summary(result)
+    verdict_issues = _verdict_calibration_issues(result, posteriors)
+    limitations_text = " ".join(result.synthesis.limitations).lower()
+    single_source_limited = any(
+        term in limitations_text
+        for term in ("single historical text", "single source", "single text")
+    )
+    broad_winner = _broad_winning_hypothesis(top_h)
+    rows = [
+        (
+            "Input corpus and source base",
+            "Single-text or broad-overview input is not enough for PhD-level causal identification." if single_source_limited else "Source-base limits are not explicitly documented.",
+            "Build a source packet with primary documents, rival secondary accounts, source genre metadata, and a note on what each source can and cannot reveal.",
+        ),
+        (
+            "Extraction and provenance",
+            f"{len(result.extraction.evidence)} evidence items extracted; {network_coverage['isolated_evidence_count']} currently have no displayed graph edge.",
+            "Classify every evidence item as mechanism trace, background condition, context, discarded, or pending-test evidence; preserve source quote and date confidence.",
+        ),
+        (
+            "Hypothesis space",
+            "The leading hypothesis is broad or absorptive." if broad_winner else "Hypothesis overlap still requires explicit discriminators.",
+            "Split broad hypotheses into narrower mechanisms and require each rival pair to have at least one observable discriminator.",
+        ),
+        (
+            "Diagnostic tests",
+            f"Diagnostic strength: {diagnostic['decisive']} decisive, {diagnostic['moderate']} moderate, {diagnostic['weak']} weak, {diagnostic['near_neutral']} near-neutral items.",
+            "Pre-register hoop and smoking-gun tests before likelihood scoring; seek direct traces unlikely under rival hypotheses.",
+        ),
+        (
+            "Temporal process sequence",
+            f"Only {temporal['proximate']}/{temporal['total']} evidence items are proximate to the focal outcome; background top drivers: {len(temporal['top_driver_background'])}.",
+            "Construct a dated mechanism sequence for the final decision window and distinguish enabling background from proximate causal action.",
+        ),
+        (
+            "Bayesian update and dependence",
+            f"Top hypothesis {top_id or 'N/A'} has support {top_post:.3f} with robustness {top_robust}.",
+            "Treat high-support fragile results as rankings, not calibrated truth probabilities; audit dependence clusters and rerun sensitivity after adding stronger traces.",
+        ),
+        (
+            "Absence, counterfactuals, and scope",
+            f"{sum(1 for ae in result.absence.evaluations if ae.severity == 'damaging')} damaging absence finding(s); source scope determines whether absence is meaningful.",
+            "Specify the archive or source genre where the missing trace should appear; add counterfactual evidence on failed alternatives and non-events.",
+        ),
+        (
+            "Synthesis and claims",
+            f"{len(verdict_issues)} verdict calibration issue(s) detected.",
+            "Phrase conclusions as exploratory under the present corpus; separate mechanism plausibility from publication-strength causal identification.",
+        ),
+    ]
+    row_html = "".join(
+        f"""
+        <tr>
+          <td><strong>{_esc(output)}</strong></td>
+          <td>{_esc(critique)}</td>
+          <td>{_esc(recommendation)}</td>
+        </tr>"""
+        for output, critique, recommendation in rows
+    )
+    optimal_steps = [
+        "Freeze a sharper research question and focal decision window.",
+        "Assemble a source packet with independent primary and secondary evidence.",
+        "Split broad hypotheses and define pairwise discriminators before testing.",
+        "Collect proximate dated traces for the decisive sequence.",
+        "Rerun likelihood scoring, dependence clustering, sensitivity, and this audit.",
+        "Only then upgrade from exploratory ranking to a PhD-level causal claim.",
+    ]
+    steps_html = "".join(f"<li>{_esc(step)}</li>" for step in optimal_steps)
+    return f"""
+    <div class="card mb-4 shadow-sm border-danger">
+      <div class="card-header bg-danger text-white"><h4 class="mb-0">Academic PhD Review</h4></div>
+      <div class="card-body">
+        <p><strong>Current scholarly status:</strong> exploratory process-tracing output under a limited input text. It is useful for hypothesis generation and audit planning, not yet a PhD-level causal demonstration.</p>
+        <h5>Recommendations by Pipeline Output</h5>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead><tr>
+              <th>Output</th>
+              <th>PhD-level critique</th>
+              <th>How to improve</th>
+            </tr></thead>
+            <tbody>{row_html}</tbody>
+          </table>
+        </div>
+        <h5>Proceed Until Optimal</h5>
+        <ol>{steps_html}</ol>
+      </div>
+    </div>"""
+
+
 def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict]]:
     """Build vis.js nodes and edges including evidence-hypothesis links."""
     nodes: list[dict[str, object]] = []
@@ -690,6 +811,17 @@ def generate_report(result: ProcessTracingResult) -> str:
     </div>"""
 
     output_quality_audit = _render_output_quality_audit(
+        result,
+        top_id=top_id,
+        top_h=top_h,
+        top_post=top_post,
+        top_robust=top_robust,
+        posteriors=posteriors,
+        ev_map=ev_map,
+        network_coverage=network_coverage,
+    )
+
+    academic_review = _render_academic_review(
         result,
         top_id=top_id,
         top_h=top_h,
@@ -1442,6 +1574,7 @@ def generate_report(result: ProcessTracingResult) -> str:
   </div>
   {exec_summary}
   {output_quality_audit}
+  {academic_review}
   {temporal_timeline}
   {network_section}
   {comparison_table}

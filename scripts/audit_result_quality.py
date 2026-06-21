@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -181,6 +182,116 @@ def _network_visual_stats(result: ProcessTracingResult) -> dict[str, Any]:
     }
 
 
+def _diagnostic_strength_stats(result: ProcessTracingResult) -> dict[str, Any]:
+    from pt.bayesian import INTERPRETIVE_LR_CAP, lr_matrix
+
+    hypothesis_ids = [h.id for h in result.hypothesis_space.hypotheses]
+    interpretive_caps = {
+        ev.id: INTERPRETIVE_LR_CAP
+        for ev in result.extraction.evidence
+        if ev.evidence_type == "interpretive"
+    }
+    strengths: list[float] = []
+    for _, lrs in lr_matrix(result.testing, hypothesis_ids, interpretive_caps):
+        if not lrs:
+            continue
+        strengths.append(
+            max(abs(math.log(max(lr, 0.01))) for lr in lrs.values())
+        )
+    return {
+        "decisive_items": sum(1 for s in strengths if s > 1.6),
+        "moderate_items": sum(1 for s in strengths if 0.7 < s <= 1.6),
+        "weak_items": sum(1 for s in strengths if 0.1 < s <= 0.7),
+        "near_neutral_items": sum(1 for s in strengths if s <= 0.1),
+        "max_log_lr": round(max(strengths), 3) if strengths else 0.0,
+    }
+
+
+def _academic_caps(
+    result: ProcessTracingResult,
+    *,
+    temporal: dict[str, Any],
+    fragility: dict[str, Any],
+    verdict_issues: list[str],
+    network: dict[str, Any],
+) -> tuple[int, list[dict[str, Any]], list[str]]:
+    """Hard PhD-methods caps: visibility cannot overcome weak evidentiary basis."""
+    caps: list[dict[str, Any]] = []
+    recommendations: list[str] = []
+
+    def add(cap: int, reason: str, recommendation: str) -> None:
+        caps.append({"cap": cap, "reason": reason, "recommendation": recommendation})
+        recommendations.append(recommendation)
+
+    limitations = " ".join(result.synthesis.limitations).lower()
+    if any(term in limitations for term in ("single historical text", "single source", "single text")):
+        add(
+            78,
+            "The synthesis itself acknowledges a single-source or single-text basis.",
+            "Add an explicit source packet: primary documents, hostile/alternative secondary accounts, and source metadata before treating the result as PhD-level causal evidence.",
+        )
+
+    diagnostic = _diagnostic_strength_stats(result)
+    if diagnostic["decisive_items"] == 0 and diagnostic["moderate_items"] == 0:
+        add(
+            76,
+            "No evidence item clears even the moderate diagnostic-strength threshold.",
+            "Design a small set of pre-specified hoop, smoking-gun, and discriminating straw-in-the-wind tests before rerunning likelihood elicitation.",
+        )
+    elif diagnostic["decisive_items"] == 0:
+        add(
+            84,
+            "The result lacks decisive process-tracing tests.",
+            "Seek direct traces that would be unlikely under rival hypotheses, not just background facts that weakly favor one story.",
+        )
+
+    total = temporal["total"] or 1
+    proximate_share = temporal["proximate"] / total
+    if proximate_share < 0.20:
+        add(
+            80,
+            f"Only {temporal['proximate']}/{temporal['total']} evidence items are proximate to the focal outcome.",
+            "Collect and separately score outcome-proximate evidence from the final decision window; do not let background conditions carry the main causal claim.",
+        )
+    if temporal["top_driver_background"]:
+        add(
+            82,
+            "One or more top drivers are background-context items rather than proximate mechanism traces.",
+            "Separate background enabling conditions from mechanism evidence and require at least one proximate top driver for a publication-strength claim.",
+        )
+
+    if fragility.get("high_fragile"):
+        add(
+            84,
+            "The leading hypothesis has high comparative support but fragile robustness.",
+            "Treat the winner as a provisional ranking; seek fewer, stronger discriminating traces and rerun sensitivity after dependence-cluster review.",
+        )
+
+    if _broad_winner_risk(result):
+        add(
+            84,
+            "The winning hypothesis is broad enough to absorb mechanisms from rival explanations.",
+            "Split the broad winner into narrower mechanisms or add explicit discriminators so overlap with rivals cannot create an artificial victory.",
+        )
+
+    if verdict_issues:
+        add(
+            86,
+            "At least one synthesis verdict overstates a low-posterior hypothesis.",
+            "Calibrate verdict labels to comparative support; label low-support but plausible mechanisms as residual or secondary, not supported.",
+        )
+
+    if network["isolated_evidence_count"] > len(result.extraction.evidence) * 0.5:
+        add(
+            88,
+            "More than half of extracted evidence items have no displayed graph edge.",
+            "Classify unlinked evidence as background, discarded, or pending-test evidence so readers can distinguish unused inventory from causal support.",
+        )
+
+    academic_cap = min([entry["cap"] for entry in caps], default=100)
+    return academic_cap, caps, recommendations
+
+
 def audit_result(
     result: ProcessTracingResult,
     report_html: str,
@@ -208,6 +319,9 @@ def audit_result(
         "points": 15 if contract_ok else 5,
         "max": 15,
         "ok": contract_ok,
+        "recommendations": [] if contract_ok else [
+            "Repair ID/vector coverage before interpreting any substantive output."
+        ],
     }
     score += categories["contract_integrity"]["points"]
 
@@ -227,6 +341,9 @@ def audit_result(
         "verdict_issues": verdict_issues,
         "comparative_visible": comparative_visible,
         "calibration_visible": calibration_visible,
+        "recommendations": [] if comparative_visible and calibration_visible else [
+            "State that support is comparative, not absolute; caveat low-posterior supported verdicts as secondary mechanisms."
+        ],
     }
     score += categories["comparative_support_discipline"]["points"]
 
@@ -251,6 +368,9 @@ def audit_result(
         **temporal,
         "temporal_visible": temporal_visible,
         "background_visible": background_visible,
+        "recommendations": [] if temporal_visible and background_visible else [
+            "Add a chronological timeline and separate background conditions from proximate causal mechanism traces."
+        ],
     }
     score += categories["temporal_and_causal_proximity"]["points"]
 
@@ -272,6 +392,9 @@ def audit_result(
         **fragility,
         "fragile_warning_visible": fragile_warning_visible,
         "robustness_visible": robustness_visible,
+        "recommendations": [] if fragile_warning_visible and robustness_visible else [
+            "Surface high-support fragile winners, sensitivity ranges, rank stability, and prior sensitivity in the headline."
+        ],
     }
     score += categories["robustness_and_fragility"]["points"]
 
@@ -290,6 +413,9 @@ def audit_result(
         "clustered_items": len(clustered_ids),
         "dependence_visible": dependence_visible,
         "weighted_visible": weighted_visible,
+        "recommendations": [] if dependence_visible and weighted_visible else [
+            "Show effective evidence after dependence pooling; do not let raw counts imply independent corroboration."
+        ],
     }
     score += categories["evidence_weighting_and_dependence"]["points"]
 
@@ -301,6 +427,9 @@ def audit_result(
         "max": 10,
         "broad_winner_risk": broad_risk,
         "broad_warning_visible": broad_visible,
+        "recommendations": [] if broad_visible else [
+            "Flag broad winners and add sharper discriminators against overlapping rival hypotheses."
+        ],
     }
     score += discrimination_points
 
@@ -316,38 +445,78 @@ def audit_result(
         "max": 10,
         "damaging_absence_count": len(damaging_absences),
         "source_scope_visible": source_scope_visible,
+        "recommendations": [] if source_scope_visible else [
+            "Caveat damaging absence claims by source scope; specify where the missing trace should be found."
+        ],
     }
     score += source_points
 
     network = _network_visual_stats(result)
     network_legend_visible = _report_has(report_html, "top driver edge", "not discarded")
+    academic_review_visible = _report_has(
+        report_html,
+        "academic phd review",
+        "recommendations by pipeline output",
+        "proceed until optimal",
+    )
     safe = "</script><script>" not in report_html and 'id="detail-' in report_html
-    visual_ok = network["top_graph_connected"] and network_legend_visible
+    visual_ok = network["top_graph_connected"] and network_legend_visible and academic_review_visible
     categories["report_usability_and_safety"] = {
         "points": 5 if safe and visual_ok else 2 if safe else 0,
         "max": 5,
         "safe": safe,
         "visual_ok": visual_ok,
         "network_legend_visible": network_legend_visible,
+        "academic_review_visible": academic_review_visible,
         **network,
+        "recommendations": [] if safe and visual_ok else [
+            "Connect the top-ranked hypothesis to visible support and disclose hidden isolated evidence as not discarded."
+        ],
     }
     score += categories["report_usability_and_safety"]["points"]
 
+    base_score = score
+    academic_cap, academic_caps, priority_recommendations = _academic_caps(
+        result,
+        temporal=temporal,
+        fragility=fragility,
+        verdict_issues=verdict_issues,
+        network=network,
+    )
+    score = min(base_score, academic_cap)
+
     return {
         "score": score,
+        "base_score": base_score,
+        "academic_cap": academic_cap,
         "grade": _grade(score),
         "categories": categories,
+        "academic_caps": academic_caps,
+        "priority_recommendations": priority_recommendations,
     }
 
 
 def _render_text(audit: dict[str, Any]) -> str:
     lines = [f"Grade: {audit['grade']} ({audit['score']}/100)"]
+    if audit.get("base_score") != audit.get("score"):
+        lines.append(
+            f"Report-surface score: {audit['base_score']}/100; academic evidence cap: {audit['academic_cap']}/100"
+        )
     for name, details in audit["categories"].items():
         lines.append(f"- {name}: {details['points']}/{details['max']}")
         for key, value in details.items():
             if key in {"points", "max"}:
                 continue
             lines.append(f"  {key}: {value}")
+    if audit.get("academic_caps"):
+        lines.append("- academic_caps:")
+        for cap in audit["academic_caps"]:
+            lines.append(f"  cap {cap['cap']}: {cap['reason']}")
+            lines.append(f"    recommendation: {cap['recommendation']}")
+    if audit.get("priority_recommendations"):
+        lines.append("- priority_recommendations:")
+        for rec in audit["priority_recommendations"]:
+            lines.append(f"  - {rec}")
     return "\n".join(lines)
 
 

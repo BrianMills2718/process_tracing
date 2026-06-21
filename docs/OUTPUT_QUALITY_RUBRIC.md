@@ -1,46 +1,71 @@
 # Output Quality Rubric
 
-This rubric grades a generated process-tracing result and report. An `A` means
-the output is review-ready: it may still be uncertain, but its uncertainty,
-scope limits, and causal-evidence weaknesses are visible enough that a reader is
-not misled by the ranking.
+This rubric grades a generated process-tracing result and report from an
+academic process-tracing standpoint. It grades both the visible report and the
+underlying evidentiary basis. A polished report cannot receive an `A` if the
+input corpus, diagnostic tests, temporal sequence, or hypothesis design would
+not survive a PhD-level methods critique.
 
 ## Acceptance Criteria
 
-- `A`: 90-100. Review-ready. Major causal, temporal, robustness, and reporting
-  caveats are surfaced in the report.
-- `B`: 80-89. Useful but not review-ready. One or more important caveats are
-  present only in raw data or prose, not clearly surfaced.
-- `C`: 70-79. Analytically risky. The output may have valid structure but can
-  mislead on timing, posterior meaning, or evidence strength.
-- `D`: 60-69. Major weaknesses. The reader cannot trust the headline without
-  manually auditing the JSON.
+- `A`: 90-100. PhD-review-ready under the available corpus. No active academic
+  evidence cap. Claims remain cautious, but the source base, discriminators,
+  temporal sequence, and diagnostic tests are strong enough for scholarly review.
+- `B`: 80-89. Strong exploratory output. The report is clear, but one academic
+  weakness still prevents publication-strength causal inference.
+- `C`: 70-79. Useful for hypothesis generation and audit planning. The structure
+  is sound, but the evidentiary basis is too thin, weak, broad, or background
+  heavy for a PhD-level causal claim.
+- `D`: 60-69. Major weaknesses. The output may be readable but has serious
+  method risks in source scope, diagnosticity, temporality, or synthesis.
 - `F`: below 60. Not usable.
 
-## Rubric
+## Rubric by Pipeline Output
 
 | Category | Points | A-grade standard |
 |---|---:|---|
-| Contract integrity | 15 | Evidence, hypotheses, vectors, clusters, and report artifacts are structurally consistent; IDs are exact; no silent drops. |
-| Comparative-support discipline | 15 | Report labels support as comparative, not truth probability; verdict labels are calibrated to posterior support or explicitly caveated as secondary mechanisms. |
-| Temporal and causal proximity | 15 | Report shows focal year, proximate evidence share, background evidence share, whether top drivers are proximate to the outcome, and a chronological event/evidence timeline. |
-| Robustness and fragility | 15 | High-support fragile results are prominently warned; sensitivity interval, rank stability, and prior stability are visible. |
-| Evidence weighting and dependence | 15 | Report distinguishes raw counts from effective/weighted evidence; dependence clusters and weak-evidence accumulation are visible. |
-| Hypothesis discrimination | 10 | Broad or absorptive winning hypotheses are flagged when they overlap rival mechanisms; remaining discriminators are named. |
-| Source-scope and absence calibration | 10 | Damaging absence findings are caveated when the source is broad and may not contain the missing micro-evidence. |
-| Report usability and safety | 5 | HTML is safe to open, collapsibles work with model-provided IDs, the top-ranked hypothesis is visually connected to its supporting evidence, hidden isolated nodes are disclosed as not discarded, and the audit is visible without reading JSON. |
+| Contract integrity | 15 | Extraction, hypotheses, testing vectors, dependence clusters, Bayesian posteriors, and report artifacts are structurally consistent; no evidence, hypothesis, or vector is silently dropped. |
+| Comparative-support discipline | 15 | Bayesian support is framed as comparative over the listed hypothesis set, not truth probability; synthesis verdicts are calibrated to posteriors or explicitly labeled as secondary mechanisms. |
+| Temporal and causal proximity | 15 | The report gives a focal year, proximate/background evidence shares, background top-driver warnings, and a chronological event/evidence timeline before network interpretation. |
+| Robustness and fragility | 15 | High-support fragile winners are not treated as settled results; sensitivity interval, rank stability, prior stability, and fragility warnings are visible. |
+| Evidence weighting and dependence | 15 | Raw counts are distinguished from effective evidence; dependence clusters, weak-evidence accumulation, and source-lineage risks are visible. |
+| Hypothesis discrimination | 10 | Broad or absorptive winners are flagged; rival hypotheses have explicit discriminators rather than overlapping umbrella mechanisms. |
+| Source-scope and absence calibration | 10 | Absence findings are tied to source genre and archive expectations; broad overview texts cannot support strong damaging absence claims without caveats. |
+| Report usability and safety | 5 | HTML is safe, top-ranked hypotheses are visually connected to support, hidden isolated nodes are disclosed as not discarded, and PhD-level recommendations are visible in the report. |
+
+## Academic Evidence Caps
+
+These caps override the surface score. A report that satisfies every display
+requirement can still be capped when the underlying scholarly evidence is weak.
+
+| Cap | Trigger | Required improvement |
+|---:|---|---|
+| 78 | Single-source or single-text limitation acknowledged | Add a source packet with primary documents, rival secondary accounts, and source metadata. |
+| 76 | No evidence item reaches moderate diagnostic strength | Pre-specify hoop, smoking-gun, and discriminating tests; seek traces unlikely under rivals. |
+| 80 | Less than 20% of evidence is proximate to the focal outcome | Collect dated evidence from the decisive decision window and score it separately. |
+| 82 | Top drivers are background-context items | Separate enabling conditions from proximate mechanism traces. |
+| 84 | High-support winner is fragile | Treat as provisional ranking; seek fewer but stronger discriminating traces. |
+| 84 | Winning hypothesis is broad/absorptive | Split into narrower mechanisms or add pairwise discriminators. |
+| 86 | Synthesis verdicts overstate low posteriors | Recalibrate verdict labels to comparative support. |
+| 88 | More than half of extracted evidence has no displayed graph edge | Classify unlinked evidence as background, discarded, or pending-test evidence. |
 
 ## Scope Limits
 
-The audit grades reporting discipline and internal evidence handling. An `A`
-means the report is review-ready, not that the causal claim is historically true
-or externally validated. Source quality, missing archives, and hypothesis-space
-coverage still require substantive review.
+The audit grades academic readiness of the generated output, not historical
+truth. With a limited input text, the optimal output may be a clear `C`: useful
+for hypothesis generation, explicit about its limits, and precise about what
+must be collected next. Do not raise the grade by hiding limitations; raise it
+by improving source scope, diagnostic evidence, temporal process evidence, and
+hypothesis discrimination.
 
 ## Iteration Protocol
 
 1. Run `make audit-result RESULT=RESULT REPORT=REPORT`.
-2. Fix the highest-point failing category first.
-3. Regenerate the report from the same `result.json` when the fix is report-only.
-4. Rerun the audit.
-5. Stop only when the grade is `A` or a genuine blocker prevents further progress.
+2. Read both category recommendations and academic evidence caps.
+3. Fix report-only failures first when the JSON already contains the needed
+   information.
+4. If a cap reflects missing evidence, stop trying to polish the report and
+   collect the recommended source material.
+5. Rerun extraction, testing, Bayesian update, report generation, and the audit.
+6. Stop only when the output reaches `A` or the remaining cap requires external
+   evidence not present in the current input corpus.
