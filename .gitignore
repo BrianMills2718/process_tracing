@@ -50,6 +50,7 @@ debug/
 logs/
 temp*.txt
 validation_output.txt
+.claude/hook_log.jsonl
 
 # Generated analysis files
 *_analysis_*.html
