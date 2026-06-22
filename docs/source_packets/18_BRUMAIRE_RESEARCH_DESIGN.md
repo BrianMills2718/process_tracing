@@ -75,8 +75,8 @@ An improved result should clear these gates:
 - Multiple source groups appear in extracted evidence; the synthesis must not
   treat the corpus as a single historical source.
 - `result.json` stores source-packet metadata, and the report includes the
-  source-packet contract table plus the rule that packet metadata is not itself
-  evidence.
+  source-packet contract table, packet-source coverage table, and the rule that
+  packet metadata is not itself evidence.
 - At least 20 percent of evidence is proximate to 1799.
 - The top hypothesis has at least one proximate top driver.
 - At least one item reaches moderate diagnostic strength.

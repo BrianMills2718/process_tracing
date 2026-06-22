@@ -23,6 +23,7 @@ from pt.schemas import (
     ProcessTracingResult,
     RefinementResult,
 )
+from pt.source_coverage import build_source_coverage
 from pt.source_packet import SourcePacket
 
 
@@ -244,6 +245,7 @@ def run_pipeline(
         if source_packet is not None
         else from_result.source_packet if from_result is not None else None
     )
+    source_coverage = from_result.source_coverage if from_result is not None else None
 
     # Input validation — catch garbage/trivial input before burning 9+ LLM calls
     if from_result is None:
@@ -338,6 +340,15 @@ def run_pipeline(
             pass_label="[Refined]", trace_id=trace_id, priors=priors,
         )
 
+    if source_packet is not None:
+        source_coverage = build_source_coverage(source_packet, text, extraction)
+        if verbose:
+            print(
+                "Source coverage: "
+                f"{source_coverage.sources_with_evidence}/{source_coverage.source_count} "
+                "packet sources represented in extracted evidence"
+            )
+
     elapsed = time.time() - t0
     if verbose:
         print(f"\nPipeline complete in {elapsed:.1f}s")
@@ -351,6 +362,7 @@ def run_pipeline(
         bayesian=bayesian,
         synthesis=synthesis,
         source_packet=source_packet_summary,
+        source_coverage=source_coverage,
         refinement=refinement_result,
         is_refined=refine,
     )

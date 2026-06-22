@@ -5,7 +5,9 @@
   "outcome": "Napoleon Bonaparte's 18 Brumaire coup and the creation of the Consulate",
   "source_candidates": [
     {
+      "source_id": "source_a_bonaparte_justification",
       "title": "Brumaire: Bonaparte's Justification",
+      "text_markers": ["Source A"],
       "source_group": "Bonaparte public justification",
       "source_kind": "primary proclamation",
       "date_coverage": "1799-11-10",
@@ -16,7 +18,9 @@
       "relevance_to_question": "Tests whether Bonaparte framed the coup as rescue and order rather than as personalist seizure."
     },
     {
+      "source_id": "source_b_decree_proclamation",
       "title": "Brumaire Decree and Proclamation of the Consuls",
+      "text_markers": ["Source B"],
       "source_group": "official legal transition documents",
       "source_kind": "primary legal text",
       "date_coverage": "1799-11-10 to 1799-11-12",
@@ -27,7 +31,9 @@
       "relevance_to_question": "Discriminates legal-constitutional revision from purely military takeover narratives."
     },
     {
+      "source_id": "source_c_constitution_year_viii",
       "title": "Constitution of the Year VIII",
+      "text_markers": ["Source C"],
       "source_group": "constitutional design",
       "source_kind": "primary constitutional text",
       "date_coverage": "1799-12-13",
@@ -38,7 +44,9 @@
       "relevance_to_question": "Tests whether the endpoint was strong-executive constitutional revision or a Bonapartist personalist settlement."
     },
     {
+      "source_id": "source_d_fondation_napoleon",
       "title": "Eymeric Job, 18 Brumaire: the context and course of a coup d'Etat",
+      "text_markers": ["Source D"],
       "source_group": "narrative secondary account",
       "source_kind": "secondary narrative",
       "date_coverage": "1795 to 1799",
@@ -49,7 +57,9 @@
       "relevance_to_question": "Separates background instability from proximate agency and coercion in the final decision window."
     },
     {
+      "source_id": "source_e_crook_h_france",
       "title": "Malcolm Crook, The Myth of the 18th Brumaire",
+      "text_markers": ["Source E"],
       "source_group": "critical historiography",
       "source_kind": "historiography",
       "date_coverage": "1799 and later interpretation",

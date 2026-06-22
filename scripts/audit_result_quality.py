@@ -243,6 +243,7 @@ def _academic_caps(
 
     limitations = " ".join(result.synthesis.limitations).lower()
     source_packet = result.source_packet
+    source_coverage = result.source_coverage
     source_scope_capped = False
     if any(term in limitations for term in ("single historical text", "single source", "single text")):
         if source_packet is None:
@@ -290,6 +291,26 @@ def _academic_caps(
             "Extend or repair the packet before publication-strength causal claims.",
             "external_evidence",
             "The packet has at least three independent source groups, no unresolved high-priority gaps, and packet limitations are either resolved or explicitly accepted.",
+        )
+
+    if source_packet is not None and source_coverage is None:
+        add(
+            82,
+            "A source packet is present, but no packet-source coverage report is stored.",
+            "Compute packet-source coverage so the report shows which source groups produced evidence.",
+            "report_or_model",
+            "Every accepted source-packet run stores source coverage with per-source input marker and evidence counts.",
+        )
+    elif source_coverage is not None and (
+        source_coverage.sources_with_evidence < source_coverage.source_count
+        or source_coverage.unconfigured_source_ids
+    ):
+        add(
+            82,
+            "Packet-source coverage is incomplete or not explicitly configured for every source.",
+            "Repair packet source markers or assemble the corpus so every packet source is represented in extracted evidence, or explicitly accept the gap.",
+            "external_evidence",
+            "Every packet source has explicit text markers and at least one extracted evidence item, or the missing source is moved to known_gaps with an explicit disposition.",
         )
 
     diagnostic = _diagnostic_strength_stats(result)
@@ -539,11 +560,13 @@ def audit_result(
         ev for ev in result.absence.evaluations if ev.severity == "damaging"
     ]
     packet = result.source_packet
+    coverage = result.source_coverage
     source_packet_visible = packet is None or _report_has(report_html, "source packet contract")
+    source_coverage_visible = coverage is None or _report_has(report_html, "packet source coverage")
     source_scope_visible = (not damaging_absences) or _report_has(
         report_html, "source-scope", "absence"
     )
-    source_scope_visible = source_scope_visible and source_packet_visible
+    source_scope_visible = source_scope_visible and source_packet_visible and source_coverage_visible
     source_points = 10 if source_scope_visible else 5
     categories["source_scope_and_absence"] = {
         "points": source_points,
@@ -551,7 +574,12 @@ def audit_result(
         "damaging_absence_count": len(damaging_absences),
         "source_packet_present": packet is not None,
         "source_packet_visible": source_packet_visible,
+        "source_coverage_present": coverage is not None,
+        "source_coverage_visible": source_coverage_visible,
         "source_count": packet.source_count if packet else 0,
+        "sources_with_evidence": coverage.sources_with_evidence if coverage else 0,
+        "assigned_evidence_count": coverage.assigned_evidence_count if coverage else 0,
+        "unassigned_evidence_count": len(coverage.unassigned_evidence_ids) if coverage else 0,
         "known_gap_count": packet.known_gap_count if packet else 0,
         "high_priority_gap_count": packet.high_priority_gap_count if packet else 0,
         "source_scope_visible": source_scope_visible,

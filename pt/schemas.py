@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import ClassVar, Literal, Optional
 from pydantic import BaseModel, Field, model_validator
 
-from pt.source_packet import SourcePacketSummary
+from pt.source_packet import SourceCoverageReport, SourcePacketSummary
 
 DiagnosticType = Literal["hoop", "smoking_gun", "doubly_decisive", "straw_in_the_wind"]
 EvidenceType = Literal["empirical", "interpretive"]
@@ -39,7 +39,12 @@ class Mechanism(BaseModel):
 class Evidence(BaseModel):
     id: str = Field(description="Unique identifier, e.g. 'evi_tax_records'")
     description: str
-    source_text: str = Field(description="Direct quote from the input text")
+    source_text: str = Field(
+        description=(
+            "Direct quote from the input text; preserve source markers, document labels, "
+            "speaker labels, and citation labels when they appear in the quoted span"
+        )
+    )
     evidence_type: EvidenceType = Field(
         default="empirical",
         description="'empirical' for facts/events/actions, 'interpretive' for historian arguments/scholarly claims"
@@ -413,6 +418,10 @@ class ProcessTracingResult(BaseModel):
     source_packet: Optional[SourcePacketSummary] = Field(
         default=None,
         description="Source-packet metadata governing source scope and observability assumptions.",
+    )
+    source_coverage: Optional[SourceCoverageReport] = Field(
+        default=None,
+        description="Deterministic packet-source coverage against input text and extracted evidence.",
     )
     refinement: Optional[RefinementResult] = None
     is_refined: bool = False

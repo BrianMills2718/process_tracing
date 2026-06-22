@@ -87,7 +87,10 @@ make source-packet-run \
 
 The packet governs research question, source-scope metadata, observability
 assumptions, and missing-source gaps. It does not make packet metadata evidence;
-evidence still has to appear in the input text and likelihood matrix.
+evidence still has to appear in the input text and likelihood matrix. When a
+packet source has explicit `text_markers`, the run also stores source coverage:
+which packet sources appear in the input text, which produced extracted
+evidence, and which evidence items remain unassigned to packet sources.
 
 ## Architecture
 
@@ -95,6 +98,7 @@ evidence still has to appear in the input text and likelihood matrix.
 pt/
   assistant.py         Slice 0: agentic source-packet draft harness
   source_packet.py     Source-packet schema, loader, summary, and prompt context
+  source_coverage.py   Packet-source marker coverage against input/evidence
   schemas.py           Pydantic contracts for all pipeline data
   llm.py               LLM boundary through llm_client.call_llm_structured
   pass_extract.py      Pass 1: source-grounded extraction
@@ -103,6 +107,8 @@ pt/
   pass_absence.py      Pass 3b: qualitative absence-of-evidence evaluation
   bayesian.py          Pass 3.5: deterministic comparative-support update
   pass_synthesize.py   Pass 4: written synthesis
+  verdict_calibration.py
+                       Deterministic calibration of synthesis status labels
   pass_refine.py       Pass 5: optional second-reading refinement
   pipeline.py          Single-case orchestrator
   report.py            HTML report and temporal causal network
@@ -115,9 +121,10 @@ pt/
 The next implementation slices are about scaling process-tracing research labor,
 not just improving report polish. Source-packet construction now has a typed
 assistant draft surface and the main pipeline can consume that artifact as a
-source-scope contract. Benchmark repair, partition critique, and report critique
-remain planned agent-drivable workspace tasks through `llm_client` using Codex
-or Claude Code backends. This repo should not call Codex/Claude Code directly.
+source-scope contract with deterministic packet-source coverage. Benchmark
+repair, partition critique, and report critique remain planned agent-drivable
+workspace tasks through `llm_client` using Codex or Claude Code backends. This
+repo should not call Codex/Claude Code directly.
 
 ## Documentation Map
 

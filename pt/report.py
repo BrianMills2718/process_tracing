@@ -14,6 +14,7 @@ from pt.bayesian import INTERPRETIVE_LR_CAP, RESIDUAL_ID, lr_matrix
 from pt.schemas import Evidence, Hypothesis, HypothesisPosterior, PredictionClassification, ProcessTracingResult
 
 _BACKGROUND_DRIVER_LEVEL_GAP = 18
+_CONTROL_CHARS_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
 
 class _TemporalAudit(TypedDict):
@@ -46,13 +47,34 @@ def _interpretive_caps(result: ProcessTracingResult) -> dict[str, float]:
     }
 
 
-def _esc(s: str) -> str:
-    return html.escape(str(s))
+def _clean_text(value: object) -> str:
+    """Remove non-printing control characters before rendering model text."""
+    return _CONTROL_CHARS_RE.sub("", str(value))
+
+
+def _clean_for_json(value: object) -> object:
+    """Recursively remove control characters from values embedded in script JSON."""
+    if isinstance(value, str):
+        return _clean_text(value)
+    if isinstance(value, list):
+        return [_clean_for_json(item) for item in value]
+    if isinstance(value, tuple):
+        return [_clean_for_json(item) for item in value]
+    if isinstance(value, dict):
+        return {
+            _clean_text(key) if isinstance(key, str) else key: _clean_for_json(item)
+            for key, item in value.items()
+        }
+    return value
+
+
+def _esc(s: object) -> str:
+    return html.escape(_clean_text(s))
 
 
 def _json_for_script(value: object) -> str:
     """Serialize JSON safely for embedding directly inside a script tag."""
-    return json.dumps(value).replace("</", "<\\/").replace("<!--", "<\\!--")
+    return json.dumps(_clean_for_json(value)).replace("</", "<\\/").replace("<!--", "<\\!--")
 
 
 def _dom_id(prefix: str, value: str) -> str:
@@ -770,6 +792,7 @@ def _render_academic_review(
     broad_winner = _broad_winning_hypothesis(top_h)
     triage = _evidence_triage_summary(result)
     source_packet = result.source_packet
+    source_coverage = result.source_coverage
     if source_packet is None:
         source_scope_status = (
             "No accepted source-packet contract is stored with this result."
@@ -780,10 +803,19 @@ def _render_academic_review(
         )
     else:
         source_kinds = ", ".join(source_packet.source_kinds) or "unspecified"
+        if source_coverage is None:
+            coverage_phrase = "source coverage was not computed"
+        else:
+            coverage_phrase = (
+                f"{source_coverage.sources_with_evidence}/"
+                f"{source_coverage.source_count} packet source(s) represented "
+                "in extracted evidence"
+            )
         source_scope_status = (
             f"Source packet accepted for {source_packet.case_name}: "
             f"{source_packet.source_count} source(s), kinds: {source_kinds}; "
-            f"high-priority gaps: {source_packet.high_priority_gap_count}."
+            f"high-priority gaps: {source_packet.high_priority_gap_count}; "
+            f"{coverage_phrase}."
         )
         if source_packet.high_priority_gap_count:
             gap_text = ", ".join(source_packet.high_priority_gaps)
@@ -820,6 +852,13 @@ def _render_academic_review(
         or source_packet.limitations
     ):
         external_blockers.append("source-packet gaps or limitations")
+    if source_packet is not None and source_coverage is None:
+        external_blockers.append("source coverage not computed")
+    elif source_coverage is not None and (
+        source_coverage.sources_with_evidence < source_coverage.source_count
+        or source_coverage.unconfigured_source_ids
+    ):
+        external_blockers.append("packet source coverage gaps")
     if diagnostic["decisive"] == 0 and diagnostic["moderate"] == 0:
         external_blockers.append("weak diagnostic tests")
     elif diagnostic["decisive"] == 0:
@@ -917,6 +956,45 @@ def _render_academic_review(
         <p class="small text-muted">Interpretation rule: the packet governs source scope,
         observability, and missing-source claims. Packet metadata is not itself evidence;
         evidence still must appear in the input text and likelihood matrix.</p>"""
+    if source_coverage is None:
+        coverage_html = """
+        <h5>Packet Source Coverage</h5>
+        <p class="small text-muted">No packet source coverage report is stored in this result.</p>"""
+    else:
+        coverage_rows = "".join(
+            f"""
+            <tr>
+              <td><code>{_esc(item.source_id)}</code></td>
+              <td>{_esc(item.title)}</td>
+              <td>{_esc(item.status)}</td>
+              <td>{item.input_marker_hits}</td>
+              <td>{item.evidence_count}</td>
+              <td class="small">{_esc(', '.join(item.evidence_ids[:8]) or 'None')}</td>
+            </tr>"""
+            for item in source_coverage.items
+        )
+        unassigned = ", ".join(source_coverage.unassigned_evidence_ids[:12]) or "None"
+        coverage_html = f"""
+        <h5>Packet Source Coverage</h5>
+        <p class="small text-muted">Coverage is matched from exact packet text markers in
+        the input text and extracted evidence quotes. It is provenance plumbing, not a
+        semantic judgment about evidentiary quality.</p>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead><tr>
+              <th>Source ID</th>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Input Marker Hits</th>
+              <th>Evidence Count</th>
+              <th>Evidence IDs</th>
+            </tr></thead>
+            <tbody>{coverage_rows}</tbody>
+          </table>
+        </div>
+        <p class="small text-muted">Assigned evidence:
+        {source_coverage.assigned_evidence_count}/{source_coverage.evidence_count};
+        unassigned evidence sample: {_esc(unassigned)}</p>"""
     optimal_steps = [
         "Freeze a sharper research question and focal decision window.",
         "Load, repair, or extend the source packet before treating source-scope gaps as resolved.",
@@ -960,6 +1038,7 @@ def _render_academic_review(
         <p><strong>Current scholarly status:</strong> {_esc(status_text)}</p>
         {gate_html}
         {packet_html}
+        {coverage_html}
         <h5>Recommendations by Pipeline Output</h5>
         <div class="table-responsive">
           <table class="table table-sm table-bordered">

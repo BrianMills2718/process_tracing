@@ -1,7 +1,7 @@
 # Plan 003 - SOTA+ Execution Master Plan
 
 **Status:** In Progress
-**Progress:** Slices 0-1 implemented.
+**Progress:** Slices 0-1 implemented; Slice 1b source-coverage and verdict-calibration hardening completed locally with live E2E evidence.
 **Type:** implementation
 **Priority:** Critical
 **Blocked By:** None
@@ -249,8 +249,9 @@ the stated question.
 
 **Implemented artifacts:** `pt/source_packet.py`, `--source-packet`,
 `make source-packet-run`, `docs/source_packets/18_BRUMAIRE_SOURCE_PACKET.json`,
-`ProcessTracingResult.source_packet`, report source-packet table, and audit
-source-scope cap distinctions.
+`ProcessTracingResult.source_packet`, `ProcessTracingResult.source_coverage`,
+report source-packet and source-coverage tables, and audit source-scope cap
+distinctions.
 
 ### Slice 2 - Research Question And Hypothesis Partition Gate
 
@@ -482,8 +483,11 @@ passing benchmark record and an explanation of remaining external-data limits.
 |---|---|---|
 | `tests/test_assistant.py` | | Slice 0 assistant harness contract, artifact persistence, dependency boundary, CLI errors, and opt-in live smoke. |
 | `tests/test_source_packet.py` | | Slice 1 source-packet loading, assistant-artifact compatibility, and summary metadata. |
+| `tests/test_source_coverage.py` | | Slice 1 packet-source marker coverage for input text, extracted evidence, missing sources, and unconfigured sources. |
+| `tests/test_extraction_quality.py` | `test_extraction_contract_preserves_source_markers_in_prompt_and_schema` | Slice 1b extraction prompt/schema preserve source markers so packet coverage can be measured on live output. |
 | `tests/test_cli_source_packet.py` | | Slice 1 CLI `--source-packet` plumbing without an LLM call. |
 | `tests/test_pass_refine.py` | | Regression coverage for the live Slice 1 refinement failure: Pass 5 must not put evidence-to-hypothesis support links into causal edges. |
+| `tests/test_verdict_calibration.py` | | Slice 1b deterministic synthesis status calibration against computed posteriors. |
 
 ### Existing Tests (Must Pass)
 

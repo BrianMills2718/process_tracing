@@ -30,7 +30,7 @@ not survive a PhD-level methods critique.
 | Robustness and fragility | 15 | High-support fragile winners are not treated as settled results; sensitivity interval, rank stability, prior stability, and fragility warnings are visible. |
 | Evidence weighting and dependence | 15 | Raw counts are distinguished from effective evidence; dependence clusters, weak-evidence accumulation, and source-lineage risks are visible. |
 | Hypothesis discrimination | 10 | Broad or absorptive winners are flagged; rival hypotheses have explicit discriminators rather than overlapping umbrella mechanisms. |
-| Source-scope and absence calibration | 10 | Absence findings are tied to source genre and archive expectations; accepted source packets are visible in the report, and broad overview texts cannot support strong damaging absence claims without caveats. |
+| Source-scope and absence calibration | 10 | Absence findings are tied to source genre and archive expectations; accepted source packets and packet-source coverage are visible in the report, and broad overview texts cannot support strong damaging absence claims without caveats. |
 | Report usability and safety | 5 | HTML is safe, top-ranked hypotheses are visually connected to support, hidden isolated nodes are disclosed as not discarded, and PhD-level recommendations, evidence triage, and optimality gate are visible in the report. |
 
 ## Academic Evidence Caps
@@ -46,13 +46,14 @@ with Van Evera-style discrimination between rivals.
 |---:|---|---|
 | 78 | Single-source or single-text limitation acknowledged and no source packet is stored | Add a source packet with primary documents, rival secondary accounts, source metadata, observability notes, and source gaps. |
 | 82 | Source packet exists but is thin, has high-priority gaps, or carries unresolved packet limitations | Extend or repair the packet before publication-strength causal claims. |
+| 82 | Source packet exists but packet-source coverage is missing, unconfigured, or incomplete | Add exact text markers, assemble the corpus from packet sources, and verify every accepted packet source appears in extracted evidence or is explicitly dispositioned as a gap. |
 | 88 | Source packet exists but synthesis/report still describe stale single-source limits | Regenerate or repair synthesis so source-scope limitations are based on the accepted packet. |
 | 76 | No evidence item reaches moderate diagnostic strength | Pre-specify hoop, smoking-gun, and discriminating tests; seek traces unlikely under rivals. |
 | 80 | Less than 20% of evidence is proximate to the focal outcome | Collect dated evidence from the decisive decision window and score it separately. |
 | 82 | Top drivers are background-context items | Separate enabling conditions from proximate mechanism traces. |
 | 84 | High-support winner is fragile | Treat as provisional ranking; seek fewer but stronger discriminating traces. |
 | 84 | Winning hypothesis is broad/absorptive | Split into narrower mechanisms or add pairwise discriminators. |
-| 86 | Synthesis verdicts overstate low posteriors | Recalibrate verdict labels to comparative support. |
+| 86 | Synthesis verdicts overstate low posteriors | Recalibrate verdict labels to comparative support; this should normally be caught by `pt/verdict_calibration.py`. |
 | 88 | More than half of extracted evidence has no displayed graph edge | Classify unlinked evidence as background, discarded, or pending-test evidence. |
 
 ## Scope Limits

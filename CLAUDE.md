@@ -108,12 +108,14 @@ Options:
 | `pt/pass_absence.py` | Pass 3b: Absence-of-evidence evaluation (all hypotheses, single call) | Yes |
 | `pt/bayesian.py` | Pass 3.5: coherent joint update (log-space softmax, pure math, no LLM) | No |
 | `pt/pass_synthesize.py` | Pass 4: Written synthesis | Yes |
+| `pt/verdict_calibration.py` | Deterministic calibration of synthesis verdict labels against computed support | No |
 | `pt/pass_refine.py` | Pass 5: Analytical refinement (second reading) | Yes |
 | `pt/apply_refinement.py` | Apply refinement delta to extraction + hypotheses | No |
 | `pt/pipeline.py` | Orchestrator — runs passes sequentially | No |
 | `pt/report.py` | HTML report generation, PhD audit, temporal causal network | No |
 | `pt/cli.py` | CLI entry point | No |
 | `pt/source_packet.py` | Source-packet contract, loader, summary, and prompt context | No |
+| `pt/source_coverage.py` | Deterministic packet-source marker coverage against input/evidence | No |
 | `pt/schemas_multi.py` | Pydantic models for cross-case analysis | No |
 | `pt/pass_binarize.py` | Map extraction → binary variables (per case) | Yes |
 | `pt/pass_propose_model.py` | Data-driven: propose causal model from N extractions | Yes |
@@ -158,6 +160,7 @@ build plan: `docs/BUILDPLAN_pragmatic_process_tracing.md`; historical rebuild lo
 - **Source fidelity**: Every evidence item must quote or closely paraphrase the input text. No hallucinated evidence.
 - **Pairwise discrimination**: Each hypothesis pair must have 3+ evidence items where LRs diverge by 2x+.
 - **Steelman verdicts**: Every hypothesis gets a mandatory steelman case, even if eliminated — ensures fair analysis.
+- **Verdict calibration**: `pt/verdict_calibration.py` deterministically downgrades synthesis status labels that overstate computed comparative support. LLMs write reasoning and steelman cases; they do not get final authority to call a very-low-posterior hypothesis "supported".
 - **Mechanical robustness**: Each hypothesis's posterior is mechanically classified as "robust" (driven by few decisive LRs with |log(LR)| > 1.6), "fragile" (driven by many weak LRs with |log(LR)| < 0.7), or "moderate". No LLM judgment involved.
 - **Sensitivity analysis**: Per-hypothesis perturbation of top-N most influential LRs (plus rivals' top drivers) by ±50% on log-LR scale. Reports posterior ranges and rank stability under perturbation.
 - **Multi-speaker awareness**: Debate/discussion texts get speaker-attributed evidence, disputed facts classified as interpretive, neutral research questions, and Rule F preventing systematic speaker favoritism in testing.

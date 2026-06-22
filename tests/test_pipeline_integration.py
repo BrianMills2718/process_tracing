@@ -20,6 +20,7 @@ from pt.report import (
     _temporal_position,
     generate_report,
 )
+from pt.source_coverage import build_source_coverage
 from pt.schemas import (
     AbsenceEvaluation,
     AbsenceResult,
@@ -227,7 +228,9 @@ def _make_source_packet() -> SourcePacket:
         outcome="Creation of the Consulate",
         source_candidates=[
             SourceCandidate(
+                source_id="source_a",
                 title="Official proclamation",
+                text_markers=["Source A"],
                 source_group="official public justification",
                 source_kind="primary proclamation",
                 date_coverage="1799-11",
@@ -238,7 +241,9 @@ def _make_source_packet() -> SourcePacket:
                 relevance_to_question="Tests whether order claims were post-hoc legitimation.",
             ),
             SourceCandidate(
+                source_id="source_b",
                 title="Council proceedings",
+                text_markers=["Source B"],
                 source_group="legislative record",
                 source_kind="primary legislative record",
                 date_coverage="1799-11",
@@ -249,7 +254,9 @@ def _make_source_packet() -> SourcePacket:
                 relevance_to_question="Tests whether legality collapsed before military coercion.",
             ),
             SourceCandidate(
+                source_id="source_c",
                 title="Critical historiography",
+                text_markers=["Source C"],
                 source_group="rival secondary account",
                 source_kind="historiography",
                 date_coverage="1799",
@@ -490,6 +497,8 @@ class TestPipelineOrchestration:
         assert result.source_packet.source_count == 3
         assert result.source_packet.high_priority_gap_count == 1
         assert result.source_packet.source_packet_path == "packet.json"
+        assert result.source_coverage is not None
+        assert result.source_coverage.source_count == 3
         assert "Source-packet contract" in captured["prompt"]
         assert "Private correspondence among conspirators" in captured["prompt"]
         assert "Do NOT treat the packet metadata as evidence" in captured["prompt"]
@@ -536,6 +545,19 @@ class TestReportConsistency:
         assert " " not in dom_id
         assert "/" not in dom_id
         assert "#" not in dom_id
+
+    def test_report_strips_control_characters_from_model_text(self):
+        result = _make_process_result()
+        result.synthesis.analytical_narrative = "Narrative with bad\x00control text."
+        result.extraction.evidence[0].description = "Evidence with bad\x01control text."
+        result.extraction.evidence[0].source_text = "Quote with bad\x02control text."
+
+        html = generate_report(result)
+
+        assert "\x00" not in html
+        assert "\x01" not in html
+        assert "\x02" not in html
+        assert "badcontrol text" in html
 
     def test_low_relevance_extreme_evidence_hidden_as_uninformative(self):
         extraction = _make_extraction()
@@ -743,17 +765,28 @@ class TestReportConsistency:
         from scripts.audit_result_quality import audit_result
 
         result = _make_process_result()
-        result.source_packet = _make_source_packet().to_summary("packet.json")
+        packet = _make_source_packet()
+        result.source_packet = packet.to_summary("packet.json")
+        result.extraction.evidence[0].source_text = "Source A says the fiscal crisis mattered."
+        result.extraction.evidence[1].source_text = "Source B says proceedings were contested."
+        result.source_coverage = build_source_coverage(
+            packet,
+            "Source A says one thing. Source B says another thing. Source C says a third thing.",
+            result.extraction,
+        )
 
         html = generate_report(result)
         normalized = " ".join(html.lower().split())
         audit = audit_result(result, html, focal_year_override=1799)
 
         assert "source packet contract" in normalized
+        assert "packet source coverage" in normalized
         assert "packet metadata is not itself evidence" in normalized
         assert "private correspondence among conspirators" in normalized
         assert audit["categories"]["source_scope_and_absence"]["source_packet_present"] is True
+        assert audit["categories"]["source_scope_and_absence"]["source_coverage_present"] is True
         assert audit["categories"]["source_scope_and_absence"]["source_count"] == 3
+        assert audit["categories"]["source_scope_and_absence"]["sources_with_evidence"] == 2
         assert audit["categories"]["source_scope_and_absence"]["high_priority_gap_count"] == 1
         assert any(
             "source packet is present" in cap["reason"].lower()

@@ -58,8 +58,9 @@ reused/extended the rest. This was not a repo restart.
 | `pt/pass_extract.py`, `pt/pass_hypothesize.py` | **REUSE + EXTEND** | sound; Pass 2 now accepts source-packet context; remaining work is stronger MECE/residual and partition-provenance auditing |
 | cross-case path (`pass_binarize`, `cq_bridge`, `multi_pipeline`) | **REUSE** | this *is* the white paper's formal path; already aligned |
 | `pt/report.py` | **REUSE + ADAPT** | renders support, sensitivity, PhD audit, evidence triage, source-packet contract, temporal timeline, and temporal causal network |
+| `pt/verdict_calibration.py` | **NEW GUARDRAIL** | deterministic post-synthesis guard downgrades status labels that overstate computed comparative support |
 | agentic assistant harness | **PARTIAL** | source-packet draft task is implemented through `llm_client` `workspace_agent`; partition critique, benchmark repair, and report critique assistants are still planned |
-| source-packet contract | **PARTIAL** | `--source-packet` loads typed packet artifacts and stores source-scope metadata in results/reports; source acquisition and per-source evidence coverage are deferred |
+| source-packet contract | **PARTIAL** | `--source-packet` loads typed packet artifacts, stores source-scope metadata, and reports packet-source coverage from exact text markers; source acquisition and high-priority missing-source resolution are deferred |
 | harness, Makefile, `tests/`, prompt loading | **REUSE** | infrastructure |
 
 Rule of thumb for future work: extend where the remaining gaps are methodological
@@ -119,7 +120,7 @@ repair and report critique through `llm_client` Codex/Claude Code backends; full
 band *elicitation* + joint Monte-Carlo propagation; qualitative critic/auditor
 pass + ablation switch; trace-production model; post-selection &
 prior-provenance guards; per-hypothesis dependence; cross-cluster shared-error
-sampling; source acquisition and packet-source coverage verification; formal
+sampling; source acquisition and high-priority missing-source resolution; formal
 validation benchmark.
 These are optimum-scope or next-roadmap work; the current build approximates or defers them.
 
@@ -134,8 +135,8 @@ The historical slice order is preserved in
 1. **Done:** truth-in-labeling, `llm_client` boundary, coherent likelihood vectors,
    researcher priors, residual `H0`, dependence pooling, sensitivity/prior
    stability, report audit, and temporal network presentation.
-2. **Next:** hypothesis partition audit, source acquisition/packet-source
-   coverage verification, stronger source-lineage/dependence modeling,
+2. **Next:** hypothesis partition audit, source acquisition/high-priority
+   missing-source resolution, stronger source-lineage/dependence modeling,
    observability-weighted absence, benchmark/report assistant tasks, and the
    qualitative structural critic.
 3. **Validation:** auditor/dependence ablations and a frozen benchmark are still

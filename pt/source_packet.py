@@ -25,6 +25,13 @@ class SourceCandidate(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
+    source_id: str | None = Field(
+        default=None,
+        description=(
+            "Optional stable source identifier used for packet coverage, such as "
+            "'source_a' or 'brumaire_decree'."
+        ),
+    )
     title: str = Field(description="Human-readable source title.")
     source_group: str | None = Field(
         default=None,
@@ -51,6 +58,13 @@ class SourceCandidate(BaseModel):
         description="What traces this source genre should and should not reveal for the research question."
     )
     relevance_to_question: str = Field(description="Why this source helps discriminate among rival explanations.")
+    text_markers: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Exact provenance markers expected in the assembled input text and "
+            "source-grounded evidence quotes, such as 'Source A' or a citation label."
+        ),
+    )
 
 
 class RivalInterpretation(BaseModel):
@@ -157,6 +171,43 @@ class SourcePacketSummary(BaseModel):
     )
 
 
+class SourceCoverageItem(BaseModel):
+    """Coverage of one source-packet source in the assembled corpus and evidence."""
+
+    source_id: str = Field(description="Stable source identifier for this coverage row.")
+    title: str = Field(description="Source title from the packet.")
+    source_group: str | None = Field(description="Packet source group, when provided.")
+    source_kind: str = Field(description="Packet source kind.")
+    text_markers: list[str] = Field(description="Exact provenance markers used for coverage matching.")
+    input_marker_hits: int = Field(description="Count of marker occurrences in the input text.")
+    evidence_ids: list[str] = Field(description="Evidence IDs whose source text contains a marker.")
+    evidence_count: int = Field(description="Number of extracted evidence items linked to this source.")
+    covered_in_input: bool = Field(description="True when at least one marker appears in the input text.")
+    covered_in_evidence: bool = Field(description="True when at least one evidence quote carries a marker.")
+    status: Literal[
+        "covered",
+        "input_only",
+        "evidence_only",
+        "missing",
+        "unconfigured",
+    ] = Field(description="Coverage status for this source.")
+
+
+class SourceCoverageReport(BaseModel):
+    """Deterministic coverage check for packet sources against input and extraction."""
+
+    source_count: int = Field(description="Number of packet sources checked.")
+    sources_with_input_markers: int = Field(description="Sources with at least one marker in the input text.")
+    sources_with_evidence: int = Field(description="Sources linked to at least one extracted evidence item.")
+    evidence_count: int = Field(description="Total extracted evidence items in the final result.")
+    assigned_evidence_count: int = Field(description="Evidence items linked to at least one packet source marker.")
+    unassigned_evidence_ids: list[str] = Field(description="Evidence IDs with no packet-source marker in source_text.")
+    missing_source_ids: list[str] = Field(description="Configured source IDs with no input marker and no evidence.")
+    input_only_source_ids: list[str] = Field(description="Sources present in input markers but absent from extracted evidence.")
+    unconfigured_source_ids: list[str] = Field(description="Sources without explicit markers, so coverage is weak.")
+    items: list[SourceCoverageItem] = Field(description="Per-source coverage rows.")
+
+
 class SourcePacket(SourcePacketDraft):
     """Validated source-packet contract accepted by the process-tracing pipeline."""
 
@@ -195,8 +246,10 @@ class SourcePacket(SourcePacketDraft):
         source_lines = "\n".join(
             (
                 f"- {source.title}; group={source.source_group or 'unspecified'}; "
+                f"id={source.source_id or 'unspecified'}; "
                 f"kind={source.source_kind}; coverage={source.date_coverage}; "
                 f"locator={source.locator or 'not specified'}; "
+                f"text_markers={', '.join(source.text_markers) or 'not specified'}; "
                 f"observability={source.expected_observability}; "
                 f"reliability={source.reliability_note}; "
                 f"relevance={source.relevance_to_question}"

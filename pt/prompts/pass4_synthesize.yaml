@@ -25,6 +25,7 @@ messages:
       ### 1. Verdicts
       For each hypothesis:
       - `status`: "strongly_supported", "supported", "weakened", "eliminated", or "indeterminate"
+        - Calibrate the label to computed Bayesian comparative support. Do not label a hypothesis "supported" or "strongly_supported" if its final support is below 0.10. Do not label a hypothesis "strongly_supported" if its final support is below 0.50. If final support is below the prior, prefer "weakened" unless there is a clearly stated reason not to.
       - `key_evidence_for`: Evidence IDs where LR > 1 (supports this hypothesis)
       - `key_evidence_against`: Evidence IDs where LR < 1 (weighs against this hypothesis). EVERY hypothesis should have SOME evidence against it unless the case is overwhelming.
       - `reasoning`: 2-3 sentences on why this verdict follows from the specific tests that passed/failed

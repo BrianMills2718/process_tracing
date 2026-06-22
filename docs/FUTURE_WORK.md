@@ -34,6 +34,13 @@ Implemented in the reference pipeline:
 - Slice 1 source-packet contract accepted by the pipeline via `--source-packet`;
   result/report/audit outputs preserve source counts, source kinds, high-priority
   gaps, packet limitations, and the rule that packet metadata is not evidence.
+- Source-packet coverage verification: packet sources can define exact
+  `text_markers`; `result.json`, report, and `make audit-result` show which
+  packet sources appear in the input text, which produced extracted evidence,
+  and which evidence remains unassigned.
+- Deterministic verdict calibration: synthesis status labels are downgraded
+  when they overstate computed comparative support; low-posterior hypotheses can
+  still receive steelman reasoning, but not a misleading "supported" label.
 
 ## Highest-Value Next Work
 
@@ -42,15 +49,17 @@ Implemented in the reference pipeline:
 | 1 | Hypothesis partition audit | Broad, overlapping, or complementary hypotheses still undermine comparative support. | A review artifact freezes the research question, hypothesis menu, residual, and pairwise discriminators before testing. |
 | 2 | Dependence and trace-production upgrade | Scalar dependence clusters reduce double-counting but do not model per-hypothesis redundancy, solicitation, preservation, false-positive channels, or shared model error. | Planted duplicate/source-lineage tests plus a report section showing why evidence was pooled or left independent. |
 | 3 | Observability-weighted absence | Absence findings are qualitative and excluded from the update. | Missing predicted traces carry source-genre observability bands and remain clearly separated from evidence of world-absence. |
-| 4 | Source acquisition and packet coverage verification | The packet is now an accepted contract, but source acquisition and proof that every packet source contributed extractable text are not yet automated. | The input corpus is assembled from packet sources with source-level provenance and a coverage report showing which sources produced evidence. |
+| 4 | Source acquisition and missing-source resolution | The packet is now an accepted contract and coverage is reported, but the tool does not yet acquire missing source classes such as private correspondence. | The input corpus is assembled or extended from packet sources with source-level provenance, and high-priority packet gaps are resolved or explicitly accepted. |
 | 5 | Auditor ablation benchmark | Architecture is auditable, but methodological validity is not yet empirically demonstrated. | Frozen benchmark cases compare narrative-only, dependence-pooling, and audit-enabled variants with calibration/discrimination metrics. |
 
-The immediate implementation slice is now the **hypothesis partition audit**
-from Plan 003. The source-packet contract exists as a pipeline/review artifact,
-but it does not yet automate source acquisition or prove that every packet
-source contributed evidence. Plan 003 remains the execution checklist: every
-slice must include E2E testing, review/critique, cleanup, and a commit gate
-before the next slice starts.
+For the current Brumaire benchmark, the active audit blocker is **source
+acquisition and high-priority missing-source resolution**: the packet-source
+coverage report is complete for accepted sources, but the packet still declares
+an unresolved high-priority private-correspondence gap. For the broader
+architecture roadmap, the next planned method slice remains the hypothesis
+partition audit from Plan 003. Every slice must include live non-mocked E2E
+testing, review/critique, cleanup, and a commit gate before the next slice
+starts.
 
 ## Methodology Extensions
 
@@ -72,8 +81,8 @@ before the next slice starts.
 ## Product and Operations Work
 
 - Add agent-drivable JSON endpoints for report inspection and audit results.
-- Add source acquisition and packet coverage verification on top of the accepted
-  source-packet contract.
+- Add source acquisition and missing-source resolution on top of the accepted
+  source-packet contract and coverage report.
 - Keep agent harness integration behind `llm_client`; this repo should not call
   Codex, Claude Code, provider SDKs, or assistant subprocesses directly.
 - Preserve run metadata: model, prompts, priors, source hashes, audit version,

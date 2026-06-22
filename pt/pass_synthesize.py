@@ -18,6 +18,7 @@ from pt.schemas import (
     SynthesisResult,
     TestingResult,
 )
+from pt.verdict_calibration import calibrate_synthesis_verdicts
 
 PROMPTS_DIR = Path(__file__).parent / "prompts"
 
@@ -44,10 +45,11 @@ def run_synthesize(
         bayesian_json=json.dumps(bayesian.model_dump(), indent=2),
         absence_json=json.dumps(absence.model_dump(), indent=2),
     )
-    return call_llm(
+    synthesis = call_llm(
         messages[0]["content"],
         SynthesisResult,
         task="process_tracing.synthesize",
         trace_id=trace_id,
         **kwargs,
     )
+    return calibrate_synthesis_verdicts(synthesis, bayesian)

@@ -76,6 +76,26 @@ def test_extraction_preserves_source_quotes_and_meaningful_descriptions():
         assert len(evidence.description) >= 20
 
 
+def test_extraction_contract_preserves_source_markers_in_prompt_and_schema():
+    captured_prompts: list[str] = []
+
+    def _capture_call(prompt, schema, **kwargs):
+        captured_prompts.append(prompt)
+        return _quality_extraction()
+
+    with patch("pt.pass_extract.call_llm", side_effect=_capture_call):
+        run_extract("Source A says the committee accepted the decree.", trace_id="source-marker-contract")
+
+    prompt = captured_prompts[0].lower()
+    source_text_schema = Evidence.model_json_schema()["properties"]["source_text"]["description"].lower()
+
+    assert "source provenance is part of the evidence" in prompt
+    assert "keep that marker inside `source_text`" in prompt
+    assert "preserves any source marker or citation label" in prompt
+    assert "preserve source markers" in source_text_schema
+    assert "citation labels" in source_text_schema
+
+
 def test_extraction_sanitizes_non_ascii_evidence_ids():
     """LLM-assigned ids with accents/whitespace are normalized to ASCII so they
     survive later LLM round-trips (the fail-loud id match in pass_test)."""
