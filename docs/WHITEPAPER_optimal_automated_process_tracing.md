@@ -17,7 +17,7 @@ v7 fixes the coherence defects and adds the validity refinements from a fifth re
 3. **Two-sided missingness formula (§6.6).** Corrected `P(omit E|H)` so the fact-false branch isn't assumed to be silent (consistent with §4's false-positive channel).
 4. **"No contradiction surface" reworded (§6.1).** The *paths* aren't mixed on one case; the intra-path audit deliberately *does* create a contradiction surface.
 5. **"Convergence" redefined (§6.7)** as convergence of audit *state* (incl. `irreducibly-widened`), not numerical agreement.
-6. **Human review degated (§6.3).** All-cluster human review is the optimum; top-driver-only is a pragmatic compromise.
+6. **Adversarial review degated (§6.3).** All-cluster adversarial review is the optimum; top-driver-only is a pragmatic compromise. Human experts are one useful review source, not the definition of rigor.
 7. **Post-selection & prior-provenance guards (§5.2, new).** Controls for hypotheses generated from the same text, and for priors formed from evidence later counted in the likelihood — "a quantity may enter the calculation once."
 8. **Cross-cluster shared error terms (§6.2.1).** Joint sampling extended across clusters (shared latent errors for model family, genre, archive process, trace-production assumption) so shared mistakes don't cancel artificially.
 9. **Uncertainty over competing trace-production *structures* (§4).** Carry rival trace-production graphs via model-averaging instead of picking one discount.
@@ -95,7 +95,7 @@ Automated systems that read a historical text and output "what caused this" tend
 
 A holistic likelihood judgment typically rests on an *implicit* model. But that model is not only a model of historical causation; `P(evidence | hypothesis)` is fundamentally about **how the evidence was produced** — solicited, recorded, preserved, observed — and conflating the two is a recurring error. We therefore keep two models distinct: the **substantive causal model** (events causing events) and the **trace-production model** (events producing the evidence now available).
 
-This paper specifies the **quality-optimal architecture** — the design that maximizes *inferential validity* (auditability, dependence handling, calibrated sensitivity) treating **compute cost as unconstrained**. It is the north-star, not a build plan: pragmatic cost-quality compromises are a separate, later concern and are deliberately excluded so as not to bias the optimum. ("Quality-optimal" is a design aspiration toward the intractable Bayesian optimum of §7, not a claim of *proven* optimality, which only validation can establish.) The architecture is **task-routed**: for a single text, a narrative likelihood engine whose estimates carry externalized reasoning and are stated as likelihood bands; **every** evidence cluster audited by an independently-constructed local causal graph, with disagreements resolved by a **constrained reconciliation protocol** rather than averaging; and, for many comparable cases, the formal model (CausalQueries) as the source of truth for *identified* counterfactual and population estimands. Van Evera's diagnostic tests are retained as a human-legible labeling layer over the likelihoods. We state the estimand precisely, bound the architecture's claims by what the data can identify, and specify how one would test whether it works.
+This paper specifies the **quality-optimal architecture** — the design that maximizes *inferential validity* (auditability, dependence handling, calibrated sensitivity) treating **compute cost as unconstrained**. It is the north-star, not a build plan: pragmatic cost-quality compromises are a separate, later concern and are deliberately excluded so as not to bias the optimum. ("Quality-optimal" is a design aspiration toward the intractable Bayesian optimum of §7, not a claim of *proven* optimality, which only validation can establish.) The broader goal is automated mixed-methods causal research at PhD / think-tank / academic quality: process tracing supplies source-grounded mechanisms and diagnostic evidence; quantitative and cross-case methods supply identified estimands when the data structure supports them; and the system iterates between the two rather than treating them as separate workflows. The architecture is **task-routed**: for a single text, a narrative likelihood engine whose estimates carry externalized reasoning and are stated as likelihood bands; **every** evidence cluster audited by an independently-constructed local causal graph, with disagreements resolved by a **constrained reconciliation protocol** rather than averaging; and, for many comparable cases, the formal model (CausalQueries) as the source of truth for *identified* counterfactual and population estimands. Van Evera's diagnostic tests are retained as a legible labeling layer over the likelihoods. We state the estimand precisely, bound the architecture's claims by what the data can identify, and specify how one would test whether it works.
 
 ---
 
@@ -108,7 +108,7 @@ Two failure modes recur:
 1. **Pseudo-quantification.** The system emits "posterior probabilities" from machinery that is not a coherent probability model — typically per-evidence likelihood ratios multiplied under an unstated independence assumption, then renormalized to look like a distribution.
 2. **Over-formalization.** The system forces the problem into a rigid causal graph over binary variables, discarding the discriminating texture of the evidence and committing to a structure the text does not warrant.
 
-This paper aims at a design that avoids both, *and is honest about what it cannot deliver.*
+This paper aims at a design that avoids both, *and is honest about what it cannot deliver*. The honesty is methodological, not anthropocentric: it does not assume humans are intrinsically better qualitative analysts or less biased. It assumes that qualitative expertise must be decomposed into auditable operations — source criticism, hypothesis construction, diagnostic testing, trace-production modeling, rival explanation testing, and synthesis — so agents can execute, contest, validate, and scale those operations.
 
 ---
 
@@ -335,7 +335,7 @@ Because the estimator, critic, and reconciler may all be instances of the same b
 - different model families where available;
 - **blinded roles** — the critic does not see the estimator's number;
 - randomized elicitation order; evidence-redaction probes;
-- **human review across all clusters** (in the optimum); rationing human attention to top-driver/contested items is a *pragmatic compromise*, not part of the north-star;
+- adversarial review across all clusters (in the optimum), performed by independent critic/reconciler roles and, where useful, human experts; rationing review to top-driver/contested items is a *pragmatic compromise*, not part of the north-star;
 - retained disagreement logs for reproducibility.
 
 **Three grades of independence — and we mostly buy the weakest.** Independence is not one thing:
@@ -346,7 +346,7 @@ Because the estimator, critic, and reconciler may all be instances of the same b
 | Model | different model families | family-specific quirks | sometimes (when a second family is available) |
 | Epistemic | different information / differently-trained priors | shared training-data artifacts, shared historiographic stereotypes | **rarely** |
 
-Only **epistemic** independence makes agreement strong evidence. If every model has absorbed the same "fiscal-crisis → French Revolution" trope, blinded agents can agree from a shared cultural prior, not from the evidence. **This is where unconstrained cost actually cashes out into quality.** The single highest-value lever in the optimum is not more passes of one model — it is *diversity of source*: run the estimator and critic (and the cross-case modeler) on **maximally different model families**, trained on different corpora, and where possible give them **different information** (e.g., one works only from primary-source excerpts, another from the full text), plus human spot-checks. Same-model agreement is treated as **near-worthless** (it removes procedural error only); cross-family, cross-information agreement is what counts. Because compute is not a constraint here, the optimum spends it on independence — diverse models and human review — rather than on repetition.
+Only **epistemic** independence makes agreement strong evidence. If every model has absorbed the same "fiscal-crisis → French Revolution" trope, blinded agents can agree from a shared cultural prior, not from the evidence. **This is where unconstrained cost actually cashes out into quality.** The single highest-value lever in the optimum is not more passes of one model — it is *diversity of source*: run the estimator and critic (and the cross-case modeler) on **maximally different model families**, trained on different corpora, and where possible give them **different information** (e.g., one works only from primary-source excerpts, another from the full text), plus expert spot-checks that can be human or agentic. Same-model agreement is treated as **near-worthless** (it removes procedural error only); cross-family, cross-information agreement is what counts. Because compute is not a constraint here, the optimum spends it on independence — diverse models, source partitions, critic roles, and validation probes — rather than on repetition.
 
 **Faithful-abstraction (translation) contract.** Before any number is compared, the auditor must certify that its local graph is a *faithful abstraction* of the narrative object — otherwise the audit silently changes the claim being audited. The auditor logs, for each translation:
 
@@ -557,7 +557,7 @@ The architecture's central empirical claim is that **the local causal-graph audi
 | Paraphrase robustness | Do conclusions survive rewording of the source? |
 | Source-contamination test | Are repeated/copied reports correctly *not* double-counted? |
 | Missing-evidence test | Is absence handled cautiously (no over-disconfirmation)? |
-| Expert agreement (with caution) | Agreement with human process tracers, noting bias-reproduction risk |
+| Expert agreement (with caution) | Agreement with expert process tracers or expert-agent panels, noting that neither human nor model agreement is ground truth |
 
 The objective in §6 (auditability, dependence-handling, calibrated sensitivity — cost unconstrained) is what these designs operationalize. Calibration against *truth* is hard for unique historical events; the protocol therefore leans on synthetic recovery, ablation, and internal-coherence tests, with expert agreement as a secondary, bias-aware check.
 
@@ -572,7 +572,7 @@ A test menu is not a validation design without metrics, a baseline, and threshol
 | Dependence detection | precision/recall of the evidence-graph clustering vs. injected duplicates |
 | Duplicate overcounting | ratio of posterior shift from a planted copied report to that from an independent one (target ≈ 1) |
 | Absence handling | false-disconfirmation rate on planted observability-low absences (target ≈ 0) |
-| Cost (recorded, not optimized) | model calls, tokens, wall-time, human-review minutes — measured to inform the *later* pragmatic design, **not** a quality criterion here |
+| Cost (recorded, not optimized) | model calls, tokens, wall-time, expert-review minutes — measured to inform the *later* pragmatic design, **not** a quality criterion here |
 
 **Baseline.** "Narrative-only" must be the **operationally identical pipeline with the audit and evidence-graph clustering removed** — same extraction, same priors, same bands — so the ablation isolates the audit's contribution and nothing else.
 
