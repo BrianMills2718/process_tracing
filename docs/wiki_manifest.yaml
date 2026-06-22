@@ -1,10 +1,34 @@
 version: 1
 project: process_tracing
 publish:
+  - path: PROJECT.md
+    type: ProjectDossier
+    title: Process Tracing Project Dossier
+    tags: [portfolio, dossier, process-tracing, analyst-methods]
   - path: README.md
     type: ProjectOverview
     title: Process Tracing Overview
     tags: [portfolio, analysis, process-tracing]
+  - path: docs/METHODOLOGY.md
+    type: Methodology
+    title: Process Tracing Methodology
+    tags: [methodology, process-tracing, causal-inference]
+  - path: docs/ARTIFACTS.md
+    type: ArtifactRegister
+    title: Process Tracing Artifact Register
+    tags: [artifacts, evidence, portfolio]
+  - path: docs/VALIDATION.md
+    type: Validation
+    title: Process Tracing Validation
+    tags: [validation, evidence, process-tracing]
+  - path: docs/CONCERNS.md
+    type: ConcernRegister
+    title: Process Tracing Concern Register
+    tags: [concerns, risk, portfolio]
+  - path: docs/adr/0001_process_tracing_methodology_spine.md
+    type: ADR
+    title: Process Tracing Methodology Spine ADR
+    tags: [adr, methodology, portfolio]
   - path: docs/REVIEWER_WALKTHROUGH.md
     type: PortfolioGuide
     title: Process Tracing Reviewer Walkthrough
