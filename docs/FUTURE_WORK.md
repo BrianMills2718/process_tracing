@@ -4,6 +4,11 @@ This is the current roadmap for `process_tracing`. It records work that remains
 after the inference-core rebuild and report-audit work. Historical phase plans and
 superseded status reports live under `docs/archive/`.
 
+Current SOTA+ recovery source of truth:
+
+- `docs/research/PROCESS_TRACING_SOTA_REVIEW_2026.md`
+- `docs/plans/002_sota_plus_recovery_plan.md`
+
 ## Current Baseline
 
 Implemented in the reference pipeline:
@@ -32,6 +37,10 @@ Implemented in the reference pipeline:
 | 3 | Dependence and trace-production upgrade | Scalar dependence clusters reduce double-counting but do not model per-hypothesis redundancy, solicitation, preservation, false-positive channels, or shared model error. | Planted duplicate/source-lineage tests plus a report section showing why evidence was pooled or left independent. |
 | 4 | Observability-weighted absence | Absence findings are qualitative and excluded from the update. | Missing predicted traces carry source-genre observability bands and remain clearly separated from evidence of world-absence. |
 | 5 | Auditor ablation benchmark | Architecture is auditable, but methodological validity is not yet empirically demonstrated. | Frozen benchmark cases compare narrative-only, dependence-pooling, and audit-enabled variants with calibration/discrimination metrics. |
+
+The immediate implementation slice is the **source-packet contract** from Plan
+002. It comes first because source scope and provenance currently cap academic
+quality before downstream inference machinery can matter.
 
 ## Methodology Extensions
 

@@ -28,6 +28,14 @@ publish:
     type: ProjectDoc
     title: Process Tracing Output Quality Rubric
     tags: [analysis, process-tracing, validation]
+  - path: docs/research/PROCESS_TRACING_SOTA_REVIEW_2026.md
+    type: ResearchSynthesis
+    title: Process Tracing SOTA Review 2026
+    tags: [analysis, process-tracing, methodology, sota]
+  - path: docs/plans/002_sota_plus_recovery_plan.md
+    type: ProjectPlan
+    title: SOTA+ Recovery And Thin-Slice Operating Model
+    tags: [analysis, process-tracing, methodology, roadmap, sota]
   - glob: evidence/*.md
     type: EvidenceArtifact
     tags: [evidence, verification, process-tracing]

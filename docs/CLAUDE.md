@@ -15,10 +15,13 @@ Maintained documentation for `process_tracing`.
 - `ontology.md` - current analytic ontology and report-network semantics.
 - `FUTURE_WORK.md` - current roadmap after the inference-core rebuild.
 - `REVIEWER_WALKTHROUGH.md` - portfolio/reviewer orientation.
+- `research/PROCESS_TRACING_SOTA_REVIEW_2026.md` - external SOTA map for
+  process tracing, mixed methods, and LLM-assisted qualitative/causal work.
 
 ## Route By Question
 
 - active implementation planning -> `plans/`
+- SOTA/literature/research synthesis -> `research/`
 - active deterministic verification -> `../tests/` via `make check`
 - historical manual verification helpers -> `testing/`
 - historical validation benchmarks and checks -> `validation/`

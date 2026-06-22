@@ -14,6 +14,9 @@
 >   north-star). When you need depth on *any* concept below, that paper is the source.
 > - `docs/BUILDPLAN_pragmatic_process_tracing.md` — the **80/20 build** and
 >   compromise record.
+> - `docs/research/PROCESS_TRACING_SOTA_REVIEW_2026.md` and
+>   `docs/plans/002_sota_plus_recovery_plan.md` — the current SOTA+ reset:
+>   external frontier map, failure postmortem, and thin-slice gates.
 >
 > When this doc and the code disagree about *current capability*, trust the code +
 > the ledger in §6. When they disagree about *intent*, trust this doc and the white paper.
@@ -138,3 +141,6 @@ The historical slice order is preserved in
   planted-duplicate non-double-counting). `make check` after each slice.
 - **Behavioral (LLM contract):** any change to `pass_test`/prompts requires a **live run** on `input_text/revolutions/french_revolution.txt` (and a debate text, per prior lessons) before it is called done — inspect whether likelihood vectors, dependence clusters, and rankings are defensible.
 - **Headline empirical question (later):** does the critic/auditor actually improve inference vs. narrative-only (WP §8 ablation)? That is what graduates this from "auditable" to "validated."
+- **SOTA+ gate:** every non-trivial slice must name the external SOTA frontier it
+  advances, the capability-ladder row it moves, and the benchmark/failure mode it
+  tests. Use Plan 002 as the operating model.

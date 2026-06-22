@@ -91,6 +91,10 @@ pt/
   and compromise record.
 - `docs/OUTPUT_QUALITY_RUBRIC.md` - audit rubric for generated results/reports.
 - `docs/ontology.md` - current analytic ontology and report-network semantics.
+- `docs/research/PROCESS_TRACING_SOTA_REVIEW_2026.md` - external SOTA map and
+  SOTA+ opportunity analysis.
+- `docs/plans/002_sota_plus_recovery_plan.md` - recovery gates and thin-slice
+  operating model.
 
 Historical sprint notes and superseded analyses live under `docs/archive/`.
 

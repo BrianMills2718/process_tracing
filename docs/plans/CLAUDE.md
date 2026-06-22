@@ -7,6 +7,7 @@ Track all implementation work here.
 | # | Name | Priority | Status | Blocks |
 |---|------|----------|--------|--------|
 | 1 | Tentative Maintenance Roadmap | Medium | 📋 Planned | Future cleanup/refactor implementation plans |
+| 2 | SOTA+ Recovery And Thin-Slice Operating Model | Critical | 📋 Planned | Source packet contract, hypothesis partition audit, validation benchmark |
 
 ## Status Key
 
