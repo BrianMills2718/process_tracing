@@ -546,6 +546,10 @@ class TestReportConsistency:
         assert 'id="toggle-background_driver_link"' in html
         assert 'id="toggle-temporal_conflict"' in html
         assert "function focusNetwork()" in html
+        assert "How to Read This Network" in html
+        assert "Evidence is not itself the same as a cause" in html
+        assert "outside the neutral LR band [0.67, 1.50]" in html
+        assert "not as a claim that" in html
 
     def test_network_preserves_backward_edges_as_temporal_conflicts(self):
         payload = _make_process_result().model_dump()

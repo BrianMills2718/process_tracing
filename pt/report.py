@@ -1082,6 +1082,87 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
     return nodes, edges
 
 
+def _network_edge_example(edges: list[dict], nodes: list[dict], group: str) -> str:
+    """Return a compact concrete example for a network edge group."""
+    node_by_id = {str(node["id"]): node for node in nodes}
+    edge = next((item for item in edges if item.get("group") == group), None)
+    if edge is None:
+        return "No edge of this type was generated for this run."
+
+    source = node_by_id.get(str(edge["from"]), {})
+    target = node_by_id.get(str(edge["to"]), {})
+    source_label = str(source.get("label") or edge["from"])
+    target_label = str(target.get("label") or edge["to"])
+    title = html.unescape(str(edge.get("title") or ""))
+    title_html = f' <span class="text-muted">({_esc(title)})</span>' if title else ""
+    return f"{_esc(source_label)} &rarr; {_esc(target_label)}{title_html}"
+
+
+def _render_network_interpretation_guide(
+    result: ProcessTracingResult, nodes: list[dict], edges: list[dict]
+) -> str:
+    """Explain the network ontology, edge layers, and interpretation rules."""
+    node_counts: dict[str, int] = {}
+    edge_counts: dict[str, int] = {}
+    for node in nodes:
+        group = str(node.get("group") or "unknown")
+        node_counts[group] = node_counts.get(group, 0) + 1
+    for edge in edges:
+        group = str(edge.get("group") or "unknown")
+        edge_counts[group] = edge_counts.get(group, 0) + 1
+
+    return f"""
+        <div class="border rounded p-3 mb-3 bg-light">
+          <h5 class="mb-2">How to Read This Network</h5>
+          <p class="small mb-2">
+            This is a working process-tracing ontology, not a final academic causal ontology.
+            <strong>Events</strong>, <strong>evidence</strong>, <strong>hypotheses</strong>,
+            <strong>actors</strong>, and <strong>mechanisms</strong> are node types. The driver/link
+            toggles are edge layers and review filters; they are not additional kinds of causal things.
+          </p>
+          <div class="row g-3 small">
+            <div class="col-lg-6">
+              <table class="table table-sm mb-0">
+                <thead><tr><th>Node type</th><th>Meaning</th><th>Count</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Event</strong></td><td>Dated occurrence that can participate in a causal sequence.</td><td>{node_counts.get("event", 0)}</td></tr>
+                  <tr><td><strong>Evidence</strong></td><td>Observation, quotation, claim, or fact used to update hypotheses. Evidence is not itself the same as a cause.</td><td>{node_counts.get("evidence", 0)}</td></tr>
+                  <tr><td><strong>Hypothesis</strong></td><td>Candidate explanation being compared by the Bayesian update.</td><td>{node_counts.get("hypothesis", 0)}</td></tr>
+                  <tr><td><strong>Actor</strong></td><td>Person or institution extracted from the text; hidden by default until agency needs inspection.</td><td>{node_counts.get("actor", 0)}</td></tr>
+                  <tr><td><strong>Mechanism</strong></td><td>Abstract process claim; hidden by default because it needs evidence/event anchoring.</td><td>{node_counts.get("mechanism", 0)}</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col-lg-6">
+              <table class="table table-sm mb-0">
+                <thead><tr><th>Edge layer</th><th>How it is determined</th><th>Count</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Extracted process edge</strong></td><td>Extractor-produced source &rarr; target relation whose dated source is not after its target. It may connect events, evidence, mechanisms, or hypotheses depending on what the extractor grounded.</td><td>{edge_counts.get("causal", 0)}</td></tr>
+                  <tr><td><strong>Top drivers</strong></td><td>Evidence &rarr; hypothesis links named in that hypothesis posterior's <code>top_drivers</code>. They are the largest update contributors, not necessarily favorable evidence.</td><td>{edge_counts.get("top_driver_link", 0)}</td></tr>
+                  <tr><td><strong>Background drivers</strong></td><td>Top-driver links whose evidence sits far upstream in the temporal layout. They are preserved but hidden by default so background conditions do not dominate the proximate sequence.</td><td>{edge_counts.get("background_driver_link", 0)}</td></tr>
+                  <tr><td><strong>Additional evidence links</strong></td><td>Informative evidence &rarr; hypothesis links outside the neutral LR band [0.67, 1.50] that were not selected as top drivers.</td><td>{edge_counts.get("evidence_link", 0)}</td></tr>
+                  <tr><td><strong>Temporal conflicts</strong></td><td>Extractor-produced causal relations where the source is dated after the target. These are audit warnings, not normal causal arrows.</td><td>{edge_counts.get("temporal_conflict", 0)}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="small mt-3">
+            <strong>Concrete examples from this run:</strong>
+            <ul class="mb-2">
+              <li><strong>Extracted process edge:</strong> {_network_edge_example(edges, nodes, "causal")}</li>
+              <li><strong>Top driver:</strong> {_network_edge_example(edges, nodes, "top_driver_link")} &mdash; this is one of the largest updates for its target hypothesis; LR &gt; 1 favors that target, LR &lt; 1 weighs against it.</li>
+              <li><strong>Background driver:</strong> {_network_edge_example(edges, nodes, "background_driver_link")}</li>
+              <li><strong>Additional evidence link:</strong> {_network_edge_example(edges, nodes, "evidence_link")}</li>
+              <li><strong>Temporal conflict:</strong> {_network_edge_example(edges, nodes, "temporal_conflict")} &mdash; toggle this on to inspect likely extraction or date-direction problems.</li>
+            </ul>
+            <strong>Interpretation rule:</strong> read gray process arrows as extracted chronological process claims that still need review.
+            Read green/red evidence-to-hypothesis arrows as diagnostic support or opposition, not as a claim that
+            the evidence node caused the hypothesis. A dashed driver can still be important because it is one of the
+            largest updates available in a limited corpus, even if its absolute LR is weak.
+          </div>
+        </div>"""
+
+
 def generate_report(result: ProcessTracingResult) -> str:
     """Generate self-contained HTML report."""
 
@@ -1103,6 +1184,7 @@ def generate_report(result: ProcessTracingResult) -> str:
 
     vis_nodes, vis_edges = _build_vis_data(result)
     network_coverage = _network_coverage(result, vis_nodes, vis_edges)
+    network_guide = _render_network_interpretation_guide(result, vis_nodes, vis_edges)
     nodes_json = _json_for_script(vis_nodes)
     edges_json = _json_for_script(vis_edges)
 
@@ -1268,6 +1350,7 @@ def generate_report(result: ProcessTracingResult) -> str:
             <button class="btn btn-outline-secondary" id="net-fit" title="Fit all">Fit</button>
           </div>
         </div>
+        {network_guide}
         <div id="network" style="width:100%;height:720px;border:1px solid #ddd;border-radius:4px"></div>
         <div id="network-info" class="alert alert-light mt-2 small">Temporal DAG layout: left-to-right columns follow extracted dates, with mechanisms and hypotheses downstream. Proximate top-driver evidence links are shown by default; green links support a hypothesis (LR &gt; 1), red links oppose it (LR &lt; 1), and dashed links mark weak top drivers. Background drivers, additional evidence links, and temporal conflicts remain available through toggles.</div>
       </div>
