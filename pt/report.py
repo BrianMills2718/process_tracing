@@ -1119,7 +1119,7 @@ def _render_network_interpretation_guide(
             <strong>Events</strong>, <strong>evidence</strong>, <strong>hypotheses</strong>,
             <strong>actors</strong>, and <strong>mechanisms</strong> are node types. The driver/link
             toggles are edge layers and review filters; they are not additional kinds of causal things.
-            The goal is to make qualitative causal work inspectable enough to automate, audit, and
+            The goal is to make within-case causal inference inspectable enough to automate, audit, and
             connect to quantitative designs.
           </p>
           <div class="row g-3 small">

@@ -548,6 +548,7 @@ class TestReportConsistency:
         assert "function focusNetwork()" in html
         assert "How to Read This Network" in html
         assert "mixed-methods research ontology" in html
+        assert "within-case causal inference" in html
         assert "connect to quantitative designs" in html
         assert "Evidence is not itself the same as a cause" in html
         assert "outside the neutral LR band [0.67, 1.50]" in html
