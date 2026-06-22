@@ -39,9 +39,10 @@ turns the SOTA+ vision into a repeatable operating loop.
 - `docs/ontology.md` - analytic object model and report-network semantics.
 - `docs/source_packets/18_BRUMAIRE_RESEARCH_DESIGN.md` - first public
   source-packet benchmark candidate and E2E run command.
-- `/home/brian/projects/.claude/skills/design-plan/SKILL.md` - modality-aware
+- `~/projects/.claude/skills/design-plan/SKILL.md` - modality-aware
   planning protocol used to separate specifiable contracts from exploratory
-  benchmark calibration.
+  benchmark calibration, require vertical risk-ordered slices, and keep a live
+  concern register.
 
 ---
 
@@ -75,6 +76,12 @@ plan after the prior slice's E2E run, independent critique, and cleanup. Later
 slice details may change when earlier benchmark readouts reveal a better order
 or a failed assumption.
 
+The live concern register for this plan is
+`docs/plans/sota_plus_concern_register.md`. Concerns, audit findings,
+ambiguities, and recommendations should go there when they arise rather than
+remaining in chat. Each slice boundary must triage the register before the next
+slice begins.
+
 ---
 
 ## Files Affected
@@ -106,6 +113,7 @@ No implementation slice is complete until all gates below pass.
 | E2E smoke | One command exercises the slice on a real process-tracing case and writes artifacts to `/tmp/pt_smoke/<slice>/`. |
 | Audit/review | The generated JSON/report/sidecar is reviewed against `docs/OUTPUT_QUALITY_RUBRIC.md` and this plan's slice criteria. |
 | Independent adversarial critique | A fresh reviewer pass identifies what still fails from a PhD methods standpoint and whether the next step is code, prompt, source, benchmark, or scope. Self-review alone does not satisfy this gate. |
+| Concern register triage | New concerns and audit findings are added to `docs/plans/sota_plus_concern_register.md`; every open item is dispositioned as resolved, mitigated, accepted, escalated, or deferred to a named slice. |
 | Cleanup | Stale docs are updated or archived; generated artifacts stay out of git unless intentionally curated; `make check` passes. |
 | Commit | Verified work is committed before moving to the next slice. |
 
@@ -131,6 +139,8 @@ Slice N - <one-line outcome>
   success:         deductive test/gate or exploratory readout
   review focus:    what the independent adversarial pass should try to break
   cleanup:         debt/docs/refactor to clear before Slice N+1
+  done-when:       test/readout passes; audit findings dispositioned; cleanup
+                   done; concern register triaged
 ```
 
 ---
@@ -486,6 +496,8 @@ Use this checklist after each E2E run.
 - Did the output improve process-tracing validity, or only presentation?
 - Who performed the independent adversarial critique, and where is the critique
   artifact or summary?
+- Were all new concerns and critique findings added to
+  `docs/plans/sota_plus_concern_register.md` and dispositioned?
 - What is the strongest PhD-level critique remaining?
 - Is the next action code, prompt, source collection, benchmark design, or
   documentation cleanup?
@@ -522,5 +534,7 @@ The long-term goal is met only when all of the following are true:
   cleanup gates, and success criteria.
 - [ ] Plan 003 distinguishes execution-ready next slices from directional
   future skeleton slices to avoid fake precision.
+- [ ] Plan 003 has a live concern register and makes register triage part of
+  every slice's definition of done.
 - [ ] Future implementation work uses this plan as the stop/go checklist.
 - [ ] `make check` passes after documentation updates.
