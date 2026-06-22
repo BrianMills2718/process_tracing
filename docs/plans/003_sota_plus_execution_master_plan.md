@@ -111,8 +111,8 @@ No implementation slice is complete until all gates below pass.
 |---|---|
 | Contract | Typed input/output artifact exists or an existing schema is extended truthfully. Open exploratory fields use broad types and explicit notes rather than fake precision. |
 | Unit/integration tests | Deterministic tests cover the new contract, failure mode, and at least one regression case. |
-| E2E smoke | One command exercises the slice on a real process-tracing case and writes artifacts to `/tmp/pt_smoke/<slice>/`. |
-| Audit/review | The generated JSON/report/sidecar is reviewed against `docs/OUTPUT_QUALITY_RUBRIC.md` and this plan's slice criteria. |
+| Live non-mocked E2E | One command exercises the slice on a real process-tracing case with real LLM/provider calls, no mocks, and writes `result.json` plus `report.html` artifacts. Deterministic tests are necessary but insufficient for this gate. |
+| Audit/review | `make audit-result` is run against the live generated JSON/report/sidecar and reviewed against `docs/OUTPUT_QUALITY_RUBRIC.md` plus this plan's slice criteria. |
 | Independent adversarial critique | A fresh reviewer pass identifies what still fails from a PhD methods standpoint and whether the next step is code, prompt, source, benchmark, or scope. Self-review alone does not satisfy this gate. |
 | Concern register triage | New concerns and audit findings are added to `docs/plans/sota_plus_concern_register.md`; every open item is dispositioned as resolved, mitigated, accepted, escalated, or deferred to a named slice. |
 | Cleanup | Stale docs are updated or archived; generated artifacts stay out of git unless intentionally curated; `make check` passes. |
@@ -483,6 +483,7 @@ passing benchmark record and an explanation of remaining external-data limits.
 | `tests/test_assistant.py` | | Slice 0 assistant harness contract, artifact persistence, dependency boundary, CLI errors, and opt-in live smoke. |
 | `tests/test_source_packet.py` | | Slice 1 source-packet loading, assistant-artifact compatibility, and summary metadata. |
 | `tests/test_cli_source_packet.py` | | Slice 1 CLI `--source-packet` plumbing without an LLM call. |
+| `tests/test_pass_refine.py` | | Regression coverage for the live Slice 1 refinement failure: Pass 5 must not put evidence-to-hypothesis support links into causal edges. |
 
 ### Existing Tests (Must Pass)
 

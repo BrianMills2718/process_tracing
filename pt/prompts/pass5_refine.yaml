@@ -22,6 +22,19 @@ messages:
       ### 3. New Causal Edges
       Relationships the extraction missed but that the evidence pattern suggests exist. Must quote a supporting passage from the source text. Don't add edges that merely restate what's already captured.
 
+      `new_causal_edges` is ONLY for substantive causal/process relationships
+      among causal-graph nodes. Valid endpoints are:
+      - existing actor, event, mechanism, or evidence IDs in the inventory below
+      - new `evi_ref_*` evidence IDs that you create in `new_evidence`
+
+      Do NOT use hypothesis IDs such as `h1`, `h2`, `h3`, or `h4` as
+      `source_id` or `target_id` in `new_causal_edges`. Do NOT add edges like
+      `evi_ref_01 -> h3` with relationships such as "supports", "challenges",
+      or "strengthens"; those are diagnostic evidence-hypothesis relationships
+      handled by the testing/Bayesian matrix, not causal graph edges. If new
+      evidence changes support for a hypothesis, describe that in
+      `hypothesis_refinements`, `missing_mechanisms`, or `analyst_notes`.
+
       ### 4. Spurious Extractions
       Evidence or causal edges the first pass extracted but that the full analysis reveals lack real textual support. Be CONSERVATIVE: don't remove evidence just because it's uninformative (LR near 1.0). Only remove items that are genuinely unsupported by the text or represent misreadings. For edges, use "source_id->target_id" format.
 
@@ -51,6 +64,9 @@ messages:
 
       ## Hypothesis Space
       {{ hypotheses_json }}
+
+      ## Valid Existing Causal-Edge Endpoints
+      {{ causal_edge_endpoint_inventory }}
 
       ## Bayesian Summary
       {{ bayesian_summary }}

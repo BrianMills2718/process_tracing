@@ -57,6 +57,7 @@ Options:
 - `--model <litellm-model-id>` — override the default model
 - `--theories <path>` — inject theoretical frameworks for hypothesis generation (see Theory Injection below)
 - `--research-question <text>` — pin the outcome to explain instead of letting the LLM choose it
+- `--source-packet <path>` — load a source-packet contract or assistant artifact; pins research question and source-scope metadata
 - `--review` — pause after hypothesis generation (and after refinement) for human review/editing
 - `--json-only` — skip HTML report generation
 - `--refine` — run analytical refinement after initial pipeline, then re-run passes 3+
@@ -112,6 +113,7 @@ Options:
 | `pt/pipeline.py` | Orchestrator — runs passes sequentially | No |
 | `pt/report.py` | HTML report generation, PhD audit, temporal causal network | No |
 | `pt/cli.py` | CLI entry point | No |
+| `pt/source_packet.py` | Source-packet contract, loader, summary, and prompt context | No |
 | `pt/schemas_multi.py` | Pydantic models for cross-case analysis | No |
 | `pt/pass_binarize.py` | Map extraction → binary variables (per case) | Yes |
 | `pt/pass_propose_model.py` | Data-driven: propose causal model from N extractions | Yes |
@@ -137,6 +139,14 @@ build plan: `docs/BUILDPLAN_pragmatic_process_tracing.md`; historical rebuild lo
 - **Known limitation (load-bearing)**: dependence pooling uses one scalar dependence strength per cluster, not per-hypothesis redundancy or a full trace-production model. If the LLM misses a cluster, support can still be overconfident; read high-support fragile results as a ranking until source-lineage and trace-production audits improve.
 
 ### Implemented Guardrails and Design Constraints
+
+- **Live E2E required**: Deterministic mocked tests are necessary but never
+  sufficient for implementation slices. Every slice that changes pipeline,
+  prompt, schema, report, audit, or agent behavior must run a live non-mocked
+  end-to-end command on a real process-tracing case, write `result.json` and
+  `report.html`, run `make audit-result` on those artifacts, and record the
+  command, output directory, model, audit grade, and failures/fixes in the slice
+  evidence note before the slice can be considered complete.
 
 - **Relevance gating**: Evidence with `relevance < 0.4` is forced to `LR = 1.0` (uninformative). Above 0.4, soft discount on the log scale of the centered LR.
 - **Relevance = min(temporal, causal-domain)**: Not just "how recent" but "how on-topic for this hypothesis."

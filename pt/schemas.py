@@ -312,9 +312,19 @@ class ReinterpretedEvidence(BaseModel):
 
 
 class NewCausalEdge(BaseModel):
-    source_id: str
-    target_id: str
-    relationship: str
+    source_id: str = Field(
+        description=(
+            "Existing event/actor/mechanism/evidence id, or a new evi_ref_* "
+            "evidence id created in this same refinement. Do not use hypothesis ids."
+        )
+    )
+    target_id: str = Field(
+        description=(
+            "Existing event/actor/mechanism/evidence id, or a new evi_ref_* "
+            "evidence id created in this same refinement. Do not use hypothesis ids."
+        )
+    )
+    relationship: str = Field(description="Substantive causal/process relationship, not evidentiary support.")
     source_text_support: str = Field(description="Quote from input text")
 
 

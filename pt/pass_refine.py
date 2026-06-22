@@ -83,6 +83,22 @@ def _build_bayesian_summary(
     )
 
 
+def _build_causal_edge_endpoint_inventory(extraction: ExtractionResult) -> str:
+    """List valid existing endpoint ids for Pass 5 causal-edge additions."""
+
+    rows: list[str] = []
+    for actor in extraction.actors:
+        rows.append(f"- {actor.id} (actor): {actor.name}")
+    for event in extraction.events:
+        date = f", date={event.date}" if event.date else ""
+        rows.append(f"- {event.id} (event{date}): {event.description}")
+    for mechanism in extraction.mechanisms:
+        rows.append(f"- {mechanism.id} (mechanism): {mechanism.description}")
+    for evidence in extraction.evidence:
+        rows.append(f"- {evidence.id} (evidence): {evidence.description}")
+    return "\n".join(rows) if rows else "- No existing causal-edge endpoints."
+
+
 def run_refine(
     text: str,
     extraction: ExtractionResult,
@@ -100,12 +116,14 @@ def run_refine(
     kwargs: dict[str, Any] = {"model": model} if model else {}
 
     bayesian_summary = _build_bayesian_summary(bayesian, hypothesis_space, extraction)
+    causal_edge_endpoint_inventory = _build_causal_edge_endpoint_inventory(extraction)
 
     messages = render_prompt(
         PROMPTS_DIR / "pass5_refine.yaml",
         source_text=text,
         extraction_json=json.dumps(extraction.model_dump(), indent=2),
         hypotheses_json=json.dumps(hypothesis_space.model_dump(), indent=2),
+        causal_edge_endpoint_inventory=causal_edge_endpoint_inventory,
         bayesian_summary=bayesian_summary,
         absence_json=json.dumps(absence.model_dump(), indent=2),
         synthesis_json=json.dumps(synthesis.model_dump(), indent=2),
