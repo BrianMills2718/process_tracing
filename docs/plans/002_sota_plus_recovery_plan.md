@@ -63,6 +63,10 @@ benchmark fixture/audit artifact, and leave `make check` green. Do not start a
 downstream slice if the current slice reveals that the source packet, hypothesis
 partition, or benchmark acceptance criteria are underspecified.
 
+Detailed execution gates, E2E commands, per-slice review/critique requirements,
+cleanup gates, and long-term success criteria are defined in
+`docs/plans/003_sota_plus_execution_master_plan.md`.
+
 ## Thin-Slice Roadmap
 
 ### Cross-Cutting Slice 0 - Agentic Assistant Harness Contract

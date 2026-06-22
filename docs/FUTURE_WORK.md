@@ -8,6 +8,7 @@ Current SOTA+ recovery source of truth:
 
 - `docs/research/PROCESS_TRACING_SOTA_REVIEW_2026.md`
 - `docs/plans/002_sota_plus_recovery_plan.md`
+- `docs/plans/003_sota_plus_execution_master_plan.md`
 
 ## Current Baseline
 
@@ -40,10 +41,12 @@ Implemented in the reference pipeline:
 | 6 | Auditor ablation benchmark | Architecture is auditable, but methodological validity is not yet empirically demonstrated. | Frozen benchmark cases compare narrative-only, dependence-pooling, and audit-enabled variants with calibration/discrimination metrics. |
 
 The immediate implementation slice is the **agentic assistant harness contract**
-from Plan 002, scoped to the **source-packet contract**. Source scope and
-provenance currently cap academic quality before downstream inference machinery
-can matter, and the assistant harness is the route for making that work scalable
-instead of manual.
+from Plans 002 and 003, scoped to the **source-packet contract**. Source scope
+and provenance currently cap academic quality before downstream inference
+machinery can matter, and the assistant harness is the route for making that
+work scalable instead of manual. Plan 003 is the execution checklist: every slice
+must include E2E testing, review/critique, cleanup, and a commit gate before the
+next slice starts.
 
 ## Methodology Extensions
 

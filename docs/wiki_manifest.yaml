@@ -36,6 +36,10 @@ publish:
     type: ProjectPlan
     title: SOTA+ Recovery And Thin-Slice Operating Model
     tags: [analysis, process-tracing, methodology, roadmap, sota]
+  - path: docs/plans/003_sota_plus_execution_master_plan.md
+    type: ProjectPlan
+    title: SOTA+ Execution Master Plan
+    tags: [analysis, process-tracing, methodology, roadmap, sota, validation]
   - glob: evidence/*.md
     type: EvidenceArtifact
     tags: [evidence, verification, process-tracing]

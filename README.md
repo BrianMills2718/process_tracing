@@ -104,6 +104,8 @@ entry point, and this repo should not call Codex/Claude Code directly.
   SOTA+ opportunity analysis.
 - `docs/plans/002_sota_plus_recovery_plan.md` - recovery gates and thin-slice
   operating model.
+- `docs/plans/003_sota_plus_execution_master_plan.md` - long-horizon SOTA+
+  execution plan with E2E, critique, cleanup, and success gates per slice.
 
 Historical sprint notes and superseded analyses live under `docs/archive/`.
 
