@@ -67,6 +67,14 @@ that agents and humans can review. Every aggregate score must step down to the
 case, evidence item, hypothesis pair, prompt, source, or report section that
 caused it.
 
+**Application to this plan:** this is a risk-ordered skeleton, not a fake
+precision script for the entire long-term program. Slices 0 and 1 are the next
+execution-ready slices. Slices 2-10 define the directional path, risks, and
+expected artifacts, but each must be refreshed into an execution-ready child
+plan after the prior slice's E2E run, independent critique, and cleanup. Later
+slice details may change when earlier benchmark readouts reveal a better order
+or a failed assumption.
+
 ---
 
 ## Files Affected
@@ -97,13 +105,33 @@ No implementation slice is complete until all gates below pass.
 | Unit/integration tests | Deterministic tests cover the new contract, failure mode, and at least one regression case. |
 | E2E smoke | One command exercises the slice on a real process-tracing case and writes artifacts to `/tmp/pt_smoke/<slice>/`. |
 | Audit/review | The generated JSON/report/sidecar is reviewed against `docs/OUTPUT_QUALITY_RUBRIC.md` and this plan's slice criteria. |
-| Adversarial critique | A written critique identifies what still fails from a PhD methods standpoint and whether the next step is code, prompt, source, benchmark, or scope. |
+| Independent adversarial critique | A fresh reviewer pass identifies what still fails from a PhD methods standpoint and whether the next step is code, prompt, source, benchmark, or scope. Self-review alone does not satisfy this gate. |
 | Cleanup | Stale docs are updated or archived; generated artifacts stay out of git unless intentionally curated; `make check` passes. |
 | Commit | Verified work is committed before moving to the next slice. |
 
 Stop rule: do not advance to a downstream slice when the current slice reveals
 that source scope, hypothesis partition, benchmark expectations, or artifact
 contracts are underspecified. Update this plan or the relevant slice plan first.
+
+Acceptable independent critique sources, in descending preference: a separate
+agent run through the agentic assistant harness, a Claude/Codex second-opinion
+pass through `llm_client`, a human review, or a deliberately separate
+adversarial run with a new trace and written limitation that no external
+reviewer was available. The critique artifact must be saved or summarized in
+the slice notes before cleanup.
+
+Each slice handoff must update the next 1-2 slices from directional skeleton to
+execution-ready detail using this shape:
+
+```text
+Slice N - <one-line outcome>
+  advances:        capability-ladder row and long-term goal step
+  vertical scope:  smallest end-to-end demonstrable behavior
+  de-risks:        unknown or boundary attacked by doing this now
+  success:         deductive test/gate or exploratory readout
+  review focus:    what the independent adversarial pass should try to break
+  cleanup:         debt/docs/refactor to clear before Slice N+1
+```
 
 ---
 
@@ -148,6 +176,10 @@ python -m pt.multi input_text/revolutions/french_revolution.txt \
 ---
 
 ## Slice Roadmap
+
+Slices 0-1 are execution-ready. Slices 2-10 are risk-ordered directional
+slices: keep their goals and gates, but refresh their implementation details
+after the previous slice's E2E readout and independent critique.
 
 ### Slice 0 - Agentic Assistant Harness
 
@@ -452,10 +484,13 @@ Use this checklist after each E2E run.
 - Can every aggregate score or warning step down to a source, evidence item,
   hypothesis pair, case, prompt, or report section?
 - Did the output improve process-tracing validity, or only presentation?
+- Who performed the independent adversarial critique, and where is the critique
+  artifact or summary?
 - What is the strongest PhD-level critique remaining?
 - Is the next action code, prompt, source collection, benchmark design, or
   documentation cleanup?
 - Are any docs now stale or overclaiming?
+- Did the next 1-2 slice specs get refreshed based on the observed readout?
 
 ---
 
@@ -485,5 +520,7 @@ The long-term goal is met only when all of the following are true:
 - [ ] Plan 003 is linked from the plan index and active roadmap docs.
 - [ ] Plan 003 defines slice order, dependencies, E2E tests, critique gates,
   cleanup gates, and success criteria.
+- [ ] Plan 003 distinguishes execution-ready next slices from directional
+  future skeleton slices to avoid fake precision.
 - [ ] Future implementation work uses this plan as the stop/go checklist.
 - [ ] `make check` passes after documentation updates.
