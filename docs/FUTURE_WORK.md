@@ -32,15 +32,18 @@ Implemented in the reference pipeline:
 
 | Priority | Work | Why it matters | Acceptance check |
 |---:|---|---|---|
-| 1 | Source-packet workflow | The current pipeline can be academically capped by single-text or broad-overview source scope. It needs an agent-drivable way to assemble primary sources, rival secondary accounts, dates, and source-genre metadata before running inference. | A documented source packet can be passed to the pipeline; the report audit distinguishes corpus limits from report/model failures. |
-| 2 | Hypothesis partition audit | Broad, overlapping, or complementary hypotheses still undermine comparative support. | A review artifact freezes the research question, hypothesis menu, residual, and pairwise discriminators before testing. |
-| 3 | Dependence and trace-production upgrade | Scalar dependence clusters reduce double-counting but do not model per-hypothesis redundancy, solicitation, preservation, false-positive channels, or shared model error. | Planted duplicate/source-lineage tests plus a report section showing why evidence was pooled or left independent. |
-| 4 | Observability-weighted absence | Absence findings are qualitative and excluded from the update. | Missing predicted traces carry source-genre observability bands and remain clearly separated from evidence of world-absence. |
-| 5 | Auditor ablation benchmark | Architecture is auditable, but methodological validity is not yet empirically demonstrated. | Frozen benchmark cases compare narrative-only, dependence-pooling, and audit-enabled variants with calibration/discrimination metrics. |
+| 1 | Agentic assistant harness contract | The SOTA+ vision depends on scaling research labor, not only model calls. Source-packet drafting, benchmark repair, report critique, and thin-slice implementation need a governed assistant surface. | A Make/CLI task invokes Codex or Claude Code through `llm_client` `workspace_agent`, with config-selected backend, `task`, `trace_id`, `max_budget`, provenance, and a typed artifact. |
+| 2 | Source-packet workflow | The current pipeline can be academically capped by single-text or broad-overview source scope. It needs an agent-drivable way to assemble primary sources, rival secondary accounts, dates, and source-genre metadata before running inference. | A documented source packet can be passed to the pipeline; the report audit distinguishes corpus limits from report/model failures. |
+| 3 | Hypothesis partition audit | Broad, overlapping, or complementary hypotheses still undermine comparative support. | A review artifact freezes the research question, hypothesis menu, residual, and pairwise discriminators before testing. |
+| 4 | Dependence and trace-production upgrade | Scalar dependence clusters reduce double-counting but do not model per-hypothesis redundancy, solicitation, preservation, false-positive channels, or shared model error. | Planted duplicate/source-lineage tests plus a report section showing why evidence was pooled or left independent. |
+| 5 | Observability-weighted absence | Absence findings are qualitative and excluded from the update. | Missing predicted traces carry source-genre observability bands and remain clearly separated from evidence of world-absence. |
+| 6 | Auditor ablation benchmark | Architecture is auditable, but methodological validity is not yet empirically demonstrated. | Frozen benchmark cases compare narrative-only, dependence-pooling, and audit-enabled variants with calibration/discrimination metrics. |
 
-The immediate implementation slice is the **source-packet contract** from Plan
-002. It comes first because source scope and provenance currently cap academic
-quality before downstream inference machinery can matter.
+The immediate implementation slice is the **agentic assistant harness contract**
+from Plan 002, scoped to the **source-packet contract**. Source scope and
+provenance currently cap academic quality before downstream inference machinery
+can matter, and the assistant harness is the route for making that work scalable
+instead of manual.
 
 ## Methodology Extensions
 
@@ -62,7 +65,11 @@ quality before downstream inference machinery can matter.
 ## Product and Operations Work
 
 - Add agent-drivable JSON endpoints for report inspection and audit results.
-- Make source-packet construction a CLI/Make target rather than an ad hoc doc.
+- Make source-packet construction a CLI/Make target rather than an ad hoc doc,
+  with optional Codex/Claude Code execution through `llm_client`
+  `workspace_agent`.
+- Keep agent harness integration behind `llm_client`; this repo should not call
+  Codex, Claude Code, provider SDKs, or assistant subprocesses directly.
 - Preserve run metadata: model, prompts, priors, source hashes, audit version,
   and commit SHA in `result.json`.
 - Add report-regression fixtures for network layout and audit sections.

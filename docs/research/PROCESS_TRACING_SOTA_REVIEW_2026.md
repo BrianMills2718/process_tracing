@@ -17,12 +17,16 @@ Current SOTA is fragmented:
 - **Process-tracing software** exists or is emerging for formal Bayesian
   bookkeeping, but it still expects humans to specify evidence, priors,
   likelihoods, hypotheses, or causal models.
+- **Agentic coding/research harnesses** can turn routine process-tracing
+  research labor, benchmark construction, report critique, and implementation
+  repair into auditable workspace tasks when routed through governed
+  infrastructure.
 
 The SOTA+ opportunity is therefore not to imitate one existing tool. It is to
 integrate the best pieces into an agentic pipeline that removes the usual
-constraints: qualitative labor bottlenecks, low technical capacity in mixed
-methods, and manual translation between source evidence and quantitative causal
-models.
+constraints: process-tracing research labor bottlenecks, low technical capacity
+in mixed methods, and manual translation between source evidence and
+quantitative causal models.
 
 ## SOTA Dimensions
 
@@ -145,7 +149,41 @@ Key sources:
 - "Large Language Models for Causal Discovery: Current Landscape and Future
   Directions" (IJCAI 2025 survey): https://www.ijcai.org/proceedings/2025/1186.pdf
 
-### 5. LLM Qualitative Analysis and Coding
+### 5. Agentic Coding And Research Harnesses
+
+Coding harnesses such as Codex and Claude Code matter here because process
+tracing is not only a text-generation task. A SOTA+ system has to gather and
+structure sources, revise schemas, construct benchmarks, run audits, inspect
+HTML/JSON outputs, repair code, and preserve provenance. Those are workspace
+tasks, not single prompt completions.
+
+The local ecosystem already supplies the necessary abstraction: `llm_client`
+routes `codex*` and `claude-code*` model strings to Codex/Claude Code agent SDK
+backends and exposes a `workspace_agent` execution mode with `task`,
+`trace_id`, and `max_budget` observability. The process-tracing repo should
+therefore treat Codex and Claude Code as interchangeable assistant backends
+behind `llm_client`, not as direct dependencies.
+
+SOTA+ strengths:
+
+- process-tracing research labor can be decomposed into repeatable
+  research-assistant tasks;
+- the same harness can build source packets, repair benchmarks, critique
+  reports, and implement thin slices;
+- agent outputs can be logged, budgeted, typed, and regression-tested;
+- humans remain research directors and validators rather than the scaling
+  bottleneck.
+
+SOTA+ risks:
+
+- freeform agents can produce impressive but untestable artifacts;
+- direct subprocess integrations bypass shared observability and budget policy;
+- assistant work can drift into generic coding automation unless each task
+  emits a process-tracing artifact with a clear acceptance gate;
+- agentic speed can amplify weak methodology if benchmarks and audits are not
+  frozen first.
+
+### 6. LLM Qualitative Analysis and Coding
 
 LLM qualitative-analysis research matters as adjacent evidence about scaling
 interpretive labor, but it is not process tracing. The SOTA is early, rapidly
@@ -180,8 +218,8 @@ Key sources:
 ## SOTA+ Implications For This Repo
 
 The project should not accept the field's existing bottlenecks as constraints.
-Manual qualitative labor and weak technical mixed-methods implementation are
-limitations of current practice, not limits of the method.
+Manual process-tracing research labor and weak technical mixed-methods
+implementation are limitations of current practice, not limits of the method.
 
 SOTA+ means:
 
@@ -203,7 +241,11 @@ SOTA+ means:
    likelihood claims, not as unparameterized likelihood calculators.
 7. **Cross-case bridge:** use process-tracing outputs to build and stress-test
    CausalQueries/QCA/statistical models when cases and variables support it.
-8. **Benchmark gates:** validate every capability against frozen cases and
+8. **Agentic assistant harness:** route source-packet work, benchmark repair,
+   report critique, and implementation slices through `llm_client`
+   `workspace_agent` tasks using Codex/Claude Code backends, with typed
+   artifacts and observability.
+9. **Benchmark gates:** validate every capability against frozen cases and
    known failure modes before claiming PhD/think-tank quality.
 
 ## What Went Wrong In The Current Repo
@@ -227,6 +269,8 @@ SOTA+ means:
    source examples.
 4. Add a real-world causal-text extraction benchmark slice, using ReCAST-style
    failure modes as inspiration.
-5. Define cross-case eligibility gates before invoking CausalQueries.
-6. Compare the pipeline to manual Bayesian process-tracing software and to
+5. Define the agent-assistant task contracts for source-packet construction,
+   partition critique, benchmark repair, and report critique.
+6. Define cross-case eligibility gates before invoking CausalQueries.
+7. Compare the pipeline to manual Bayesian process-tracing software and to
    formal CausalQueries workflows on the same case material.

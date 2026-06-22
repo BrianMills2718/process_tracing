@@ -11,8 +11,8 @@ benchmark-enforced SOTA+ path.
 Recover the SOTA+ vision and make it operational. The project should automate
 process tracing at PhD / think-tank / academic quality by exceeding current
 practice, not merely digitizing it. Current practice is constrained by manual
-qualitative labor and limited technical mixed-methods implementation; this repo
-should treat those as bottlenecks to remove.
+process-tracing research labor and limited technical mixed-methods
+implementation; this repo should treat those as bottlenecks to remove.
 
 ## Required Reading
 
@@ -29,6 +29,7 @@ should treat those as bottlenecks to remove.
 | Vision not enforced | SOTA+ appeared in docs but not as a slice-level acceptance gate. | Every plan must name the SOTA frontier it advances and the benchmark/failure mode it tests. |
 | Presentation substituted for inference | Report/network polish improved inspectability but did not always improve source scope, hypothesis design, diagnosticity, or validation. | A UI/report slice cannot claim quality improvement unless it changes an inference check, exposes a failure mode, or blocks an overclaim. |
 | No frozen benchmark | Grades and "optimal" claims were too easy to inflate. | Maintain frozen benchmark cases with expected critique targets and caps. |
+| Agent labor layer left implicit | "Agentic" was used as aspiration without a governed assistant contract for source work, benchmark repair, or critique loops. | Agentic work must run through `llm_client` as a typed, budgeted, observable workspace-agent task. |
 | Current/future drift | Methodology optimum, current code, and old sprint notes blurred together. | Active docs must distinguish implemented / partial / planned; stale docs go to `docs/archive/`. |
 | Thin slices lost north-star coupling | Small implementation steps were not always tied to a named SOTA capability. | Each slice must update the capability ladder and add a deterministic or audit check. |
 
@@ -40,6 +41,7 @@ must move one row upward.
 | Capability | Current state | SOTA+ target | Gate |
 |---|---|---|---|
 | Source packet | Manual/ad hoc source selection; report can be capped by source scope. | Agent builds primary/secondary source packet with provenance, dates, genre, reliability, and coverage map. | Source packet schema + one benchmark packet. |
+| Agentic assistant harness | `llm_client` can route `codex*` and `claude-code*` model strings to Codex/Claude Code agent SDKs, but this repo has no process-tracing assistant task surface yet. | Governed research assistant runs source-packet construction, hypothesis-partition audits, benchmark repair, report critique, and implementation thin slices through interchangeable Codex/Claude Code backends. | One Make/CLI task invokes `llm_client` `execution_mode="workspace_agent"` with config-selected backend, `task`, `trace_id`, `max_budget`, agent spec/provenance, and a typed artifact checked by tests/audits. |
 | Research question/focal window | LLM can choose, user can pin. | Frozen question, focal decision window, outcome, and scope before testing. | Partition artifact exists before Pass 3. |
 | Hypothesis partition | Prompt rules + optional review. | MECE-ish rival set, explicit residual, split/merge audit, pairwise discriminators. | Partition audit blocks broad/overlapping hypotheses. |
 | Extraction/provenance | Source-grounded evidence and source hash. | Evidence/event/mechanism/source metadata with quote, date confidence, source genre, and trace-production relevance. | Extraction fixture checks provenance completeness. |
@@ -53,13 +55,34 @@ must move one row upward.
 
 ## Plan
 
-Execute the recovery in thin slices, beginning with the source-packet contract.
-Each slice must update the SOTA+ capability ladder, add or revise a benchmark
-fixture/audit artifact, and leave `make check` green. Do not start a downstream
-slice if the current slice reveals that the source packet, hypothesis partition,
-or benchmark acceptance criteria are underspecified.
+Execute the recovery in thin slices. The assistant harness is cross-cutting, but
+it must land through a real process-tracing task rather than as an abstract agent
+platform. The first harnessed task should therefore support the source-packet
+contract. Each slice must update the SOTA+ capability ladder, add or revise a
+benchmark fixture/audit artifact, and leave `make check` green. Do not start a
+downstream slice if the current slice reveals that the source packet, hypothesis
+partition, or benchmark acceptance criteria are underspecified.
 
 ## Thin-Slice Roadmap
+
+### Cross-Cutting Slice 0 - Agentic Assistant Harness Contract
+
+Define and implement the narrow process-tracing assistant entry point that calls
+Codex or Claude Code through `llm_client`, not through direct subprocess,
+provider-SDK, or CLI glue in this repo. The assistant is for bounded research
+labor: source-packet drafting, partition critique, benchmark repair, report
+critique, and implementation thin slices.
+
+Acceptance:
+
+- Backend is selected by config/CLI from `codex*` or `claude-code*` model
+  strings accepted by `llm_client`.
+- Calls use `execution_mode="workspace_agent"` with explicit `task`, `trace_id`,
+  `max_budget`, working directory, and agent spec/provenance metadata.
+- The first assistant task emits a typed artifact for Slice 1, not a freeform
+  chat transcript.
+- Tests or audits verify that process_tracing has no direct Codex/Claude Code
+  subprocess or provider-SDK dependency.
 
 ### Slice 1 - Source Packet Contract
 
@@ -126,6 +149,10 @@ Acceptance:
 - No SOTA+ claim without a named external SOTA baseline and a benchmark result.
 - No "optimal" claim unless remaining caps are external-data limits rather than
   model/report failures.
+- No agentic-assistant work outside `llm_client`: Codex/Claude Code are
+  interchangeable harness backends, not direct dependencies of this repo.
+- Agentic-assistant outputs must be typed artifacts with provenance, budget, and
+  observability, never only chat logs or screenshots.
 - No quality-improvement slice without one of: source scope, hypothesis
   partition, diagnosticity, dependence, observability, structural critique,
   cross-case eligibility, or validation.
@@ -136,6 +163,8 @@ Acceptance:
 
 ## Immediate Next Slice
 
-Start with **Slice 1 - Source Packet Contract**. It has the highest leverage
-because weak source scope poisons every later step and currently imposes the most
-frequent academic cap.
+Start with **Cross-Cutting Slice 0 - Agentic Assistant Harness Contract**, scoped
+to **Slice 1 - Source Packet Contract**. This prevents building a generic agent
+platform while still making source construction agent-drivable. Source scope has
+the highest leverage because weak source scope poisons every later step and
+currently imposes the most frequent academic cap.

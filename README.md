@@ -81,6 +81,15 @@ pt/
   multi_pipeline.py    Multi-document cross-case analysis
 ```
 
+## SOTA+ Direction
+
+The next implementation slices are about scaling process-tracing research labor,
+not just improving report polish. Source-packet construction, benchmark repair,
+partition critique, and report critique should become agent-drivable workspace
+tasks through `llm_client` using Codex or Claude Code backends. Those tasks are
+planned surfaces: the current CLI does not yet expose a process-tracing assistant
+entry point, and this repo should not call Codex/Claude Code directly.
+
 ## Documentation Map
 
 - `docs/PROJECT_THEORY_AND_GOALS.md` - canonical project intent and current
