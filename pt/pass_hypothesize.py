@@ -44,6 +44,7 @@ def run_hypothesize(
     model: str | None = None,
     theories: str | None = None,
     research_question: str | None = None,
+    source_packet_context: str | None = None,
     trace_id: str | None = None,
 ) -> HypothesisSpace:
     """Build hypothesis space from extraction results.
@@ -56,6 +57,9 @@ def run_hypothesize(
             generate hypotheses for THIS exact question, and the returned
             research_question is overwritten with it verbatim for reproducibility.
             When None, the LLM selects the outcome (less reproducible across runs).
+        source_packet_context: Optional source-packet contract text. When present,
+            use it as the source-scope and observability design for hypothesis
+            generation without treating it as extracted evidence.
     """
     rq = research_question.strip() if research_question else None
     if rq:
@@ -68,6 +72,19 @@ def run_hypothesize(
         )
     else:
         research_question_block = ""
+
+    if source_packet_context:
+        source_packet_block = (
+            "## Source-packet contract\n\n"
+            "The analyst supplied this source packet before inference. Use it to "
+            "preserve source-scope limits, rival interpretations, observability "
+            "expectations, and pre-specified tests. Do NOT treat the packet metadata "
+            "as evidence unless the extracted text contains the trace itself. Do NOT "
+            "claim source coverage beyond this packet.\n\n"
+            f"{source_packet_context.strip()}"
+        )
+    else:
+        source_packet_block = ""
 
     if theories:
         theories_block = (
@@ -86,6 +103,7 @@ def run_hypothesize(
         extraction_json=json.dumps(extraction.model_dump(), indent=2),
         theories_block=theories_block,
         research_question_block=research_question_block,
+        source_packet_block=source_packet_block,
     )
     kwargs: dict[str, Any] = {"model": model} if model else {}
     space = call_llm(

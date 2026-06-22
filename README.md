@@ -54,6 +54,9 @@ Useful options:
 - `--refine` runs the second-reading refinement pass.
 - `--from-result output/run/result.json` reuses extraction and hypotheses from a
   matching prior result, then refines.
+- `--source-packet packet.json` loads a source-packet contract or assistant
+  artifact, pins the research question from it, and stores source-scope metadata
+  in `result.json` and the report audit.
 - `--max-budget <dollars>` sets the per-call LLM budget cap.
 
 Quality audit:
@@ -73,11 +76,25 @@ This uses `llm_client` `workspace_agent` routing and writes a typed JSON draft.
 Set `MODEL=claude-code` to use Claude Code instead when that backend is
 available.
 
+Run the pipeline with an accepted source packet:
+
+```bash
+make source-packet-run \
+  INPUT=input_text/revolutions/french_revolution.txt \
+  SOURCE_PACKET=output/assistant/source_packet_draft.json \
+  RUN_OUTPUT_DIR=output/french_rev_packet
+```
+
+The packet governs research question, source-scope metadata, observability
+assumptions, and missing-source gaps. It does not make packet metadata evidence;
+evidence still has to appear in the input text and likelihood matrix.
+
 ## Architecture
 
 ```text
 pt/
   assistant.py         Slice 0: agentic source-packet draft harness
+  source_packet.py     Source-packet schema, loader, summary, and prompt context
   schemas.py           Pydantic contracts for all pipeline data
   llm.py               LLM boundary through llm_client.call_llm_structured
   pass_extract.py      Pass 1: source-grounded extraction
@@ -96,11 +113,11 @@ pt/
 ## SOTA+ Direction
 
 The next implementation slices are about scaling process-tracing research labor,
-not just improving report polish. Source-packet construction, benchmark repair,
-partition critique, and report critique should become agent-drivable workspace
-tasks through `llm_client` using Codex or Claude Code backends. Those tasks are
-planned surfaces: the current CLI does not yet expose a process-tracing assistant
-entry point, and this repo should not call Codex/Claude Code directly.
+not just improving report polish. Source-packet construction now has a typed
+assistant draft surface and the main pipeline can consume that artifact as a
+source-scope contract. Benchmark repair, partition critique, and report critique
+remain planned agent-drivable workspace tasks through `llm_client` using Codex
+or Claude Code backends. This repo should not call Codex/Claude Code directly.
 
 ## Documentation Map
 

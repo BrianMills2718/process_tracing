@@ -242,13 +242,54 @@ def _academic_caps(
         recommendations.append(recommendation)
 
     limitations = " ".join(result.synthesis.limitations).lower()
+    source_packet = result.source_packet
+    source_scope_capped = False
     if any(term in limitations for term in ("single historical text", "single source", "single text")):
+        if source_packet is None:
+            add(
+                78,
+                "The synthesis itself acknowledges a single-source or single-text basis, and no source packet is stored with the result.",
+                "Add an explicit source packet: primary documents, hostile/alternative secondary accounts, and source metadata before treating the result as PhD-level causal evidence.",
+                "external_evidence",
+                "At least three independent source groups are represented, including one primary-source group and one rival/critical secondary account.",
+            )
+        elif (
+            source_packet.source_count < 3
+            or source_packet.high_priority_gap_count > 0
+            or source_packet.limitations
+        ):
+            add(
+                82,
+                "A source packet is present, but it is still thin or names unresolved source-scope limitations.",
+                "Repair the source packet before treating the single-text caveat as cleared.",
+                "external_evidence",
+                "The packet has at least three independent source groups, no unresolved high-priority gaps, and packet limitations are either resolved or explicitly accepted.",
+            )
+        else:
+            add(
+                88,
+                "A source packet is present, but synthesis still describes the evidence base as single-source.",
+                "Regenerate or repair synthesis so source-scope limitations are based on the accepted packet rather than stale generic caveats.",
+                "report_or_synthesis",
+                "The synthesis and report agree on the accepted source packet and remaining source-scope limits.",
+            )
+        source_scope_capped = True
+
+    if (
+        source_packet is not None
+        and not source_scope_capped
+        and (
+            source_packet.source_count < 3
+            or source_packet.high_priority_gap_count > 0
+            or source_packet.limitations
+        )
+    ):
         add(
-            78,
-            "The synthesis itself acknowledges a single-source or single-text basis.",
-            "Add an explicit source packet: primary documents, hostile/alternative secondary accounts, and source metadata before treating the result as PhD-level causal evidence.",
+            82,
+            "The source packet is present but does not yet clear minimum source-scope review.",
+            "Extend or repair the packet before publication-strength causal claims.",
             "external_evidence",
-            "At least three independent source groups are represented, including one primary-source group and one rival/critical secondary account.",
+            "The packet has at least three independent source groups, no unresolved high-priority gaps, and packet limitations are either resolved or explicitly accepted.",
         )
 
     diagnostic = _diagnostic_strength_stats(result)
@@ -497,14 +538,22 @@ def audit_result(
     damaging_absences = [
         ev for ev in result.absence.evaluations if ev.severity == "damaging"
     ]
+    packet = result.source_packet
+    source_packet_visible = packet is None or _report_has(report_html, "source packet contract")
     source_scope_visible = (not damaging_absences) or _report_has(
         report_html, "source-scope", "absence"
     )
+    source_scope_visible = source_scope_visible and source_packet_visible
     source_points = 10 if source_scope_visible else 5
     categories["source_scope_and_absence"] = {
         "points": source_points,
         "max": 10,
         "damaging_absence_count": len(damaging_absences),
+        "source_packet_present": packet is not None,
+        "source_packet_visible": source_packet_visible,
+        "source_count": packet.source_count if packet else 0,
+        "known_gap_count": packet.known_gap_count if packet else 0,
+        "high_priority_gap_count": packet.high_priority_gap_count if packet else 0,
         "source_scope_visible": source_scope_visible,
         "recommendations": [] if source_scope_visible else [
             "Caveat damaging absence claims by source scope; specify where the missing trace should be found."

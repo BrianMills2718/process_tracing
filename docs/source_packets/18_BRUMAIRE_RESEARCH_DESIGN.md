@@ -11,6 +11,8 @@ historiographical account.
 ## Corpus
 
 - Input packet: `input_text/source_packets/18_brumaire_source_packet.txt`
+- Source-packet contract:
+  `docs/source_packets/18_BRUMAIRE_SOURCE_PACKET.json`
 - Theory lenses: `input_text/theories/18_brumaire_rival_frameworks.txt`
 - Source groups:
   - Bonaparte justification, 10 November 1799: https://revolution.chnm.org/d/461
@@ -56,7 +58,7 @@ Jacobin-dominated republic, or a royalist restoration?
 ```bash
 python -m pt input_text/source_packets/18_brumaire_source_packet.txt \
   --output-dir /tmp/pt_smoke/brumaire_packet \
-  --research-question "Why did the French Revolution culminate in Napoleon Bonaparte's 18 Brumaire coup and the Consulate rather than a stable parliamentary republic, a revived Jacobin-dominated republic, or a royalist restoration?" \
+  --source-packet docs/source_packets/18_BRUMAIRE_SOURCE_PACKET.json \
   --theories input_text/theories/18_brumaire_rival_frameworks.txt \
   --refine \
   --max-budget 1.0
@@ -72,6 +74,9 @@ An improved result should clear these gates:
 
 - Multiple source groups appear in extracted evidence; the synthesis must not
   treat the corpus as a single historical source.
+- `result.json` stores source-packet metadata, and the report includes the
+  source-packet contract table plus the rule that packet metadata is not itself
+  evidence.
 - At least 20 percent of evidence is proximate to 1799.
 - The top hypothesis has at least one proximate top driver.
 - At least one item reaches moderate diagnostic strength.

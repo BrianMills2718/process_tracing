@@ -1,6 +1,7 @@
 # Plan 003 - SOTA+ Execution Master Plan
 
-**Status:** Planned
+**Status:** In Progress
+**Progress:** Slices 0-1 implemented.
 **Type:** implementation
 **Priority:** Critical
 **Blocked By:** None
@@ -220,6 +221,8 @@ budgeted, observable source-packet draft.
 
 ### Slice 1 - Source Packet Contract And Benchmark
 
+**Status:** Implemented in the Slice 1 source-packet contract commit.
+
 **Goal:** Make source scope explicit before inference.
 
 **Implementation scope:**
@@ -243,6 +246,11 @@ demo can support PhD-grade claims.
 **Success criteria:** source-scope caps in the report name concrete missing
 source classes, or clear because the packet covers the needed source genres for
 the stated question.
+
+**Implemented artifacts:** `pt/source_packet.py`, `--source-packet`,
+`make source-packet-run`, `docs/source_packets/18_BRUMAIRE_SOURCE_PACKET.json`,
+`ProcessTracingResult.source_packet`, report source-packet table, and audit
+source-scope cap distinctions.
 
 ### Slice 2 - Research Question And Hypothesis Partition Gate
 
@@ -473,13 +481,15 @@ passing benchmark record and an explanation of remaining external-data limits.
 | Test File | Test Function | What It Verifies |
 |---|---|---|
 | `tests/test_assistant.py` | | Slice 0 assistant harness contract, artifact persistence, dependency boundary, CLI errors, and opt-in live smoke. |
+| `tests/test_source_packet.py` | | Slice 1 source-packet loading, assistant-artifact compatibility, and summary metadata. |
+| `tests/test_cli_source_packet.py` | | Slice 1 CLI `--source-packet` plumbing without an LLM call. |
 
 ### Existing Tests (Must Pass)
 
 | Test Pattern | Why |
 |---|---|
 | `tests/test_pt_llm.py` | Existing LLM boundary behavior remains intact. |
-| `tests/test_pipeline_integration.py` | Pipeline/report integration remains unchanged by the assistant harness. |
+| `tests/test_pipeline_integration.py` | Pipeline/report integration, source-packet prompt context, result metadata, report visibility, and audit cap behavior remain covered. |
 
 ## Required Tests By Slice
 

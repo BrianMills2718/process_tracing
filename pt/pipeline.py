@@ -23,6 +23,7 @@ from pt.schemas import (
     ProcessTracingResult,
     RefinementResult,
 )
+from pt.source_packet import SourcePacket
 
 
 def _source_text_sha256(text: str) -> str:
@@ -189,6 +190,8 @@ def run_pipeline(
     research_question: str | None = None,
     refine: bool = False,
     from_result: ProcessTracingResult | None = None,
+    source_packet: SourcePacket | None = None,
+    source_packet_path: str | None = None,
     trace_id: str | None = None,
     priors: dict[str, float] | None = None,
 ) -> ProcessTracingResult:
@@ -206,11 +209,41 @@ def run_pipeline(
             explain (reproducible across runs); when None the LLM selects it.
         refine: If True, run analytical refinement after initial pipeline, then re-run passes 3+.
         from_result: Load extraction + hypothesis_space from existing result, skip passes 1-2. Implies refine.
+        source_packet: Optional source-packet contract that pins source scope,
+            observability assumptions, and the research question before inference.
     """
     t0 = time.time()
     if trace_id is None:
         trace_id = uuid4().hex[:8]
     source_text_sha256 = _source_text_sha256(text)
+
+    if from_result is not None and source_packet is not None:
+        raise ValueError(
+            "--source-packet cannot be combined with --from-result because "
+            "--from-result reuses an existing hypothesis space"
+        )
+
+    if source_packet is not None:
+        packet_rq = source_packet.research_question.strip()
+        pinned_rq = research_question.strip() if research_question else None
+        if pinned_rq and pinned_rq != packet_rq:
+            raise ValueError(
+                "--research-question conflicts with source_packet.research_question "
+                f"(research_question={pinned_rq!r}, source_packet={packet_rq!r})"
+            )
+        research_question = packet_rq
+        if verbose:
+            print(
+                f"Source packet: {source_packet.case_name} "
+                f"({len(source_packet.source_candidates)} sources, "
+                f"{len(source_packet.known_gaps)} known gaps)"
+            )
+
+    source_packet_summary = (
+        source_packet.to_summary(source_packet_path)
+        if source_packet is not None
+        else from_result.source_packet if from_result is not None else None
+    )
 
     # Input validation — catch garbage/trivial input before burning 9+ LLM calls
     if from_result is None:
@@ -243,7 +276,9 @@ def run_pipeline(
             print(f"Pass 2/4: Building hypothesis space{extra}...")
         hypothesis_space = run_hypothesize(
             extraction, model=model, theories=theories,
-            research_question=research_question, trace_id=trace_id,
+            research_question=research_question,
+            source_packet_context=source_packet.to_prompt_context() if source_packet else None,
+            trace_id=trace_id,
         )
         if verbose:
             print(f"  {len(hypothesis_space.hypotheses)} hypotheses "
@@ -315,6 +350,7 @@ def run_pipeline(
         absence=absence,
         bayesian=bayesian,
         synthesis=synthesis,
+        source_packet=source_packet_summary,
         refinement=refinement_result,
         is_refined=refine,
     )

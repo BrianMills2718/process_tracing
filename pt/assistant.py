@@ -21,6 +21,13 @@ from dotenv import load_dotenv
 from llm_client import call_llm_structured, render_prompt
 from pydantic import BaseModel, Field
 
+from pt.source_packet import (
+    RivalInterpretation,
+    SourceCandidate,
+    SourceGap,
+    SourcePacketDraft,
+)
+
 PROMPTS_DIR = Path(__file__).parent / "prompts"
 SOURCE_PACKET_PROMPT = PROMPTS_DIR / "assistant_source_packet.yaml"
 DEFAULT_ASSISTANT_MODEL = os.getenv("PT_ASSISTANT_MODEL", "codex")
@@ -38,81 +45,6 @@ load_dotenv(override=True)
 
 class AssistantError(Exception):
     """Raised when assistant task setup or execution fails."""
-
-
-class SourceCandidate(BaseModel):
-    """One proposed source for a process-tracing source packet."""
-
-    title: str = Field(description="Human-readable source title.")
-    source_kind: str = Field(
-        description="Broad source kind, such as primary legal text, proclamation, memoir, newspaper, archive, secondary narrative, or historiography."
-    )
-    date_coverage: str = Field(description="Date or period covered by the source.")
-    locator: str | None = Field(
-        default=None,
-        description="URL, citation, archive locator, file path, or null when not yet known.",
-    )
-    provenance_note: str = Field(description="Where this source comes from and why it is admissible.")
-    reliability_note: str = Field(description="Biases, limitations, authorship issues, or source-production risks.")
-    expected_observability: str = Field(
-        description="What traces this source genre should and should not reveal for the research question."
-    )
-    relevance_to_question: str = Field(description="Why this source helps discriminate among rival explanations.")
-
-
-class RivalInterpretation(BaseModel):
-    """A rival scholarly or source-grounded interpretation to preserve."""
-
-    interpretation: str = Field(description="The rival interpretation or mechanism.")
-    supporting_sources: list[str] = Field(
-        default_factory=list,
-        description="Source titles or source classes that support or represent this interpretation.",
-    )
-    discriminating_implication: str = Field(
-        description="What evidence would distinguish this interpretation from important rivals."
-    )
-
-
-class SourceGap(BaseModel):
-    """A missing source class or trace that limits the packet."""
-
-    missing_source_class: str = Field(description="Concrete source class still missing.")
-    why_it_matters: str = Field(description="How the gap could cap inference quality.")
-    expected_location: str = Field(description="Where an analyst or agent should look next.")
-    priority: Literal["high", "medium", "low"] = Field(description="Collection priority.")
-
-
-class SourcePacketDraft(BaseModel):
-    """Typed draft emitted by the assistant before Slice 1 finalizes the packet contract."""
-
-    case_name: str = Field(description="Case or event being studied.")
-    research_question: str = Field(description="Process-tracing research question.")
-    focal_window: str = Field(description="Focal temporal window for the outcome and proximate traces.")
-    outcome: str = Field(description="Outcome the source packet is designed to explain.")
-    source_candidates: list[SourceCandidate] = Field(
-        min_length=1,
-        description="Candidate sources to include in the packet.",
-    )
-    rival_interpretations: list[RivalInterpretation] = Field(
-        default_factory=list,
-        description="Rival interpretations the packet should preserve before testing.",
-    )
-    observability_notes: list[str] = Field(
-        default_factory=list,
-        description="Cross-source notes about what the corpus can and cannot reveal.",
-    )
-    known_gaps: list[SourceGap] = Field(
-        default_factory=list,
-        description="Missing source classes or traces that still limit inference.",
-    )
-    proposed_next_steps: list[str] = Field(
-        default_factory=list,
-        description="Concrete next actions for improving the packet or running the pipeline.",
-    )
-    limitations: list[str] = Field(
-        default_factory=list,
-        description="Caveats that should cap claims if not resolved.",
-    )
 
 
 class AssistantRunMetadata(BaseModel):

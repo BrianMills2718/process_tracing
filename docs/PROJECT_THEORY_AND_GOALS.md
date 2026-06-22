@@ -55,10 +55,11 @@ reused/extended the rest. This was not a repo restart.
 | evidence graph / dependence | **PARTIAL** | LLM-supplied dependence clusters with scalar partial pooling; per-hypothesis redundancy deferred |
 | qualitative critic pass | **PLANNED** | gated, single-family first (BUILDPLAN Slice 6); should ship the ablation switch |
 | `pt/llm.py` | **REBUILT (small)** | delegates to `llm_client.call_llm_structured` (validated Pydantic, routed model calls) |
-| `pt/pass_extract.py`, `pt/pass_hypothesize.py` | **REUSE + EXTEND** | sound; remaining work is stronger MECE/residual and partition-provenance auditing |
+| `pt/pass_extract.py`, `pt/pass_hypothesize.py` | **REUSE + EXTEND** | sound; Pass 2 now accepts source-packet context; remaining work is stronger MECE/residual and partition-provenance auditing |
 | cross-case path (`pass_binarize`, `cq_bridge`, `multi_pipeline`) | **REUSE** | this *is* the white paper's formal path; already aligned |
-| `pt/report.py` | **REUSE + ADAPT** | renders support, sensitivity, PhD audit, evidence triage, temporal timeline, and temporal causal network |
-| agentic assistant harness | **PLANNED** | `llm_client` already routes `codex*` and `claude-code*` model strings to Codex/Claude Code agent backends; this repo still needs a narrow process-tracing wrapper for typed assistant artifacts |
+| `pt/report.py` | **REUSE + ADAPT** | renders support, sensitivity, PhD audit, evidence triage, source-packet contract, temporal timeline, and temporal causal network |
+| agentic assistant harness | **PARTIAL** | source-packet draft task is implemented through `llm_client` `workspace_agent`; partition critique, benchmark repair, and report critique assistants are still planned |
+| source-packet contract | **PARTIAL** | `--source-packet` loads typed packet artifacts and stores source-scope metadata in results/reports; source acquisition and per-source evidence coverage are deferred |
 | harness, Makefile, `tests/`, prompt loading | **REUSE** | infrastructure |
 
 Rule of thumb for future work: extend where the remaining gaps are methodological
@@ -69,7 +70,7 @@ priors, independent multiplication, or "posterior probability" labels).
 ## 4. Invariants (non-negotiable; violating one is a bug)
 
 1. **LLM-first for semantics** (per `CLAUDE.md`): no keyword/rule-based evidence classification; all semantic judgments via LLM structured output.
-2. **All LLM and agent calls go through `llm_client`.** Structured pipeline calls go via `pt/llm.py`; future workspace-agent assistant calls must go through a narrow process-tracing wrapper over `llm_client` `execution_mode="workspace_agent"` with `task=/trace_id=/max_budget=`. No direct provider SDK calls, Codex CLI calls, Claude Code CLI calls, or assistant subprocess glue in this repo.
+2. **All LLM and agent calls go through `llm_client`.** Structured pipeline calls go via `pt/llm.py`; workspace-agent assistant calls go through a narrow process-tracing wrapper over `llm_client` `execution_mode="workspace_agent"` with `task=/trace_id=/max_budget=`. No direct provider SDK calls, Codex CLI calls, Claude Code CLI calls, or assistant subprocess glue in this repo.
 3. **The schema is the contract.** Every LLM boundary returns a validated Pydantic model; required fields are required.
 4. **Coherent likelihoods only.** Pairwise ratios are *derived from a vector*, never independently elicited.
 5. **Comparative support, not probability of truth.** Outputs are normalized over the listed hypotheses; the report says so (truth-in-labeling).
@@ -112,12 +113,14 @@ redundancy; support ranges are sensitivity ranges, not full elicited likelihood
 bands with Monte Carlo propagation; Van Evera labels are carried per cell but
 `prediction_classifications` is not yet repopulated by the new pass.
 
-**Planned / deferred (per build plan & cutter):** agentic assistant harness for
-source-packet work and benchmark repair through `llm_client` Codex/Claude Code
-backends; full band *elicitation* + joint Monte-Carlo propagation; qualitative
-critic/auditor pass + ablation switch; trace-production model; post-selection &
+**Planned / deferred (per build plan & cutter):** hypothesis partition audit;
+agentic assistant tasks beyond source-packet drafting, including benchmark
+repair and report critique through `llm_client` Codex/Claude Code backends; full
+band *elicitation* + joint Monte-Carlo propagation; qualitative critic/auditor
+pass + ablation switch; trace-production model; post-selection &
 prior-provenance guards; per-hypothesis dependence; cross-cluster shared-error
-sampling; source-packet workflow; formal validation benchmark.
+sampling; source acquisition and packet-source coverage verification; formal
+validation benchmark.
 These are optimum-scope or next-roadmap work; the current build approximates or defers them.
 
 **Not claimed:** no methodological validation (the WP §8 auditor ablation) has been run. This is
@@ -131,9 +134,9 @@ The historical slice order is preserved in
 1. **Done:** truth-in-labeling, `llm_client` boundary, coherent likelihood vectors,
    researcher priors, residual `H0`, dependence pooling, sensitivity/prior
    stability, report audit, and temporal network presentation.
-2. **Next:** agentic assistant harness scoped to source-packet construction,
-   source-packet workflow, hypothesis partition audit, stronger
-   source-lineage/dependence modeling, observability-weighted absence, and the
+2. **Next:** hypothesis partition audit, source acquisition/packet-source
+   coverage verification, stronger source-lineage/dependence modeling,
+   observability-weighted absence, benchmark/report assistant tasks, and the
    qualitative structural critic.
 3. **Validation:** auditor/dependence ablations and a frozen benchmark are still
    required before claiming demonstrated PhD-level methodological validity.

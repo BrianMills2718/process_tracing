@@ -31,22 +31,26 @@ Implemented in the reference pipeline:
 - Slice 0 agentic assistant harness for typed source-packet drafts through
   `llm_client` `workspace_agent`; deterministic contract tests are in place and
   live provider smoke is opt-in with `PT_RUN_LIVE_AGENT_TESTS=1`.
+- Slice 1 source-packet contract accepted by the pipeline via `--source-packet`;
+  result/report/audit outputs preserve source counts, source kinds, high-priority
+  gaps, packet limitations, and the rule that packet metadata is not evidence.
 
 ## Highest-Value Next Work
 
 | Priority | Work | Why it matters | Acceptance check |
 |---:|---|---|---|
-| 1 | Source-packet workflow | The current pipeline can be academically capped by single-text or broad-overview source scope. It needs an agent-drivable way to assemble primary sources, rival secondary accounts, dates, and source-genre metadata before running inference. | A documented source packet can be passed to the pipeline; the report audit distinguishes corpus limits from report/model failures. |
-| 2 | Hypothesis partition audit | Broad, overlapping, or complementary hypotheses still undermine comparative support. | A review artifact freezes the research question, hypothesis menu, residual, and pairwise discriminators before testing. |
-| 3 | Dependence and trace-production upgrade | Scalar dependence clusters reduce double-counting but do not model per-hypothesis redundancy, solicitation, preservation, false-positive channels, or shared model error. | Planted duplicate/source-lineage tests plus a report section showing why evidence was pooled or left independent. |
-| 4 | Observability-weighted absence | Absence findings are qualitative and excluded from the update. | Missing predicted traces carry source-genre observability bands and remain clearly separated from evidence of world-absence. |
+| 1 | Hypothesis partition audit | Broad, overlapping, or complementary hypotheses still undermine comparative support. | A review artifact freezes the research question, hypothesis menu, residual, and pairwise discriminators before testing. |
+| 2 | Dependence and trace-production upgrade | Scalar dependence clusters reduce double-counting but do not model per-hypothesis redundancy, solicitation, preservation, false-positive channels, or shared model error. | Planted duplicate/source-lineage tests plus a report section showing why evidence was pooled or left independent. |
+| 3 | Observability-weighted absence | Absence findings are qualitative and excluded from the update. | Missing predicted traces carry source-genre observability bands and remain clearly separated from evidence of world-absence. |
+| 4 | Source acquisition and packet coverage verification | The packet is now an accepted contract, but source acquisition and proof that every packet source contributed extractable text are not yet automated. | The input corpus is assembled from packet sources with source-level provenance and a coverage report showing which sources produced evidence. |
 | 5 | Auditor ablation benchmark | Architecture is auditable, but methodological validity is not yet empirically demonstrated. | Frozen benchmark cases compare narrative-only, dependence-pooling, and audit-enabled variants with calibration/discrimination metrics. |
 
-The immediate implementation slice is now the **source-packet workflow** from
-Plans 002 and 003. The assistant harness exists as a typed draft generator, but
-the source-packet contract still needs to become a pipeline/review artifact.
-Plan 003 is the execution checklist: every slice must include E2E testing,
-review/critique, cleanup, and a commit gate before the next slice starts.
+The immediate implementation slice is now the **hypothesis partition audit**
+from Plan 003. The source-packet contract exists as a pipeline/review artifact,
+but it does not yet automate source acquisition or prove that every packet
+source contributed evidence. Plan 003 remains the execution checklist: every
+slice must include E2E testing, review/critique, cleanup, and a commit gate
+before the next slice starts.
 
 ## Methodology Extensions
 
@@ -68,8 +72,8 @@ review/critique, cleanup, and a commit gate before the next slice starts.
 ## Product and Operations Work
 
 - Add agent-drivable JSON endpoints for report inspection and audit results.
-- Extend the new source-packet draft CLI/Make target into the Slice 1
-  source-packet contract accepted by the pipeline/report audit.
+- Add source acquisition and packet coverage verification on top of the accepted
+  source-packet contract.
 - Keep agent harness integration behind `llm_client`; this repo should not call
   Codex, Claude Code, provider SDKs, or assistant subprocesses directly.
 - Preserve run metadata: model, prompts, priors, source hashes, audit version,

@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import ClassVar, Literal, Optional
 from pydantic import BaseModel, Field, model_validator
 
+from pt.source_packet import SourcePacketSummary
+
 DiagnosticType = Literal["hoop", "smoking_gun", "doubly_decisive", "straw_in_the_wind"]
 EvidenceType = Literal["empirical", "interpretive"]
 Severity = Literal["damaging", "notable", "minor"]
@@ -398,5 +400,9 @@ class ProcessTracingResult(BaseModel):
     absence: AbsenceResult
     bayesian: BayesianResult
     synthesis: SynthesisResult
+    source_packet: Optional[SourcePacketSummary] = Field(
+        default=None,
+        description="Source-packet metadata governing source scope and observability assumptions.",
+    )
     refinement: Optional[RefinementResult] = None
     is_refined: bool = False

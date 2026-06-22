@@ -769,6 +769,33 @@ def _render_academic_review(
     )
     broad_winner = _broad_winning_hypothesis(top_h)
     triage = _evidence_triage_summary(result)
+    source_packet = result.source_packet
+    if source_packet is None:
+        source_scope_status = (
+            "No accepted source-packet contract is stored with this result."
+        )
+        source_scope_recommendation = (
+            "Build or load a source packet with primary documents, rival secondary "
+            "accounts, source genre metadata, observability notes, and source gaps."
+        )
+    else:
+        source_kinds = ", ".join(source_packet.source_kinds) or "unspecified"
+        source_scope_status = (
+            f"Source packet accepted for {source_packet.case_name}: "
+            f"{source_packet.source_count} source(s), kinds: {source_kinds}; "
+            f"high-priority gaps: {source_packet.high_priority_gap_count}."
+        )
+        if source_packet.high_priority_gap_count:
+            gap_text = ", ".join(source_packet.high_priority_gaps)
+            source_scope_recommendation = (
+                f"Resolve or explicitly accept high-priority packet gaps before "
+                f"publication-strength claims: {gap_text}."
+            )
+        else:
+            source_scope_recommendation = (
+                "Use the packet to constrain absence claims and verify that extracted "
+                "evidence quotes come from the represented source groups."
+            )
     triage_counts = triage["counts"]
     triage_rows = "".join(
         f"""
@@ -785,8 +812,14 @@ def _render_academic_review(
     high_fragile = top_post >= 0.75 and top_robust == "fragile"
     too_many_unlinked = network_coverage["isolated_evidence_count"] > len(result.extraction.evidence) * 0.5
     external_blockers: list[str] = []
-    if single_source_limited:
-        external_blockers.append("single-source corpus")
+    if source_packet is None and single_source_limited:
+        external_blockers.append("single-source corpus without source packet")
+    elif source_packet is not None and (
+        source_packet.source_count < 3
+        or source_packet.high_priority_gap_count > 0
+        or source_packet.limitations
+    ):
+        external_blockers.append("source-packet gaps or limitations")
     if diagnostic["decisive"] == 0 and diagnostic["moderate"] == 0:
         external_blockers.append("weak diagnostic tests")
     elif diagnostic["decisive"] == 0:
@@ -807,8 +840,8 @@ def _render_academic_review(
     rows = [
         (
             "Input corpus and source base",
-            "Single-text or broad-overview input is not enough for PhD-level causal identification." if single_source_limited else "Source scope does not trigger an active cap; limitations are documented in synthesis.",
-            "Build or preserve a source packet with primary documents, rival secondary accounts, source genre metadata, and a note on what each source can and cannot reveal.",
+            source_scope_status,
+            source_scope_recommendation,
         ),
         (
             "Extraction and provenance",
@@ -855,9 +888,38 @@ def _render_academic_review(
         </tr>"""
         for output, critique, recommendation in rows
     )
+    if source_packet is None:
+        packet_html = """
+        <h5>Source Packet Contract</h5>
+        <p class="small text-muted">No source packet is stored in this result. Source-scope
+        caps therefore depend on extracted evidence and synthesis limitations.</p>"""
+    else:
+        packet_limitations = "; ".join(source_packet.limitations) or "None stated"
+        packet_gaps = "; ".join(source_packet.high_priority_gaps) or "None"
+        packet_groups = ", ".join(source_packet.source_groups) or "No groups specified"
+        packet_path = source_packet.source_packet_path or "not stored"
+        packet_html = f"""
+        <h5>Source Packet Contract</h5>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <tbody>
+              <tr><th>Case</th><td>{_esc(source_packet.case_name)}</td></tr>
+              <tr><th>Focal Window</th><td>{_esc(source_packet.focal_window)}</td></tr>
+              <tr><th>Outcome</th><td>{_esc(source_packet.outcome)}</td></tr>
+              <tr><th>Sources</th><td>{source_packet.source_count} source(s); groups: {_esc(packet_groups)}; kinds: {_esc(', '.join(source_packet.source_kinds) or 'unspecified')}</td></tr>
+              <tr><th>Known Gaps</th><td>{source_packet.known_gap_count} total; high priority: {_esc(packet_gaps)}</td></tr>
+              <tr><th>Pre-specified Tests</th><td>{source_packet.pre_specified_test_count}</td></tr>
+              <tr><th>Packet Limitations</th><td>{_esc(packet_limitations)}</td></tr>
+              <tr><th>Packet Path</th><td>{_esc(packet_path)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small text-muted">Interpretation rule: the packet governs source scope,
+        observability, and missing-source claims. Packet metadata is not itself evidence;
+        evidence still must appear in the input text and likelihood matrix.</p>"""
     optimal_steps = [
         "Freeze a sharper research question and focal decision window.",
-        "Assemble a source packet with independent primary and secondary evidence.",
+        "Load, repair, or extend the source packet before treating source-scope gaps as resolved.",
         "Split broad hypotheses and define pairwise discriminators before testing.",
         "Collect proximate dated traces for the decisive sequence.",
         "Rerun likelihood scoring, dependence clustering, sensitivity, and this audit.",
@@ -897,6 +959,7 @@ def _render_academic_review(
       <div class="card-body">
         <p><strong>Current scholarly status:</strong> {_esc(status_text)}</p>
         {gate_html}
+        {packet_html}
         <h5>Recommendations by Pipeline Output</h5>
         <div class="table-responsive">
           <table class="table table-sm table-bordered">

@@ -1,0 +1,132 @@
+{
+  "case_name": "18 Brumaire",
+  "research_question": "Why did the French Revolution culminate in Napoleon Bonaparte's 18 Brumaire coup and the Consulate rather than a stable parliamentary republic, a revived Jacobin-dominated republic, or a royalist restoration?",
+  "focal_window": "1799-10 to 1799-12",
+  "outcome": "Napoleon Bonaparte's 18 Brumaire coup and the creation of the Consulate",
+  "source_candidates": [
+    {
+      "title": "Brumaire: Bonaparte's Justification",
+      "source_group": "Bonaparte public justification",
+      "source_kind": "primary proclamation",
+      "date_coverage": "1799-11-10",
+      "locator": "https://revolution.chnm.org/d/461",
+      "provenance_note": "Reprinted by Liberty, Equality, Fraternity from John Hall Stewart, A Documentary Survey of the French Revolution.",
+      "reliability_note": "Self-justifying public account written after the coup; useful for legitimation claims but weak for private planning.",
+      "expected_observability": "Public rationale, claims about danger, legality, and order; not reliable for hidden bargaining or coercive intent.",
+      "relevance_to_question": "Tests whether Bonaparte framed the coup as rescue and order rather than as personalist seizure."
+    },
+    {
+      "title": "Brumaire Decree and Proclamation of the Consuls",
+      "source_group": "official legal transition documents",
+      "source_kind": "primary legal text",
+      "date_coverage": "1799-11-10 to 1799-11-12",
+      "locator": "https://www.napoleon-series.org/research/government/legislation/c_brumaire.html",
+      "provenance_note": "Reprinted by The Napoleon Series from Frank Maloy Anderson's collection of French constitutional documents.",
+      "reliability_note": "Formal legal text records the public institutional settlement, but omits coercion and private strategy.",
+      "expected_observability": "Legal sequence, formal offices, emergency claims, and institutional redesign immediately after Brumaire.",
+      "relevance_to_question": "Discriminates legal-constitutional revision from purely military takeover narratives."
+    },
+    {
+      "title": "Constitution of the Year VIII",
+      "source_group": "constitutional design",
+      "source_kind": "primary constitutional text",
+      "date_coverage": "1799-12-13",
+      "locator": "https://www.napoleon-series.org/research/government/legislation/c_constitution8.html",
+      "provenance_note": "Reprinted by The Napoleon Series from Frank Maloy Anderson's constitutional documents collection.",
+      "reliability_note": "Authoritative for the final institutional design, but not for motives or informal power before ratification.",
+      "expected_observability": "Distribution of appointment power, executive authority, and representative constraints in the new regime.",
+      "relevance_to_question": "Tests whether the endpoint was strong-executive constitutional revision or a Bonapartist personalist settlement."
+    },
+    {
+      "title": "Eymeric Job, 18 Brumaire: the context and course of a coup d'Etat",
+      "source_group": "narrative secondary account",
+      "source_kind": "secondary narrative",
+      "date_coverage": "1795 to 1799",
+      "locator": "https://www.napoleon.org/en/history-of-the-two-empires/articles/18-brumaire-the-context-and-course-of-a-coup-detat/",
+      "provenance_note": "Fondation Napoleon narrative account of the Directory context and Brumaire sequence.",
+      "reliability_note": "Synthetic narrative with institutional perspective; useful for chronology but not independent primary evidence.",
+      "expected_observability": "Background conditions, actors, sequence of civilian plotting, military positioning, and legislative crisis.",
+      "relevance_to_question": "Separates background instability from proximate agency and coercion in the final decision window."
+    },
+    {
+      "title": "Malcolm Crook, The Myth of the 18th Brumaire",
+      "source_group": "critical historiography",
+      "source_kind": "historiography",
+      "date_coverage": "1799 and later interpretation",
+      "locator": "https://h-france.net/the-myth-of-the-18th-brumaire/",
+      "provenance_note": "H-France Napoleon Forum critical historiographical account.",
+      "reliability_note": "Interpretive scholarship rather than direct primary evidence; valuable for rival mechanism critique.",
+      "expected_observability": "Challenges to standard Brumaire myth, rival interpretation, and cautions about retrospective Bonapartist framing.",
+      "relevance_to_question": "Prevents the hypothesis menu from collapsing into the coup's own public explanation."
+    }
+  ],
+  "rival_interpretations": [
+    {
+      "interpretation": "Sieyes and allied civilians initiated a constitutional revision and used Bonaparte as a risky military instrument.",
+      "supporting_sources": ["Brumaire Decree and Proclamation of the Consuls", "Eymeric Job narrative account"],
+      "discriminating_implication": "Civilian planning and constitutional design should precede Bonaparte's coercive dominance."
+    },
+    {
+      "interpretation": "Bonaparte and loyal military/family allies converted a faltering civilian plot into personalist rule.",
+      "supporting_sources": ["Bonaparte's Justification", "Constitution of the Year VIII", "Eymeric Job narrative account"],
+      "discriminating_implication": "The decisive trace should be military coercion, legislative intimidation, or constitutional concentration around Bonaparte."
+    },
+    {
+      "interpretation": "Structural Directory collapse made some extra-constitutional solution likely regardless of the particular coup coalition.",
+      "supporting_sources": ["Eymeric Job narrative account", "Malcolm Crook critical account"],
+      "discriminating_implication": "Background instability should explain timing and form without relying on Bonaparte's individual agency."
+    }
+  ],
+  "observability_notes": [
+    "Official proclamations are strong for public legitimation but weak for private planning.",
+    "Legal texts are authoritative for institutional settlement but weak for coercion and motive.",
+    "Narrative secondary accounts help organize chronology but must not be double-counted as independent primary traces.",
+    "Historiography should preserve rival interpretations and source cautions rather than count as direct empirical evidence."
+  ],
+  "known_gaps": [
+    {
+      "missing_source_class": "Private correspondence among Sieyes, Bonaparte, Lucien, Murat, and allied conspirators",
+      "why_it_matters": "Would directly adjudicate civilian initiation versus Bonapartist conversion of the plot.",
+      "expected_location": "Published correspondence, memoir collections, or archival editions for Brumaire actors.",
+      "priority": "high"
+    },
+    {
+      "missing_source_class": "Independent legislative eyewitness accounts from the Council of Five Hundred",
+      "why_it_matters": "Would sharpen whether deputies were coerced, confused, or already resigned to constitutional revision.",
+      "expected_location": "Memoirs, proceedings, and contemporary press accounts for 18-19 Brumaire.",
+      "priority": "medium"
+    }
+  ],
+  "pre_specified_tests": [
+    {
+      "test_name": "Civilian initiation hoop",
+      "target_rival_pair": "elite constitutional revision vs pure Bonapartist authorship",
+      "expected_trace": "Sieyes or allied civilians planned revision and sought a military backer before Bonaparte dominated the outcome.",
+      "contrary_trace": "Bonaparte independently planned the institutional replacement before civilian conspirators converged on him.",
+      "source_classes": ["secondary narrative", "correspondence", "memoir"]
+    },
+    {
+      "test_name": "Military coercion smoking gun",
+      "target_rival_pair": "personalist military conversion vs voluntary parliamentary revision",
+      "expected_trace": "Deputies resisted and were dispersed, intimidated, or rounded up by troops before ratification.",
+      "contrary_trace": "Representative bodies voluntarily ratified the transition before coercive deployment mattered.",
+      "source_classes": ["legislative records", "eyewitness accounts", "memoirs"]
+    },
+    {
+      "test_name": "Constitutional concentration smoking gun",
+      "target_rival_pair": "Bonapartist personalist settlement vs temporary emergency revision",
+      "expected_trace": "The final constitution made First Consul decision authority and appointments disproportionately decisive.",
+      "contrary_trace": "The final design preserved meaningful collective executive and parliamentary checks.",
+      "source_classes": ["constitutional text", "legal commentary"]
+    }
+  ],
+  "proposed_next_steps": [
+    "Run the pipeline on input_text/source_packets/18_brumaire_source_packet.txt with this source packet and the rival theory lenses.",
+    "After the run, audit whether extracted evidence actually covers the five source groups named here.",
+    "Collect high-priority private correspondence before upgrading the result from current-corpus optimality to publication-strength causal identification."
+  ],
+  "limitations": [
+    "The packet is curated from public online sources and does not yet include archival private correspondence.",
+    "Several source groups are reprints or secondary accounts, so source-lineage dependence must be audited before treating corroboration as independent."
+  ]
+}

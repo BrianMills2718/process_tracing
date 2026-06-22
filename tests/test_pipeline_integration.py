@@ -41,6 +41,7 @@ from pt.schemas import (
     TestingResult,
     TextHypothesis,
 )
+from pt.source_packet import SourceCandidate, SourceGap, SourcePacket
 
 
 # ── Deterministic fixtures ─────────────────────────────────────────
@@ -215,6 +216,59 @@ def _make_process_result(source_text_sha256: str | None = None) -> ProcessTracin
         absence=_make_absence(),
         bayesian=run_bayesian_update(_make_testing(), ["h1", "h2"]),
         synthesis=_make_synthesis(),
+    )
+
+
+def _make_source_packet() -> SourcePacket:
+    return SourcePacket(
+        case_name="18 Brumaire",
+        research_question="Why did Brumaire produce the Consulate rather than a restored Directory?",
+        focal_window="1799-10 to 1799-11",
+        outcome="Creation of the Consulate",
+        source_candidates=[
+            SourceCandidate(
+                title="Official proclamation",
+                source_group="official public justification",
+                source_kind="primary proclamation",
+                date_coverage="1799-11",
+                locator="https://example.test/proclamation",
+                provenance_note="Official post-coup source.",
+                reliability_note="Justificatory and public-facing.",
+                expected_observability="Public legitimacy claims, not private planning.",
+                relevance_to_question="Tests whether order claims were post-hoc legitimation.",
+            ),
+            SourceCandidate(
+                title="Council proceedings",
+                source_group="legislative record",
+                source_kind="primary legislative record",
+                date_coverage="1799-11",
+                locator="archive://council",
+                provenance_note="Proceedings from the contested legislative moment.",
+                reliability_note="Institutional record with procedural blind spots.",
+                expected_observability="Procedural disruption and formal resistance.",
+                relevance_to_question="Tests whether legality collapsed before military coercion.",
+            ),
+            SourceCandidate(
+                title="Critical historiography",
+                source_group="rival secondary account",
+                source_kind="historiography",
+                date_coverage="1799",
+                locator=None,
+                provenance_note="Scholarly rival interpretation.",
+                reliability_note="Interpretive synthesis, not direct trace evidence.",
+                expected_observability="Alternative mechanism claims and source disputes.",
+                relevance_to_question="Preserves rival mechanisms for discrimination.",
+            ),
+        ],
+        known_gaps=[
+            SourceGap(
+                missing_source_class="Private correspondence among conspirators",
+                why_it_matters="Could reveal planning sequence and agency.",
+                expected_location="Correspondence collections",
+                priority="high",
+            )
+        ],
+        limitations=[],
     )
 
 
@@ -408,6 +462,47 @@ class TestPipelineOrchestration:
     def test_not_refined_by_default(self, pipeline_result):
         assert pipeline_result.is_refined is False
         assert pipeline_result.refinement is None
+
+    @pytest.mark.plans(3)
+    def test_source_packet_pins_question_and_reaches_hypothesis_prompt(self):
+        text = " ".join(["substantive"] * 400)
+        packet = _make_source_packet()
+        captured: dict[str, str] = {}
+
+        def fake_hypothesize(prompt: str, response_model: type, *, task: str = "", trace_id: str = "", **kwargs):
+            captured["prompt"] = prompt
+            return _mock_call_llm(prompt, response_model, task=task, trace_id=trace_id, **kwargs)
+
+        with patch("pt.pass_extract.call_llm", side_effect=_mock_call_llm), \
+             patch("pt.pass_hypothesize.call_llm", side_effect=fake_hypothesize), \
+             patch("pt.pass_test.call_llm", side_effect=_mock_call_llm), \
+             patch("pt.pass_absence.call_llm", side_effect=_mock_call_llm), \
+             patch("pt.pass_synthesize.call_llm", side_effect=_mock_call_llm):
+            result = run_pipeline(
+                text,
+                verbose=False,
+                source_packet=packet,
+                source_packet_path="packet.json",
+            )
+
+        assert result.hypothesis_space.research_question == packet.research_question
+        assert result.source_packet is not None
+        assert result.source_packet.source_count == 3
+        assert result.source_packet.high_priority_gap_count == 1
+        assert result.source_packet.source_packet_path == "packet.json"
+        assert "Source-packet contract" in captured["prompt"]
+        assert "Private correspondence among conspirators" in captured["prompt"]
+        assert "Do NOT treat the packet metadata as evidence" in captured["prompt"]
+
+    @pytest.mark.plans(3)
+    def test_source_packet_rejects_conflicting_research_question(self):
+        with pytest.raises(ValueError, match="conflicts"):
+            run_pipeline(
+                " ".join(["substantive"] * 400),
+                verbose=False,
+                source_packet=_make_source_packet(),
+                research_question="Why did a different outcome occur?",
+            )
 
 
 class TestBayesianMathDeterministic:
@@ -643,6 +738,28 @@ class TestReportConsistency:
         assert audit["optimality"]["acceptance_criteria"]
         assert audit["categories"]["report_usability_and_safety"]["top_graph_connected"] is True
 
+    @pytest.mark.plans(3)
+    def test_source_packet_is_visible_in_report_and_audit(self):
+        from scripts.audit_result_quality import audit_result
+
+        result = _make_process_result()
+        result.source_packet = _make_source_packet().to_summary("packet.json")
+
+        html = generate_report(result)
+        normalized = " ".join(html.lower().split())
+        audit = audit_result(result, html, focal_year_override=1799)
+
+        assert "source packet contract" in normalized
+        assert "packet metadata is not itself evidence" in normalized
+        assert "private correspondence among conspirators" in normalized
+        assert audit["categories"]["source_scope_and_absence"]["source_packet_present"] is True
+        assert audit["categories"]["source_scope_and_absence"]["source_count"] == 3
+        assert audit["categories"]["source_scope_and_absence"]["high_priority_gap_count"] == 1
+        assert any(
+            "source packet is present" in cap["reason"].lower()
+            for cap in audit["academic_caps"]
+        )
+
     def test_network_keeps_weak_top_driver_edges_visible(self):
         result = _make_audit_stress_result()
         top_id = result.bayesian.ranking[0]
@@ -674,6 +791,17 @@ class TestFromResultProvenance:
             run_pipeline(
                 "new text",
                 from_result=_make_process_result(_source_text_sha256("old text")),
+                verbose=False,
+            )
+
+    @pytest.mark.plans(3)
+    def test_from_result_rejects_fresh_source_packet(self):
+        text = " ".join(["substantive"] * 400)
+        with pytest.raises(ValueError, match="cannot be combined"):
+            run_pipeline(
+                text,
+                from_result=_make_process_result(_source_text_sha256(text)),
+                source_packet=_make_source_packet(),
                 verbose=False,
             )
 

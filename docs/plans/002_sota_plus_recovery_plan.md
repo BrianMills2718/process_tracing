@@ -1,6 +1,7 @@
 # Plan 002 - SOTA+ Recovery And Thin-Slice Operating Model
 
-**Status:** Planned
+**Status:** In Progress
+**Progress:** Slices 0-1 implemented in Plan 003.
 **Created:** 2026-06-22
 **Context:** The project has a strong methodology north star, but prior work let
 documentation, report polish, and implementation slices drift away from a
@@ -40,8 +41,8 @@ must move one row upward.
 
 | Capability | Current state | SOTA+ target | Gate |
 |---|---|---|---|
-| Source packet | Manual/ad hoc source selection; report can be capped by source scope. | Agent builds primary/secondary source packet with provenance, dates, genre, reliability, and coverage map. | Source packet schema + one benchmark packet. |
-| Agentic assistant harness | `llm_client` can route `codex*` and `claude-code*` model strings to Codex/Claude Code agent SDKs, but this repo has no process-tracing assistant task surface yet. | Governed research assistant runs source-packet construction, hypothesis-partition audits, benchmark repair, report critique, and implementation thin slices through interchangeable Codex/Claude Code backends. | One Make/CLI task invokes `llm_client` `execution_mode="workspace_agent"` with config-selected backend, `task`, `trace_id`, `max_budget`, agent spec/provenance, and a typed artifact checked by tests/audits. |
+| Source packet | Implemented contract and Brumaire benchmark packet; pipeline/report/audit consume source-packet metadata, but source acquisition and per-source extraction coverage are not yet automated. | Agent builds primary/secondary source packet with provenance, dates, genre, reliability, and coverage map, then assembles/verifies the corpus from that packet. | Source packet schema + one benchmark packet is implemented; next gate is source acquisition and packet-source coverage verification. |
+| Agentic assistant harness | Implemented source-packet draft task through `llm_client` `workspace_agent`; other assistant tasks are not yet implemented. | Governed research assistant runs source-packet construction, hypothesis-partition audits, benchmark repair, report critique, and implementation thin slices through interchangeable Codex/Claude Code backends. | One Make/CLI task invokes `llm_client` `execution_mode="workspace_agent"` with config-selected backend, `task`, `trace_id`, `max_budget`, agent spec/provenance, and a typed artifact checked by tests/audits. |
 | Research question/focal window | LLM can choose, user can pin. | Frozen question, focal decision window, outcome, and scope before testing. | Partition artifact exists before Pass 3. |
 | Hypothesis partition | Prompt rules + optional review. | MECE-ish rival set, explicit residual, split/merge audit, pairwise discriminators. | Partition audit blocks broad/overlapping hypotheses. |
 | Extraction/provenance | Source-grounded evidence and source hash. | Evidence/event/mechanism/source metadata with quote, date confidence, source genre, and trace-production relevance. | Extraction fixture checks provenance completeness. |
@@ -56,12 +57,13 @@ must move one row upward.
 ## Plan
 
 Execute the recovery in thin slices. The assistant harness is cross-cutting, but
-it must land through a real process-tracing task rather than as an abstract agent
-platform. The first harnessed task should therefore support the source-packet
-contract. Each slice must update the SOTA+ capability ladder, add or revise a
-benchmark fixture/audit artifact, and leave `make check` green. Do not start a
-downstream slice if the current slice reveals that the source packet, hypothesis
-partition, or benchmark acceptance criteria are underspecified.
+it must land through real process-tracing tasks rather than as an abstract agent
+platform. Slices 0-1 established the assistant source-packet draft task and the
+pipeline source-packet contract. Each remaining slice must update the SOTA+
+capability ladder, add or revise a benchmark fixture/audit artifact, and leave
+`make check` green. Do not start a downstream slice if the current slice reveals
+that the hypothesis partition, source coverage, or benchmark acceptance criteria
+are underspecified.
 
 Detailed execution gates, E2E commands, per-slice review/critique requirements,
 cleanup gates, and long-term success criteria are defined in

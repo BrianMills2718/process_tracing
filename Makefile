@@ -216,13 +216,16 @@ status:  ## Show git status
 	@git status --short --branch
 
 # --- During Implementation ---
-.PHONY: test test-quick check source-packet-draft
+.PHONY: test test-quick check source-packet-draft source-packet-run
 
 MODEL ?= codex
 MAX_BUDGET ?= 1.0
 CASE ?= 18 Brumaire
 CONTEXT ?= docs/source_packets/18_BRUMAIRE_RESEARCH_DESIGN.md
 OUTPUT ?= output/assistant/source_packet_draft.json
+INPUT ?=
+SOURCE_PACKET ?= $(OUTPUT)
+RUN_OUTPUT_DIR ?= output/source_packet_run
 
 test:  ## Run pytest
 	pytest tests/ -v
@@ -255,6 +258,17 @@ source-packet-draft:  ## Draft source-packet artifact through llm_client workspa
 		--output "$(OUTPUT)" \
 		--model "$(MODEL)" \
 		--max-budget "$(MAX_BUDGET)"
+
+source-packet-run:  ## Run pipeline with a source packet (INPUT=... SOURCE_PACKET=... RUN_OUTPUT_DIR=...)
+ifndef INPUT
+	$(error INPUT is required. Usage: make source-packet-run INPUT=input_text/case.txt SOURCE_PACKET=output/assistant/source_packet_draft.json)
+endif
+ifndef SOURCE_PACKET
+	$(error SOURCE_PACKET is required. Usage: make source-packet-run INPUT=input_text/case.txt SOURCE_PACKET=output/assistant/source_packet_draft.json)
+endif
+	@PYTHONPATH=. python -m pt "$(INPUT)" \
+		--source-packet "$(SOURCE_PACKET)" \
+		--output-dir "$(RUN_OUTPUT_DIR)"
 
 # --- PR Workflow ---
 .PHONY: pr-ready pr merge finish pr-auto-check pr-auto

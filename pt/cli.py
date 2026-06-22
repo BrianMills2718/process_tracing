@@ -21,6 +21,7 @@ def main() -> None:
     parser.add_argument("--research-question", default=None, help="Pin the research question (the outcome to explain). Makes runs reproducible; when omitted the LLM selects it.")
     parser.add_argument("--refine", action="store_true", help="Run analytical refinement after initial pipeline, then re-run passes 3+")
     parser.add_argument("--from-result", default=None, help="Path to existing result.json; skips passes 1-2, implies --refine")
+    parser.add_argument("--source-packet", default=None, help="Path to source-packet JSON or assistant source-packet artifact. Pins research question and source-scope metadata.")
     parser.add_argument("--priors", default=None, help="Path to JSON file mapping hypothesis_id -> prior weight (need not sum to 1). Default: uniform.")
     parser.add_argument("--max-budget", type=float, default=None, help="Per-call LLM budget cap in dollars (default: PT_MAX_BUDGET or 1.0)")
     args = parser.parse_args()
@@ -52,6 +53,7 @@ def main() -> None:
     from pt.pipeline import run_pipeline
     from pt.report import generate_report
     from pt.schemas import ProcessTracingResult
+    from pt.source_packet import SourcePacketError, load_source_packet
 
     # Load theories file if provided
     theories = None
@@ -76,6 +78,22 @@ def main() -> None:
             from_result = ProcessTracingResult.model_validate(json.load(f))
         print(f"Loaded result: {args.from_result}")
 
+    source_packet = None
+    if args.source_packet:
+        if args.from_result:
+            print("Error: --source-packet cannot be combined with --from-result", file=sys.stderr)
+            sys.exit(1)
+        try:
+            source_packet = load_source_packet(args.source_packet)
+        except SourcePacketError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            sys.exit(1)
+        print(
+            f"Source packet: {args.source_packet} "
+            f"({len(source_packet.source_candidates)} sources, "
+            f"{len(source_packet.known_gaps)} known gaps)"
+        )
+
     # Load researcher priors if provided
     priors = None
     if args.priors:
@@ -93,6 +111,8 @@ def main() -> None:
         text, model=args.model, review=args.review, output_dir=output_dir,
         theories=theories, research_question=args.research_question,
         refine=args.refine, from_result=from_result,
+        source_packet=source_packet,
+        source_packet_path=args.source_packet,
         priors=priors,
     )
 

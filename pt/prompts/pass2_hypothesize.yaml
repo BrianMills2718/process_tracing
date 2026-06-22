@@ -8,6 +8,8 @@ messages:
 
       {{ research_question_block }}
 
+      {{ source_packet_block }}
+
       ## Rule 1: SINGULAR research question
 
       The research question MUST identify ONE specific outcome and ask what caused it. NOT a compound question.
