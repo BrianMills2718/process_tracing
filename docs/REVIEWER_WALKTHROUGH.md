@@ -15,18 +15,21 @@ reviewer-safe case bundle is
 1. Start with a case question that has rival explanations.
 2. Extract actors, events, mechanisms, causal edges, and evidence records.
 3. Generate competing hypotheses.
-4. Test each hypothesis against evidence using diagnostic tests and likelihood-ratio style updates.
+4. Test evidence with a coherent likelihood vector across all hypotheses.
 5. Track absence of evidence separately from evidence of absence.
-6. Synthesize the final narrative with visible support and caveats.
+6. Read the temporal causal network, support table, PhD audit, and final
+   narrative together; no single view is the whole analysis.
 
 ## What A Reviewer Should Inspect
 
 | Artifact | Why it matters |
 |----------|----------------|
 | `README.md` | Shows the end-to-end pipeline and validated input texts |
+| `docs/PROJECT_THEORY_AND_GOALS.md` | States the project goal, current capability ledger, and claim discipline |
 | `docs/WHITEPAPER_optimal_automated_process_tracing.md` | Explains the methodology and why the workflow is analytically meaningful |
 | `docs/ontology.md` | Shows the typed analytic objects behind the workflow |
-| `evidence/*.md` | Shows how claims are grounded in inspectable evidence artifacts |
+| `docs/OUTPUT_QUALITY_RUBRIC.md` | Shows how generated reports are graded and capped |
+| `evidence/current/*.md` and `evidence/completed/*.md` | Shows how claims are grounded in inspectable evidence artifacts |
 | `docs/portfolio/FRENCH_DIRECTORY_COLLAPSE_CASE_BUNDLE.md` | Shows one public-source question through evidence, hypothesis updates, absence checks, and report paths |
 
 ## Analyst Differentiator

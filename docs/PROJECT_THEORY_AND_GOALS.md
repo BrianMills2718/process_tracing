@@ -2,18 +2,18 @@
 
 **Canonical agent-facing orientation for this repository.**
 
-*Version 1.0 — 2026-06-19*
+*Version 1.1 - 2026-06-22*
 
 > **Purpose & audience.** This is the single statement of *what this system is, the
-> theory it implements, the conceptual model it operates on, what is being rebuilt,
+> theory it implements, the conceptual model it operates on, what has been rebuilt,
 > and the honest state of what is built*. It is for the coding agents (and humans)
 > who work on this repo. It **complements**, and does not replace:
 > - `CLAUDE.md` — operational (commands, file map, model/config notes).
 > - `docs/WHITEPAPER_optimal_automated_process_tracing.md` — the **methodology
 >   optimum** (the *why* and the full probabilistic design; cost-unconstrained
 >   north-star). When you need depth on *any* concept below, that paper is the source.
-> - `docs/BUILDPLAN_pragmatic_process_tracing.md` — the **80/20 build** (what to
->   actually build first, and the slice order).
+> - `docs/BUILDPLAN_pragmatic_process_tracing.md` — the **80/20 build** and
+>   compromise record.
 >
 > When this doc and the code disagree about *current capability*, trust the code +
 > the ledger in §6. When they disagree about *intent*, trust this doc and the white paper.
@@ -32,31 +32,35 @@ Each item points to the white-paper section with the full treatment.
 
 - **Estimand (WP §5).** Single-text output = posterior odds over `{H₁ … H_k}` + an explicit **residual H₀**, each `Hᵢ` an intensional causal story. Reported as **comparative support + ranking + robustness + sensitivity**. Never an identified effect/necessity/sufficiency/counterfactual.
 - **Two models, never conflated (WP §4).** The **substantive causal model** (events → events) is distinct from the **trace-production model** (events → the evidence we observe: solicited, recorded, survived, extracted — *and* a false-positive channel for claims asserted though false). `P(E|H)` decomposes across both.
-- **Likelihoods are a coherent vector (WP §6.2.1).** Per evidence cluster, elicit one **relative-log-likelihood vector** across all hypotheses (anchored to a reference); **derive** pairwise ratios from it so reciprocity/transitivity hold by construction. Never elicit independent pairwise LRs. Express as **bands**, propagate as intervals (joint, not independent), report a **posterior interval + rank-stability**.
+- **Likelihoods are a coherent vector (WP §6.2.1).** Per evidence item or cluster, elicit one **relative-log-likelihood vector** across all hypotheses; **derive** pairwise ratios from it so reciprocity/transitivity hold by construction. Never elicit independent pairwise LRs. The optimum expresses these as bands with joint propagation; the current pipeline reports support sensitivity ranges and rank-stability while full band elicitation remains partial.
 - **The auditor is a *qualitative* critic (WP §6.3).** A graph's topology cannot compute a likelihood. The single-text critic emits categories + direction (`confound` / `too-strong` / `void` / `confirm`); the **estimator re-elicits** the magnitude. True likelihood *derivation* from a parameterized graph belongs to the **cross-case** path only.
 - **Dependence on an evidence graph (WP §6.5).** Conditional dependence (not shared ancestry alone) decides clustering; lineage collapses, same-event-independent-channels partially pool, per-hypothesis.
 - **Absence = source-silence (WP §6.6).** The datum is `P(source omits E | H)` weighted by observability, never "prove world-absence."
 - **Input provenance (WP §5.2).** A quantity may enter the calculation once: guard post-selection (hypotheses generated from the evidence) and prior/likelihood double-counting.
 - **Pure math stays deterministic.** Bayesian updating, normalization, band propagation, sensitivity = pure Python in `pt/bayesian.py`, no LLM (per `CLAUDE.md` exception).
 
-## 3. Rebuild scope: what is being rebuilt vs reused
+## 3. Rebuild scope: what was rebuilt vs reused
 
-We are doing a **clean-slate rebuild of the single-text inference core, in place**, and **reusing/extending** the rest. This is *not* a repo restart.
+The project completed an in-place rebuild of the single-text inference core and
+reused/extended the rest. This was not a repo restart.
 
 | Area | Decision | Notes |
 |---|---|---|
-| `pt/pass_test.py` + `pass3_test.yaml` (likelihood elicitation) | **REBUILD** | per-evidence likelihood **vector** across hypotheses, replacing per-hypothesis two-way `P(E\|H)` vs `P(E\|¬H)` |
-| `pt/bayesian.py` (update/bands/sensitivity) | **REBUILD** | consume vectors; posterior **intervals** + rank-stability; researcher priors + prior-sensitivity |
-| likelihood-related parts of `pt/schemas.py` | **REBUILD** | vector schema, bands, evidence-cluster, critic outputs |
-| evidence graph / dependence | **NEW** | minimal lineage clustering first (BUILDPLAN Slice 5) |
-| qualitative critic pass | **NEW** | gated, single-family first (BUILDPLAN Slice 6); ships the ablation switch |
-| `pt/llm.py` | **REBUILD (small)** | delegate to `llm_client.call_llm_structured` (validated Pydantic, three-tier routing); stop hand-rolling schema-injection/parse-retry |
-| `pt/pass_extract.py`, `pt/pass_hypothesize.py` | **REUSE + EXTEND** | sound; add provenance + MECE/residual fields |
+| `pt/pass_test.py` + `pass3_test.yaml` (likelihood elicitation) | **REBUILT** | per-evidence likelihood **vector** across hypotheses, replacing per-hypothesis two-way `P(E\|H)` vs `P(E\|¬H)` |
+| `pt/bayesian.py` (update/sensitivity) | **REBUILT** | consumes vectors; log-space support update; residual `H0`; dependence pooling; researcher priors + prior-sensitivity |
+| likelihood-related parts of `pt/schemas.py` | **REBUILT / PARTIAL** | vector schema and dependence-cluster schema implemented; full elicited bands and critic outputs deferred |
+| evidence graph / dependence | **PARTIAL** | LLM-supplied dependence clusters with scalar partial pooling; per-hypothesis redundancy deferred |
+| qualitative critic pass | **PLANNED** | gated, single-family first (BUILDPLAN Slice 6); should ship the ablation switch |
+| `pt/llm.py` | **REBUILT (small)** | delegates to `llm_client.call_llm_structured` (validated Pydantic, routed model calls) |
+| `pt/pass_extract.py`, `pt/pass_hypothesize.py` | **REUSE + EXTEND** | sound; remaining work is stronger MECE/residual and partition-provenance auditing |
 | cross-case path (`pass_binarize`, `cq_bridge`, `multi_pipeline`) | **REUSE** | this *is* the white paper's formal path; already aligned |
-| `pt/report.py` | **REUSE + ADAPT** | already security-fixed; adapt to render support-intervals + audit state |
+| `pt/report.py` | **REUSE + ADAPT** | renders support, sensitivity, PhD audit, evidence triage, temporal timeline, and temporal causal network |
 | harness, Makefile, `tests/`, prompt loading | **REUSE** | infrastructure |
 
-Rule of thumb: rebuild where the code embodies the *pseudo-Bayesian* design (two-way LRs, point posteriors, uniform-prior, independent multiplication); reuse where it is already correct and debugged.
+Rule of thumb for future work: extend where the remaining gaps are methodological
+(source scope, hypothesis partition, dependence, trace production, validation);
+do not reintroduce the old pseudo-Bayesian design (two-way LRs, hidden uniform
+priors, independent multiplication, or "posterior probability" labels).
 
 ## 4. Invariants (non-negotiable; violating one is a bug)
 
@@ -80,40 +84,57 @@ When describing outputs (reports, commits, user text):
 
 ## 6. Proven-vs-planned ledger (condensed; full table in WP §9)
 
-**Implemented (this rebuild, live-validated where noted):**
+**Implemented (rebuild plus report-audit work):**
 - LLM boundary on `llm_client.call_llm_structured` (live smoke ✓).
 - **Coherent likelihood vectors** — per-evidence vector across hypotheses, geomean-derived
   per-hyp LRs, joint normalization (Slice 3; live-validated on french_revolution.txt ✓).
 - **Researcher-settable priors + prior-sensitivity** — CLI `--priors`, `PriorSensitivity` (Slice 2).
-- **Posterior interval + rank-stability + prior-stability** surfaced in the report headline (Slice 4).
+- **Residual hypothesis** — `H0_residual` is included in the default pipeline update.
+- **Dependence clustering** — Pass 3 returns dependence clusters and `bayesian.py`
+  partially pools them before updating.
+- **Support sensitivity range + rank-stability + prior-stability** surfaced in the report headline.
 - **Truth-in-labeling** — report says "Support" (comparative), not "posterior probability."
+- **Source provenance** — `source_text_sha256` prevents `--from-result` reuse with a different input text.
+- **Report audit** — `make audit-result` and the HTML report expose caps,
+  recommendations, evidence triage, and optimality status.
+- **Temporal network** — report network uses fixed temporal coordinates and toggles
+  top drivers, background drivers, additional links, temporal conflicts, and isolated nodes.
 - Reused & intact: extraction, hypothesis generation, Van Evera classification, mechanical
   robustness, sensitivity, cross-case CausalQueries bridge, report shell, harness/tests.
 
-**Partial:** absence pass is qualitative-only (observability grading deferred); Van Evera
-labels carried per-cell but `prediction_classifications` not yet repopulated by the new pass.
+**Partial:** absence pass is qualitative-only (observability grading deferred);
+dependence pooling uses a scalar per cluster rather than per-hypothesis
+redundancy; support ranges are sensitivity ranges, not full elicited likelihood
+bands with Monte Carlo propagation; Van Evera labels are carried per cell but
+`prediction_classifications` is not yet repopulated by the new pass.
 
 **Planned / deferred (per build plan & cutter):** full band *elicitation* + joint Monte-Carlo
-propagation; evidence-graph dependence clustering; the qualitative critic/auditor pass +
-ablation switch; trace-production model; post-selection & prior-provenance guards;
-cross-cluster shared-error sampling. These are optimum-scope; the first build approximates or defers them.
+propagation; qualitative critic/auditor pass + ablation switch; trace-production
+model; post-selection & prior-provenance guards; per-hypothesis dependence;
+cross-cluster shared-error sampling; source-packet workflow; formal validation benchmark.
+These are optimum-scope or next-roadmap work; the current build approximates or defers them.
 
 **Not claimed:** no methodological validation (the WP §8 auditor ablation) has been run. This is
 an *auditable inference architecture*, not a *validated* one.
 
-## 7. Build sequence
+## 7. Implementation sequence
 
-Follow `BUILDPLAN_pragmatic_process_tracing.md`, adapted to the in-place rebuild. Each slice ships independently, leaves `make check` green, and carries a regression test:
+The historical slice order is preserved in
+`docs/BUILDPLAN_pragmatic_process_tracing.md`; the current state is:
 
-1. **Slice 1 — truth-in-labeling** ✅ (PR #5).
-2. **LLM boundary** — `pt/llm.py` → `call_llm_structured` (folds in the old "Slice 0"; do it before the vector schema so richer structured output is robust).
-3. **Slice 3 (MVP) — coherent likelihood vector** — rebuild `pass_test` + prompt + schema + `bayesian` to elicit/derive vectors. **Needs one live validation run** (per `CLAUDE.md`: validate prompt changes by running the pipeline).
-4. **Slice 4 — bands + posterior intervals + rank-stability.**
-5. **Slice 2 — researcher priors + prior-sensitivity.**
-6. **Deferred until a run shows they matter:** evidence-graph clustering (Slice 5), critic pass (Slice 6), and all optimum-only machinery (cross-cluster shared error, trace-production model-averaging, multi-family diversity).
+1. **Done:** truth-in-labeling, `llm_client` boundary, coherent likelihood vectors,
+   researcher priors, residual `H0`, dependence pooling, sensitivity/prior
+   stability, report audit, and temporal network presentation.
+2. **Next:** source-packet workflow, hypothesis partition audit, stronger
+   source-lineage/dependence modeling, observability-weighted absence, and the
+   qualitative structural critic.
+3. **Validation:** auditor/dependence ablations and a frozen benchmark are still
+   required before claiming demonstrated PhD-level methodological validity.
 
 ## 8. How to verify (the loop that keeps us honest)
 
-- **Deterministic:** unit tests for every `bayesian.py` change (coherence of derived ratios; band→interval propagation; prior-sensitivity; planted-duplicate non-double-counting). `make check` after each slice.
-- **Behavioral (LLM contract):** any change to `pass_test`/prompts requires a **live run** on `input_text/revolutions/french_revolution.txt` (and a debate text, per prior lessons) before it is called done — eyeball whether vectors/bands are sane and whether the ranking is defensible.
+- **Deterministic:** unit tests for every `bayesian.py` change (coherence of
+  derived ratios; residual behavior; prior-sensitivity; dependence pooling;
+  planted-duplicate non-double-counting). `make check` after each slice.
+- **Behavioral (LLM contract):** any change to `pass_test`/prompts requires a **live run** on `input_text/revolutions/french_revolution.txt` (and a debate text, per prior lessons) before it is called done — inspect whether likelihood vectors, dependence clusters, and rankings are defensible.
 - **Headline empirical question (later):** does the critic/auditor actually improve inference vs. narrative-only (WP §8 ablation)? That is what graduates this from "auditable" to "validated."

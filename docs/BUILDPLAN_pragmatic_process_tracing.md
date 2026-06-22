@@ -5,13 +5,22 @@
 
 It is deliberately short. The optimum is the long document; the build is supposed to fit in your head.
 
+**Current status (2026-06-22):** Slices 1-5 have shipped in pragmatic form,
+along with residual `H0`, source-hash validation, report audit, and temporal
+network presentation. Slice 4 currently reports support sensitivity ranges and
+rank/prior stability, not full elicited likelihood bands with Monte Carlo
+propagation. Slice 5 currently uses scalar dependence-cluster pooling, not
+per-hypothesis redundancy. Slice 6 (qualitative structural critic) and the
+optimum-only machinery remain planned. Historical rebuild notes are archived at
+`docs/archive/development/REBUILD_SPRINT.md`.
+
 ---
 
 ## 1. The 80/20 thesis
 
 Most of the optimum's quality comes from a handful of cheap, local fixes to how likelihoods are formed and reported. The expensive machinery (multi-family triangulation auditor, cross-cluster shared-error sampling, trace-production model-averaging, post-selection correction) is high-cost and, for a *single text*, lower marginal quality than getting the basics right. So the first build:
 
-- **does** fix the priors, the coherence of the likelihood, the bands/interval reporting, and the worst dependence double-counting;
+- **does** fix the priors, the coherence of the likelihood, support sensitivity reporting, and the worst dependence double-counting;
 - **approximates** the auditor as a single cheap critic pass on the evidence that moves the result;
 - **defers** the genuinely expensive optimum-only components, with each deferral logged here so it is a decision, not an omission.
 
@@ -38,17 +47,17 @@ Most of the optimum's quality comes from a handful of cheap, local fixes to how 
 
 Each slice names the file(s), the white-paper claim it realizes, and how it is verified. Run `make check` after each.
 
-**Slice 1 — Truth-in-labeling.** Stop calling the output "posterior probability"; call it "comparative posterior support / posterior odds over the hypothesis set." *Files:* `pt/report.py`, `pt/schemas.py` (field descriptions/labels), synthesis prompt wording. *Verify:* report/test assertion on the new label; no math change. *Cost:* ~1 hr. *Removes the overclaim immediately.*
+**Slice 1 — Truth-in-labeling. DONE.** Stop calling the output "posterior probability"; call it "comparative posterior support / posterior odds over the hypothesis set." *Files:* `pt/report.py`, `pt/schemas.py` (field descriptions/labels), synthesis prompt wording. *Verify:* report/test assertion on the new label; no math change. *Cost:* ~1 hr. *Removes the overclaim immediately.*
 
-**Slice 2 — Researcher-settable priors + prior-sensitivity.** Replace hardcoded uniform `1/n` with a priors input (CLI/file), defaulting to uniform but recorded; add a prior-perturbation pass alongside the existing LR sensitivity. *Files:* `pt/bayesian.py`, `pt/cli.py`, `pt/schemas.py`. *Verify:* unit tests — non-uniform priors change posteriors as expected; prior-sensitivity populated. *Realizes:* §5/§6.2.
+**Slice 2 — Researcher-settable priors + prior-sensitivity. DONE.** Replace hardcoded uniform `1/n` with a priors input (CLI/file), defaulting to uniform but recorded; add a prior-perturbation pass alongside the existing LR sensitivity. *Files:* `pt/bayesian.py`, `pt/cli.py`, `pt/schemas.py`. *Verify:* unit tests — non-uniform priors change posteriors as expected; prior-sensitivity populated. *Realizes:* §5/§6.2.
 
-**Slice 3 — Coherent multi-hypothesis likelihood (the core fix).** Change Pass 3 from per-(hyp, evidence) two-way `P(E|H)` vs `P(E|¬H)` to a likelihood **vector** across all hypotheses per evidence item; derive pairwise ratios; update posteriors from the vector. *Files:* `pt/pass_test.py`, `pt/prompts/pass3_test.yaml`, `pt/schemas.py`, `pt/bayesian.py`. *Verify:* unit test that derived ratios are coherent (reciprocity/transitivity hold by construction); regression on a fixed extraction. *Realizes:* §6.2.1. *Biggest single quality gain.*
+**Slice 3 — Coherent multi-hypothesis likelihood (the core fix). DONE.** Change Pass 3 from per-(hyp, evidence) two-way `P(E|H)` vs `P(E|¬H)` to a likelihood **vector** across all hypotheses per evidence item; derive pairwise ratios; update posteriors from the vector. *Files:* `pt/pass_test.py`, `pt/prompts/pass3_test.yaml`, `pt/schemas.py`, `pt/bayesian.py`. *Verify:* unit test that derived ratios are coherent (reciprocity/transitivity hold by construction); regression on a fixed extraction. *Realizes:* §6.2.1. *Biggest single quality gain.*
 
-**Slice 4 — Bands + interval reporting.** Elicit likelihoods as bands; propagate via simple Monte Carlo (independent within-vector to start); report a posterior **interval per hypothesis + rank-stability**, not a point. *Files:* `pt/bayesian.py`, `pt/report.py`, `pt/schemas.py`. *Verify:* tests on band→interval propagation and rank-stability fraction. *Realizes:* §6.2.1.
+**Slice 4 — Bands + interval reporting. PARTIAL / PRAGMATIC DONE.** The report now surfaces support sensitivity ranges, rank stability, and prior stability. Full LLM-elicited likelihood bands and Monte Carlo propagation remain deferred. *Files:* `pt/bayesian.py`, `pt/report.py`, `pt/schemas.py`. *Verify:* tests on support range, rank stability, and prior stability. *Realizes part of:* §6.2.1.
 
-**Slice 5 — Lineage dependence collapse.** Build the minimal evidence-graph signal: detect same-document/same-source lineage among evidence items and elicit one joint likelihood for the cluster (no product). Skip partial-pooling for now. *Files:* new small module + `pt/pass_test.py`/`pt/schemas.py`. *Verify:* planted-duplicate test — a copied report does not move the posterior like an independent one. *Realizes:* §6.5 (subset).
+**Slice 5 — Lineage dependence collapse. PRAGMATIC DONE.** The testing pass emits dependence clusters and the Bayesian update partially pools them with scalar dependence strength. Per-hypothesis redundancy and trace-production structure remain deferred. *Files:* `pt/pass_test.py`, `pt/schemas.py`, `pt/bayesian.py`. *Verify:* planted-duplicate test — a copied report does not move the posterior like an independent one. *Realizes:* §6.5 (subset).
 
-**Slice 6 — Cheap critic pass (gated).** A single-model critic that, for the **top-driver** evidence only, flags `confound`/`too-strong`/`void` + direction; the estimator re-elicits flagged items. *Files:* new `pt/pass_audit.py` + wiring in `pt/pipeline.py`. *Verify:* the pipeline runs end-to-end with audit on/off (ablation hook); audit decisions logged. *Realizes:* §6.3/§6.7 in pragmatic (gated, single-family) form — and gives the **ablation switch** the white paper's validation needs.
+**Slice 6 — Cheap critic pass (gated). PLANNED.** A single-model critic that, for the **top-driver** evidence only, flags `confound`/`too-strong`/`void` + direction; the estimator re-elicits flagged items. *Files:* new `pt/pass_audit.py` + wiring in `pt/pipeline.py`. *Verify:* the pipeline runs end-to-end with audit on/off (ablation hook); audit decisions logged. *Realizes:* §6.3/§6.7 in pragmatic (gated, single-family) form — and gives the **ablation switch** the white paper's validation needs.
 
 Slices 1–4 convert the single-text path from pseudo-Bayesian to defensible without touching extraction or the report's structure. 5–6 add the highest-value dependence and audit pieces in cheap form. Everything in §2's "defer" column waits until an ablation shows the cheap versions help.
 

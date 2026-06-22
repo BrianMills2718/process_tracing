@@ -13,13 +13,13 @@ This file provides guidance to Claude Code when working with code in this reposi
 - Any `if/elif` chains for semantic understanding
 - Dataset-specific logic or historical period-specific rules
 - Returning None/0/[] on LLM failure (must raise, fail-fast)
-- Direct API calls bypassing LiteLLM
+- Direct API calls bypassing `pt/llm.py` / `llm_client`
 
 **REQUIRED**:
 - LLM semantic analysis for ALL evidence-hypothesis relationships
 - Structured Pydantic outputs for ALL LLM calls
 - Generalist process tracing — no dataset-specific hardcoding
-- Consistent LiteLLM routing for all LLM operations
+- Consistent `llm_client` routing for all LLM operations
 - Single model configuration across entire pipeline
 
 **Exception**: Pure math (Bayesian updating, normalization, clamping) is deliberately NOT LLM — it lives in `pt/bayesian.py` with deterministic, testable functions.
@@ -39,9 +39,9 @@ The working premise is that expert process-tracing tasks are not protected by an
 Given a text, the pipeline:
 1. **Extracts** evidence, actors, events, mechanisms, causal edges
 2. **Hypothesizes** competing causal explanations with observable predictions
-3. **Tests** each hypothesis against every evidence item (diagnostic tests + likelihood ratios)
+3. **Tests** evidence with one coherent evidence-by-hypothesis likelihood matrix
 3b. **Absence** evaluates what predicted evidence is missing from the text (failed hoop tests)
-4. **Updates** posteriors via Bayesian math in odds space
+4. **Updates** comparative support via deterministic Bayesian math in log space
 5. **Synthesizes** a written analytical narrative with verdicts (informed by absence findings)
 6. **Refines** (optional) re-reads source text with full context, applies delta, re-runs passes 3-5
 
@@ -56,10 +56,13 @@ Output: `result.json` (full structured data) + `report.html` (Bootstrap + vis.js
 Options:
 - `--model <litellm-model-id>` — override the default model
 - `--theories <path>` — inject theoretical frameworks for hypothesis generation (see Theory Injection below)
+- `--research-question <text>` — pin the outcome to explain instead of letting the LLM choose it
 - `--review` — pause after hypothesis generation (and after refinement) for human review/editing
 - `--json-only` — skip HTML report generation
 - `--refine` — run analytical refinement after initial pipeline, then re-run passes 3+
 - `--from-result <path>` — load existing result.json, skip passes 1-2, implies `--refine`
+- `--priors <path>` — JSON object mapping hypothesis ids to positive prior weights
+- `--max-budget <dollars>` — per-call LLM budget cap
 
 ### Multi-Document Cross-Case Analysis
 
@@ -107,7 +110,7 @@ Options:
 | `pt/pass_refine.py` | Pass 5: Analytical refinement (second reading) | Yes |
 | `pt/apply_refinement.py` | Apply refinement delta to extraction + hypotheses | No |
 | `pt/pipeline.py` | Orchestrator — runs passes sequentially | No |
-| `pt/report.py` | HTML report generation | No |
+| `pt/report.py` | HTML report generation, PhD audit, temporal causal network | No |
 | `pt/cli.py` | CLI entry point | No |
 | `pt/schemas_multi.py` | Pydantic models for cross-case analysis | No |
 | `pt/pass_binarize.py` | Map extraction → binary variables (per case) | Yes |
@@ -123,15 +126,17 @@ Options:
 
 The single-text testing/update core was rebuilt to be **coherent**. Canonical spec:
 `docs/PROJECT_THEORY_AND_GOALS.md`; methodology: `docs/WHITEPAPER_optimal_automated_process_tracing.md`;
-build plan: `docs/BUILDPLAN_pragmatic_process_tracing.md`; status log: `docs/REBUILD_SPRINT.md`.
+build plan: `docs/BUILDPLAN_pragmatic_process_tracing.md`; historical rebuild log:
+`docs/archive/development/REBUILD_SPRINT.md`.
 
 - **Likelihood *vectors*, not two-way LRs**: Pass 3 makes **one matrix call** — for each evidence item it emits a relative-likelihood vector across *all* hypotheses (`pt/schemas.py: EvidenceLikelihood`). Per-hypothesis LRs are derived as `relative_likelihood / geomean(vector)`, so pairwise ratios are coherent by construction. `pass_test` fails loud on incomplete/duplicate/unknown vectors.
 - **Coherent joint update**: `pt/bayesian.py` uses a log-space softmax (`post_i = softmax(log prior_i + Σ log LR_i)`) — **order-invariant**, no per-step clamping. (Replaced the earlier per-hypothesis binary-odds-then-normalize, which was order-dependent.)
 - **Pairwise LR cap = 20**: bounds a single item's max:min ratio across hypotheses (`LR_CAP`, each centered log-LR clamped to ±0.5·log 20). Does **not** bound aggregate overconfidence — see below.
-- **Researcher priors + sensitivity**: CLI `--priors` (JSON, validated fail-loud); `PriorSensitivity` reports robustness to ±2× prior swings. Report shows comparative **support** (not "posterior probability"), support intervals, and rank/prior stability.
-- **Known limitation (load-bearing)**: the joint update over many conditionally-dependent items is **overconfident** (Naive-Bayes). **Evidence-dependence clustering is required** to fix magnitudes; until then read results as a *ranking* (the report shows an overconfidence banner). Residual hypothesis `H0` is not yet implemented (estimand incomplete).
+- **Researcher priors + sensitivity**: CLI `--priors` (JSON, validated fail-loud); `PriorSensitivity` reports robustness to ±2× prior swings. Report shows comparative **support** (not "posterior probability"), support sensitivity ranges, and rank/prior stability.
+- **Residual + dependence pooling**: the update includes `H0_residual` by default and partially pools LLM-supplied dependence clusters so correlated evidence is not raw-counted as independent.
+- **Known limitation (load-bearing)**: dependence pooling uses one scalar dependence strength per cluster, not per-hypothesis redundancy or a full trace-production model. If the LLM misses a cluster, support can still be overconfident; read high-support fragile results as a ranking until source-lineage and trace-production audits improve.
 
-### Earlier design decisions (pre-rebuild; some superseded)
+### Implemented Guardrails and Design Constraints
 
 - **Relevance gating**: Evidence with `relevance < 0.4` is forced to `LR = 1.0` (uninformative). Above 0.4, soft discount on the log scale of the centered LR.
 - **Relevance = min(temporal, causal-domain)**: Not just "how recent" but "how on-topic for this hypothesis."
@@ -154,52 +159,20 @@ build plan: `docs/BUILDPLAN_pragmatic_process_tracing.md`; status log: `docs/REB
 
 ### Known Gaps vs. PhD-Level Analysis
 
-1. **Complementary hypotheses as rivals** — Every run has ≥1 pair that the synthesis admits are "two sides of the same coin." The mutual exclusion rules help but don't fully solve it. Best mitigation: `--review` checkpoint.
-2. **Debate genre still partially mishandled** — Speaker assessments sometimes coded empirical. Cross-speaker agreement not weighted more heavily in practice.
-3. ~~**Absence-of-evidence not evaluated**~~ FIXED — Pass 3b evaluates missing predicted evidence qualitatively (synthesis only, not Bayesian). Each finding includes severity, reasoning, and whether the text would contain the evidence if it existed.
-4. **Synthesis is summary, not analysis** — Tends toward restating Bayesian results in prose rather than generating original analytical insights.
-5. **Skocpol theory-driven validation needs better case selection** — Running 6 successful revolutions against Skocpol's model produces all 1s (every variable present in every case). CausalQueries needs variation to estimate effects. Requires: (a) negative cases where revolution didn't happen (e.g., Prussian Reform Era, Meiji Japan, failed 1848 revolutions), and (b) positive cases where not all Skocpol conditions were present (e.g., revolutions driven by ideology rather than fiscal crisis). Current revolution corpus is useful for the data-driven workflow but insufficient for theory-driven CQ estimation with Skocpol.
+1. **Source scope and diagnosticity cap academic readiness** — broad overview texts often produce useful exploratory rankings, not PhD-review-ready causal claims. Use source packets and pre-specified discriminators.
+2. **Hypothesis partitions still need audit** — broad, overlapping, or complementary hypotheses can make comparative support look cleaner than the actual causal menu. Use `--review` and preserve pairwise discriminators.
+3. **Dependence is partial** — scalar dependence clusters reduce double-counting, but per-hypothesis redundancy, source-lineage graphs, and trace-production model averaging remain planned.
+4. **Absence remains qualitative** — Pass 3b evaluates missing predicted evidence for synthesis, but observability-weighted absence does not yet enter Bayesian updating.
+5. **Cross-case estimation needs real variation** — CausalQueries requires comparable cases with variation in outcomes and covariates; all-positive/all-ones revolution corpora are not enough for effect estimation.
 
 ---
 
-## Competitive Landscape (surveyed Feb 2026)
-
-**No existing tool does the full loop: text in → extraction → hypotheses → diagnostic tests → Bayesian posteriors → sensitivity → synthesis.** That end-to-end pipeline is our unique position.
-
-### Direct competitors (same problem space)
-
-| Tool | What it does | What it lacks vs. us |
-|------|-------------|---------------------|
-| **CausalQueries** (R, Humphreys) | Formal Bayesian process tracing with DAGs. Mathematically rigorous, d-separation aware. | No text input, no LLM, no automation. Analyst must manually specify model structure and data. It's a calculator, not an analyst. |
-| **ACH tools** (Burton, Open-Synthesis, ArkhamMirror) | CIA-style consistency matrices. ArkhamMirror adds LLM "devil's advocate." | No Bayesian math — consistency counting only. No diagnostic test classification. No extraction pipeline — human provides hypotheses and evidence. |
-| **LLM SATs** (Roberts, SANS) | Streamlit apps using GPT-4 for ACH, Starbursting, Key Assumptions Checks. | Single-pass LLM, no pipeline. Proof-of-concept, no Bayesian updating or sensitivity. |
-
-### Adjacent tools (LLM + causal inference, but not from text)
-
-| Tool | What it does | What it lacks vs. us |
-|------|-------------|---------------------|
-| **PyWhy-LLM** (DoWhy ecosystem) | LLM suggests confounders, validates causal assumptions for structured data. | Operates on structured data, not text. No Van Evera, no process tracing. |
-| **LLM-argumentation** (DAMO-NLP-SG, ACL 2024) | Benchmarks LLMs on argument mining tasks. | Benchmark, not a tool. Evaluates capabilities, doesn't build a pipeline. |
-
-### Adjacent tools (LLM + qualitative research)
-
-| Tool | What it does | What it lacks vs. us |
-|------|-------------|---------------------|
-| **LLMCode** (Hämäläinen) | LLM-assisted qualitative coding with IoU/Hausdorff alignment metrics. Published. | Coding, not causal inference. No hypotheses, no Bayesian updating. |
-| **DeTAILS** | LLM-assisted thematic analysis with researcher agency preserved. | Thematic analysis, not causal reasoning. |
-
-### Our unique value = three things no one else combines
+## Strategic Position
 
 1. **Text-in, analysis-out** — no manual model specification required
 2. **Methodologically grounded** — Van Evera's process tracing (hoop/smoking gun/doubly decisive), not ad-hoc LLM reasoning
-3. **Quantified uncertainty** — Bayesian posteriors with sensitivity ranges and mechanical robustness, not just "the LLM thinks X"
-
-### Strategic opportunities (not yet implemented)
-
-- ~~**Multi-document analysis**~~ IMPLEMENTED — `python -m pt.multi` runs N texts, binarizes against a causal model (theory-driven or data-driven), bridges to CausalQueries for cross-case Bayesian estimation. See Multi-Document section above.
-- ~~**CausalQueries bridge**~~ IMPLEMENTED — `pt/cq_bridge.py` + `scripts/cq_runner.R` communicate via subprocess + JSON. Requires R + CausalQueries package; graceful degradation without R.
-- ~~**Absence-of-evidence**~~ IMPLEMENTED — Pass 3b evaluates missing predicted evidence (qualitative, synthesis only).
-- ~~**Analytical refinement pass (second reading)**~~ IMPLEMENTED — `--refine` flag triggers second reading after initial pipeline. `--from-result` loads existing result.json. See Key Design Decisions.
+3. **Quantified and audited support** — comparative support, sensitivity ranges, robustness, evidence triage, and explicit academic caps
+4. **Mixed-methods bridge** — single-text process tracing plus cross-case CausalQueries path, without pretending the two estimands are the same
 
 ### Prompt Quality Notes
 

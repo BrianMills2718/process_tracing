@@ -1,192 +1,71 @@
-# Future Work - Process Tracing Toolkit
+# Future Work
 
-## Overview
+This is the current roadmap for `process_tracing`. It records work that remains
+after the inference-core rebuild and report-audit work. Historical phase plans and
+superseded status reports live under `docs/archive/`.
 
-This document outlines planned enhancements and architectural improvements for the LLM-Enhanced Process Tracing Toolkit. The system currently implements qualitative Van Evera methodology with sophisticated LLM integration. Future work focuses on methodological flexibility, analytical rigor, and configurable paradigm selection.
+## Current Baseline
 
-## Phase 2: Methodological Architecture Refactor
+Implemented in the reference pipeline:
 
-### Configurable Analysis Paradigms
+- LLM-first extraction, hypothesis generation, testing, absence review,
+  synthesis, and optional refinement.
+- Coherent evidence-by-hypothesis likelihood vectors.
+- Deterministic Bayesian support update in log space.
+- Researcher priors, prior sensitivity, LR sensitivity, and robustness labels.
+- Explicit residual hypothesis in the update.
+- Interpretive-evidence caps and relevance gating.
+- Dependence clusters with scalar partial pooling.
+- Source-text hash validation for `--from-result`.
+- PhD-style output audit, evidence triage, and `make audit-result`.
+- Temporal report view and interactive causal network with top-driver,
+  background-driver, additional-link, temporal-conflict, and isolated-node
+  controls.
+- Cross-case path through `pt.multi` and the CausalQueries bridge.
 
-**Current State**: System uses qualitative Van Evera methodology with some pseudo-Bayesian numerical updating  
-**Target State**: Clean separation of methodological approaches with user-configurable selection
+## Highest-Value Next Work
 
-```python
-class AnalysisMode(Enum):
-    QUALITATIVE_VAN_EVERA = "qualitative"      # Pure elimination logic
-    BAYESIAN_LLM_ESTIMATED = "bayesian"        # LLM-estimated parameters
-    HYBRID_MIXED = "hybrid"                     # Combined approach
-    COMPARATIVE_CASE = "comparative"            # Multi-case analysis
+| Priority | Work | Why it matters | Acceptance check |
+|---:|---|---|---|
+| 1 | Source-packet workflow | The current pipeline can be academically capped by single-text or broad-overview source scope. It needs an agent-drivable way to assemble primary sources, rival secondary accounts, dates, and source-genre metadata before running inference. | A documented source packet can be passed to the pipeline; the report audit distinguishes corpus limits from report/model failures. |
+| 2 | Hypothesis partition audit | Broad, overlapping, or complementary hypotheses still undermine comparative support. | A review artifact freezes the research question, hypothesis menu, residual, and pairwise discriminators before testing. |
+| 3 | Dependence and trace-production upgrade | Scalar dependence clusters reduce double-counting but do not model per-hypothesis redundancy, solicitation, preservation, false-positive channels, or shared model error. | Planted duplicate/source-lineage tests plus a report section showing why evidence was pooled or left independent. |
+| 4 | Observability-weighted absence | Absence findings are qualitative and excluded from the update. | Missing predicted traces carry source-genre observability bands and remain clearly separated from evidence of world-absence. |
+| 5 | Auditor ablation benchmark | Architecture is auditable, but methodological validity is not yet empirically demonstrated. | Frozen benchmark cases compare narrative-only, dependence-pooling, and audit-enabled variants with calibration/discrimination metrics. |
 
-class ProcessTracingConfig:
-    analysis_mode: AnalysisMode
-    llm_parameter_estimation: bool
-    confidence_scoring: bool
-    elimination_logic_only: bool
-    narrative_synthesis: bool
-    quantitative_outputs: bool
-```
+## Methodology Extensions
 
-### LLM-Estimated Bayesian Parameters
+- **Qualitative structural critic:** implement the white paper's local causal-graph
+  critic as a categorical, directional audit of posterior-moving evidence. The
+  graph should identify missing pathways, confounds, and too-strong likelihood
+  claims; it should not compute likelihood magnitudes without parameters.
+- **Prior provenance audit:** record which sources informed researcher priors and
+  prevent the same material from being counted again as likelihood evidence.
+- **Cap/floor sensitivity grid:** report whether rankings survive alternative
+  LR caps and floors, not only top-driver perturbations.
+- **Cross-case eligibility checks:** before invoking CausalQueries, enforce case
+  comparability and outcome/covariate variation so the formal path is not fed an
+  all-ones design.
+- **Quantitative feedback loop:** use cross-case findings to propose sharper
+  within-case traces, and use process-tracing outputs to refine cross-case model
+  structure and measurement.
 
-**Concept**: Use LLMs to estimate Bayesian parameters the way human experts would, providing theoretical justification for numerical values.
+## Product and Operations Work
 
-**Implementation Goals**:
-- **Prior Estimation**: LLM estimates `P(hypothesis)` based on domain knowledge and context
-- **Likelihood Ratios**: LLM estimates `P(evidence|hypothesis)` vs `P(evidence|¬hypothesis)` with reasoning
-- **Parameter Justification**: Academic-quality explanations for all numerical estimates
-- **Uncertainty Quantification**: Confidence intervals and sensitivity analysis
-- **Domain Adaptation**: Context-aware parameter estimation based on field (political science, history, etc.)
+- Add agent-drivable JSON endpoints for report inspection and audit results.
+- Make source-packet construction a CLI/Make target rather than an ad hoc doc.
+- Preserve run metadata: model, prompts, priors, source hashes, audit version,
+  and commit SHA in `result.json`.
+- Add report-regression fixtures for network layout and audit sections.
+- Build a small curated benchmark set with public sources and expected critique
+  targets.
 
-**Example LLM Prompts**:
-```
-"As a political science expert, estimate the prior probability that ideological factors 
-drove the American Revolution, considering: [context]. Provide your estimate as a 
-probability with academic justification."
+## Not In Scope For This Repo
 
-"Given this evidence: [evidence], estimate the likelihood ratio P(E|H₁)/P(E|H₂) where 
-H₁ = ideological cause, H₂ = economic cause. Explain your reasoning using Van Evera logic."
-```
-
-## Phase 3: Advanced Academic Features
-
-### Alternative Explanation Enhancement
-**Current**: 2 alternative explanations (1 eliminated, 1 active)  
-**Target**: 3-5 systematically evaluated alternative explanations with LLM-generated comparative assessment
-
-### Causal Chain LLM Assessment
-**Current**: 379 causal chains identified but no quality scoring  
-**Target**: LLM-based plausibility and completeness assessment for multi-step causal chains using MechanismAssessment patterns
-
-### Cross-Case Comparative Analysis
-**Target**: Multi-case analysis capabilities with systematic comparison across different historical/political cases
-
-### Temporal Process Validation
-**Target**: Enhanced temporal consistency checking with LLM-based chronological reasoning
-
-## Phase 4: Methodological Rigor Improvements
-
-### Evidence Quality Framework
-- **Source Reliability Assessment**: LLM-based evaluation of evidence source credibility
-- **Evidence Triangulation**: Systematic cross-referencing and corroboration analysis
-- **Bias Detection**: LLM identification of potential selection bias or confirmation bias patterns
-
-### Academic Publication Standards
-- **Citation Integration**: Proper academic citation formatting and source tracking
-- **Reproducibility**: Analysis pipeline versioning and parameter documentation
-- **Peer Review Simulation**: LLM-based methodological critique and improvement suggestions
-
-### Validation and Testing
-- **Known Case Testing**: Validate methodology against well-established historical cases
-- **Inter-rater Reliability**: Compare LLM assessments with human expert evaluations
-- **Sensitivity Analysis**: Test robustness of conclusions to parameter variations
-
-## Technical Architecture Goals
-
-### Clean Paradigm Separation
-```python
-# Qualitative Van Evera
-qualitative_analyzer = QualitativeVanEveraAnalyzer(
-    elimination_logic=True,
-    narrative_synthesis=True,
-    llm_enhancement=True
-)
-
-# Bayesian Analysis
-bayesian_analyzer = BayesianProcessTracingAnalyzer(
-    llm_parameter_estimation=True,
-    prior_estimation_method="domain_expert",
-    likelihood_calculation="comparative",
-    uncertainty_quantification=True
-)
-
-# Hybrid Approach
-hybrid_analyzer = HybridAnalyzer(
-    qualitative_elimination=True,
-    bayesian_confidence=True,
-    narrative_integration=True
-)
-```
-
-### Configuration Management
-- **Analysis Profiles**: Pre-configured settings for different academic fields
-- **Methodology Documentation**: Automatic documentation of analytical choices
-- **Reproducible Pipelines**: Version-controlled analysis configurations
-
-### LLM Integration Architecture
-- **Provider Abstraction**: Support for multiple LLM providers with consistent interfaces
-- **Structured Output Validation**: Robust schema validation with academic quality checks
-- **Prompt Engineering**: Domain-specific prompt templates with A/B testing
-- **Cost Optimization**: Intelligent model selection based on task complexity
-
-## Research and Validation Plans
-
-### Academic Collaboration
-- **Expert Review**: Engage with process tracing methodology experts
-- **Case Study Validation**: Test against established academic case studies
-- **Conference Presentations**: Present methodology at relevant academic conferences
-
-### Benchmarking
-- **Human Expert Comparison**: Compare LLM assessments with human academic evaluations
-- **Cross-Methodology Validation**: Test consistency across different analytical approaches
-- **Reproducibility Studies**: Verify consistent results across multiple analysis runs
-
-### Documentation and Training
-- **Methodology Guides**: Comprehensive documentation of analytical approaches
-- **Academic Tutorials**: Step-by-step guides for researchers
-- **Best Practices**: Evidence-based recommendations for optimal usage
-
-## Implementation Timeline
-
-### Phase 2: Methodological Architecture (Next)
-- Design configurable analysis framework
-- Implement clean paradigm separation
-- Create LLM Bayesian parameter estimation prototype
-
-### Phase 3: Advanced Features (Medium-term)
-- Enhanced alternative explanation analysis
-- Causal chain quality assessment
-- Cross-case comparative capabilities
-
-### Phase 4: Academic Rigor (Long-term)
-- Evidence quality framework implementation
-- Publication-ready output generation
-- Comprehensive validation studies
-
-## Success Metrics
-
-### Academic Quality
-- **Van Evera Compliance**: >90% methodology adherence
-- **Expert Validation**: Positive evaluation from domain experts  
-- **Publication Readiness**: Output quality suitable for academic journals
-
-### Technical Performance
-- **Reliability**: <5% analysis failures
-- **Consistency**: >95% reproducibility across runs
-- **Efficiency**: Analysis completion within reasonable time bounds
-
-### Methodological Innovation
-- **LLM Parameter Estimation**: Validated approach for Bayesian parameter estimation
-- **Hybrid Methodology**: Successful integration of qualitative and quantitative approaches
-- **Academic Adoption**: Usage by academic researchers for actual research projects
-
-## Research Questions
-
-### Methodological
-- Can LLMs reliably estimate Bayesian parameters with academic rigor?
-- How do qualitative vs quantitative approaches compare in accuracy and insight generation?
-- What is the optimal balance between automation and human expert judgment?
-
-### Technical
-- How can we ensure reproducibility across different LLM providers and versions?
-- What are the computational requirements for large-scale comparative case analysis?
-- How can we validate LLM reasoning against established academic standards?
-
-### Academic Impact
-- Do LLM-enhanced process tracing tools improve research quality?
-- How can we address concerns about AI in academic methodology?
-- What training is needed for researchers to effectively use these tools?
-
----
-
-This document serves as a roadmap for evolving the process tracing toolkit from its current enhanced foundation toward a comprehensive, methodologically rigorous, and academically valuable research tool.
+- Generic qualitative coding or thematic coding workflows. Those belong in the
+  separate qualitative-coding project.
+- Claims of identified causal effects from one text. Single-text output remains
+  comparative support over a stated hypothesis set.
+- Treating human judgment as the only route to rigor. Human review is valuable
+  for direction, accountability, and validation; routine process-tracing labor
+  should be decomposed into auditable agent and deterministic steps.

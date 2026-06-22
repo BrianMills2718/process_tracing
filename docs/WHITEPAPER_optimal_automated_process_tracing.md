@@ -601,21 +601,21 @@ To keep this a methodology paper rather than a research program, two areas are *
 
 | Capability (§) | Status | Where / form today | Gap to methodology target |
 |---|---|---|---|
-| Bayesian likelihood updating (§3) | **Partial** | `pt/bayesian.py`, odds-space update | two-way `H` vs `¬H` + uniform prior; not multi-hypothesis comparative |
-| Van Evera diagnostic classification (§3.2) | **Implemented** | `pass3_test` prompt + schema | — |
+| Bayesian likelihood updating (§3) | **Partial** | `pt/bayesian.py`, log-space comparative support update | full elicited bands, trace-production model, and benchmark validation still absent |
+| Van Evera diagnostic classification (§3.2) | **Implemented** | per-cell `diagnostic_type` in `EvidenceLikelihood` | `prediction_classifications` not yet repopulated as a separate prediction-level table |
 | Mechanical robustness signal (§6) | **Implemented** | `pt/bayesian._compute_robustness` | — |
-| Sensitivity over likelihoods (§6.5) | **Implemented** | `pt/bayesian._run_sensitivity` | — |
-| Sensitivity over priors (§6.2) | **Planned** | — | priors not yet an input |
-| Researcher-settable priors (§5, §6.2) | **Planned** | hardcoded uniform `1/n` | elicited/justified priors |
-| Likelihood bands + propagation (§6.2.1) | **Planned** | continuous point LRs, capped/relevance-discounted | bands, log-uniform MC, rank-stability |
-| Multi-hypothesis comparative likelihoods (§6.2) | **Planned** | pairwise vs-`¬H` | full-set comparative elicitation |
-| Estimand discipline & residual `H₀` (§5, §5.1) | **Partial** | exclusivity self-check in prompt; `--review` freeze | explicit residual hypothesis; estimand stated in output |
+| Sensitivity over likelihoods (§6.5) | **Partial** | `pt/bayesian._run_sensitivity` perturbs top drivers | no cap/floor grid or full band propagation |
+| Sensitivity over priors (§6.2) | **Implemented** | `PriorSensitivity` in `pt/bayesian.py` | prior-provenance audit still absent |
+| Researcher-settable priors (§5, §6.2) | **Implemented** | CLI `--priors` JSON weights, validated fail-loud | priors are accepted as researcher inputs; elicitation/justification workflow not built |
+| Likelihood bands + propagation (§6.2.1) | **Planned** | continuous point LRs plus sensitivity ranges, capped/relevance-discounted | elicited bands and log-uniform MC propagation |
+| Multi-hypothesis comparative likelihoods (§6.2) | **Implemented** | `pt/pass_test.py` elicits one vector across all hypotheses per evidence item | full band semantics remain planned |
+| Estimand discipline & residual `H₀` (§5, §5.1) | **Partial** | `include_residual=True` in pipeline; output labels support not truth probability | residual is flat/uninformative, not a modeled mixture over residual subtypes |
 | Externalized causal-**and-trace** reasoning (§4) | **Partial** | per-evaluation `justification` text | trace-production reasoning not separated from causal |
 | Trace-production model (§4) | **Planned** | — | not represented |
-| Evidence graph + dependence clustering (§6.5) | **Planned** | independent multiplication; LR cap + relevance as crude dampers | explicit evidence graph, joint cluster bands |
+| Evidence graph + dependence clustering (§6.5) | **Partial** | LLM-supplied `dependence_clusters` with scalar partial pooling | no per-hypothesis redundancy, source-lineage graph, or joint cluster bands |
 | Triangulation auditor + translation contract (§6.3) | **Planned** | — | estimator/critic/reconciler not built |
 | Reconciler protocol (§6.4) | **Planned** | — | constrained action table |
-| Audit coverage = all clusters (§6.7) | **Planned** | `top_drivers` computed (a future gating input, not the optimum) | optimum audits every cluster; no auditor built yet |
+| Audit coverage = all clusters (§6.7) | **Planned** | `top_drivers`, evidence triage, and report audit exist | optimum audits every evidence cluster with an independent critic |
 | Missingness model w/ observability bands (§6.6) | **Partial** | qualitative-only absence pass (`pass_absence`), excluded from updating | observability grading |
 | Cross-case formal estimation (§7) | **Implemented** | `pt.multi` + `cq_bridge` → CausalQueries | — |
 | Cross-case eligibility criteria (§7) | **Planned** | documented all-`1`s failure mode | enforced comparability checks |

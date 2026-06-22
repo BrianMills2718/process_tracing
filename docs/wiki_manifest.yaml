@@ -9,6 +9,10 @@ publish:
     type: PortfolioGuide
     title: Process Tracing Reviewer Walkthrough
     tags: [portfolio, process-tracing, analyst-methods]
+  - path: docs/PROJECT_THEORY_AND_GOALS.md
+    type: ProjectDoc
+    title: Process Tracing Theory, Goals, and Current Capability
+    tags: [analysis, process-tracing, methodology, roadmap]
   - path: docs/portfolio/FRENCH_DIRECTORY_COLLAPSE_CASE_BUNDLE.md
     type: PortfolioEvidence
     title: French Directory Collapse Case Bundle
@@ -18,12 +22,23 @@ publish:
     tags: [analysis, process-tracing, methodology]
   - path: docs/ontology.md
     type: ProjectDoc
+    title: Process Tracing Ontology
     tags: [analysis, ontology, process-tracing]
+  - path: docs/OUTPUT_QUALITY_RUBRIC.md
+    type: ProjectDoc
+    title: Process Tracing Output Quality Rubric
+    tags: [analysis, process-tracing, validation]
   - glob: evidence/*.md
+    type: EvidenceArtifact
+    tags: [evidence, verification, process-tracing]
+  - glob: evidence/current/*.md
+    type: EvidenceArtifact
+    tags: [evidence, verification, process-tracing]
+  - glob: evidence/completed/*.md
     type: EvidenceArtifact
     tags: [evidence, verification, process-tracing]
 exclude:
   - docs/CLAUDE.md
   - hooks/**
   - .pytest_cache/**
-  - archive/**
+  - docs/archive/**

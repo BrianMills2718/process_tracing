@@ -1,264 +1,109 @@
-Process Tracing Ontology - Phased Implementation
-
-## Current Implementation Status
-
-**Phase 0 (Current)**: Basic Event-Evidence-Hypothesis patterns ✅  
-**Phase 1 (Next)**: Core Mechanism Analysis 🚧  
-**Phase 2 (Planned)**: Counter-evidence & Alternatives 📋  
-**Phase 3 (Future)**: Agency & Context 📋  
-
----
-
-## CORE NODE TYPES (Phase 0 - Implemented)
-
-  Event 🔵 (#66b3ff)
-
-  - description (string, required): Event description
-  - timestamp (datetime, optional): Precise timestamp
-  - date, start_date, end_date (string, optional): Date information
-  - location (string, optional): Where event occurred
-  - certainty (float 0.0-1.0, optional): Confidence event occurred
-  - type (optional): "triggering", "intermediate", "outcome", "unspecified"
-  - is_point_in_time (boolean, optional): Whether event is instantaneous
-
-  Hypothesis 🟡 (#ffcc00)
-
-  - description (string, required): Testable causal statement
-  - prior_probability (float 0.0-1.0, optional): Probability before evidence
-  - posterior_probability (float 0.0-1.0, optional): Probability after evidence
-  - status (optional): "active", "supported", "partially_supported", "refuted", "undetermined"
-
-  Evidence 🔴 (#ff6666)
-
-  - description (string, required): Evidence description
-  - type (required): "hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "bayesian", "general"
-  - certainty (float 0.0-1.0, optional): Confidence in evidence
-  - source (string, optional): Source identification
-  - credibility (float 0.0-1.0, optional): Source credibility
-
-## PHASE 1 ADDITION: Core Mechanism Analysis 🚧
-
-  Causal_Mechanism 🟢 (#99ff99)
-
-  - description (string, required): How the mechanism works step-by-step
-  - confidence (float 0.0-1.0, optional): Confidence mechanism operates as described
-  - completeness (float 0.0-1.0, optional): How complete our understanding is
-  - status (optional): "hypothetical", "supported", "refuted", "partial", "unspecified"
-  - testable_predictions (array, optional): What evidence would confirm/refute operation
-
-## PHASE 2 ADDITIONS: Counter-evidence & Alternatives 📋
-
-  Alternative_Explanation 🟠 (#ff9966)
-  
-  - description (string, required): Alternative causal explanation
-  - probability (float 0.0-1.0, optional): Estimated likelihood
-  - status (optional): "active", "eliminated", "supported", "undetermined"
-  - key_predictions (array, optional): Distinguishing implications
-
-## PHASE 3 ADDITIONS: Agency & Context 📋
-
-  Actor 🩷 (#ff99cc)
-  
-  - name (string, required): Actor identification
-  - role (string, optional): Position or function
-  - intentions (string, optional): Goals and motivations
-  - beliefs (string, optional): What they believe to be true
-  - constraints (string, optional): Limitations on their actions
-  - capabilities (string, optional): What they can actually do
-
-  Condition 🟣 (#ccccff)
-  
-  - description (string, required): Condition description
-  - type (required): "background", "enabling", "constraining", "scope"
-  - necessity (float 0.0-1.0, optional): How necessary for outcomes
-  - temporal_scope (string, optional): When condition applies
-
-## RESEARCH-LEVEL EXTENSIONS (Future Consideration)
-
-  - Data_Source 🔷 (#c2c2f0): Source documents/interviews/observations
-  - Inference_Rule 🟪 (#cc99ff): Logical reasoning rules
-  - Inferential_Test 🟤 (#ffb366): Formal hypothesis tests
-
----
-
-## EDGE TYPES BY IMPLEMENTATION PHASE
-
-### PHASE 0 EDGES (Currently Implemented) ✅
-
-**Basic Evidence-Hypothesis Testing:**
-
-  supports
-
-  - Domain: [Evidence, Event]
-  - Range: [Hypothesis, Event, Causal_Mechanism]
-  - Properties:
-    - probative_value (0.0-1.0), certainty (0.0-1.0)
-    - source_text_quote, description
-    - diagnostic_type: "hoop", "smoking_gun", "straw_in_the_wind", "doubly_decisive", "general"
-    - target_type: "event_occurrence", "causal_relationship", "mechanism_operation", "general"
-
-  refutes
-
-  - Domain: [Evidence, Event]
-  - Range: [Hypothesis, Event, Causal_Mechanism]
-  - Properties: Same as supports + diagnostic_type + target_type
-
-  tests_hypothesis
-
-  - Domain: [Evidence, Event]
-  - Range: [Hypothesis]
-  - Properties: probative_value, test_result ("passed", "failed", "ambiguous"), diagnostic_type
-
-  tests_mechanism
-
-  - Domain: [Evidence, Event]
-  - Range: [Causal_Mechanism]
-  - Properties: probative_value, test_result, diagnostic_type
-
-  🔥 NEW ACADEMIC EDGE TYPES
-
-  confirms_occurrence
-
-  - Domain: [Evidence]
-  - Range: [Event]
-  - Properties: certainty, source_text_quote, diagnostic_type
-  - Purpose: Evidence confirms an event actually happened
-
-  disproves_occurrence
-
-  - Domain: [Evidence]
-  - Range: [Event]
-  - Properties: certainty, source_text_quote, diagnostic_type
-  - Purpose: Evidence disproves an event happened
-
-  provides_evidence_for
-
-  - Domain: [Event]
-  - Range: [Hypothesis, Causal_Mechanism]
-  - Properties: probative_value, reasoning, diagnostic_type
-  - Purpose: Events serve as evidence for broader claims
-
-  🔥 TRADITIONAL CAUSAL CONNECTIONS
-
-  causes
-
-  - Domain: [Event] → Range: [Event]
-  - Properties: certainty, mechanism_id, type ("direct", "indirect")
-
-### PHASE 1 EDGES (Mechanism Analysis) 🚧
-
-  **part_of_mechanism**
-  
-  - Domain: [Event] → Range: [Causal_Mechanism]
-  - Properties: 
-    - role (string): "trigger", "intermediate", "outcome", "facilitating"
-    - sequence_position (int, optional): Step number in mechanism
-    - necessity (float 0.0-1.0, optional): How necessary for mechanism
-  - Purpose: Links events as components of causal mechanisms
-
-  **tests_mechanism**
-  
-  - Domain: [Evidence, Event] → Range: [Causal_Mechanism]  
-  - Properties:
-    - probative_value (float 0.0-1.0): Strength of mechanism test
-    - test_result (string): "passed", "failed", "ambiguous", "inconclusive"
-    - diagnostic_type: Van Evera types for mechanism testing
-    - mechanism_aspect (string): "existence", "operation", "completeness"
-  - Purpose: Evidence testing whether mechanisms operate as theorized
-
-  **explains_mechanism**
-  
-  - Domain: [Hypothesis] → Range: [Causal_Mechanism]
-  - Properties: 
-    - certainty (float 0.0-1.0): Confidence in explanation
-    - type_of_claim (string): "existence", "operation", "necessity", "sufficiency"
-    - scope (string, optional): Under what conditions explanation applies
-  - Purpose: Links theoretical claims to specific mechanisms
-
-### PHASE 2 EDGES (Counter-evidence & Alternatives) 📋
-
-  **refutes**
-  
-  - Domain: [Evidence, Event] → Range: [Hypothesis, Causal_Mechanism, Alternative_Explanation]
-  - Properties: Same as supports + refutation strength
-  - Purpose: Evidence that contradicts or undermines claims
-
-  **disproves_occurrence** 
-  
-  - Domain: [Evidence] → Range: [Event]
-  - Properties: certainty, source_text_quote, diagnostic_type
-  - Purpose: Evidence showing events did NOT happen
-
-  **supports_alternative / refutes_alternative**
-  
-  - Domain: [Evidence] → Range: [Alternative_Explanation]  
-  - Properties: probative_value, diagnostic_type
-  - Purpose: Evidence for/against competing explanations
-
-### PHASE 3 EDGES (Agency & Context) 📋
-
-  **initiates**
-  
-  - Domain: [Actor] → Range: [Event]
-  - Properties: intentionality, capability_assessment
-  - Purpose: Actor-driven event causation
-
-  - Domain: [Condition] → Range: [Event, Causal_Mechanism]
-  - Properties: necessity, temporal_scope, condition_type
-  - Purpose: Background/enabling/constraining factors
-
-### RESEARCH-LEVEL EDGES (Future Consideration)
-
-  **updates_probability** - Bayesian evidence updating
-  **contradicts** - Evidence conflicts  
-  **infers** - Logical inference patterns
-  **provides_evidence** - Source-evidence attribution
-
----
-
-## 🎯 IMPLEMENTATION PRIORITIES & METHODOLOGY COVERAGE
-
-### Phase 0 (Current): 60% Process Tracing Coverage
-- ✅ Van Evera diagnostic tests
-- ✅ Basic evidence-hypothesis testing  
-- ✅ Event causation chains
-- ❌ No mechanism analysis
-- ❌ No counter-evidence patterns
-
-### Phase 1 (Mechanism Sprint): 85% Process Tracing Coverage  
-- ✅ All Phase 0 capabilities
-- ➕ Causal mechanism modeling
-- ➕ Mechanism operation testing
-- ➕ Event-mechanism linkage
-- ➕ Beach & Pedersen theory-testing support
-
-### Phase 2 (Counter-evidence Sprint): 95% Process Tracing Coverage
-- ✅ All Phase 1 capabilities  
-- ➕ Alternative explanation testing
-- ➕ Systematic counter-evidence evaluation
-- ➕ George & Bennett congruence method support
-- ➕ Explaining-outcome process tracing
-
-### Phase 3 (Agency Sprint): 100% Process Tracing Coverage
-- ✅ All Phase 2 capabilities
-- ➕ Actor intention/belief modeling
-- ➕ Strategic interaction analysis
-- ➕ Scope condition specification
-- ➕ Complete academic methodology suite
-
----
-
-## 🎯 KEY ACADEMIC FEATURES
-
-  Van Evera Diagnostic Tests (available on most evidence connections):
-  - hoop: Necessary but not sufficient (hypothesis fails if absent)
-  - smoking_gun: Sufficient but not necessary (hypothesis confirmed if present)
-  - straw_in_the_wind: Neither necessary nor sufficient (weak indicator)
-  - doubly_decisive: Both necessary and sufficient (critical evidence)
-
-  Target Types (what's being tested):
-  - event_occurrence: Whether an event happened
-  - causal_relationship: Whether X caused Y
-  - mechanism_operation: How the causation works
-
-  This ontology now supports the full range of academic process tracing methodology with flexible Evidence↔Event↔Hypothesis connections!
+# Process Tracing Ontology
+
+This document defines the current analytic objects used by the `pt` pipeline and
+the report network. It is a reading contract for analysts and agents, not a
+historical implementation plan. Superseded phase notes live in `docs/archive/`.
+
+## Core Claim
+
+The ontology separates four things that are easy to conflate:
+
+- **Substantive process:** actors, events, mechanisms, and causal edges in the
+  historical case.
+- **Trace/evidence record:** source-grounded evidence items and missing predicted
+  traces.
+- **Hypothesis space:** rival causal explanations and observable predictions.
+- **Inference layer:** likelihood vectors, dependence clusters, priors,
+  comparative support, robustness, and synthesis verdicts.
+
+The report is valid only as comparative support over the listed hypothesis set
+plus the residual hypothesis. It is not an absolute probability of truth, an
+identified causal effect, or a counterfactual estimate.
+
+## Objects
+
+| Object | Code contract | Meaning |
+|---|---|---|
+| Actor | `Actor` | A person, organization, institution, or group mentioned in the source. Actors explain agency and constraints but do not by themselves count as evidence. |
+| Event | `Event` | A dated or approximately dated occurrence in the process sequence. Events can be causes, intermediates, outcomes, or contextual conditions. |
+| Mechanism | `Mechanism` | A proposed causal process connecting causes to outcomes. Mechanisms should explain how or why a cause produces an effect. |
+| Causal edge | `CausalEdge` | An extracted directional relationship between two extracted objects. It is a substantive-process claim, not an evidence weight. |
+| Evidence | `Evidence` | A quoted or closely paraphrased trace from the input text. Evidence can be empirical or interpretive and must preserve source text. |
+| Hypothesis | `Hypothesis` | A rival causal explanation with a causal mechanism and observable predictions. Hypotheses should be as mutually exclusive and discriminating as the corpus allows. |
+| Prediction | `Prediction` | A trace we would expect to observe if a hypothesis were true. Predictions feed diagnostic testing and absence checks. |
+| Evidence likelihood | `EvidenceLikelihood` | One evidence item's relative likelihood vector across all hypotheses. This is the central testing object. |
+| Dependence cluster | `EvidenceCluster` | Evidence items that are not conditionally independent because they share source lineage, event origin, mechanism, or sub-narrative. |
+| Absence evaluation | `AbsenceEvaluation` | A qualitative finding that a predicted trace is missing from the source. This is source silence, not proof that the event never occurred. |
+| Bayesian posterior | `HypothesisPosterior` | Comparative support after deterministic updating, including update trail, top drivers, and robustness. |
+| Synthesis verdict | `HypothesisVerdict` | Narrative conclusion for each hypothesis, calibrated against comparative support and caveats. |
+
+## Inference Semantics
+
+**Likelihood vectors.** Pass 3 asks for one vector per evidence item across all
+hypotheses. Pairwise likelihood ratios are derived from that vector, so
+reciprocity and transitivity hold by construction.
+
+**Relevance gating.** Evidence below the relevance gate is forced uninformative.
+Evidence above the gate is discounted on the log scale according to relevance.
+Interpretive evidence is capped more tightly than empirical evidence.
+
+**Dependence pooling.** Dependence clusters are partially pooled before Bayesian
+updating. A fully redundant cluster acts like one observation; a partially
+redundant cluster contributes more than one but less than the raw count.
+
+**Residual hypothesis.** The update includes `H0_residual`, an explicit "none of
+the listed explanations" competitor. It prevents the system from being forced to
+crown a listed story when the hypothesis menu is incomplete.
+
+**Support.** Reported support is normalized comparative support across the
+hypothesis set used in the update. Read it with robustness, sensitivity range,
+prior stability, and source-scope caveats.
+
+## Report Network Semantics
+
+The interactive network is an analyst-facing projection of the ontology, not the
+complete result. The full evidentiary record remains in `result.json`, the
+diagnostic matrix, and the Evidence Inventory.
+
+| Network element | Meaning |
+|---|---|
+| Event nodes | Extracted dated process events. They are placed in left-to-right temporal order when dates are available. |
+| Evidence nodes | Source-grounded traces. They are placed by `approximate_date` when available. |
+| Hypothesis nodes | Rival explanations. They sit downstream of the dated trace sequence because they are claims being evaluated, not historical events. |
+| Actor and mechanism nodes | Extracted agency/context objects. They are hidden by default to reduce clutter but can be toggled on. |
+| Causal edges | Extracted substantive process relationships, shown left-to-right when temporally consistent. |
+| Top-driver links | Evidence-hypothesis links for the evidence items with the largest absolute log-likelihood impact on a hypothesis after caps and gating. These are shown by default because they explain the largest updates. |
+| Background-driver links | Top-driver links where the evidence is far upstream of the outcome window. They may have evidentiary value, but the report warns that they are background context unless paired with proximate mechanism traces. |
+| Additional evidence links | Other displayed evidence-hypothesis links that clear the visual LR threshold but are not top drivers. They are hidden by default and available by toggle. |
+| Temporal conflicts | Extracted causal edges that point backward in the dated layout. They are hidden by default and shown by toggle because they require analyst review. |
+| Isolated nodes | Nodes with no currently visible edge. They are not discarded; they are hidden only by the initial view. The Evidence Inventory preserves the full list. |
+
+## Concrete Example
+
+Suppose the source says a military-backed coup annulled elections in 1797, and
+the hypotheses are:
+
+- `h1`: institutional weakness caused collapse.
+- `h2`: ideological polarization caused collapse.
+- `h3`: military coercion caused collapse.
+
+The evidence item is represented once as `Evidence`. Pass 3 gives it a likelihood
+vector, for example `{h1: 4, h2: 2, h3: 9}`. The Bayesian layer derives each
+hypothesis's LR from that shared vector, applies caps/relevance, pools it with
+dependent evidence if needed, and updates comparative support. If the item has
+one of the largest absolute log-LR impacts for `h3`, the report draws a top-driver
+link from the evidence node to `h3`. If the evidence is decades before the focal
+outcome, it becomes a background-driver link: still evidentiary, but not enough
+by itself to establish the proximate mechanism.
+
+## Current Limitations
+
+- The network is a projection, not the inference engine. The Bayesian update is
+  in `pt/bayesian.py`; the graph makes the update inspectable.
+- Dependence clustering uses a scalar dependence strength per cluster. Per-
+  hypothesis redundancy and full trace-production model averaging remain future
+  methodology work.
+- Absence findings are qualitative. Observability-weighted missingness does not
+  yet enter the Bayesian update.
+- A limited source corpus can produce an optimal exploratory report but still be
+  capped below PhD-review-ready causal identification.
