@@ -20,6 +20,7 @@ Usage:
 """
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -304,9 +305,18 @@ def run_tests(requirements: list[TestRequirement], project_root: Path) -> tuple[
         else:
             pytest_args.append(req.file)
 
+    env = dict(os.environ)
+    existing_pythonpath = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = (
+        str(project_root)
+        if not existing_pythonpath
+        else f"{project_root}{os.pathsep}{existing_pythonpath}"
+    )
+
     result = subprocess.run(
         pytest_args,
         cwd=project_root,
+        env=env,
         capture_output=True,
         text=True
     )
@@ -482,9 +492,10 @@ def main() -> int:
 
     if args.plan:
         # Find specific plan
-        plan_files = [f for f in find_plan_files(plans_dir)
-                     if f.name.startswith(f"{args.plan:02d}_") or
-                        f.name.startswith(f"{args.plan}_")]
+        plan_files = [
+            f for f in find_plan_files(plans_dir)
+            if int(f.name.split("_", 1)[0]) == args.plan
+        ]
 
         if not plan_files:
             print(f"Error: No plan found with number {args.plan}")

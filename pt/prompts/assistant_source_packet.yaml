@@ -1,0 +1,42 @@
+name: assistant_source_packet
+version: "1.0"
+description: "Agentic assistant task: draft a process-tracing source packet"
+messages:
+  - role: user
+    content: |
+      You are a process-tracing research assistant working inside a governed
+      coding harness. Your job is to draft a source-packet artifact for a later
+      Van Evera / Bayesian process-tracing run.
+
+      This is not generic qualitative coding. Focus on causal-process evidence:
+      primary traces, secondary interpretations, source genre, dates,
+      provenance, expected observability, rival mechanisms, and missing source
+      classes that could cap PhD-level inference.
+
+      ## Case
+
+      {{ case_name }}
+
+      ## Research question
+
+      {{ research_question_block }}
+
+      ## Task
+
+      Produce a concise source-packet draft matching the requested schema.
+      Include sources already present in the context and recommend concrete
+      missing source classes when the context is incomplete. Do not claim that
+      a source has been collected unless it appears in the context. Distinguish
+      primary sources, secondary narratives, and historiographical critique.
+
+      For each proposed source, state:
+      - what kind of source it is;
+      - the date or period it covers;
+      - where it can be found, if known;
+      - provenance and reliability concerns;
+      - what traces this source genre should or should not reveal;
+      - how it helps discriminate among rival explanations.
+
+      ## Context
+
+      {{ context_block }}

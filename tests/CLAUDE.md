@@ -10,13 +10,15 @@ tests/
 ├── test_pt_bayesian.py          # Deterministic math: coherent joint update, cap, priors, sensitivity
 ├── test_pipeline_integration.py # Pipeline/report integration; vector-completeness fail-loud; labeling
 ├── test_extraction_quality.py   # Deterministic extraction contract tests
-└── test_pt_llm.py               # LLM boundary contract tests + opt-in live structured smoke
+├── test_pt_llm.py               # LLM boundary contract tests + opt-in live structured smoke
+└── test_assistant.py            # Agentic assistant harness contract tests + opt-in live agent smoke
 ```
 
-Live smoke tests are gated behind `PT_RUN_LIVE_LLM_TESTS=1` (currently the
-`call_llm_structured` smoke in `test_pt_llm.py`). The old standalone
-`test_litellm_structured.py` / `test_instructor_approach.py` were removed when the
-LLM boundary moved to `llm_client.call_llm_structured`.
+Live LLM smoke tests are gated behind `PT_RUN_LIVE_LLM_TESTS=1` (currently the
+`call_llm_structured` smoke in `test_pt_llm.py`). Live assistant/agent smoke is
+gated behind `PT_RUN_LIVE_AGENT_TESTS=1` in `test_assistant.py`. The old
+standalone `test_litellm_structured.py` / `test_instructor_approach.py` were
+removed when the LLM boundary moved to `llm_client.call_llm_structured`.
 
 ## Running Tests
 
@@ -31,7 +33,8 @@ PYTHONPATH=. pytest tests -q --tb=short
 pytest tests/test_pt_bayesian.py::TestRelevanceGating::test_relevance_threshold_blocks_low_relevance -v
 
 # Opt-in live provider smoke tests
-PT_RUN_LIVE_LLM_TESTS=1 pytest tests/test_litellm_structured.py tests/test_instructor_approach.py -v
+PT_RUN_LIVE_LLM_TESTS=1 pytest tests/test_pt_llm.py -v
+PT_RUN_LIVE_AGENT_TESTS=1 pytest tests/test_assistant.py -v
 ```
 
 ## Test Types

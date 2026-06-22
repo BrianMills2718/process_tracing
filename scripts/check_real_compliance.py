@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that active semantic pipeline passes route through the shared LLM wrapper."""
+"""Check that active semantic LLM surfaces route through governed boundaries."""
 
 from pathlib import Path
 
@@ -14,9 +14,16 @@ semantic_files = [
     'pt/pass_propose_model.py',
 ]
 
+assistant_files = [
+    'pt/assistant.py',
+]
+
 using_llm = []
 not_using = []
 missing_files = []
+using_assistant_harness = []
+assistant_not_using = []
+missing_assistant_files = []
 
 for file_path in semantic_files:
     path = Path(file_path)
@@ -47,4 +54,31 @@ for f in not_using:
 if missing_files:
     print("\nMISSING files:")
     for f in missing_files:
+        print(f"  [?] {f}")
+
+for file_path in assistant_files:
+    path = Path(file_path)
+    if path.exists():
+        content = path.read_text()
+        if (
+            'from llm_client import call_llm_structured' in content
+            and 'execution_mode="workspace_agent"' in content
+            and 'openai_codex_sdk' not in content
+            and 'claude_agent_sdk' not in content
+        ):
+            using_assistant_harness.append(file_path)
+        else:
+            assistant_not_using.append(file_path)
+    else:
+        missing_assistant_files.append(file_path)
+
+print("\nAssistant workspace-agent harness:")
+for f in using_assistant_harness:
+    print(f"  [OK] {f}")
+for f in assistant_not_using:
+    print(f"  [X] {f}")
+
+if missing_assistant_files:
+    print("\nMISSING assistant files:")
+    for f in missing_assistant_files:
         print(f"  [?] {f}")

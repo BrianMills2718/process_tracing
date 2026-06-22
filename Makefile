@@ -216,7 +216,13 @@ status:  ## Show git status
 	@git status --short --branch
 
 # --- During Implementation ---
-.PHONY: test test-quick check
+.PHONY: test test-quick check source-packet-draft
+
+MODEL ?= codex
+MAX_BUDGET ?= 1.0
+CASE ?= 18 Brumaire
+CONTEXT ?= docs/source_packets/18_BRUMAIRE_RESEARCH_DESIGN.md
+OUTPUT ?= output/assistant/source_packet_draft.json
 
 test:  ## Run pytest
 	pytest tests/ -v
@@ -241,6 +247,14 @@ check:  ## Run tests, type check, and repo validators
 	@PYTHONPATH=. python scripts/meta/check_agents_sync.py --check
 	@echo ""
 	@echo "All checks passed!"
+
+source-packet-draft:  ## Draft source-packet artifact through llm_client workspace_agent (MODEL=codex CONTEXT=... OUTPUT=...)
+	@PYTHONPATH=. python -m pt.assistant source-packet \
+		--case-name "$(CASE)" \
+		--context "$(CONTEXT)" \
+		--output "$(OUTPUT)" \
+		--model "$(MODEL)" \
+		--max-budget "$(MAX_BUDGET)"
 
 # --- PR Workflow ---
 .PHONY: pr-ready pr merge finish pr-auto-check pr-auto

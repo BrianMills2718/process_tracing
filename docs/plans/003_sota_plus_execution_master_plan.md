@@ -466,6 +466,21 @@ passing benchmark record and an explanation of remaining external-data limits.
 
 ---
 
+## Required Tests
+
+### New Tests (TDD)
+
+| Test File | Test Function | What It Verifies |
+|---|---|---|
+| `tests/test_assistant.py` | | Slice 0 assistant harness contract, artifact persistence, dependency boundary, CLI errors, and opt-in live smoke. |
+
+### Existing Tests (Must Pass)
+
+| Test Pattern | Why |
+|---|---|
+| `tests/test_pt_llm.py` | Existing LLM boundary behavior remains intact. |
+| `tests/test_pipeline_integration.py` | Pipeline/report integration remains unchanged by the assistant harness. |
+
 ## Required Tests By Slice
 
 | Slice | Deterministic tests | E2E artifact |

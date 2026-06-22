@@ -62,10 +62,22 @@ Quality audit:
 make audit-result RESULT=output/french_rev/result.json REPORT=output/french_rev/report.html
 ```
 
+Agentic source-packet draft:
+
+```bash
+make source-packet-draft MODEL=codex \
+  OUTPUT=output/assistant/source_packet_draft.json
+```
+
+This uses `llm_client` `workspace_agent` routing and writes a typed JSON draft.
+Set `MODEL=claude-code` to use Claude Code instead when that backend is
+available.
+
 ## Architecture
 
 ```text
 pt/
+  assistant.py         Slice 0: agentic source-packet draft harness
   schemas.py           Pydantic contracts for all pipeline data
   llm.py               LLM boundary through llm_client.call_llm_structured
   pass_extract.py      Pass 1: source-grounded extraction
