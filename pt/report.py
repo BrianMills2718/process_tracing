@@ -7,10 +7,13 @@ import html
 import json
 import math
 import re
+from collections import defaultdict
 from typing import Any, TypedDict
 
 from pt.bayesian import INTERPRETIVE_LR_CAP, RESIDUAL_ID, lr_matrix
 from pt.schemas import Evidence, Hypothesis, HypothesisPosterior, PredictionClassification, ProcessTracingResult
+
+_BACKGROUND_DRIVER_LEVEL_GAP = 18
 
 
 class _TemporalAudit(TypedDict):
@@ -177,6 +180,79 @@ def _first_year(value: str | None) -> int | None:
     return int(match.group(1)) if match else None
 
 
+_MONTHS = {
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
+}
+
+
+def _temporal_position(value: str | None) -> int | None:
+    """Return a sortable coarse date key for DAG levels."""
+    year = _first_year(value)
+    if year is None:
+        return None
+    month = 6
+    day = 15
+    lowered = value.lower() if value else ""
+
+    iso_match = re.search(r"\b(1[5-9]\d{2}|20\d{2})-(\d{1,2})(?:-(\d{1,2}))?\b", lowered)
+    if iso_match:
+        month = int(iso_match.group(2))
+        if iso_match.group(3):
+            day = int(iso_match.group(3))
+    else:
+        for name, number in _MONTHS.items():
+            if name in lowered:
+                month = number
+                day_match = re.search(rf"\b(\d{{1,2}})\s+{name}\b", lowered)
+                if day_match:
+                    day = int(day_match.group(1))
+                break
+
+    brumaire_match = re.search(r"\b(17|18|19)\s+brumaire\b", lowered)
+    if brumaire_match and year == 1799:
+        month = 11
+        day = {"17": 8, "18": 9, "19": 10}[brumaire_match.group(1)]
+
+    if "before brumaire" in lowered and year == 1799:
+        month = min(month, 10)
+        day = min(day, 1)
+    if "weeks before" in lowered and year == 1799:
+        month = min(month, 10)
+        day = min(day, 20)
+
+    return year * 10000 + month * 100 + day
+
+
+def _layout_temporal_position(primary: str | None, *context: str | None) -> int | None:
+    """Return a sortable date key using contextual before/after cues for layout."""
+    primary_position = _temporal_position(primary)
+    context_text = " ".join(part for part in context if part)
+    if not context_text:
+        return primary_position
+    contextual_position = _temporal_position(f"{primary or ''} {context_text}")
+    if primary_position is None:
+        return contextual_position
+    lowered = context_text.lower()
+    has_prior_cue = any(
+        cue in lowered
+        for cue in ("before", "prior to", "earlier than", "weeks before", "months before")
+    )
+    if has_prior_cue and contextual_position is not None:
+        return min(primary_position, contextual_position)
+    return primary_position
+
+
 def _focal_year(result: ProcessTracingResult) -> int | None:
     """Infer the outcome year for temporal-proximity reporting."""
     years: list[int] = []
@@ -269,6 +345,82 @@ def _network_coverage(
         "top_id": top_id,
         "top_degree": degree.get(top_id or "", 0),
     }
+
+
+def _assign_temporal_dag_positions(nodes: list[dict], edges: list[dict]) -> None:
+    """Assign deterministic left-to-right DAG coordinates to network nodes."""
+    if not nodes:
+        return
+
+    node_by_id = {str(node["id"]): node for node in nodes}
+    level_spacing = 155
+    row_spacing = 54
+    occupied_by_level: dict[int, list[float]] = defaultdict(list)
+
+    def node_level(node: dict) -> int:
+        return int(node.get("level") or 0)
+
+    def reserve_y(level: int, desired: float, spacing: int = row_spacing) -> float:
+        used = occupied_by_level[level]
+        candidates = [desired]
+        for step in range(1, 24):
+            candidates.extend((desired + step * spacing, desired - step * spacing))
+        for candidate in candidates:
+            if all(abs(candidate - existing) >= spacing * 0.72 for existing in used):
+                used.append(candidate)
+                return candidate
+        fallback = desired + len(used) * spacing
+        used.append(fallback)
+        return fallback
+
+    def pin(node: dict, y: float) -> None:
+        node["x"] = node_level(node) * level_spacing
+        node["y"] = int(round(y))
+        node["fixed"] = {"x": True, "y": True}
+
+    hypothesis_nodes = sorted(
+        (node for node in nodes if node.get("group") == "hypothesis"),
+        key=lambda node: str(node["id"]),
+    )
+    hypothesis_y: dict[str, float] = {}
+    if hypothesis_nodes:
+        start = -((len(hypothesis_nodes) - 1) * row_spacing) / 2
+        for idx, node in enumerate(hypothesis_nodes):
+            y = start + idx * row_spacing
+            pin(node, y)
+            hypothesis_y[str(node["id"])] = y
+
+    top_driver_targets: dict[str, list[str]] = defaultdict(list)
+    for edge in edges:
+        if edge.get("group") == "top_driver_link":
+            top_driver_targets[str(edge["from"])].append(str(edge["to"]))
+
+    for node_id, target_ids in sorted(top_driver_targets.items()):
+        top_driver_node = node_by_id.get(node_id)
+        if top_driver_node is None:
+            continue
+        target_ys = [hypothesis_y[target_id] for target_id in target_ids if target_id in hypothesis_y]
+        desired_y = sum(target_ys) / len(target_ys) if target_ys else 0
+        pin(top_driver_node, reserve_y(node_level(top_driver_node), desired_y))
+
+    group_base_y = {
+        "event": -260,
+        "evidence": 250,
+        "mechanism": -140,
+        "actor": 380,
+    }
+    buckets: dict[tuple[int, str], list[dict]] = defaultdict(list)
+    for node in nodes:
+        if "fixed" in node:
+            continue
+        buckets[(node_level(node), str(node.get("group") or ""))].append(node)
+
+    for (level, group), bucket in sorted(buckets.items()):
+        base_y = group_base_y.get(group, 0)
+        start = base_y - ((len(bucket) - 1) * row_spacing) / 2
+        for idx, node in enumerate(sorted(bucket, key=lambda item: str(item["id"]))):
+            desired_y = start + idx * row_spacing
+            pin(node, reserve_y(level, desired_y))
 
 
 def _verdict_calibration_issues(
@@ -782,36 +934,65 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
     posteriors = {p.hypothesis_id: p.final_posterior for p in result.bayesian.posteriors}
     posterior_objs = {p.hypothesis_id: p for p in result.bayesian.posteriors}
     node_ids = set()
+    node_levels: dict[str, int] = {}
+    dated_positions = sorted({
+        pos for item in ext.events for pos in [_temporal_position(item.date)] if pos is not None
+    } | {
+        pos
+        for item in ext.evidence
+        for pos in [_layout_temporal_position(item.approximate_date, item.description, item.source_text)]
+        if pos is not None
+    })
+    level_by_position = {position: idx for idx, position in enumerate(dated_positions)}
+    unknown_temporal_level = len(level_by_position)
+    mechanism_level = unknown_temporal_level + 1
+    hypothesis_level = unknown_temporal_level + 2
+
+    def position_level(pos: int | None) -> int:
+        if pos is None:
+            return unknown_temporal_level
+        return level_by_position.get(pos, unknown_temporal_level)
+
+    def temporal_level(value: str | None) -> int:
+        return position_level(_temporal_position(value))
 
     for e in ext.events:
+        level = temporal_level(e.date)
         nodes.append({
             "id": e.id, "label": e.description[:40], "title": _esc(e.description),
             "color": "#66b3ff", "shape": "dot", "size": 15, "group": "event",
+            "level": level,
         })
         node_ids.add(e.id)
+        node_levels[e.id] = level
 
     for a in ext.actors:
         nodes.append({
             "id": a.id, "label": a.name[:30], "title": _esc(a.description),
             "color": "#ff99cc", "shape": "dot", "size": 12, "group": "actor",
-            "hidden": True,
+            "hidden": True, "level": 0,
         })
         node_ids.add(a.id)
+        node_levels[a.id] = 0
 
     for ev in ext.evidence:
+        level = position_level(_layout_temporal_position(ev.approximate_date, ev.description, ev.source_text))
         nodes.append({
             "id": ev.id, "label": ev.description[:40], "title": _esc(ev.source_text[:200]),
             "color": "#ff6666", "shape": "diamond", "size": 10, "group": "evidence",
+            "level": level,
         })
         node_ids.add(ev.id)
+        node_levels[ev.id] = level
 
     for m in ext.mechanisms:
         nodes.append({
             "id": m.id, "label": m.description[:40], "title": _esc(m.description),
             "color": "#99ff99", "shape": "dot", "size": 12, "group": "mechanism",
-            "hidden": True,
+            "hidden": True, "level": mechanism_level,
         })
         node_ids.add(m.id)
+        node_levels[m.id] = mechanism_level
 
     for h in result.hypothesis_space.hypotheses:
         post = posteriors.get(h.id, 0)
@@ -820,17 +1001,30 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
             "id": h.id, "label": f"{h.id}: {h.description[:30]}",
             "title": _esc(f"{h.description}\nSupport: {post:.3f}"),
             "color": "#ffcc00", "shape": "star", "size": int(size),
-            "group": "hypothesis",
+            "group": "hypothesis", "level": hypothesis_level,
         })
         node_ids.add(h.id)
+        node_levels[h.id] = hypothesis_level
 
     # Causal edges from extraction
     for ce in ext.causal_edges:
         if ce.source_id in node_ids and ce.target_id in node_ids:
+            source_level = node_levels.get(ce.source_id)
+            target_level = node_levels.get(ce.target_id)
+            temporal_conflict = (
+                source_level is not None
+                and target_level is not None
+                and source_level > target_level
+            )
             edges.append({
                 "from": ce.source_id, "to": ce.target_id,
-                "label": ce.relationship[:20], "arrows": "to",
-                "color": {"color": "#999"}, "group": "causal",
+                "arrows": "to",
+                "color": {"color": "#b23a48" if temporal_conflict else "#5f6670", "opacity": 0.82 if temporal_conflict else 0.78},
+                "width": 1.5 if temporal_conflict else 1.6,
+                "dashes": temporal_conflict,
+                "hidden": temporal_conflict,
+                "title": _esc("Temporal-order warning: extracted relationship points backward in the dated layout." if temporal_conflict else ce.relationship),
+                "group": "temporal_conflict" if temporal_conflict else "causal",
             })
 
     # Evidence-hypothesis edges from the likelihood matrix (same caps as the update)
@@ -853,17 +1047,38 @@ def _build_vis_data(result: ProcessTracingResult) -> tuple[list[dict], list[dict
             log_lr = abs(math.log(max(lr, 0.01)))
             width = max(0.9 if is_top_driver else 0.5, min(4, log_lr))
             color = "#28a745" if lr > 1 else "#dc3545"
+            source_level = node_levels.get(evidence_id)
+            target_level = node_levels.get(hyp_id)
+            is_background_driver = (
+                is_top_driver
+                and source_level is not None
+                and target_level is not None
+                and target_level - source_level >= _BACKGROUND_DRIVER_LEVEL_GAP
+            )
+            edge_group = (
+                "background_driver_link"
+                if is_background_driver
+                else "top_driver_link"
+                if is_top_driver
+                else "evidence_link"
+            )
             edge: dict[str, object] = {
                 "from": evidence_id, "to": hyp_id,
                 "arrows": "to", "width": round(width, 1),
                 "color": {"color": color, "opacity": 0.85 if is_top_driver else 0.6},
-                "group": "evidence_link",
-                "title": f"LR={lr:.2f}" + ("; top driver edge" if is_top_driver else ""),
+                "group": edge_group,
+                "hidden": edge_group != "top_driver_link",
+                "title": f"LR={lr:.2f}" + (
+                    "; background top driver" if is_background_driver
+                    else "; top driver edge" if is_top_driver
+                    else ""
+                ),
             }
             if is_top_driver and 0.67 <= lr <= 1.5:
                 edge["dashes"] = [5, 5]
             edges.append(edge)
 
+    _assign_temporal_dag_positions(nodes, edges)
     return nodes, edges
 
 
@@ -1023,9 +1238,24 @@ def generate_report(result: ProcessTracingResult) -> str:
             <label class="form-check-label" for="toggle-mechanism"><span style="display:inline-block;width:12px;height:12px;background:#99ff99;border-radius:50%"></span> Mechanisms</label>
           </div>
           <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="toggle-evidence_link" checked>
+            <input class="form-check-input" type="checkbox" id="toggle-top_driver_link" checked>
+            <label class="form-check-label" for="toggle-top_driver_link">
+              <span style="display:inline-block;width:12px;height:3px;background:#28a745;vertical-align:middle"></span> Top drivers</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="toggle-background_driver_link">
+            <label class="form-check-label" for="toggle-background_driver_link">
+              <span style="display:inline-block;width:12px;height:3px;background:#6f8f45;vertical-align:middle"></span> Background drivers</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="toggle-evidence_link">
             <label class="form-check-label" for="toggle-evidence_link">
-              <span style="display:inline-block;width:12px;height:3px;background:#28a745;vertical-align:middle"></span>/<span style="display:inline-block;width:12px;height:3px;background:#dc3545;vertical-align:middle"></span> Evidence Links</label>
+              <span style="display:inline-block;width:12px;height:3px;background:#28a745;vertical-align:middle"></span>/<span style="display:inline-block;width:12px;height:3px;background:#dc3545;vertical-align:middle"></span> Additional evidence links</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="toggle-temporal_conflict">
+            <label class="form-check-label" for="toggle-temporal_conflict">
+              <span style="display:inline-block;width:12px;height:3px;border-top:2px dashed #b23a48;vertical-align:middle"></span> Temporal conflicts</label>
           </div>
           <div class="form-check form-check-inline">
             <input class="form-check-input" type="checkbox" id="toggle-isolated" checked>
@@ -1034,11 +1264,12 @@ def generate_report(result: ProcessTracingResult) -> str:
           <div class="btn-group btn-group-sm ms-auto">
             <button class="btn btn-outline-secondary" id="net-zoom-in" title="Zoom in">+</button>
             <button class="btn btn-outline-secondary" id="net-zoom-out" title="Zoom out">&minus;</button>
+            <button class="btn btn-outline-secondary" id="net-focus" title="Focus on the downstream causal window">Focus</button>
             <button class="btn btn-outline-secondary" id="net-fit" title="Fit all">Fit</button>
           </div>
         </div>
-        <div id="network" style="width:100%;height:600px;border:1px solid #ddd;border-radius:4px"></div>
-        <div id="network-info" class="alert alert-light mt-2 small">Click a node for details. Green edges = supporting evidence (LR &gt; 1). Red edges = opposing evidence (LR &lt; 1). A dashed top driver edge is shown even when the LR is weak because it is one of that hypothesis's largest updates.</div>
+        <div id="network" style="width:100%;height:720px;border:1px solid #ddd;border-radius:4px"></div>
+        <div id="network-info" class="alert alert-light mt-2 small">Temporal DAG layout: left-to-right columns follow extracted dates, with mechanisms and hypotheses downstream. Proximate top-driver evidence links are shown by default; green links support a hypothesis (LR &gt; 1), red links oppose it (LR &lt; 1), and dashed links mark weak top drivers. Background drivers, additional evidence links, and temporal conflicts remain available through toggles.</div>
       </div>
       </div>
     </div>"""
@@ -1833,25 +2064,25 @@ document.addEventListener('DOMContentLoaded', function() {{
   var edges = new vis.DataSet(edgesData);
   var container = document.getElementById('network');
   var network = new vis.Network(container, {{nodes: nodes, edges: edges}}, {{
-    nodes: {{font: {{size: 11}}, borderWidth: 2}},
+    nodes: {{font: {{size: 13, strokeWidth: 3, strokeColor: '#ffffff'}}, borderWidth: 2}},
     edges: {{
       arrows: {{to: {{enabled: true, scaleFactor: 0.7}}}},
       font: {{size: 8, align: 'middle'}},
       width: 1.2,
-      smooth: {{type: 'continuous'}}
+      smooth: {{type: 'cubicBezier', forceDirection: 'horizontal', roundness: 0.35}}
+    }},
+    layout: {{
+      improvedLayout: false,
+      randomSeed: 42
     }},
     physics: {{
-      enabled: true,
-      stabilization: {{iterations: 300}},
-      barnesHut: {{
-        gravitationalConstant: -5000,
-        springLength: 250,
-        springConstant: 0.04,
-        damping: 0.09
-      }}
+      enabled: false
     }},
     interaction: {{hover: true, tooltipDelay: 200, zoomView: true, dragView: true}}
   }});
+  window.ptNetwork = network;
+  window.ptNodes = nodes;
+  window.ptEdges = edges;
 
   network.on('click', function(params) {{
     var info = document.getElementById('network-info');
@@ -1875,16 +2106,94 @@ document.addEventListener('DOMContentLoaded', function() {{
     var scale = network.getScale();
     network.moveTo({{scale: scale / 1.3}});
   }});
+  function focusNetwork() {{
+    var visibleNodes = nodes.get().filter(function(n) {{ return n.hidden !== true; }});
+    if (!visibleNodes.length) {{
+      network.fit({{animation: false}});
+      return;
+    }}
+    var topDriverNodeIds = new Set();
+    edges.forEach(function(e) {{
+      if (e.hidden !== true && e.group === 'top_driver_link') {{
+        topDriverNodeIds.add(e.from);
+        topDriverNodeIds.add(e.to);
+      }}
+    }});
+    var maxLevel = Math.max.apply(null, visibleNodes.map(function(n) {{ return Number(n.level || 0); }}));
+    var focusNodes = visibleNodes.filter(function(n) {{
+      var level = Number(n.level || 0);
+      return n.group === 'hypothesis' || topDriverNodeIds.has(n.id) || level >= maxLevel - 8;
+    }});
+    if (!focusNodes.length) focusNodes = visibleNodes;
+    var focusIds = focusNodes.map(function(n) {{ return n.id; }});
+    var positions = network.getPositions(focusIds);
+    var xs = [];
+    var ys = [];
+    Object.keys(positions).forEach(function(id) {{
+      xs.push(positions[id].x);
+      ys.push(positions[id].y);
+    }});
+    if (!xs.length) {{
+      network.fit({{animation: false}});
+      return;
+    }}
+    var minX = Math.min.apply(null, xs);
+    var maxX = Math.max.apply(null, xs);
+    var minY = Math.min.apply(null, ys);
+    var maxY = Math.max.apply(null, ys);
+    var width = Math.max(1, maxX - minX);
+    var height = Math.max(1, maxY - minY);
+    var scaleX = container.clientWidth / (width + 460);
+    var scaleY = container.clientHeight / (height + 260);
+    var scale = Math.max(0.42, Math.min(0.9, Math.min(scaleX, scaleY)));
+    network.moveTo({{
+      position: {{x: (minX + maxX) / 2, y: (minY + maxY) / 2}},
+      scale: scale,
+      animation: false
+    }});
+  }}
+  document.getElementById('net-focus').addEventListener('click', function() {{
+    focusNetwork();
+  }});
   document.getElementById('net-fit').addEventListener('click', function() {{
     network.fit();
   }});
+  var networkBody = document.getElementById('networkBody');
+  if (networkBody) {{
+    networkBody.addEventListener('shown.bs.collapse', function() {{
+      setTimeout(focusNetwork, 100);
+    }});
+  }}
 
+  var topDriverCb = document.getElementById('toggle-top_driver_link');
+  var backgroundDriverCb = document.getElementById('toggle-background_driver_link');
   var evLinkCb = document.getElementById('toggle-evidence_link');
+  var temporalConflictCb = document.getElementById('toggle-temporal_conflict');
   var isolatedCb = document.getElementById('toggle-isolated');
 
   function edgeVisible(edge) {{
+    if (edge.group === 'top_driver_link' && topDriverCb && !topDriverCb.checked) return false;
+    if (edge.group === 'background_driver_link' && backgroundDriverCb && !backgroundDriverCb.checked) return false;
     if (edge.group === 'evidence_link' && evLinkCb && !evLinkCb.checked) return false;
+    if (edge.group === 'temporal_conflict' && temporalConflictCb && !temporalConflictCb.checked) return false;
     return !edge.hidden;
+  }}
+
+  function syncOptionalEdgeGroup(group, cb) {{
+    if (!cb) return;
+    var show = cb.checked;
+    var updates = [];
+    edges.forEach(function(e) {{
+      if (e.group === group) updates.push({{id: e.id, hidden: !show}});
+    }});
+    edges.update(updates);
+  }}
+
+  function syncOptionalEdges() {{
+    syncOptionalEdgeGroup('top_driver_link', topDriverCb);
+    syncOptionalEdgeGroup('background_driver_link', backgroundDriverCb);
+    syncOptionalEdgeGroup('evidence_link', evLinkCb);
+    syncOptionalEdgeGroup('temporal_conflict', temporalConflictCb);
   }}
 
   function updateNodeVisibility() {{
@@ -1901,7 +2210,8 @@ document.addEventListener('DOMContentLoaded', function() {{
       var groupCb = document.getElementById('toggle-' + n.group);
       var groupVisible = !groupCb || groupCb.checked;
       var isIsolated = !connected.has(n.id);
-      updates.push({{id: n.id, hidden: !groupVisible || (hideIsolated && isIsolated)}});
+      var preserveIsolated = n.group === 'hypothesis';
+      updates.push({{id: n.id, hidden: !groupVisible || (hideIsolated && isIsolated && !preserveIsolated)}});
     }});
     nodes.update(updates);
   }}
@@ -1914,15 +2224,32 @@ document.addEventListener('DOMContentLoaded', function() {{
   }});
 
   // Toggle evidence link edges
+  if (topDriverCb) {{
+    topDriverCb.addEventListener('change', function() {{
+      syncOptionalEdges();
+      updateNodeVisibility();
+      focusNetwork();
+    }});
+  }}
+  if (backgroundDriverCb) {{
+    backgroundDriverCb.addEventListener('change', function() {{
+      syncOptionalEdges();
+      updateNodeVisibility();
+      focusNetwork();
+    }});
+  }}
   if (evLinkCb) {{
     evLinkCb.addEventListener('change', function() {{
-      var show = evLinkCb.checked;
-      var updates = [];
-      edges.forEach(function(e) {{
-        if (e.group === 'evidence_link') updates.push({{id: e.id, hidden: !show}});
-      }});
-      edges.update(updates);
+      syncOptionalEdges();
       updateNodeVisibility();
+      focusNetwork();
+    }});
+  }}
+  if (temporalConflictCb) {{
+    temporalConflictCb.addEventListener('change', function() {{
+      syncOptionalEdges();
+      updateNodeVisibility();
+      focusNetwork();
     }});
   }}
 
@@ -1931,7 +2258,9 @@ document.addEventListener('DOMContentLoaded', function() {{
     isolatedCb.addEventListener('change', updateNodeVisibility);
   }}
 
+  syncOptionalEdges();
   updateNodeVisibility();
+  setTimeout(focusNetwork, 100);
 }});
 </script>
 </body>

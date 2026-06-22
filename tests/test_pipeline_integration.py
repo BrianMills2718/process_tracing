@@ -12,7 +12,14 @@ import pytest
 
 from pt.bayesian import run_bayesian_update
 from pt.pipeline import _source_text_sha256, run_pipeline
-from pt.report import _build_vis_data, _diagnostic_strength_summary, _dom_id, generate_report
+from pt.report import (
+    _build_vis_data,
+    _diagnostic_strength_summary,
+    _dom_id,
+    _layout_temporal_position,
+    _temporal_position,
+    generate_report,
+)
 from pt.schemas import (
     AbsenceEvaluation,
     AbsenceResult,
@@ -510,6 +517,71 @@ class TestReportConsistency:
 
         assert _diagnostic_strength_summary(result)["decisive"] == 1
         assert _diagnostic_strength_stats(result)["decisive_items"] == 1
+
+    def test_network_uses_temporal_dag_layout(self):
+        result = _make_process_result()
+        nodes, edges = _build_vis_data(result)
+        by_id = {node["id"]: node for node in nodes}
+
+        assert by_id["evt_crisis"]["level"] < by_id["evt_coup"]["level"]
+        assert by_id["evi_debt"]["level"] < by_id["evi_elite_plot"]["level"]
+        assert by_id["h1"]["level"] > by_id["evi_elite_plot"]["level"]
+        assert by_id["evt_crisis"]["x"] < by_id["evt_coup"]["x"] < by_id["h1"]["x"]
+        assert by_id["h1"]["fixed"] == {"x": True, "y": True}
+        causal_edges = [edge for edge in edges if edge.get("group") == "causal"]
+        top_driver_edges = [edge for edge in edges if edge.get("group") == "top_driver_link"]
+        background_driver_edges = [edge for edge in edges if edge.get("group") == "background_driver_link"]
+        additional_evidence_edges = [edge for edge in edges if edge.get("group") == "evidence_link"]
+        assert causal_edges
+        assert top_driver_edges
+        assert all(edge.get("hidden") is False for edge in top_driver_edges)
+        assert all(edge.get("hidden") is True for edge in background_driver_edges)
+        assert all(edge.get("hidden") is True for edge in additional_evidence_edges)
+        assert all(by_id[edge["from"]]["level"] <= by_id[edge["to"]]["level"] for edge in causal_edges)
+
+        html = generate_report(result)
+        assert "randomSeed: 42" in html
+        assert "physics: {\n      enabled: false" in html
+        assert 'id="toggle-top_driver_link" checked' in html
+        assert 'id="toggle-background_driver_link"' in html
+        assert 'id="toggle-temporal_conflict"' in html
+        assert "function focusNetwork()" in html
+
+    def test_network_preserves_backward_edges_as_temporal_conflicts(self):
+        payload = _make_process_result().model_dump()
+        payload["extraction"]["causal_edges"].append({
+            "source_id": "evt_coup",
+            "target_id": "evt_crisis",
+            "relationship": "impossible backward relation",
+        })
+        result = ProcessTracingResult.model_validate(payload)
+        nodes, edges = _build_vis_data(result)
+        by_id = {node["id"]: node for node in nodes}
+
+        conflict_edges = [edge for edge in edges if edge.get("group") == "temporal_conflict"]
+
+        assert conflict_edges
+        assert conflict_edges[0]["from"] == "evt_coup"
+        assert conflict_edges[0]["to"] == "evt_crisis"
+        assert conflict_edges[0]["hidden"] is True
+        assert conflict_edges[0]["dashes"] is True
+        assert all(
+            by_id[edge["from"]]["level"] <= by_id[edge["to"]]["level"]
+            for edge in edges
+            if edge.get("group") == "causal"
+        )
+
+    def test_temporal_position_parses_brumaire_dates(self):
+        assert _temporal_position(
+            "17 Brumaire Year VIII (8 November 1799)"
+        ) < _temporal_position("18 Brumaire Year VIII (9 November 1799)")
+        assert _temporal_position(
+            "18 Brumaire Year VIII (9 November 1799)"
+        ) < _temporal_position("19 Brumaire Year VIII (10 November 1799)")
+        assert _layout_temporal_position(
+            "1799-11",
+            "Weeks before 18 Brumaire: conspirators met to plan the coup.",
+        ) < _temporal_position("1799-11-09")
 
     def test_script_terminator_in_graph_data_is_escaped(self):
         result = _make_process_result()
