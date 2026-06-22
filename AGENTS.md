@@ -39,6 +39,7 @@ read `CLAUDE.md` directly.
 
 ### Principles
 
+- **Research ambition**: automate expert mixed-methods causal research at PhD / think-tank / academic quality; do not frame the system as merely augmenting human qualitative labor.
 - **LLM-First**: all semantic analysis uses LLM, never rule-based matching or keyword logic
 - **Structured output**: all LLM calls return Pydantic models; `if/elif` chains for semantic understanding are prohibited
 - **Fail loud**: raise on LLM failure, never return None/0/[] silently

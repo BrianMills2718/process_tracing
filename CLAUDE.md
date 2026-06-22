@@ -30,6 +30,12 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 **Van Evera Process Tracing Pipeline** — a multi-pass LLM pipeline that performs systematic causal inference on historical texts using Stephen Van Evera's methodology.
 
+### North Star
+
+This project is not an "AI assistant for qualitative coding." The ambition is to automate mixed-methods causal research at PhD / think-tank / academic quality by making the labor-intensive parts of qualitative inference explicit, structured, auditable, scalable, and interoperable with quantitative causal methods.
+
+The working premise is that expert qualitative tasks are not protected by an inherent human advantage. Humans are often slower, less reproducible, less exhaustive, and not automatically less biased. The quality target is achieved through architecture: structured prompts and schemas, provenance, adversarial critic roles, independence checks, sensitivity analysis, trace-production modeling, cross-case quantitative integration, and iterative qualitative ↔ quantitative feedback. Human review remains valuable as direction-setting, validation, and accountability, but it is not treated as the only source of methodological rigor or as a permanent bottleneck.
+
 Given a text, the pipeline:
 1. **Extracts** evidence, actors, events, mechanisms, causal edges
 2. **Hypothesizes** competing causal explanations with observable predictions
@@ -249,6 +255,7 @@ python -m pt.multi input_text/case_a.txt input_text/case_b.txt --output-dir outp
 
 ## Principles
 
+- **Research ambition**: automate expert mixed-methods causal research at PhD / think-tank / academic quality; do not frame the system as merely augmenting human qualitative labor.
 - **LLM-First**: all semantic analysis uses LLM, never rule-based matching or keyword logic
 - **Structured output**: all LLM calls return Pydantic models; `if/elif` chains for semantic understanding are prohibited
 - **Fail loud**: raise on LLM failure, never return None/0/[] silently

@@ -1115,10 +1115,12 @@ def _render_network_interpretation_guide(
         <div class="border rounded p-3 mb-3 bg-light">
           <h5 class="mb-2">How to Read This Network</h5>
           <p class="small mb-2">
-            This is a working process-tracing ontology, not a final academic causal ontology.
+            This network is an analyst-facing projection of the mixed-methods research ontology.
             <strong>Events</strong>, <strong>evidence</strong>, <strong>hypotheses</strong>,
             <strong>actors</strong>, and <strong>mechanisms</strong> are node types. The driver/link
             toggles are edge layers and review filters; they are not additional kinds of causal things.
+            The goal is to make qualitative causal work inspectable enough to automate, audit, and
+            connect to quantitative designs.
           </p>
           <div class="row g-3 small">
             <div class="col-lg-6">
