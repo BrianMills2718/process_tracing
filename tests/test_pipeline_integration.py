@@ -811,6 +811,46 @@ class TestReportConsistency:
             for cap in audit["claim_scope_caps"]
         )
 
+    @pytest.mark.plans(3)
+    def test_source_packet_context_reaches_extraction_pass(self):
+        captured_contexts: list[str | None] = []
+
+        def _capture_extract(text, **kwargs):
+            captured_contexts.append(kwargs.get("source_packet_context"))
+            extraction = _make_extraction()
+            extraction.evidence[0].source_text = "Source A says the fiscal crisis mattered."
+            extraction.evidence[1].source_text = "Source C says institutional design constrained outcomes."
+            return extraction
+
+        text = " ".join(["Source A records one trace. Source C records another trace."] * 80)
+
+        with (
+            patch("pt.pipeline.run_extract", side_effect=_capture_extract),
+            patch("pt.pipeline.run_hypothesize", return_value=_make_hypothesis_space()),
+            patch(
+                "pt.pipeline._run_passes_3_plus",
+                return_value=(
+                    _make_testing(),
+                    _make_absence(),
+                    run_bayesian_update(_make_testing(), ["h1", "h2"]),
+                    _make_synthesis(),
+                ),
+            ),
+        ):
+            result = run_pipeline(
+                text,
+                source_packet=_make_source_packet(),
+                verbose=False,
+                trace_id="source-packet-extraction-wiring",
+            )
+
+        assert captured_contexts
+        assert captured_contexts[0] is not None
+        assert "Source C" in captured_contexts[0]
+        assert "Critical historiography" in captured_contexts[0]
+        assert result.source_coverage is not None
+        assert result.source_coverage.sources_with_evidence == 2
+
     def test_network_keeps_weak_top_driver_edges_visible(self):
         result = _make_audit_stress_result()
         top_id = result.bayesian.ranking[0]
@@ -922,6 +962,34 @@ class TestVectorCompleteness:
         ]
         with pytest.raises(ValueError, match="multiple dependence clusters"):
             self._run_with(t)
+
+    def test_repairs_overlapping_clusters_once_with_validation_feedback(self):
+        from pt import pass_test
+        from pt.schemas import EvidenceCluster
+
+        bad = _make_testing()
+        bad.dependence_clusters = [
+            EvidenceCluster(evidence_ids=["evi_debt", "evi_tax_revolt"], reason="x"),
+            EvidenceCluster(evidence_ids=["evi_tax_revolt", "evi_elite_plot"], reason="y"),
+        ]
+        repaired = _make_testing()
+        repaired.dependence_clusters = [
+            EvidenceCluster(evidence_ids=["evi_debt", "evi_tax_revolt"], reason="x"),
+            EvidenceCluster(evidence_ids=["evi_elite_plot", "evi_historian_claim"], reason="y"),
+        ]
+        prompts: list[str] = []
+
+        def fake_call_llm(prompt, response_model, **kwargs):
+            prompts.append(prompt)
+            return bad if len(prompts) == 1 else repaired
+
+        with patch.object(pass_test, "call_llm", side_effect=fake_call_llm):
+            result = pass_test.run_test(_make_extraction(), _make_hypothesis_space())
+
+        assert len(prompts) == 2
+        assert "Validation repair required" in prompts[1]
+        assert "evidence in multiple dependence clusters" in prompts[1]
+        assert len(result.dependence_clusters) == 2
 
     def test_accepts_valid_cluster(self):
         from pt.schemas import EvidenceCluster

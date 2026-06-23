@@ -10,6 +10,7 @@ likelihoods coherent (every pairwise ratio is derived from one vector).
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Literal
 from uuid import uuid4
@@ -27,6 +28,7 @@ from pt.schemas import (
 )
 
 PROMPTS_DIR = Path(__file__).parent / "prompts"
+MAX_VALIDATION_REPAIRS = int(os.getenv("PT_TEST_VALIDATION_REPAIRS", "1"))
 
 
 def _literal_enum(values: list[str]) -> Any:
@@ -133,6 +135,72 @@ def _testing_response_model(
     )
 
 
+def _validate_testing_result(
+    result: TestingResult,
+    *,
+    expected_hyp_ids: list[str],
+    expected_ev_ids: list[str],
+) -> set[str]:
+    """Validate the deterministic matrix and dependence-cluster invariants."""
+
+    expected_hyp_id_set = set(expected_hyp_ids)
+    expected_ev_id_set = set(expected_ev_ids)
+    seen_ev_ids: list[str] = []
+    for item in result.evidence_likelihoods:
+        seen_ev_ids.append(item.evidence_id)
+        hyp_ids = [hl.hypothesis_id for hl in item.hypothesis_likelihoods]
+        if len(hyp_ids) != len(set(hyp_ids)):
+            raise ValueError(
+                f"testing: duplicate hypothesis ids in vector for evidence '{item.evidence_id}': {hyp_ids}"
+            )
+        if set(hyp_ids) != expected_hyp_id_set:
+            raise ValueError(
+                f"testing: evidence '{item.evidence_id}' vector covers {sorted(set(hyp_ids))}, "
+                f"expected exactly {sorted(expected_hyp_id_set)}"
+            )
+    if len(seen_ev_ids) != len(set(seen_ev_ids)):
+        raise ValueError("testing: duplicate evidence ids in likelihood vectors")
+    if set(seen_ev_ids) != expected_ev_id_set:
+        missing = expected_ev_id_set - set(seen_ev_ids)
+        extra = set(seen_ev_ids) - expected_ev_id_set
+        raise ValueError(
+            f"testing: evidence coverage mismatch — missing {sorted(missing)}, extra {sorted(extra)}"
+        )
+
+    clustered: set[str] = set()
+    for cluster in result.dependence_clusters:
+        ids = cluster.evidence_ids
+        unknown = set(ids) - expected_ev_id_set
+        if unknown:
+            raise ValueError(f"testing: dependence cluster references unknown evidence {sorted(unknown)}")
+        if len(set(ids)) < 2:
+            raise ValueError(f"testing: dependence cluster must have >=2 distinct members, got {ids}")
+        overlap = clustered & set(ids)
+        if overlap:
+            raise ValueError(f"testing: evidence in multiple dependence clusters: {sorted(overlap)}")
+        clustered |= set(ids)
+
+    return clustered
+
+
+def _repair_prompt(base_prompt: str, validation_error: str) -> str:
+    """Append deterministic validation feedback for a complete Pass 3 retry."""
+
+    return (
+        f"{base_prompt}\n\n"
+        "## Validation repair required\n\n"
+        "Your previous response was valid JSON but failed deterministic "
+        "process-tracing validation:\n\n"
+        f"{validation_error}\n\n"
+        "Return a COMPLETE corrected result for all evidence items. Do not omit "
+        "any evidence likelihood vector. Dependence clusters must use only exact "
+        "evidence ids from the input, each cluster must contain at least two "
+        "distinct ids, and no evidence id may appear in more than one cluster. "
+        "If an item could fit multiple overlapping clusters, choose the single "
+        "most specific cluster for that item and leave it out of the others."
+    )
+
+
 def run_test(
     extraction: ExtractionResult,
     hypothesis_space: HypothesisSpace,
@@ -180,58 +248,35 @@ def run_test(
         hypothesis_ids=expected_hyp_ids,
     )
     kwargs: dict[str, Any] = {"model": model} if model else {}
-    raw_result = call_llm(
-        messages[0]["content"],
-        response_model,
-        task="process_tracing.test",
-        trace_id=trace_id,
-        **kwargs,
-    )
-    result = TestingResult.model_validate(raw_result.model_dump())
-
-    # Fail loud: the matrix must be complete and exact — every evidence item present
-    # once, and every item's vector covering exactly the hypothesis set (no missing,
-    # duplicate, or unknown ids). Silently tolerating gaps would launder bad LLM
-    # output as neutral evidence.
-    expected_hyp_id_set = set(expected_hyp_ids)
-    expected_ev_id_set = set(expected_ev_ids)
-    seen_ev_ids: list[str] = []
-    for item in result.evidence_likelihoods:
-        seen_ev_ids.append(item.evidence_id)
-        hyp_ids = [hl.hypothesis_id for hl in item.hypothesis_likelihoods]
-        if len(hyp_ids) != len(set(hyp_ids)):
-            raise ValueError(
-                f"testing: duplicate hypothesis ids in vector for evidence '{item.evidence_id}': {hyp_ids}"
-            )
-        if set(hyp_ids) != expected_hyp_id_set:
-            raise ValueError(
-                f"testing: evidence '{item.evidence_id}' vector covers {sorted(set(hyp_ids))}, "
-                f"expected exactly {sorted(expected_hyp_id_set)}"
-            )
-    if len(seen_ev_ids) != len(set(seen_ev_ids)):
-        raise ValueError("testing: duplicate evidence ids in likelihood vectors")
-    if set(seen_ev_ids) != expected_ev_id_set:
-        missing = expected_ev_id_set - set(seen_ev_ids)
-        extra = set(seen_ev_ids) - expected_ev_id_set
-        raise ValueError(
-            f"testing: evidence coverage mismatch — missing {sorted(missing)}, extra {sorted(extra)}"
+    base_prompt = messages[0]["content"]
+    prompt = base_prompt
+    last_error: ValueError | None = None
+    for attempt in range(MAX_VALIDATION_REPAIRS + 1):
+        raw_result = call_llm(
+            prompt,
+            response_model,
+            task="process_tracing.test",
+            trace_id=trace_id if attempt == 0 else f"{trace_id}-repair{attempt}",
+            **kwargs,
         )
-
-    # Validate dependence clusters: known evidence ids, >=2 members, no item in two clusters.
-    clustered: set[str] = set()
-    for cluster in result.dependence_clusters:
-        ids = cluster.evidence_ids
-        unknown = set(ids) - expected_ev_id_set
-        if unknown:
-            raise ValueError(f"testing: dependence cluster references unknown evidence {sorted(unknown)}")
-        if len(set(ids)) < 2:
-            raise ValueError(f"testing: dependence cluster must have >=2 distinct members, got {ids}")
-        overlap = clustered & set(ids)
-        if overlap:
-            raise ValueError(f"testing: evidence in multiple dependence clusters: {sorted(overlap)}")
-        clustered |= set(ids)
+        result = TestingResult.model_validate(raw_result.model_dump())
+        try:
+            clustered = _validate_testing_result(
+                result,
+                expected_hyp_ids=expected_hyp_ids,
+                expected_ev_ids=expected_ev_ids,
+            )
+            break
+        except ValueError as exc:
+            last_error = exc
+            if attempt >= MAX_VALIDATION_REPAIRS:
+                raise
+            print(f"  Pass 3 validation repair {attempt + 1}/{MAX_VALIDATION_REPAIRS}: {exc}")
+            prompt = _repair_prompt(base_prompt, str(exc))
+    else:  # pragma: no cover - loop exits by break or raise
+        raise RuntimeError(f"testing validation failed without raising: {last_error}")
 
     n_clusters = len(result.dependence_clusters)
-    print(f"  {len(seen_ev_ids)}/{len(evidence)} evidence items vectorized across {len(hyps)} hypotheses"
+    print(f"  {len(result.evidence_likelihoods)}/{len(evidence)} evidence items vectorized across {len(hyps)} hypotheses"
           f" ({n_clusters} dependence clusters covering {len(clustered)} items)")
     return result

@@ -268,7 +268,12 @@ def run_pipeline(
     else:
         if verbose:
             print("Pass 1/4: Extracting causal graph...")
-        extraction = run_extract(text, model=model, trace_id=trace_id)
+        extraction = run_extract(
+            text,
+            model=model,
+            source_packet_context=source_packet.to_prompt_context() if source_packet else None,
+            trace_id=trace_id,
+        )
         if verbose:
             print(f"  Extracted {len(extraction.events)} events, {len(extraction.evidence)} evidence, "
                   f"{len(extraction.hypotheses_in_text)} hypotheses")

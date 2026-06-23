@@ -96,6 +96,37 @@ def test_extraction_contract_preserves_source_markers_in_prompt_and_schema():
     assert "citation labels" in source_text_schema
 
 
+def test_extraction_contract_uses_source_packet_for_marker_coverage():
+    captured_prompts: list[str] = []
+
+    def _capture_call(prompt, schema, **kwargs):
+        captured_prompts.append(prompt)
+        return _quality_extraction()
+
+    source_packet_context = (
+        "Case: test\n"
+        "Sources:\n"
+        "- Constitution of the Year VIII; id=source_c; kind=primary legal text; "
+        "text_markers=Source C; observability=formal powers and institutional constraints"
+    )
+
+    with patch("pt.pass_extract.call_llm", side_effect=_capture_call):
+        run_extract(
+            "Source C says the First Consul promulgates laws and appoints officials.",
+            source_packet_context=source_packet_context,
+            trace_id="source-packet-extract-contract",
+        )
+
+    prompt = captured_prompts[0].lower()
+
+    assert "accepted source-packet contract" in prompt
+    assert "packet metadata is not itself evidence" in prompt
+    assert "for every accepted source whose configured marker appears" in prompt
+    assert "legal, constitutional, procedural" in prompt
+    assert "source c" in prompt
+    assert "constitution of the year viii" in prompt
+
+
 def test_extraction_sanitizes_non_ascii_evidence_ids():
     """LLM-assigned ids with accents/whitespace are normalized to ASCII so they
     survive later LLM round-trips (the fail-loud id match in pass_test)."""

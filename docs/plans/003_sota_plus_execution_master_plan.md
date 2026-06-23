@@ -1,7 +1,7 @@
 # Plan 003 - SOTA+ Execution Master Plan
 
 **Status:** In Progress
-**Progress:** Slices 0-1 implemented; Slice 1b source-coverage and verdict-calibration hardening completed locally with live E2E evidence.
+**Progress:** Slices 0-1 implemented; Slice 1b source-coverage and verdict-calibration hardening completed with live E2E evidence; source-aware extraction coverage is in progress after a live dual-track audit found Source C present in input but absent from extracted evidence.
 **Type:** implementation
 **Priority:** Critical
 **Blocked By:** None
@@ -253,6 +253,18 @@ the stated question.
 report source-packet and source-coverage tables, and audit source-scope cap
 distinctions.
 
+**Active hardening slice:** Pass 1 extraction must receive the accepted
+source-packet contract before hypothesis generation. For every accepted source
+whose exact marker appears in the assembled input, extraction should produce
+source-specific evidence when the source contains relevant causal,
+institutional, temporal, agency, mechanism, constraint, interpretive, or
+absence-relevant traces. Legal or constitutional source genres count as
+evidence-bearing when they specify institutional powers, constraints,
+succession rules, office design, or procedural veto points. This does not
+complete Slice 3 metadata modeling; it is the minimal bridge needed so Slice 1
+coverage reports reflect extraction behavior rather than only downstream
+auditing.
+
 ### Slice 2 - Research Question And Hypothesis Partition Gate
 
 **Goal:** Freeze the focal question, outcome window, rival hypotheses, residual,
@@ -484,7 +496,11 @@ passing benchmark record and an explanation of remaining external-data limits.
 | `tests/test_assistant.py` | | Slice 0 assistant harness contract, artifact persistence, dependency boundary, CLI errors, and opt-in live smoke. |
 | `tests/test_source_packet.py` | | Slice 1 source-packet loading, assistant-artifact compatibility, and summary metadata. |
 | `tests/test_source_coverage.py` | | Slice 1 packet-source marker coverage for input text, extracted evidence, missing sources, and unconfigured sources. |
-| `tests/test_extraction_quality.py` | `test_extraction_contract_preserves_source_markers_in_prompt_and_schema` | Slice 1b extraction prompt/schema preserve source markers so packet coverage can be measured on live output. |
+| `tests/test_extraction_quality.py` | | Slice 1b extraction prompt/schema preserve source markers and source-packet marker coverage so packet coverage can be measured on live output. |
+| tests/test_extraction_quality.py | test_extraction_contract_preserves_source_markers_in_prompt_and_schema | Source-marker preservation prompt/schema regression. |
+| tests/test_extraction_quality.py | test_extraction_contract_uses_source_packet_for_marker_coverage | Source-packet marker coverage prompt regression. |
+| tests/test_pipeline_integration.py | TestReportConsistency::test_source_packet_context_reaches_extraction_pass | Source-aware extraction regression: the accepted source packet reaches Pass 1 before hypothesis generation. |
+| tests/test_pipeline_integration.py | TestVectorCompleteness::test_repairs_overlapping_clusters_once_with_validation_feedback | Live E2E regression: Pass 3 makes one explicit validation-repair call when dependence clusters overlap, then still fails loud if invalid. |
 | `tests/test_cli_source_packet.py` | | Slice 1 CLI `--source-packet` plumbing without an LLM call. |
 | `tests/test_pass_refine.py` | | Regression coverage for the live Slice 1 refinement failure: Pass 5 must not put evidence-to-hypothesis support links into causal edges. |
 | `tests/test_verdict_calibration.py` | | Slice 1b deterministic synthesis status calibration against computed posteriors. |

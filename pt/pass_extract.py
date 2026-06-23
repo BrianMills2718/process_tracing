@@ -44,11 +44,39 @@ def _sanitize_evidence_ids(extraction: ExtractionResult) -> ExtractionResult:
     return extraction
 
 
-def run_extract(text: str, *, model: str | None = None, trace_id: str | None = None) -> ExtractionResult:
-    """Extract causal graph from text."""
+def run_extract(
+    text: str,
+    *,
+    model: str | None = None,
+    source_packet_context: str | None = None,
+    trace_id: str | None = None,
+) -> ExtractionResult:
+    """Extract causal graph from text.
+
+    Args:
+        source_packet_context: Optional accepted source-packet contract text.
+            When present, extraction must use it as source-scope guidance while
+            still extracting evidence only from the input text itself.
+    """
     if trace_id is None:
         trace_id = hashlib.sha256(text.encode()).hexdigest()[:8]
-    messages = render_prompt(PROMPTS_DIR / "pass1_extract.yaml", text=text)
+    if source_packet_context:
+        source_packet_block = (
+            "## Accepted source-packet contract\n\n"
+            "The analyst supplied this source packet before extraction. Use it "
+            "to preserve source coverage, source genre, observability limits, "
+            "and exact text markers. Packet metadata is NOT evidence by itself: "
+            "each extracted evidence item must still quote or closely paraphrase "
+            "the input text below.\n\n"
+            f"{source_packet_context.strip()}"
+        )
+    else:
+        source_packet_block = ""
+    messages = render_prompt(
+        PROMPTS_DIR / "pass1_extract.yaml",
+        text=text,
+        source_packet_block=source_packet_block,
+    )
     kwargs: dict[str, Any] = {"model": model} if model else {}
     result = call_llm(
         messages[0]["content"],
