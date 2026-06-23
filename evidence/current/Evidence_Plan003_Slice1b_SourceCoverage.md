@@ -100,3 +100,38 @@ Remaining blocker:
 - The final live run's leading hypothesis is high-support but fragile, so the
   next evidence slice also needs fewer, stronger discriminating traces and a
   dependence-cluster review.
+
+## Fresh Live E2E For Dual-Track Audit Correction
+
+After the dual-track audit correction, a fresh non-mocked E2E was run on the
+current code path:
+
+```bash
+PYTHONPATH=. python -m pt input_text/source_packets/18_brumaire_source_packet.txt \
+  --output-dir output/live_plan003_dual_audit_20260623_001 \
+  --source-packet docs/source_packets/18_BRUMAIRE_SOURCE_PACKET.json \
+  --theories input_text/theories/18_brumaire_rival_frameworks.txt \
+  --refine \
+  --model gpt-5-mini \
+  --max-budget 2.0
+```
+
+Result: completed end to end in `843.1s`, writing:
+
+- `output/live_plan003_dual_audit_20260623_001/result.json`
+- `output/live_plan003_dual_audit_20260623_001/report.html`
+- `output/live_plan003_dual_audit_20260623_001/refinement.json`
+
+Audit:
+
+- Given-source grade: `B (82/100)`
+- Claim-scope grade: `B (82/100)`
+- Source material context: 5 accepted packet sources, 4 represented in extracted
+  evidence, 37/37 evidence items assigned to packet sources
+- Conditional caps: Source C (`Constitution of the Year VIII`) is present in
+  the input but has zero extracted evidence; result lacks decisive tests
+- Claim-scope cap: unresolved high-priority private-correspondence gap
+
+This live run validates the user-facing distinction: missing accepted-source
+coverage is a given-source critique, while missing source classes beyond the
+accepted corpus are claim-scope caveats.

@@ -20,15 +20,16 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 
 ## Current Phase
 
-Slice 1b complete and pushed in `f18f46d`; dual-track audit correction pushed in `58d5e05` and extended locally in this slice. The audit must show source material known to the grader, then separate given-source critique caps from claim-scope caps. The active remaining Brumaire blockers are: conditional robustness (high-support fragile winner) and claim scope (unresolved high-priority private-correspondence gap).
+Slice 1b complete and pushed in `f18f46d`; dual-track audit correction pushed in `58d5e05` and `4ab3ef2`. The audit shows source material known to the grader, then separates given-source critique caps from claim-scope caps. Fresh live run `output/live_plan003_dual_audit_20260623_001` shows the current active blockers: accepted-source coverage for Source C, lack of decisive tests, and broader claim-scope private-correspondence gap.
 
 ## Completed
 
 - Slice 1 baseline source-packet contract, Brumaire benchmark packet, and report/audit source-scope cap were committed in `559fbb1`.
 - Initial Slice 1b implementation added source coverage models, report table, audit category fields, and Brumaire packet `source_id` / `text_markers`.
 - Live Slice 1b Brumaire run `output/live_plan003_slice1b_final_20260622_002` represented 5/5 packet sources in extracted evidence and assigned 48/49 evidence items.
+- Fresh dual-track audit live run `output/live_plan003_dual_audit_20260623_001` represented 4/5 packet sources in extracted evidence and correctly classified Source C's missing extracted evidence as a given-source cap, separate from the private-correspondence claim-scope cap.
 - Deterministic verdict calibration removed low-posterior "supported" overclaims from the live artifact; the remaining audit caps are split into given-source robustness and broader claim-scope source gaps.
 
 ## Next
 
-Next slice should first address the given-source robustness cap with stronger discriminating traces and dependence-cluster review. Source acquisition or disposition of the high-priority missing source class is a separate claim-scope lane before broader publication-strength claims.
+Next slice should first address the given-source caps: ensure each accepted packet source produces extracted evidence or is explicitly dispositioned, then add/identify decisive discriminating traces. Source acquisition or disposition of the high-priority missing private-correspondence class is a separate claim-scope lane before broader publication-strength claims.
