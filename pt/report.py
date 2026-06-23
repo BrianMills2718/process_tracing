@@ -926,16 +926,21 @@ def _render_academic_review(
     )
     if source_packet is None:
         packet_html = """
-        <h5>Source Packet Contract</h5>
+        <h5>Source Material Known to the Grader</h5>
         <p class="small text-muted">No source packet is stored in this result. Source-scope
-        caps therefore depend on extracted evidence and synthesis limitations.</p>"""
+        caps therefore depend on extracted evidence and synthesis limitations. The
+        given-source critique is conditional on the supplied input text.</p>"""
     else:
         packet_limitations = "; ".join(source_packet.limitations) or "None stated"
         packet_gaps = "; ".join(source_packet.high_priority_gaps) or "None"
         packet_groups = ", ".join(source_packet.source_groups) or "No groups specified"
         packet_path = source_packet.source_packet_path or "not stored"
         packet_html = f"""
-        <h5>Source Packet Contract</h5>
+        <h5>Source Material Known to the Grader</h5>
+        <p class="small text-muted">The given-source critique below is graded
+        conditional on this accepted source material and on the source coverage
+        table. Known gaps are claim-scope caveats, not automatic failures of the
+        analysis given these sources.</p>
         <div class="table-responsive">
           <table class="table table-sm table-bordered">
             <tbody>

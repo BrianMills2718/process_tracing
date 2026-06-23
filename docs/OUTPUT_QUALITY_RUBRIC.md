@@ -10,6 +10,17 @@ design would not survive a PhD-level methods critique; unresolved source gaps
 cap claims beyond the current corpus rather than making the conditional critique
 meaningless.
 
+## Two Audit Tracks
+
+Every audit reports two related but distinct scores:
+
+- **Given-source grade**: quality of the process-tracing analysis conditional on
+  the accepted source material. The grader must see the source packet and
+  packet-source coverage summary before applying this grade.
+- **Claim-scope grade**: how far the resulting claims can travel beyond the
+  accepted corpus. Unresolved source gaps lower this track, but they are not by
+  themselves failures of the given-source critique.
+
 ## Acceptance Criteria
 
 - `A`: 90-100. PhD-review-ready under the available corpus. No active academic
@@ -49,7 +60,10 @@ with Van Evera-style discrimination between rivals.
 Source-scope caps are claim-strength caps, not ordinary critique rows. They say
 "do not generalize beyond the accepted corpus yet"; they should not be rendered
 as if the given-source analysis failed merely because additional sources would
-improve publication readiness.
+improve publication readiness. Packet-source coverage is different: if an
+accepted packet source is not represented in extracted evidence, the grader does
+not know that source material was actually used, so that remains a given-source
+critique cap.
 
 | Cap | Trigger | Required improvement |
 |---:|---|---|
@@ -76,16 +90,17 @@ hypothesis discrimination.
 
 ## Optimality Gate
 
-Each audit must say whether the output is optimal for the current corpus and
-what kind of iteration is next:
+Each audit must say whether the output is optimal for the accepted-source
+critique and separately whether claim-scope caps remain:
 
-- `optimal_for_current_corpus`: no academic caps remain; the output can be read
-  as PhD-review-ready under the available evidence.
+- `optimal_given_accepted_sources`: no conditional caps remain; the output can
+  be read as PhD-review-ready conditional on the accepted source material.
 - `not_optimal` + `repair_report_or_model`: the JSON contains enough information,
   but the report/model presentation or synthesis needs correction.
-- `not_optimal` + `collect_or_design_evidence`: the remaining blocker requires
-  new source material, sharper discriminators, or pre-specified tests. Report
-  polishing alone must not raise the grade.
+- `not_optimal` + `design_stronger_conditional_tests`: the given-source analysis
+  needs stronger discriminators, dependence review, or pre-specified tests.
+- `claim_scope_acceptance_criteria`: source gaps or packet limitations that cap
+  broader claims beyond the accepted corpus.
 
 The HTML report must include an evidence triage table that classifies extracted
 items as top drivers, displayed discriminators, background weak signals,
@@ -94,11 +109,14 @@ low-relevance items, near-neutral inventory, or tested-but-unlinked evidence.
 ## Iteration Protocol
 
 1. Run `make audit-result RESULT=RESULT REPORT=REPORT`.
-2. Read both category recommendations and academic evidence caps.
+2. Read `source_material_context`, then read `conditional_caps` and
+   `claim_scope_caps` separately.
 3. Fix report-only failures first when the JSON already contains the needed
    information.
-4. If a cap reflects missing evidence, stop trying to polish the report and
-   collect the recommended source material.
+4. If a conditional cap reflects weak discriminators or fragility, design
+   stronger tests/traces within the accepted-source critique. If a claim-scope
+   cap reflects missing sources, keep current conclusions conditional and only
+   collect or disposition those sources before broader claims.
 5. Rerun extraction, testing, Bayesian update, report generation, and the audit.
 6. Stop only when the output reaches `A` or the remaining cap requires external
    evidence not present in the current input corpus.

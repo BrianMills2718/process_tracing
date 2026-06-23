@@ -20,15 +20,15 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 
 ## Current Phase
 
-Slice 1b complete and pushed in `f18f46d`. The active remaining Brumaire blockers are external evidence and robustness: the accepted packet still has an unresolved high-priority private-correspondence gap, and the final live winner is high-support but fragile.
+Slice 1b complete and pushed in `f18f46d`; dual-track audit correction pushed in `58d5e05` and extended locally in this slice. The audit must show source material known to the grader, then separate given-source critique caps from claim-scope caps. The active remaining Brumaire blockers are: conditional robustness (high-support fragile winner) and claim scope (unresolved high-priority private-correspondence gap).
 
 ## Completed
 
 - Slice 1 baseline source-packet contract, Brumaire benchmark packet, and report/audit source-scope cap were committed in `559fbb1`.
 - Initial Slice 1b implementation added source coverage models, report table, audit category fields, and Brumaire packet `source_id` / `text_markers`.
 - Live Slice 1b Brumaire run `output/live_plan003_slice1b_final_20260622_002` represented 5/5 packet sources in extracted evidence and assigned 48/49 evidence items.
-- Deterministic verdict calibration removed low-posterior "supported" overclaims from the live artifact; the remaining audit caps are source-scope and high-support fragile robustness, not report polish.
+- Deterministic verdict calibration removed low-posterior "supported" overclaims from the live artifact; the remaining audit caps are split into given-source robustness and broader claim-scope source gaps.
 
 ## Next
 
-Next slice should acquire or disposition the high-priority missing source class and/or add stronger discriminating traces with dependence-cluster review, then rerun the live Brumaire audit.
+Next slice should first address the given-source robustness cap with stronger discriminating traces and dependence-cluster review. Source acquisition or disposition of the high-priority missing source class is a separate claim-scope lane before broader publication-strength claims.

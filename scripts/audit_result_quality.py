@@ -213,6 +213,49 @@ def _diagnostic_strength_stats(result: ProcessTracingResult) -> dict[str, Any]:
     }
 
 
+def _source_material_context(result: ProcessTracingResult) -> dict[str, Any]:
+    """Summarize the source material visible to the grader."""
+    packet = result.source_packet
+    coverage = result.source_coverage
+    accepted_sources: list[dict[str, Any]] = []
+    if coverage is not None:
+        accepted_sources = [
+            {
+                "source_id": item.source_id,
+                "title": item.title,
+                "source_group": item.source_group,
+                "source_kind": item.source_kind,
+                "status": item.status,
+                "input_marker_hits": item.input_marker_hits,
+                "evidence_count": item.evidence_count,
+            }
+            for item in coverage.items
+        ]
+    return {
+        "has_source_packet": packet is not None,
+        "case_name": packet.case_name if packet else None,
+        "research_question": packet.research_question if packet else result.hypothesis_space.research_question,
+        "source_count": packet.source_count if packet else 0,
+        "source_groups": packet.source_groups if packet else [],
+        "source_kinds": packet.source_kinds if packet else [],
+        "date_coverage": packet.date_coverage if packet else [],
+        "known_gap_count": packet.known_gap_count if packet else 0,
+        "high_priority_gap_count": packet.high_priority_gap_count if packet else 0,
+        "high_priority_gaps": packet.high_priority_gaps if packet else [],
+        "packet_limitations": packet.limitations if packet else [],
+        "has_source_coverage": coverage is not None,
+        "sources_with_evidence": coverage.sources_with_evidence if coverage else 0,
+        "assigned_evidence_count": coverage.assigned_evidence_count if coverage else 0,
+        "unassigned_evidence_count": len(coverage.unassigned_evidence_ids) if coverage else 0,
+        "accepted_sources": accepted_sources,
+        "interpretation": (
+            "Conditional/given-source critique uses the accepted source packet and extracted "
+            "evidence coverage. Known gaps cap broader claim scope; they are not by themselves "
+            "failures of the analysis given the accepted sources."
+        ),
+    }
+
+
 def _academic_caps(
     result: ProcessTracingResult,
     *,
@@ -220,10 +263,12 @@ def _academic_caps(
     fragility: dict[str, Any],
     verdict_issues: list[str],
     network: dict[str, Any],
-) -> tuple[int, list[dict[str, Any]], list[str]]:
-    """Hard PhD-methods caps: visibility cannot overcome weak evidentiary basis."""
-    caps: list[dict[str, Any]] = []
-    recommendations: list[str] = []
+) -> tuple[int, list[dict[str, Any]], int, list[dict[str, Any]], list[str], list[str]]:
+    """Hard caps split into given-source critique and broader claim scope."""
+    conditional_caps: list[dict[str, Any]] = []
+    claim_scope_caps: list[dict[str, Any]] = []
+    conditional_recommendations: list[str] = []
+    claim_scope_recommendations: list[str] = []
 
     def add(
         cap: int,
@@ -231,15 +276,25 @@ def _academic_caps(
         recommendation: str,
         action_type: str,
         acceptance_criteria: str,
+        *,
+        track: str,
     ) -> None:
-        caps.append({
+        entry = {
             "cap": cap,
             "reason": reason,
             "recommendation": recommendation,
             "action_type": action_type,
             "acceptance_criteria": acceptance_criteria,
-        })
-        recommendations.append(recommendation)
+            "track": track,
+        }
+        if track == "conditional":
+            conditional_caps.append(entry)
+            conditional_recommendations.append(recommendation)
+        elif track == "claim_scope":
+            claim_scope_caps.append(entry)
+            claim_scope_recommendations.append(recommendation)
+        else:
+            raise ValueError(f"unknown cap track: {track}")
 
     limitations = " ".join(result.synthesis.limitations).lower()
     source_packet = result.source_packet
@@ -251,8 +306,9 @@ def _academic_caps(
                 78,
                 "The given-source critique may be coherent, but no source packet is stored to define how far claims can travel beyond the supplied text.",
                 "Keep conclusions conditional on the supplied text; add an explicit source packet only before broader publication-strength claims.",
-                "external_evidence",
+                "claim_scope",
                 "At least three independent source groups are represented, including one primary-source group and one rival/critical secondary account.",
+                track="claim_scope",
             )
         elif (
             source_packet.source_count < 3
@@ -263,8 +319,9 @@ def _academic_caps(
                 82,
                 "The accepted-source critique may be coherent, but the packet still names source-scope limits that cap broader claims.",
                 "Keep the critique conditional on accepted sources; repair or explicitly disposition packet limits only before broader publication-strength claims.",
-                "external_evidence",
+                "claim_scope",
                 "The packet has at least three independent source groups, no unresolved high-priority gaps, and packet limitations are either resolved or explicitly accepted.",
+                track="claim_scope",
             )
         else:
             add(
@@ -273,6 +330,7 @@ def _academic_caps(
                 "Regenerate or repair synthesis so source-scope limitations are based on the accepted packet rather than stale generic caveats.",
                 "report_or_synthesis",
                 "The synthesis and report agree on the accepted source packet and remaining source-scope limits.",
+                track="conditional",
             )
         source_scope_capped = True
 
@@ -289,17 +347,19 @@ def _academic_caps(
             82,
             "The critique is conditional on accepted sources; unresolved packet gaps cap claims beyond that corpus.",
             "Do not treat source gaps as failures of the given-source critique; acquire, extend, or explicitly disposition them before publication-strength claims.",
-            "external_evidence",
+            "claim_scope",
             "The packet has at least three independent source groups, no unresolved high-priority gaps, and packet limitations are either resolved or explicitly accepted.",
+            track="claim_scope",
         )
 
     if source_packet is not None and source_coverage is None:
         add(
             82,
             "A source packet is present, but no packet-source coverage report is stored.",
-            "Compute packet-source coverage so the report shows which source groups produced evidence.",
+            "Compute packet-source coverage so the grader can see which accepted source groups produced evidence.",
             "report_or_model",
             "Every accepted source-packet run stores source coverage with per-source input marker and evidence counts.",
+            track="conditional",
         )
     elif source_coverage is not None and (
         source_coverage.sources_with_evidence < source_coverage.source_count
@@ -309,8 +369,9 @@ def _academic_caps(
             82,
             "Packet-source coverage is incomplete or not explicitly configured for every source.",
             "Repair packet source markers or assemble the corpus so every packet source is represented in extracted evidence, or explicitly accept the gap.",
-            "external_evidence",
+            "report_or_model",
             "Every packet source has explicit text markers and at least one extracted evidence item, or the missing source is moved to known_gaps with an explicit disposition.",
+            track="conditional",
         )
 
     diagnostic = _diagnostic_strength_stats(result)
@@ -321,14 +382,16 @@ def _academic_caps(
             "Design a small set of pre-specified hoop, smoking-gun, and discriminating straw-in-the-wind tests before rerunning likelihood elicitation.",
             "test_design",
             "Each major rival pair has at least one pre-specified discriminator and at least one evidence item reaches moderate diagnostic strength.",
+            track="conditional",
         )
     elif diagnostic["decisive_items"] == 0:
         add(
             84,
             "The result lacks decisive process-tracing tests.",
             "Seek direct traces that would be unlikely under rival hypotheses, not just background facts that weakly favor one story.",
-            "external_evidence",
+            "test_design",
             "At least one decisive or multiple moderate diagnostic traces are found for the leading mechanism.",
+            track="conditional",
         )
 
     total = temporal["total"] or 1
@@ -338,8 +401,9 @@ def _academic_caps(
             80,
             f"Only {temporal['proximate']}/{temporal['total']} evidence items are proximate to the focal outcome.",
             "Collect and separately score outcome-proximate evidence from the final decision window; do not let background conditions carry the main causal claim.",
-            "external_evidence",
+            "test_design",
             "At least 20% of scored evidence is proximate to the focal outcome and one proximate item is among the leading hypothesis's top drivers.",
+            track="conditional",
         )
     if temporal["top_driver_background"]:
         add(
@@ -348,6 +412,7 @@ def _academic_caps(
             "Separate background enabling conditions from mechanism evidence and require at least one proximate top driver for a publication-strength claim.",
             "model_design",
             "Top-driver summaries distinguish enabling conditions from mechanism traces, with at least one proximate mechanism trace for the winner.",
+            track="conditional",
         )
 
     if fragility.get("high_fragile"):
@@ -355,8 +420,9 @@ def _academic_caps(
             84,
             "The leading hypothesis has high comparative support but fragile robustness.",
             "Treat the winner as a provisional ranking; seek fewer, stronger discriminating traces and rerun sensitivity after dependence-cluster review.",
-            "external_evidence",
+            "test_design",
             "The winning hypothesis is robust or moderate after adding stronger traces and reviewing dependence clusters.",
+            track="conditional",
         )
 
     if _broad_winner_risk(result):
@@ -366,6 +432,7 @@ def _academic_caps(
             "Split the broad winner into narrower mechanisms or add explicit discriminators so overlap with rivals cannot create an artificial victory.",
             "hypothesis_design",
             "The broad hypothesis is split or narrowed, and every rival pair has named discriminating predictions.",
+            track="conditional",
         )
 
     if verdict_issues:
@@ -375,6 +442,7 @@ def _academic_caps(
             "Calibrate verdict labels to comparative support; label low-support but plausible mechanisms as residual or secondary, not supported.",
             "report_or_synthesis",
             "No supported/strongly-supported verdict has comparative support below 0.10 unless explicitly labeled secondary.",
+            track="conditional",
         )
 
     if network["isolated_evidence_count"] > len(result.extraction.evidence) * 0.5:
@@ -384,33 +452,63 @@ def _academic_caps(
             "Classify unlinked evidence as background, discarded, or pending-test evidence so readers can distinguish unused inventory from causal support.",
             "report_or_model",
             "Every unlinked evidence item is triaged as background, near-neutral, low-relevance, discarded, or pending-test evidence.",
+            track="conditional",
         )
 
-    academic_cap = min([entry["cap"] for entry in caps], default=100)
-    return academic_cap, caps, recommendations
+    conditional_cap = min([entry["cap"] for entry in conditional_caps], default=100)
+    claim_scope_cap = min([entry["cap"] for entry in claim_scope_caps], default=100)
+    return (
+        conditional_cap,
+        conditional_caps,
+        claim_scope_cap,
+        claim_scope_caps,
+        conditional_recommendations,
+        claim_scope_recommendations,
+    )
 
 
-def _optimality_status(score: int, academic_caps: list[dict[str, Any]]) -> dict[str, Any]:
-    """Describe whether the output is optimal and what kind of iteration is next."""
-    external_types = {"external_evidence", "test_design", "hypothesis_design"}
-    external_blockers = [
-        cap for cap in academic_caps
-        if cap.get("action_type") in external_types
+def _optimality_status(
+    conditional_score: int,
+    conditional_caps: list[dict[str, Any]],
+    claim_scope_caps: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Describe optimality for the given-source critique and claim scope."""
+    design_types = {"test_design", "hypothesis_design"}
+    design_blockers = [
+        cap for cap in conditional_caps
+        if cap.get("action_type") in design_types
     ]
-    if score >= 90 and not academic_caps:
+    report_blockers = [
+        cap for cap in conditional_caps
+        if cap.get("action_type") in {"report_or_model", "report_or_synthesis", "model_design"}
+    ]
+    if conditional_score >= 90 and not conditional_caps:
         return {
-            "status": "optimal_for_current_corpus",
-            "next_iteration_mode": "none",
+            "status": "optimal_given_accepted_sources",
+            "next_iteration_mode": "none_for_given_source_critique",
             "blocked_by_external_evidence": False,
+            "blocked_by_claim_scope": bool(claim_scope_caps),
             "acceptance_criteria": [],
+            "claim_scope_acceptance_criteria": [
+                cap["acceptance_criteria"] for cap in claim_scope_caps
+            ],
         }
-    mode = "collect_or_design_evidence" if external_blockers else "repair_report_or_model"
+    if design_blockers:
+        mode = "design_stronger_conditional_tests"
+    elif report_blockers:
+        mode = "repair_report_or_model"
+    else:
+        mode = "repair_conditional_analysis"
     return {
         "status": "not_optimal",
         "next_iteration_mode": mode,
-        "blocked_by_external_evidence": bool(external_blockers),
+        "blocked_by_external_evidence": bool(design_blockers),
+        "blocked_by_claim_scope": bool(claim_scope_caps),
         "acceptance_criteria": [
-            cap["acceptance_criteria"] for cap in academic_caps
+            cap["acceptance_criteria"] for cap in conditional_caps
+        ],
+        "claim_scope_acceptance_criteria": [
+            cap["acceptance_criteria"] for cap in claim_scope_caps
         ],
     }
 
@@ -561,7 +659,9 @@ def audit_result(
     ]
     packet = result.source_packet
     coverage = result.source_coverage
-    source_packet_visible = packet is None or _report_has(report_html, "source packet contract")
+    source_packet_visible = packet is None or _report_has(
+        report_html, "source material known to the grader"
+    ) or _report_has(report_html, "source packet contract")
     source_coverage_visible = coverage is None or _report_has(report_html, "packet source coverage")
     source_scope_visible = (not damaging_absences) or _report_has(
         report_html, "source-scope", "absence"
@@ -616,43 +716,109 @@ def audit_result(
     score += categories["report_usability_and_safety"]["points"]
 
     base_score = score
-    academic_cap, academic_caps, priority_recommendations = _academic_caps(
+    (
+        conditional_cap,
+        conditional_caps,
+        claim_scope_cap,
+        claim_scope_caps,
+        conditional_recommendations,
+        claim_scope_recommendations,
+    ) = _academic_caps(
         result,
         temporal=temporal,
         fragility=fragility,
         verdict_issues=verdict_issues,
         network=network,
     )
-    score = min(base_score, academic_cap)
-    optimality = _optimality_status(score, academic_caps)
+    conditional_score = min(base_score, conditional_cap)
+    claim_scope_score = min(conditional_score, claim_scope_cap)
+    academic_caps = conditional_caps + claim_scope_caps
+    priority_recommendations = conditional_recommendations + claim_scope_recommendations
+    optimality = _optimality_status(
+        conditional_score,
+        conditional_caps,
+        claim_scope_caps,
+    )
 
     return {
-        "score": score,
+        "score": claim_scope_score,
         "base_score": base_score,
-        "academic_cap": academic_cap,
-        "grade": _grade(score),
+        "academic_cap": min(conditional_cap, claim_scope_cap),
+        "grade": _grade(claim_scope_score),
+        "conditional_score": conditional_score,
+        "conditional_grade": _grade(conditional_score),
+        "conditional_cap": conditional_cap,
+        "claim_scope_score": claim_scope_score,
+        "claim_scope_grade": _grade(claim_scope_score),
+        "claim_scope_cap": claim_scope_cap,
         "optimality": optimality,
+        "source_material_context": _source_material_context(result),
         "categories": categories,
         "academic_caps": academic_caps,
+        "conditional_caps": conditional_caps,
+        "claim_scope_caps": claim_scope_caps,
         "priority_recommendations": priority_recommendations,
+        "conditional_priority_recommendations": conditional_recommendations,
+        "claim_scope_priority_recommendations": claim_scope_recommendations,
     }
 
 
 def _render_text(audit: dict[str, Any]) -> str:
-    lines = [f"Grade: {audit['grade']} ({audit['score']}/100)"]
+    lines = [
+        (
+            f"Given-source grade: {audit['conditional_grade']} "
+            f"({audit['conditional_score']}/100)"
+        ),
+        (
+            f"Claim-scope grade: {audit['claim_scope_grade']} "
+            f"({audit['claim_scope_score']}/100)"
+        ),
+    ]
     if audit.get("base_score") != audit.get("score"):
         lines.append(
-            f"Report-surface score: {audit['base_score']}/100; academic evidence cap: {audit['academic_cap']}/100"
+            "Report-surface score: "
+            f"{audit['base_score']}/100; conditional cap: "
+            f"{audit['conditional_cap']}/100; claim-scope cap: "
+            f"{audit['claim_scope_cap']}/100"
         )
+    source_context = audit.get("source_material_context") or {}
+    lines.append("- source_material_context:")
+    for key in [
+        "has_source_packet",
+        "case_name",
+        "source_count",
+        "source_groups",
+        "source_kinds",
+        "sources_with_evidence",
+        "assigned_evidence_count",
+        "known_gap_count",
+        "high_priority_gap_count",
+        "high_priority_gaps",
+    ]:
+        lines.append(f"  {key}: {source_context.get(key)}")
+    if source_context.get("accepted_sources"):
+        lines.append("  accepted_sources:")
+        for source in source_context["accepted_sources"]:
+            lines.append(
+                "    - "
+                f"{source['source_id']}: {source['title']} "
+                f"({source['source_kind']}, status={source['status']}, "
+                f"evidence_count={source['evidence_count']})"
+            )
     for name, details in audit["categories"].items():
         lines.append(f"- {name}: {details['points']}/{details['max']}")
         for key, value in details.items():
             if key in {"points", "max"}:
                 continue
             lines.append(f"  {key}: {value}")
-    if audit.get("academic_caps"):
-        lines.append("- academic_caps:")
-        for cap in audit["academic_caps"]:
+    if audit.get("conditional_caps"):
+        lines.append("- conditional_caps:")
+        for cap in audit["conditional_caps"]:
+            lines.append(f"  cap {cap['cap']}: {cap['reason']}")
+            lines.append(f"    recommendation: {cap['recommendation']}")
+    if audit.get("claim_scope_caps"):
+        lines.append("- claim_scope_caps:")
+        for cap in audit["claim_scope_caps"]:
             lines.append(f"  cap {cap['cap']}: {cap['reason']}")
             lines.append(f"    recommendation: {cap['recommendation']}")
     if audit.get("priority_recommendations"):

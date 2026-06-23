@@ -17,6 +17,8 @@ Plan 003 Slice 1b: source-packet coverage verification and report/synthesis hard
   NUL/C0 characters into HTML.
 - Added deterministic synthesis verdict calibration in `pt/verdict_calibration.py`
   so very-low-posterior hypotheses cannot remain labeled `supported`.
+- Added dual-track audit semantics: the grader sees `source_material_context`,
+  then receives a given-source grade and a separate claim-scope grade.
 
 ## Deterministic Verification
 
@@ -73,8 +75,13 @@ make audit-result \
   FOCAL_YEAR=1799
 ```
 
-Result: `B (82/100)`, report-surface score `100/100`, academic evidence cap
-`82/100`.
+Result after the dual-track audit correction:
+
+- Given-source grade: `B (84/100)`
+- Claim-scope grade: `B (82/100)`
+- Report-surface score: `100/100`
+- Conditional cap: high-support fragile winner
+- Claim-scope cap: unresolved high-priority source gap
 
 Resolved blockers:
 

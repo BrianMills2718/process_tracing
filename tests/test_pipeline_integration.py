@@ -735,6 +735,7 @@ class TestReportConsistency:
             "network coverage",
             "not discarded",
             "academic phd review",
+            "source material known to the grader",
             "given-source recommendations by pipeline output",
             "phd-level critique given accepted sources",
             "claim-scope caveat",
@@ -758,7 +759,7 @@ class TestReportConsistency:
         assert audit["academic_caps"]
         assert audit["priority_recommendations"]
         assert audit["optimality"]["status"] == "not_optimal"
-        assert audit["optimality"]["next_iteration_mode"] == "collect_or_design_evidence"
+        assert audit["optimality"]["next_iteration_mode"] == "design_stronger_conditional_tests"
         assert audit["optimality"]["blocked_by_external_evidence"] is True
         assert audit["optimality"]["acceptance_criteria"]
         assert audit["categories"]["report_usability_and_safety"]["top_graph_connected"] is True
@@ -782,7 +783,7 @@ class TestReportConsistency:
         normalized = " ".join(html.lower().split())
         audit = audit_result(result, html, focal_year_override=1799)
 
-        assert "source packet contract" in normalized
+        assert "source material known to the grader" in normalized
         assert "packet source coverage" in normalized
         assert "packet metadata is not itself evidence" in normalized
         assert "given-source recommendations by pipeline output" in normalized
@@ -791,13 +792,23 @@ class TestReportConsistency:
         assert "input corpus and source base" not in normalized
         assert "private correspondence among conspirators" in normalized
         assert audit["categories"]["source_scope_and_absence"]["source_packet_present"] is True
+        assert audit["source_material_context"]["has_source_packet"] is True
+        assert audit["source_material_context"]["source_count"] == 3
+        assert audit["source_material_context"]["accepted_sources"]
+        assert audit["conditional_grade"]
+        assert audit["claim_scope_grade"]
+        assert any(
+            "packet-source coverage is incomplete" in cap["reason"].lower()
+            for cap in audit["conditional_caps"]
+        )
+        assert audit["claim_scope_caps"]
         assert audit["categories"]["source_scope_and_absence"]["source_coverage_present"] is True
         assert audit["categories"]["source_scope_and_absence"]["source_count"] == 3
         assert audit["categories"]["source_scope_and_absence"]["sources_with_evidence"] == 2
         assert audit["categories"]["source_scope_and_absence"]["high_priority_gap_count"] == 1
         assert any(
             "conditional on accepted sources" in cap["reason"].lower()
-            for cap in audit["academic_caps"]
+            for cap in audit["claim_scope_caps"]
         )
 
     def test_network_keeps_weak_top_driver_edges_visible(self):
