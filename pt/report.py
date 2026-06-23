@@ -798,8 +798,8 @@ def _render_academic_review(
             "No accepted source-packet contract is stored with this result."
         )
         source_scope_recommendation = (
-            "Build or load a source packet with primary documents, rival secondary "
-            "accounts, source genre metadata, observability notes, and source gaps."
+            "Claims are conditional on the supplied text. Build or load a source "
+            "packet only when extending beyond this accepted-source critique."
         )
     else:
         source_kinds = ", ".join(source_packet.source_kinds) or "unspecified"
@@ -820,8 +820,9 @@ def _render_academic_review(
         if source_packet.high_priority_gap_count:
             gap_text = ", ".join(source_packet.high_priority_gaps)
             source_scope_recommendation = (
-                f"Resolve or explicitly accept high-priority packet gaps before "
-                f"publication-strength claims: {gap_text}."
+                f"Do not treat this as a flaw in the given-source critique. Treat "
+                f"it as a claim-scope limit: resolve or explicitly accept these "
+                f"gaps before broader publication-strength claims: {gap_text}."
             )
         else:
             source_scope_recommendation = (
@@ -843,45 +844,41 @@ def _render_academic_review(
     proximate_share = temporal["proximate"] / total_evidence
     high_fragile = top_post >= 0.75 and top_robust == "fragile"
     too_many_unlinked = network_coverage["isolated_evidence_count"] > len(result.extraction.evidence) * 0.5
-    external_blockers: list[str] = []
+    source_scope_blockers: list[str] = []
+    given_source_blockers: list[str] = []
     if source_packet is None and single_source_limited:
-        external_blockers.append("single-source corpus without source packet")
+        source_scope_blockers.append("single-source corpus without source packet")
     elif source_packet is not None and (
         source_packet.source_count < 3
         or source_packet.high_priority_gap_count > 0
         or source_packet.limitations
     ):
-        external_blockers.append("source-packet gaps or limitations")
+        source_scope_blockers.append("source-packet gaps or limitations")
     if source_packet is not None and source_coverage is None:
-        external_blockers.append("source coverage not computed")
+        given_source_blockers.append("accepted-source coverage not computed")
     elif source_coverage is not None and (
         source_coverage.sources_with_evidence < source_coverage.source_count
         or source_coverage.unconfigured_source_ids
     ):
-        external_blockers.append("packet source coverage gaps")
+        given_source_blockers.append("accepted-source coverage gaps")
     if diagnostic["decisive"] == 0 and diagnostic["moderate"] == 0:
-        external_blockers.append("weak diagnostic tests")
+        given_source_blockers.append("weak diagnostic tests")
     elif diagnostic["decisive"] == 0:
-        external_blockers.append("no decisive diagnostic test")
+        given_source_blockers.append("no decisive diagnostic test")
     if proximate_share < 0.20:
-        external_blockers.append("thin proximate evidence")
+        given_source_blockers.append("thin proximate evidence")
     if temporal["top_driver_background"]:
-        external_blockers.append("background top drivers")
+        given_source_blockers.append("background top drivers")
     if broad_winner:
-        external_blockers.append("broad hypothesis design")
+        given_source_blockers.append("broad hypothesis design")
     if high_fragile:
-        external_blockers.append("high-support fragile winner")
+        given_source_blockers.append("high-support fragile winner")
     if verdict_issues:
-        external_blockers.append("verdict calibration")
+        given_source_blockers.append("verdict calibration")
     if too_many_unlinked:
-        external_blockers.append("untriaged isolated evidence")
-    optimal_for_corpus = not external_blockers
+        given_source_blockers.append("untriaged isolated evidence")
+    optimal_given_sources = not given_source_blockers
     rows = [
-        (
-            "Input corpus and source base",
-            source_scope_status,
-            source_scope_recommendation,
-        ),
         (
             "Extraction and provenance",
             f"{len(result.extraction.evidence)} evidence items extracted; {network_coverage['isolated_evidence_count']} currently have no displayed graph edge.",
@@ -995,56 +992,83 @@ def _render_academic_review(
         <p class="small text-muted">Assigned evidence:
         {source_coverage.assigned_evidence_count}/{source_coverage.evidence_count};
         unassigned evidence sample: {_esc(unassigned)}</p>"""
-    optimal_steps = [
+    given_source_steps = [
         "Freeze a sharper research question and focal decision window.",
-        "Load, repair, or extend the source packet before treating source-scope gaps as resolved.",
         "Split broad hypotheses and define pairwise discriminators before testing.",
         "Collect proximate dated traces for the decisive sequence.",
         "Rerun likelihood scoring, dependence clustering, sensitivity, and this audit.",
-        "Only then upgrade from exploratory ranking to a PhD-level causal claim.",
+        "Only then upgrade the given-source analysis from exploratory ranking to a stronger conditional claim.",
     ]
-    steps_html = "".join(f"<li>{_esc(step)}</li>" for step in optimal_steps)
-    blockers_html = "".join(f"<li>{_esc(blocker)}</li>" for blocker in external_blockers)
-    if optimal_for_corpus:
+    source_scope_steps = [
+        "Keep the current conclusions explicitly conditional on the accepted source set.",
+        "Acquire, add, or explicitly disposition the high-priority source gaps before claims that exceed the current corpus.",
+        "After source changes, rerun extraction through audit rather than treating packet metadata as evidence.",
+    ]
+    steps_html = "".join(f"<li>{_esc(step)}</li>" for step in given_source_steps)
+    source_steps_html = "".join(f"<li>{_esc(step)}</li>" for step in source_scope_steps)
+    given_blockers_html = "".join(f"<li>{_esc(blocker)}</li>" for blocker in given_source_blockers)
+    source_blockers_html = "".join(f"<li>{_esc(blocker)}</li>" for blocker in source_scope_blockers)
+    if optimal_given_sources:
         status_text = (
-            "PhD-review-ready under the current corpus. This is not a claim of historical truth; "
-            "it means the report, source scope, temporal sequence, discriminators, and diagnostic "
-            "tests clear the active audit gates."
+            "The analysis clears the given-source critique gate. This is not a claim of "
+            "historical truth or source completeness; it means the report, temporal sequence, "
+            "discriminators, and diagnostic tests clear the active audit gates conditional on "
+            "the accepted source set."
         )
         gate_html = """
         <div class="alert alert-success">
-          <strong>Optimality Gate:</strong> optimal_for_current_corpus. Next iteration mode:
-          <strong>none</strong>. No active academic evidence caps remain.
+          <strong>Optimality Gate:</strong> optimal_given_accepted_sources. Next iteration mode:
+          <strong>none for the given-source critique</strong>. No active conditional-analysis blockers remain.
         </div>"""
-        proceed_html = "<p class=\"small mb-0\">No required iteration remains under the current corpus. Future work should add archival sources only if the research question needs stronger external validation.</p>"
+        proceed_html = "<p class=\"small mb-0\">No required report/model iteration remains for the accepted-source critique. Additional sources change claim scope; they are not a prerequisite for interpreting this run conditional on the current corpus.</p>"
     else:
         status_text = (
-            "Exploratory process-tracing output under a limited input corpus. It is useful for "
-            "hypothesis generation and audit planning, not yet a PhD-level causal demonstration."
+            "Exploratory process-tracing output under the accepted sources. The critique below "
+            "evaluates the analysis given the current corpus; source-scope limits are recorded "
+            "separately as claim-strength caveats."
         )
         gate_html = f"""
         <div class="alert alert-danger">
-          <strong>Optimality Gate:</strong> not optimal for a PhD-level causal claim. Next iteration mode:
-          <strong>collect or design evidence</strong>, not report polishing. Blocking conditions:
-          <ul class="mb-0">{blockers_html}</ul>
+          <strong>Optimality Gate:</strong> not optimal for the given-source critique. Next iteration mode:
+          <strong>repair analysis or design stronger traces</strong>. Conditional-analysis blockers:
+          <ul class="mb-0">{given_blockers_html}</ul>
         </div>"""
         proceed_html = f"<ol>{steps_html}</ol>"
-    card_border = "border-success" if optimal_for_corpus else "border-danger"
-    header_class = "bg-success" if optimal_for_corpus else "bg-danger"
+    if source_scope_blockers:
+        source_scope_html = f"""
+        <div class="alert alert-warning">
+          <strong>Claim-Scope Caveat:</strong> the critique above is conditional on the accepted
+          source set. These source-scope limits cap broader publication-strength claims, but
+          they are not themselves criticisms of whether the analysis is coherent given the
+          supplied sources:
+          <ul class="mb-0">{source_blockers_html}</ul>
+          <p class="small mb-0 mt-2">Accepted-source status: {_esc(source_scope_status)}</p>
+          <p class="small mb-0 mt-2">{_esc(source_scope_recommendation)}</p>
+        </div>"""
+    else:
+        source_scope_html = f"""
+        <div class="alert alert-success">
+          <strong>Claim-Scope Caveat:</strong> no separate source-scope blocker is active beyond
+          the accepted-source critique. Accepted-source status: {_esc(source_scope_status)}
+          {_esc(source_scope_recommendation)}
+        </div>"""
+    card_border = "border-success" if optimal_given_sources else "border-danger"
+    header_class = "bg-success" if optimal_given_sources else "bg-danger"
     return f"""
     <div class="card mb-4 shadow-sm {card_border}">
       <div class="card-header {header_class} text-white"><h4 class="mb-0">Academic PhD Review</h4></div>
       <div class="card-body">
         <p><strong>Current scholarly status:</strong> {_esc(status_text)}</p>
         {gate_html}
+        {source_scope_html}
         {packet_html}
         {coverage_html}
-        <h5>Recommendations by Pipeline Output</h5>
+        <h5>Given-Source Recommendations by Pipeline Output</h5>
         <div class="table-responsive">
           <table class="table table-sm table-bordered">
             <thead><tr>
               <th>Output</th>
-              <th>PhD-level critique</th>
+              <th>PhD-level critique given accepted sources</th>
               <th>How to improve</th>
             </tr></thead>
             <tbody>{row_html}</tbody>
@@ -1064,6 +1088,8 @@ def _render_academic_review(
         </div>
         <h5>Proceed Until Optimal</h5>
         {proceed_html}
+        <h5>When Extending Beyond These Sources</h5>
+        <ol>{source_steps_html}</ol>
       </div>
     </div>"""
 

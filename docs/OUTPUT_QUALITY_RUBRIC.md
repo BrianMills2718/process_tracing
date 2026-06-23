@@ -1,10 +1,14 @@
 # Output Quality Rubric
 
 This rubric grades a generated process-tracing result and report from an
-academic process-tracing standpoint. It grades both the visible report and the
-underlying evidentiary basis. A polished report cannot receive an `A` if the
-input corpus, diagnostic tests, temporal sequence, or hypothesis design would
-not survive a PhD-level methods critique.
+academic process-tracing standpoint. It separates two judgments that must not be
+collapsed: (1) the critique of the analysis **given the accepted sources**, and
+(2) the claim-scope caveat about whether those sources are enough for broader
+publication-strength inference. A polished report cannot receive an `A` if the
+accepted-source analysis, diagnostic tests, temporal sequence, or hypothesis
+design would not survive a PhD-level methods critique; unresolved source gaps
+cap claims beyond the current corpus rather than making the conditional critique
+meaningless.
 
 ## Acceptance Criteria
 
@@ -41,6 +45,11 @@ Diagnostic strength is measured as the post-cap, relevance-discounted pairwise
 LR spread for each evidence item (`max(LR) / min(LR)` across hypotheses), not as
 one hypothesis's centered LR against the vector mean. This keeps the gate aligned
 with Van Evera-style discrimination between rivals.
+
+Source-scope caps are claim-strength caps, not ordinary critique rows. They say
+"do not generalize beyond the accepted corpus yet"; they should not be rendered
+as if the given-source analysis failed merely because additional sources would
+improve publication readiness.
 
 | Cap | Trigger | Required improvement |
 |---:|---|---|

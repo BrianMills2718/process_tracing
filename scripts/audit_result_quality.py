@@ -249,8 +249,8 @@ def _academic_caps(
         if source_packet is None:
             add(
                 78,
-                "The synthesis itself acknowledges a single-source or single-text basis, and no source packet is stored with the result.",
-                "Add an explicit source packet: primary documents, hostile/alternative secondary accounts, and source metadata before treating the result as PhD-level causal evidence.",
+                "The given-source critique may be coherent, but no source packet is stored to define how far claims can travel beyond the supplied text.",
+                "Keep conclusions conditional on the supplied text; add an explicit source packet only before broader publication-strength claims.",
                 "external_evidence",
                 "At least three independent source groups are represented, including one primary-source group and one rival/critical secondary account.",
             )
@@ -261,8 +261,8 @@ def _academic_caps(
         ):
             add(
                 82,
-                "A source packet is present, but it is still thin or names unresolved source-scope limitations.",
-                "Repair the source packet before treating the single-text caveat as cleared.",
+                "The accepted-source critique may be coherent, but the packet still names source-scope limits that cap broader claims.",
+                "Keep the critique conditional on accepted sources; repair or explicitly disposition packet limits only before broader publication-strength claims.",
                 "external_evidence",
                 "The packet has at least three independent source groups, no unresolved high-priority gaps, and packet limitations are either resolved or explicitly accepted.",
             )
@@ -287,8 +287,8 @@ def _academic_caps(
     ):
         add(
             82,
-            "The source packet is present but does not yet clear minimum source-scope review.",
-            "Extend or repair the packet before publication-strength causal claims.",
+            "The critique is conditional on accepted sources; unresolved packet gaps cap claims beyond that corpus.",
+            "Do not treat source gaps as failures of the given-source critique; acquire, extend, or explicitly disposition them before publication-strength claims.",
             "external_evidence",
             "The packet has at least three independent source groups, no unresolved high-priority gaps, and packet limitations are either resolved or explicitly accepted.",
         )

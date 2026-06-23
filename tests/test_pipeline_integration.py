@@ -735,6 +735,9 @@ class TestReportConsistency:
             "network coverage",
             "not discarded",
             "academic phd review",
+            "given-source recommendations by pipeline output",
+            "phd-level critique given accepted sources",
+            "claim-scope caveat",
             "recommendations by pipeline output",
             "optimality gate",
             "evidence triage",
@@ -782,6 +785,10 @@ class TestReportConsistency:
         assert "source packet contract" in normalized
         assert "packet source coverage" in normalized
         assert "packet metadata is not itself evidence" in normalized
+        assert "given-source recommendations by pipeline output" in normalized
+        assert "claim-scope caveat" in normalized
+        assert "not themselves criticisms of whether the analysis is coherent given the supplied sources" in normalized
+        assert "input corpus and source base" not in normalized
         assert "private correspondence among conspirators" in normalized
         assert audit["categories"]["source_scope_and_absence"]["source_packet_present"] is True
         assert audit["categories"]["source_scope_and_absence"]["source_coverage_present"] is True
@@ -789,7 +796,7 @@ class TestReportConsistency:
         assert audit["categories"]["source_scope_and_absence"]["sources_with_evidence"] == 2
         assert audit["categories"]["source_scope_and_absence"]["high_priority_gap_count"] == 1
         assert any(
-            "source packet is present" in cap["reason"].lower()
+            "conditional on accepted sources" in cap["reason"].lower()
             for cap in audit["academic_caps"]
         )
 
