@@ -17,7 +17,9 @@ execution contract for every slice.
 
 **Target:** A long-horizon execution plan that makes each slice independently
 reviewable, E2E-testable, critique-gated, cleanup-gated, and traceable to the
-PhD / think-tank / academic-quality goal.
+PhD / think-tank / academic-quality goal, while converging toward a true
+SOTA+ methodology: source design, trace-production modeling, coherent Bayesian
+testing, adversarial audit, and explicit mixed-method causal-model bridging.
 
 **Why:** The prior failure mode was not lack of ambition. It was allowing
 implementation, report polish, and methodology claims to drift apart. This plan
@@ -58,15 +60,17 @@ This project is hybrid.
 **Deductive / plan-first surfaces:** schema contracts, CLI/Make entry points,
 `llm_client` routing, provenance requirements, no-direct-subprocess policy,
 deterministic Bayesian math, report-audit structure, artifact persistence,
-markdown/link/typing checks, and stop/go gates. These can be specified before
-implementation and must have tests.
+source-design contracts, cross-case eligibility contracts, markdown/link/typing
+checks, and stop/go gates. These can be specified before implementation and
+must have tests.
 
 **Exploratory / ladder surfaces:** exact benchmark score thresholds, calibration
 of PhD-quality grades across cases, the practical usefulness of the structural
-critic, and how much source expansion is enough for different historical
-questions. These should not get fake precision. Each needs an instrument:
-frozen benchmark cases, audit scorecards, ablations, and concrete failure
-examples that can be inspected when a metric moves.
+critic, how much source expansion is enough for different historical questions,
+and which trace-production features materially improve inference rather than
+merely adding metadata. These should not get fake precision. Each needs an
+instrument: frozen benchmark cases, audit scorecards, ablations, and concrete
+failure examples that can be inspected when a metric moves.
 
 **Hybrid rule:** every exploratory surface must still emit a concrete artifact
 that agents and humans can review. Every aggregate score must step down to the
@@ -91,6 +95,25 @@ The active architecture artifact for deductive surfaces is
 `docs/ARCHITECTURE.md`. It is required reading before changing source packets,
 the inference pipeline, acquisition planning, report/workbench behavior, or any
 cross-component data contract.
+
+## Methodology Convergence Priorities
+
+The next methodology frontier is not additional report polish. The active
+priority order for reaching SOTA+ is:
+
+1. move from a static source packet to a full source-design and acquisition
+   engine;
+2. make trace-production modeling first-class in the evidence contract;
+3. strengthen source-lineage and dependence modeling so corroboration is not
+   inflated by shared provenance;
+4. keep the structural critic adversarial and benchmarked rather than letting
+   it become decorative commentary;
+5. tighten the within-case -> cross-case bridge so process traces can feed
+   explicit causal models when eligibility gates pass;
+6. graduate claims only through frozen benchmark evidence.
+
+Any slice that improves presentation without advancing one of those priorities
+must justify itself as an audit instrument rather than a cosmetic feature.
 
 ---
 
@@ -300,7 +323,7 @@ matches the partition contract.
 **Success criteria:** downstream testing cannot proceed silently with a broad
 or overlapping hypothesis menu.
 
-### Slice 3 - Extraction Provenance And Source Metadata
+### Slice 3 - Extraction Provenance, Source Metadata, And Trace-Production Hooks
 
 **Goal:** Raise extraction from quote preservation to source-aware trace
 production.
@@ -311,7 +334,8 @@ production.
   date confidence, and trace-production relevance.
 - Keep raw source quote/provenance intact.
 - Avoid using source metadata as likelihood evidence until a later explicit
-  method gate.
+  method gate, but make the metadata rich enough that the later
+  trace-production model does not need to retrofit provenance from prose.
 
 **E2E test:** Brumaire source groups appear in extracted evidence and report
 triage; source hashes still protect `--from-result`.
@@ -323,8 +347,9 @@ be traced back to source group and genre.
 interpretation.
 
 **Success criteria:** a reader can tell which sources produced the evidence
-that moved support and which source genres could or could not reveal missing
-traces.
+that moved support, which source genres could or could not reveal missing
+traces, and which trace-production fields are still absent from the current
+likelihood contract.
 
 ### Slice 4 - Diagnostic Test Matrix
 
@@ -373,15 +398,18 @@ source/evidence level rather than hidden in one scalar.
 **Success criteria:** duplicate evidence cannot materially inflate support
 without the audit showing why it was treated as independent.
 
-### Slice 6 - Observability-Weighted Absence
+### Slice 6 - Source-Design Engine And Observability-Weighted Absence
 
 **Goal:** Treat absence as source silence with observability, not as proof of
-world absence.
+world absence, and turn source scope into an active acquisition loop rather
+than a static packet.
 
 **Implementation scope:**
 
 - Add source-genre observability bands and expected source locations for
   missing traces.
+- Extend the acquisition planner so unresolved gaps, damaging absences, and
+  source-design weaknesses can drive iterative retrieval and disposition.
 - Keep absence outside the Bayesian update unless a separate explicit method
   gate is approved.
 - Show where a missing trace should have appeared and why.
@@ -395,7 +423,8 @@ trace would be expected.
 overstate what the corpus can prove.
 
 **Success criteria:** absence findings improve research guidance without
-silently becoming likelihood evidence.
+silently becoming likelihood evidence, and the source packet is clearly on the
+way to becoming a fuller source-design engine rather than the endpoint.
 
 ### Slice 7 - Structural Critic Ablation
 

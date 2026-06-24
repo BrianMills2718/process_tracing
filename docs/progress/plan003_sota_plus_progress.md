@@ -27,7 +27,7 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 
 ## Current Phase
 
-Plan 005 is the next planned UI/workbench slice: a stage-by-stage interactive trace execution host that lets a reviewer trigger each pipeline stage and inspect typed outputs with visual summaries, concise explanations, and tooltips. Implementation is blocked until the static mockup and contract notebook are reviewed.
+Plan 005 is the next planned UI/workbench slice: a stage-by-stage interactive trace execution host that lets a reviewer trigger each pipeline stage and inspect typed outputs with visual summaries, concise explanations, and tooltips. At the methodology level, the active frontier is now explicit: source packet -> source-design engine, stronger trace-production modeling, richer dependence handling, and a tighter within-case -> cross-case bridge. Implementation is blocked until the static mockup and contract notebook are reviewed.
 
 ## Completed
 
@@ -47,4 +47,4 @@ Plan 005 is the next planned UI/workbench slice: a stage-by-stage interactive tr
 
 ## Next
 
-Review the Plan 005 mockup. If approved, implement the walking skeleton host with live non-mocked stage execution and keep `docs/ARCHITECTURE.md` synchronized with any new boundary, schema, or data-flow contract.
+Review the Plan 005 mockup. If approved, implement the walking skeleton host with live non-mocked stage execution while preparing the next methodology slices around source-design completion and trace-production modeling. Keep `docs/ARCHITECTURE.md` synchronized with any new boundary, schema, or data-flow contract.

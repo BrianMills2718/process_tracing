@@ -25,7 +25,7 @@
 
 ## 1. What this project is (one paragraph)
 
-Automated Van-Evera-style **process tracing** is the first concrete slice of a broader mixed-methods research system: read historical/source material, construct and test rival causal explanations, quantify comparative support, then integrate the resulting traces with cross-case / quantitative causal designs. The LLM is the **engine of a methodology-aware pipeline** (extract → hypothesize → test → update → synthesize), with humans as research directors, validators, and accountability anchors rather than the assumed bottleneck for every within-case causal judgment. The output is **comparative explanatory support over an explicitly specified, mutually-exclusive hypothesis set** — *not* an absolute probability of truth, a causal-effect size, or a counterfactual. The bet: expert process-tracing work can be automated to PhD / think-tank / academic quality when within-case causal inference is decomposed into structured, inspectable operations and coupled to deterministic math, adversarial audits, provenance, sensitivity analysis, and quantitative integration.
+Automated Van-Evera-style **process tracing** is the first concrete slice of a broader mixed-methods research system: read historical/source material, construct and test rival causal explanations, quantify comparative support, then integrate the resulting traces with cross-case / quantitative causal designs. The LLM is the **engine of a methodology-aware pipeline** (extract → hypothesize → test → update → synthesize), with humans as research directors, validators, and accountability anchors rather than the assumed bottleneck for every within-case causal judgment. The output is **comparative explanatory support over an explicitly specified, mutually-exclusive hypothesis set** — *not* an absolute probability of truth, a causal-effect size, or a counterfactual. The bet: expert process-tracing work can be automated to PhD / think-tank / academic quality when within-case causal inference is decomposed into structured, inspectable operations and coupled to deterministic math, adversarial audits, provenance, sensitivity analysis, quantitative integration, active source design, and explicit trace-production modeling.
 
 The project therefore rejects the default claim that humans are inherently better or less biased at process-tracing interpretation. Human judgment is useful, but not privileged as ground truth. Quality comes from architecture: explicit contracts, role separation, independent critique, reproducible traces, calibration tests, agentic assistant labor routed through governed coding harnesses, and iterative process tracing ↔ quantitative feedback.
 
@@ -60,7 +60,7 @@ reused/extended the rest. This was not a repo restart.
 | `pt/report.py` | **REUSE + ADAPT** | renders support, sensitivity, PhD audit, evidence triage, source-packet contract, temporal timeline, and temporal causal network |
 | `pt/verdict_calibration.py` | **NEW GUARDRAIL** | deterministic post-synthesis guard downgrades status labels that overstate computed comparative support |
 | agentic assistant harness | **PARTIAL** | source-packet draft task is implemented through `llm_client` `workspace_agent`; partition critique, benchmark repair, and report critique assistants are still planned |
-| source-packet contract | **PARTIAL** | `--source-packet` loads typed packet artifacts, stores source-scope metadata, and reports packet-source coverage from exact text markers; source acquisition and high-priority missing-source resolution are deferred |
+| source-packet contract / source-design engine | **PARTIAL** | `--source-packet` loads typed packet artifacts, stores source-scope metadata, reports packet-source coverage from exact text markers, and supports acquisition planning; the full source-design engine loop (iterative source expansion, observability ranking, and acquisition disposition) is still incomplete |
 | harness, Makefile, `tests/`, prompt loading | **REUSE** | infrastructure |
 
 Rule of thumb for future work: extend where the remaining gaps are methodological
@@ -115,13 +115,15 @@ bands with Monte Carlo propagation; Van Evera labels are carried per cell but
 `prediction_classifications` is not yet repopulated by the new pass.
 
 **Planned / deferred (per build plan & cutter):** hypothesis partition audit;
-agentic assistant tasks beyond source-packet drafting, including benchmark
-repair and report critique through `llm_client` Codex/Claude Code backends; full
-band *elicitation* + joint Monte-Carlo propagation; qualitative critic/auditor
-pass + ablation switch; trace-production model; post-selection &
-prior-provenance guards; per-hypothesis dependence; cross-cluster shared-error
-sampling; source acquisition and high-priority missing-source resolution; formal
-validation benchmark.
+agentic assistant tasks beyond source-packet drafting, including source-design
+expansion, benchmark repair, and report critique through `llm_client`
+Codex/Claude Code backends; full band *elicitation* + joint Monte-Carlo
+propagation; qualitative critic/auditor pass + ablation switch; first-class
+trace-production model; post-selection & prior-provenance guards;
+per-hypothesis dependence; cross-cluster shared-error sampling; source-design
+engine completion with high-priority missing-source resolution; formal
+validation benchmark; and a tighter within-case -> cross-case causal-model
+bridge.
 These are optimum-scope or next-roadmap work; the current build approximates or defers them.
 
 **Not claimed:** no methodological validation (the WP §8 auditor ablation) has been run. This is
@@ -135,10 +137,10 @@ The historical slice order is preserved in
 1. **Done:** truth-in-labeling, `llm_client` boundary, coherent likelihood vectors,
    researcher priors, residual `H0`, dependence pooling, sensitivity/prior
    stability, report audit, and temporal network presentation.
-2. **Next:** hypothesis partition audit, source acquisition/high-priority
-   missing-source resolution, stronger source-lineage/dependence modeling,
-   observability-weighted absence, benchmark/report assistant tasks, and the
-   qualitative structural critic.
+2. **Next:** hypothesis partition audit; completion of the source-design engine
+   beyond static packets; stronger source-lineage/dependence modeling;
+   first-class trace-production modeling; observability-weighted absence;
+   benchmark/report assistant tasks; and the qualitative structural critic.
 3. **Validation:** auditor/dependence ablations and a frozen benchmark are still
    required before claiming demonstrated PhD-level methodological validity.
 

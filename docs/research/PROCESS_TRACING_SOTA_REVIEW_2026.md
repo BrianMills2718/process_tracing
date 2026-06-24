@@ -223,9 +223,10 @@ implementation are limitations of current practice, not limits of the method.
 
 SOTA+ means:
 
-1. **Agentic source work:** automatically build source packets with primary
-   documents, rival secondary accounts, provenance, dates, and source-genre
-   metadata.
+1. **Source-design engine, not just a packet:** automatically build, critique,
+   and iteratively expand a source design with primary documents, rival
+   secondary accounts, provenance, dates, source-genre metadata, expected
+   observability, and ranked acquisition targets.
 2. **Hypothesis-partition governance:** freeze the research question, focal
    window, rival hypotheses, residual, and pairwise discriminators before
    testing.
@@ -241,12 +242,39 @@ SOTA+ means:
    likelihood claims, not as unparameterized likelihood calculators.
 7. **Cross-case bridge:** use process-tracing outputs to build and stress-test
    CausalQueries/QCA/statistical models when cases and variables support it.
-8. **Agentic assistant harness:** route source-packet work, benchmark repair,
+8. **Agentic assistant harness:** route source-design work, benchmark repair,
    report critique, and implementation slices through `llm_client`
    `workspace_agent` tasks using Codex/Claude Code backends, with typed
    artifacts and observability.
 9. **Benchmark gates:** validate every capability against frozen cases and
    known failure modes before claiming PhD/think-tank quality.
+
+## Immediate Methodology Upgrades
+
+The next methodology frontier is not "more polished reports." It is a tighter
+integration of the qualitative and quantitative parts of the method.
+
+1. **Upgrade the source packet into a source-design engine.** The current
+   packet is a good first contract, but SOTA+ requires an active loop that
+   proposes missing source classes, ranks them by inferential payoff, models
+   expected observability, and drives retrieval until the remaining
+   uncertainty is dispositioned.
+2. **Make trace-production a first-class model.** Source kind and dependence
+   metadata are not enough. Likelihood assessment should explicitly encode how
+   a trace was produced: who asserted it, when, under what incentives, in what
+   medium, with what survivorship/translation/solicitation risks.
+3. **Bridge within-case traces to explicit causal models.** SOTA+ should not
+   stop at narrative comparative support. It should hand structured outputs to
+   CausalQueries-style causal models when cases and variables support that
+   move, and it should feed cross-case findings back into within-case traces.
+4. **Use adversarial multi-pass adjudication rather than one-shot extraction.**
+   LLM labor should be spent on rival codings, source-lineage challenge,
+   top-driver challenge, and source-gap critique, not only on first-pass
+   extraction.
+5. **Treat the interactive host as a methodology instrument.** A stage-by-stage
+   host is valuable only if it localizes uncertainty, preserves artifact
+   provenance, and makes the inferential transformations inspectable enough
+   for hostile review.
 
 ## What Went Wrong In The Current Repo
 
