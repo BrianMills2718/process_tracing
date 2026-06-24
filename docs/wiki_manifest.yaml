@@ -37,6 +37,10 @@ publish:
     type: ProjectDoc
     title: Process Tracing Theory, Goals, and Current Capability
     tags: [analysis, process-tracing, methodology, roadmap]
+  - path: docs/SOTA_PLUS_TARGET_ARCHITECTURE.md
+    type: ProjectDoc
+    title: Process Tracing SOTA+ Target Architecture
+    tags: [analysis, process-tracing, architecture, methodology, sota]
   - path: docs/portfolio/FRENCH_DIRECTORY_COLLAPSE_CASE_BUNDLE.md
     type: PortfolioEvidence
     title: French Directory Collapse Case Bundle

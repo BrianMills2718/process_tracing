@@ -17,6 +17,9 @@
 > - `docs/research/PROCESS_TRACING_SOTA_REVIEW_2026.md` and
 >   `docs/plans/002_sota_plus_recovery_plan.md` — the current SOTA+ reset:
 >   external frontier map, failure postmortem, and thin-slice gates.
+> - `docs/SOTA_PLUS_TARGET_ARCHITECTURE.md` — the end-goal design-plan
+>   architecture for the intended SOTA+ system, including future boundaries and
+>   contracts that are not fully implemented yet.
 >
 > When this doc and the code disagree about *current capability*, trust the code +
 > the ledger in §6. When they disagree about *intent*, trust this doc and the white paper.

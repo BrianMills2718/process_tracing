@@ -5,6 +5,11 @@ SOTA+ process-tracing system. It records the deductive surfaces that can be
 specified now and the exploratory surfaces that must remain instrumented until
 validated across cases.
 
+For the intended end-state architecture, including the full source-design
+engine, trace-production model, benchmark runner, and within-case -> cross-case
+bridge, see
+[SOTA_PLUS_TARGET_ARCHITECTURE.md](/home/brian/projects/process_tracing/docs/SOTA_PLUS_TARGET_ARCHITECTURE.md).
+
 ## Frame
 
 Goal: automate expert process tracing at PhD / think-tank / academic quality by

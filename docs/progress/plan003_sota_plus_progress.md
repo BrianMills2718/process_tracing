@@ -27,7 +27,7 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 
 ## Current Phase
 
-Plan 005 is the next planned UI/workbench slice: a stage-by-stage interactive trace execution host that lets a reviewer trigger each pipeline stage and inspect typed outputs with visual summaries, concise explanations, and tooltips. At the methodology level, the active frontier is now explicit: source packet -> source-design engine, stronger trace-production modeling, richer dependence handling, and a tighter within-case -> cross-case bridge. Implementation is blocked until the static mockup and contract notebook are reviewed.
+Plan 005 is the next planned UI/workbench slice: a stage-by-stage interactive trace execution host that lets a reviewer trigger each pipeline stage and inspect typed outputs with visual summaries, concise explanations, and tooltips. At the methodology level, the active frontier is now explicit: source packet -> source-design engine, stronger trace-production modeling, richer dependence handling, and a tighter within-case -> cross-case bridge. `docs/SOTA_PLUS_TARGET_ARCHITECTURE.md` now captures the end-goal boundary/domain/data-flow package for that target. Implementation is blocked until the static mockup and contract notebook are reviewed.
 
 ## Completed
 

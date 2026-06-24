@@ -42,6 +42,8 @@ turns the SOTA+ vision into a repeatable operating loop.
 - `docs/ontology.md` - analytic object model and report-network semantics.
 - `docs/ARCHITECTURE.md` - active design-plan architecture artifact with
   boundary, domain-model, and typed data-flow diagrams.
+- `docs/SOTA_PLUS_TARGET_ARCHITECTURE.md` - end-goal SOTA+ architecture
+  artifact with target boundaries, contracts, and mixed-method bridge design.
 - `docs/source_packets/18_BRUMAIRE_RESEARCH_DESIGN.md` - first public
   source-packet benchmark candidate and E2E run command.
 - `docs/plans/005_interactive_trace_execution_host.md` - planned stage-by-stage
@@ -95,6 +97,11 @@ The active architecture artifact for deductive surfaces is
 `docs/ARCHITECTURE.md`. It is required reading before changing source packets,
 the inference pipeline, acquisition planning, report/workbench behavior, or any
 cross-component data contract.
+
+The end-goal architecture artifact is
+`docs/SOTA_PLUS_TARGET_ARCHITECTURE.md`. It is required reading before changing
+the long-term slice roadmap, source-design target, benchmark strategy, or
+within-case -> cross-case bridge contracts.
 
 ## Methodology Convergence Priorities
 

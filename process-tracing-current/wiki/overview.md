@@ -24,6 +24,7 @@ implementation decision.
 # Current Orientation Links
 
 - [Architecture Spine](/wiki/architecture/architecture-spine.md)
+- [SOTA+ Target Architecture](/wiki/architecture/sota-target-architecture.md)
 - [Archive And Wiki Policy](/wiki/sources/archive-policy.md)
 - [Evidence Policy](/wiki/sources/evidence-policy.md)
 - [Design-Plan Compliance Audit](/wiki/sources/design-plan-compliance-audit.md)

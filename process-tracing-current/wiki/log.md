@@ -3,6 +3,10 @@
 ## 2026-06-24
 
 * **Ingest** | Added
+  [SOTA+ Target Architecture](architecture/sota-target-architecture.md) from
+  `docs/SOTA_PLUS_TARGET_ARCHITECTURE.md` so the current wiki distinguishes the
+  implemented architecture from the end-goal design package.
+* **Ingest** | Added
   [Interactive Trace Execution Host](plans/interactive-trace-execution-host.md)
   from `docs/plans/005_interactive_trace_execution_host.md`, including the
   mockup/contract-notebook gate and the decision to keep the current workbench

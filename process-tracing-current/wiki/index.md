@@ -5,6 +5,7 @@
 # Architecture
 
 * [Architecture Spine](architecture/architecture-spine.md) - current component boundaries, runtime flow, and contract map.
+* [SOTA+ Target Architecture](architecture/sota-target-architecture.md) - end-goal component boundaries, contracts, and mixed-method bridge design.
 
 # Policies
 
