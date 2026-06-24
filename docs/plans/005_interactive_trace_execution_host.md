@@ -1,15 +1,15 @@
 ---
-status: planned
+status: in progress
 owner: process-tracing
 updated: 2026-06-24
 ---
 
 # Plan 005 - Interactive Trace Execution Host
 
-**Status:** Planned
+**Status:** In progress
 **Type:** implementation
 **Priority:** High
-**Blocked By:** Brian review of `005_interactive_trace_execution_host_mockup.html`
+**Blocked By:** None for the current host slice; later visual-audit slices remain open
 **Blocks:** stage-by-stage process-tracing review, richer audit UI, source-acquisition promotion
 
 ---
@@ -69,6 +69,10 @@ Clean-docs note: The current `pt.workbench` is not archived now. It remains a
 tested narrow source-acquisition workbench until this host preserves or replaces
 its capabilities. Archive it only after a replacement passes live E2E and an
 archive rationale is written.
+
+Implementation note: the current slice now ships `pt.trace_host` plus host API
+endpoints for run creation, stage replay, and run inspection, with live non-mocked
+verification recorded for run `output/workbench_runs/run_20260624_200616_d4f6`.
 
 ---
 

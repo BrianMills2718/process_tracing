@@ -28,7 +28,7 @@ from pt.schemas import (
 )
 
 PROMPTS_DIR = Path(__file__).parent / "prompts"
-MAX_VALIDATION_REPAIRS = int(os.getenv("PT_TEST_VALIDATION_REPAIRS", "1"))
+MAX_VALIDATION_REPAIRS = int(os.getenv("PT_TEST_VALIDATION_REPAIRS", "2"))
 
 
 def _literal_enum(values: list[str]) -> Any:
@@ -159,7 +159,10 @@ def _validate_testing_result(
                 f"expected exactly {sorted(expected_hyp_id_set)}"
             )
     if len(seen_ev_ids) != len(set(seen_ev_ids)):
-        raise ValueError("testing: duplicate evidence ids in likelihood vectors")
+        from collections import Counter
+
+        duplicate_counts = {ev_id: count for ev_id, count in Counter(seen_ev_ids).items() if count > 1}
+        raise ValueError(f"testing: duplicate evidence ids in likelihood vectors: {duplicate_counts}")
     if set(seen_ev_ids) != expected_ev_id_set:
         missing = expected_ev_id_set - set(seen_ev_ids)
         extra = set(seen_ev_ids) - expected_ev_id_set

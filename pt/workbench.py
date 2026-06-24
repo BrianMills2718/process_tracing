@@ -23,6 +23,7 @@ from pt.source_acquisition import (
     retrieve_for_plan,
 )
 from pt.source_design import build_source_design_state
+from pt.trace_host import StageGuide, TraceHostError, TraceHostStore, TraceRunRequest, build_stage_guides
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -77,13 +78,16 @@ def build_app_payload(
 def make_handler() -> type[BaseHTTPRequestHandler]:
     """Create a request handler bound to the current repository root."""
 
+    store = TraceHostStore(REPO_ROOT)
+    stage_guides = build_stage_guides()
+
     class WorkbenchHandler(BaseHTTPRequestHandler):
         server_version = "ProcessTracingWorkbench/0.1"
 
         def do_GET(self) -> None:
             parsed = urlparse(self.path)
             if parsed.path in {"/", "/index.html"}:
-                self._send_html(_html())
+                self._send_html(_html(stage_guides))
                 return
             if parsed.path == "/artifact":
                 query = parse_qs(parsed.query)
@@ -102,32 +106,64 @@ def make_handler() -> type[BaseHTTPRequestHandler]:
             if parsed.path == "/api/health":
                 self._send_json({"ok": True})
                 return
+            parts = [part for part in parsed.path.split("/") if part]
+            if len(parts) == 3 and parts[:2] == ["api", "runs"]:
+                try:
+                    run = store.get_run(parts[2])
+                except Exception as exc:
+                    self._send_json(
+                        {"ok": False, "error": str(exc), "error_type": exc.__class__.__name__},
+                        status=HTTPStatus.NOT_FOUND,
+                    )
+                    return
+                self._send_json({"ok": True, "run": run.model_dump()})
+                return
             self.send_error(HTTPStatus.NOT_FOUND)
 
         def do_POST(self) -> None:
-            if self.path not in {"/api/acquisition-plan", "/api/enrich"}:
-                self.send_error(HTTPStatus.NOT_FOUND)
-                return
             try:
                 request = self._read_json()
-                payload = build_app_payload(
-                    result_path=str(request.get("result_path") or DEFAULT_RESULT),
-                    source_packet_path=str(request.get("source_packet_path") or DEFAULT_SOURCE_PACKET),
-                    max_targets=int(request.get("max_targets") or 8),
-                    retrieve=self.path == "/api/enrich",
-                    top_k=int(request.get("top_k") or 3),
-                    queries_per_target=int(request.get("queries_per_target") or 1),
-                    output_path=str(request.get("output_path") or DEFAULT_OUTPUT)
-                    if self.path == "/api/enrich"
-                    else None,
-                )
+                if self.path == "/api/runs":
+                    payload = {
+                        "ok": True,
+                        "run": store.create_run(TraceRunRequest.model_validate(request)).model_dump(),
+                    }
+                elif self.path in {"/api/acquisition-plan", "/api/enrich"}:
+                    payload = {
+                        "ok": True,
+                        **build_app_payload(
+                            result_path=str(request.get("result_path") or DEFAULT_RESULT),
+                            source_packet_path=str(request.get("source_packet_path") or DEFAULT_SOURCE_PACKET),
+                            max_targets=int(request.get("max_targets") or 8),
+                            retrieve=self.path == "/api/enrich",
+                            top_k=int(request.get("top_k") or 3),
+                            queries_per_target=int(request.get("queries_per_target") or 1),
+                            output_path=str(request.get("output_path") or DEFAULT_OUTPUT)
+                            if self.path == "/api/enrich"
+                            else None,
+                        ),
+                    }
+                else:
+                    parts = [part for part in self.path.split("/") if part]
+                    if len(parts) == 6 and parts[:2] == ["api", "runs"] and parts[3] == "stages" and parts[5] == "run":
+                        stage_id = parts[4]
+                        if stage_id not in stage_guides:
+                            raise ValueError(f"unknown stage: {stage_id}")
+                        payload = store.run_stage(
+                            parts[2],
+                            stage_id,  # type: ignore[arg-type]
+                            force=bool(request.get("force") or False),
+                        )
+                    else:
+                        self.send_error(HTTPStatus.NOT_FOUND)
+                        return
             except Exception as exc:
                 self._send_json(
                     {"ok": False, "error": str(exc), "error_type": exc.__class__.__name__},
                     status=HTTPStatus.BAD_REQUEST,
                 )
                 return
-            self._send_json({"ok": True, **payload})
+            self._send_json(payload)
 
         def log_message(self, format: str, *args: Any) -> None:
             return
@@ -143,7 +179,7 @@ def make_handler() -> type[BaseHTTPRequestHandler]:
             return data
 
         def _send_json(self, payload: dict[str, Any], status: HTTPStatus = HTTPStatus.OK) -> None:
-            body = json.dumps(payload).encode("utf-8")
+            body = json.dumps(payload, default=str).encode("utf-8")
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -185,8 +221,10 @@ def _resolve_repo_path(path: str | Path | None) -> Path:
     return candidate.resolve()
 
 
-def _html() -> str:
-    return f"""<!doctype html>
+def _html(stage_guides: dict[str, StageGuide]) -> str:
+    stage_guides_json = json.dumps({key: value.model_dump() for key, value in stage_guides.items()}, indent=2)
+    stage_order_json = json.dumps([stage_id for stage_id in stage_guides], indent=2)
+    html = """<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -199,6 +237,7 @@ def _html() -> str:
       --muted: #5f6b7a;
       --line: #d7dde5;
       --band: #f4f7fa;
+      --panel: #ffffff;
       --accent: #215a7a;
       --good: #1f7a4d;
       --warn: #a05a00;
@@ -209,23 +248,43 @@ def _html() -> str:
       margin: 0;
       font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--ink);
-      background: #ffffff;
+      background: #fff;
     }}
     header {{
       border-bottom: 1px solid var(--line);
-      padding: 14px 20px;
+      padding: 12px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 12px;
+      min-height: 58px;
     }}
     h1 {{ font-size: 18px; margin: 0; letter-spacing: 0; }}
-    main {{ display: grid; grid-template-columns: 360px 1fr; min-height: calc(100vh - 58px); }}
-    aside {{ border-right: 1px solid var(--line); padding: 16px; background: var(--band); }}
-    section {{ padding: 16px 20px; }}
-    label {{ display: block; font-size: 12px; font-weight: 650; color: var(--muted); margin: 12px 0 4px; }}
-    input {{
+    main {{
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      min-height: calc(100vh - 58px);
+    }}
+    aside {{
+      border-right: 1px solid var(--line);
+      background: var(--band);
+      padding: 16px;
+      min-width: 0;
+    }}
+    section {{
+      padding: 16px 18px;
+      min-width: 0;
+    }}
+    label {{
+      display: block;
+      font-size: 12px;
+      font-weight: 650;
+      color: var(--muted);
+      margin: 10px 0 4px;
+    }}
+    input, select {{
       width: 100%;
+      min-width: 0;
       border: 1px solid var(--line);
       border-radius: 6px;
       padding: 9px 10px;
@@ -233,7 +292,7 @@ def _html() -> str:
       background: #fff;
     }}
     .row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }}
-    .actions {{ display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 14px; }}
+    .actions {{ display: grid; gap: 8px; margin-top: 12px; }}
     button {{
       min-height: 38px;
       border: 1px solid var(--accent);
@@ -245,38 +304,89 @@ def _html() -> str:
     }}
     button.secondary {{ background: #fff; color: var(--accent); }}
     button:disabled {{ opacity: .55; cursor: wait; }}
-    .status {{ color: var(--muted); font-size: 12px; min-height: 20px; margin-top: 10px; }}
-    .target, .hit {{
+    .status {{ color: var(--muted); font-size: 12px; min-height: 18px; }}
+    .card, .target, .hit {{
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 12px;
+      background: var(--panel);
       margin-bottom: 10px;
-      background: #fff;
     }}
-    .target h2 {{ font-size: 15px; margin: 0 0 6px; }}
-    .meta {{ display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }}
-    .pill {{ border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; font-size: 12px; color: var(--muted); }}
-    .score {{ color: var(--good); font-weight: 700; }}
-    .query {{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: #334155; }}
+    .card h2, .target h2 {{ font-size: 15px; margin: 0 0 6px; }}
     .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }}
-    .panel-title {{ font-size: 13px; font-weight: 750; color: var(--muted); margin: 0 0 10px; text-transform: uppercase; }}
+    .panel-title {{
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--muted);
+      margin: 0 0 8px;
+      text-transform: uppercase;
+    }}
     .report-shell {{
       border: 1px solid var(--line);
       border-radius: 8px;
       overflow: hidden;
       background: #fff;
-      min-height: 68vh;
-      margin-bottom: 16px;
+      min-height: 62vh;
+      margin-bottom: 14px;
     }}
     iframe {{
       width: 100%;
-      height: 68vh;
+      height: 62vh;
       border: 0;
       display: block;
       background: #fff;
     }}
-    a {{ color: var(--accent); overflow-wrap: anywhere; }}
-    @media (max-width: 900px) {{
+    .stage-list {{ display: grid; gap: 6px; margin-top: 10px; }}
+    .stage-row {{
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      padding: 8px;
+    }}
+    .stage-row.active {{ border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }}
+    .stage-name {{ display: flex; align-items: center; gap: 8px; min-width: 0; }}
+    .dot {{
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--line);
+      flex: 0 0 auto;
+    }}
+    .stage-row.complete .dot {{ background: var(--good); }}
+    .stage-row.running .dot {{ background: var(--accent); }}
+    .stage-row.blocked .dot {{ background: var(--warn); }}
+    .stage-row.failed .dot {{ background: var(--bad); }}
+    .stage-row.skipped .dot {{ background: #9aa4b2; }}
+    .pill {{
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }}
+    .monospace {{
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }}
+    pre {{
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: #17202a;
+      color: #e7edf5;
+      padding: 10px;
+      border-radius: 7px;
+      max-height: 260px;
+      overflow: auto;
+    }}
+    @media (max-width: 1100px) {{
       main {{ grid-template-columns: 1fr; }}
       aside {{ border-right: 0; border-bottom: 1px solid var(--line); }}
       .grid {{ grid-template-columns: 1fr; }}
@@ -286,42 +396,94 @@ def _html() -> str:
 <body>
   <header>
     <h1>Process Tracing Workbench</h1>
-    <span id="provider-status" class="status"></span>
+    <span id="status" class="status"></span>
   </header>
   <main>
     <aside>
-      <label for="result-path">Result JSON</label>
-      <input id="result-path" value="{DEFAULT_RESULT}">
-      <label for="report-path">Report HTML</label>
-      <input id="report-path" value="{DEFAULT_REPORT}">
-      <label for="packet-path">Source Packet</label>
-      <input id="packet-path" value="{DEFAULT_SOURCE_PACKET}">
-      <div class="row">
-        <div>
-          <label for="max-targets">Targets</label>
-          <input id="max-targets" type="number" min="1" max="20" value="8">
+      <div class="card">
+        <h2>Create Run</h2>
+        <label for="input-path">Input text</label>
+        <input id="input-path" value="input_text/source_packets/18_brumaire_source_packet.txt">
+        <label for="packet-path">Source packet</label>
+        <input id="packet-path" value="__DEFAULT_SOURCE_PACKET__">
+        <label for="theories-path">Theories</label>
+        <input id="theories-path" value="input_text/theories/18_brumaire_rival_frameworks.txt">
+        <label for="question">Research question</label>
+        <input id="question" value="Why did the French Revolution culminate in Napoleon Bonaparte's 18 Brumaire coup?">
+        <div class="row">
+          <div>
+            <label for="model">Model</label>
+            <input id="model" placeholder="configured default">
+          </div>
+          <div>
+            <label for="budget">Budget</label>
+            <input id="budget" type="number" step="0.1" min="0" placeholder="1.0">
+          </div>
         </div>
-        <div>
-          <label for="top-k">Hits</label>
-          <input id="top-k" type="number" min="1" max="10" value="3">
+        <label><input id="refine" type="checkbox" checked> include refine stage</label>
+        <div class="actions">
+          <button id="create-run-btn">Create Run</button>
+          <button id="reload-run-btn" class="secondary">Reload Run</button>
         </div>
       </div>
-      <label for="enrich-targets">Enrich Targets</label>
-      <input id="enrich-targets" type="number" min="1" max="5" value="2">
-      <label for="output-path">Enrichment Output</label>
-      <input id="output-path" value="{DEFAULT_OUTPUT}">
-      <div class="actions">
-        <button id="report-btn" class="secondary">Load Report</button>
-        <button id="plan-btn" class="secondary">Build Agenda</button>
-        <button id="enrich-btn">Enrich Top Targets</button>
+
+      <div class="card">
+        <h2>Stages</h2>
+        <div id="stage-list" class="stage-list"></div>
       </div>
-      <div id="status" class="status"></div>
+
+      <div class="card">
+        <h2>Acquisition</h2>
+        <label for="result-path">Result JSON</label>
+        <input id="result-path" value="__DEFAULT_RESULT__">
+        <label for="report-path">Report HTML</label>
+        <input id="report-path" value="__DEFAULT_REPORT__">
+        <div class="row">
+          <div>
+            <label for="max-targets">Targets</label>
+            <input id="max-targets" type="number" min="1" max="20" value="8">
+          </div>
+          <div>
+            <label for="top-k">Hits</label>
+            <input id="top-k" type="number" min="1" max="10" value="3">
+          </div>
+        </div>
+        <label for="enrich-targets">Enrich targets</label>
+        <input id="enrich-targets" type="number" min="1" max="5" value="2">
+        <label for="output-path">Enrichment output</label>
+        <input id="output-path" value="__DEFAULT_OUTPUT__">
+        <div class="actions">
+          <button id="load-report-btn" class="secondary">Load Report</button>
+          <button id="plan-btn" class="secondary">Build Agenda</button>
+          <button id="enrich-btn">Enrich Top Targets</button>
+        </div>
+      </div>
     </aside>
+
     <section>
+      <div class="grid">
+        <div class="card">
+          <h2>Run State</h2>
+          <div id="run-summary" class="status"></div>
+          <div id="run-json" class="monospace"></div>
+        </div>
+        <div class="card" id="guide-card">
+          <h2 id="guide-title">Stage Guide</h2>
+          <div id="guide-body" class="status">Create a run, then select a stage.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Selected Stage</h2>
+        <div id="stage-summary" class="status">No stage selected.</div>
+        <pre id="artifact-json">{{}}</pre>
+      </div>
+
       <p class="panel-title">Report</p>
       <div class="report-shell">
         <iframe id="report-frame" title="Process tracing report"></iframe>
       </div>
+
       <div class="grid">
         <div>
           <p class="panel-title">Acquisition Targets</p>
@@ -335,83 +497,233 @@ def _html() -> str:
     </section>
   </main>
   <script>
+    const STAGE_GUIDES = __STAGE_GUIDES__;
+    const STAGE_ORDER = __STAGE_ORDER__;
+    let currentRunId = localStorage.getItem("pt-current-run") || "";
+    let selectedStageId = "extract";
+
     const $ = (id) => document.getElementById(id);
-    function artifactUrl(path) {{
-      return `/artifact?path=${{encodeURIComponent(path)}}`;
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, ch => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[ch]));
+    const artifactUrl = (path) => `/artifact?path=${encodeURIComponent(path)}`;
+    const requestBody = (enrich=false) => ({
+      result_path: $("result-path").value,
+      source_packet_path: $("packet-path").value,
+      max_targets: enrich ? Number($("enrich-targets").value || 2) : Number($("max-targets").value || 8),
+      top_k: Number($("top-k").value || 3),
+      queries_per_target: 1,
+      output_path: $("output-path").value
+    });
+
+    function renderGuide(stageId) {{
+      const guide = STAGE_GUIDES[stageId];
+      if (!guide) return;
+      $("guide-title").textContent = `Stage Guide: ${stageId}`;
+      $("guide-body").innerHTML = `
+        <div><strong>Purpose:</strong> ${escapeHtml(guide.purpose)}</div>
+        <div><strong>Consumes:</strong> ${escapeHtml((guide.consumes || []).join(", "))}</div>
+        <div><strong>Produces:</strong> ${escapeHtml((guide.produces || []).join(", "))}</div>
+        <div><strong>Audit:</strong> ${escapeHtml((guide.audit_questions || []).join(" | "))}</div>
+        <div title="${escapeHtml(guide.tooltip)}"><strong>Tooltip:</strong> ${escapeHtml(guide.tooltip)}</div>
+      `;
     }}
+
+    function renderStageList(run) {{
+      const stages = run?.stages || [];
+      const byId = Object.fromEntries(stages.map(stage => [stage.stage_id, stage]));
+      $("stage-list").innerHTML = STAGE_ORDER.map(stageId => {{
+        const stage = byId[stageId] || {{}};
+        const status = stage.status || (stageId === "setup" ? "complete" : stageId === "extract" ? "ready" : "blocked");
+        const summary = stage.summary ? ` - ${escapeHtml(stage.summary)}` : "";
+        return `
+          <div class="stage-row ${escapeHtml(status)} ${stageId === selectedStageId ? "active" : ""}">
+            <div class="stage-name">
+              <span class="dot"></span>
+              <button class="secondary" data-stage="${escapeHtml(stageId)}" title="${escapeHtml(STAGE_GUIDES[stageId].tooltip)}">${escapeHtml(stageId)}</button>
+              <span class="pill">${escapeHtml(status)}</span>
+            </div>
+            <span class="status">${summary}</span>
+          </div>
+        `;
+      }}).join("");
+      [...document.querySelectorAll("button[data-stage]")].forEach(button => {{
+        button.addEventListener("click", () => runStage(button.dataset.stage));
+      }});
+    }}
+
+    function renderRun(run) {{
+      currentRunId = run.run_id;
+      localStorage.setItem("pt-current-run", currentRunId);
+      $("run-summary").textContent = `${run.case_name} | ${run.status} | current: ${run.current_stage} | output: ${run.output_dir}`;
+      $("run-json").textContent = JSON.stringify(run, null, 2);
+      renderStageList(run);
+      renderGuide(selectedStageId);
+    }}
+
+    function renderArtifacts(payload) {{
+      const artifacts = payload?.artifacts || [];
+      const stage = payload?.stage || null;
+      if (stage) {{
+        $("stage-summary").textContent = `${stage.stage_id} | ${stage.status} | ${stage.summary || ""}`;
+      }}
+      $("artifact-json").textContent = JSON.stringify({{ stage, artifacts }}, null, 2);
+    }}
+
+    async function createRun() {{
+      $("status").textContent = "Creating run...";
+      try {{
+        const body = {{
+          input_path: $("input-path").value,
+          source_packet_path: $("packet-path").value,
+          theories_path: $("theories-path").value,
+          research_question: $("question").value,
+          model: $("model").value || null,
+          refine: $("refine").checked,
+          max_budget: $("budget").value ? Number($("budget").value) : null
+        }};
+        const response = await fetch("/api/runs", {{
+          method: "POST",
+          headers: {{ "Content-Type": "application/json" }},
+          body: JSON.stringify(body)
+        }});
+        const payload = await response.json();
+        if (!payload.ok) throw new Error(payload.error || "Failed to create run");
+        renderRun(payload.run);
+        $("status").textContent = `Run ${payload.run.run_id} created`;
+      }} catch (error) {{
+        $("status").textContent = error.message;
+      }}
+    }}
+
+    async function reloadRun() {{
+      if (!currentRunId) {{
+        $("status").textContent = "No run selected";
+        return;
+      }}
+      try {{
+        const response = await fetch(`/api/runs/${currentRunId}`);
+        const payload = await response.json();
+        if (!payload.ok) throw new Error(payload.error || "Failed to load run");
+        renderRun(payload.run);
+        $("status").textContent = `Loaded ${payload.run.run_id}`;
+      }} catch (error) {{
+        $("status").textContent = error.message;
+      }}
+    }}
+
+    async function runStage(stageId) {{
+      if (!currentRunId) {{
+        $("status").textContent = "Create a run first";
+        return;
+      }}
+      selectedStageId = stageId;
+      renderGuide(stageId);
+      $("status").textContent = `Running ${stageId}...`;
+      try {{
+        const response = await fetch(`/api/runs/${currentRunId}/stages/${stageId}/run`, {{
+          method: "POST",
+          headers: {{ "Content-Type": "application/json" }},
+          body: JSON.stringify({{ force: false }})
+        }});
+        const payload = await response.json();
+        if (!payload.ok) throw new Error(payload.error || "Stage failed");
+        renderRun(payload.run);
+        renderArtifacts(payload);
+        $("status").textContent = `${stageId} complete`;
+        if (stageId === "synthesize" || stageId === "refine") {{
+          const resultPath = payload.run.result_path || `${payload.run.output_dir}/result.json`;
+          $("result-path").value = resultPath;
+          $("report-path").value = `${payload.run.output_dir}/report.html`;
+          loadReport();
+        }}
+      }} catch (error) {{
+        $("status").textContent = error.message;
+      }}
+    }}
+
     function loadReport() {{
       $("report-frame").src = artifactUrl($("report-path").value);
     }}
-    function requestBody(enrich=false) {{
-      const maxTargets = Number($("max-targets").value || 8);
-      return {{
-        result_path: $("result-path").value,
-        source_packet_path: $("packet-path").value,
-        max_targets: enrich ? Number($("enrich-targets").value || 2) : maxTargets,
-        top_k: Number($("top-k").value || 3),
-        queries_per_target: 1,
-        output_path: $("output-path").value
-      }};
-    }}
-    function escapeHtml(value) {{
-      return String(value ?? "").replace(/[&<>"']/g, ch => ({{"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","'":"&#39;"}}[ch]));
-    }}
-    async function postJson(path) {{
-      $("status").textContent = path === "/api/enrich" ? "Enriching..." : "Building...";
-      $("plan-btn").disabled = true;
-      $("enrich-btn").disabled = true;
-      try {{
-        const res = await fetch(path, {{
-          method: "POST",
-          headers: {{ "Content-Type": "application/json" }},
-          body: JSON.stringify(requestBody(path === "/api/enrich"))
-        }});
-        const payload = await res.json();
-        if (!payload.ok) throw new Error(payload.error || "Request failed");
-        render(payload);
-        $("status").textContent = payload.output_path ? `Saved ${{payload.output_path}}` : "Ready";
-      }} catch (error) {{
-        $("status").textContent = error.message;
-      }} finally {{
-        $("plan-btn").disabled = false;
-        $("enrich-btn").disabled = false;
-      }}
-    }}
-    function render(payload) {{
-      const targets = payload.plan.targets || [];
+
+    function renderAcquisition(payload) {{
+      const targets = payload.plan?.targets || [];
       $("targets").innerHTML = targets.map(target => `
         <article class="target">
-          <h2>${{escapeHtml(target.target_id)}} <span class="score">${{target.priority_score}}</span></h2>
+          <h2>${escapeHtml(target.target_id)} <span class="pill">${escapeHtml(target.kind)}</span></h2>
           <div class="meta">
-            <span class="pill">${{escapeHtml(target.kind)}}</span>
-            <span class="pill">${{escapeHtml(target.target_source_class)}}</span>
+            <span class="pill">${escapeHtml(target.target_source_class)}</span>
+            <span class="pill">score ${escapeHtml(target.priority_score)}</span>
           </div>
-          <p>${{escapeHtml(target.evidence_need)}}</p>
-          <p>${{escapeHtml(target.inferential_payoff)}}</p>
-          <p class="query">${{escapeHtml((target.search_queries || [])[0] || "")}}</p>
+          <p>${escapeHtml(target.evidence_need)}</p>
+          <p>${escapeHtml(target.inferential_payoff)}</p>
+          <p class="monospace">${escapeHtml((target.search_queries || [])[0] || "")}</p>
         </article>
       `).join("");
       const retrieval = payload.retrieval || [];
       $("hits").innerHTML = retrieval.flatMap(item => (item.hits || []).map(hit => `
         <article class="hit">
           <div class="meta">
-            <span class="pill">${{escapeHtml(item.target_id)}}</span>
-            <span class="pill">${{escapeHtml(hit.provider)}} #${{escapeHtml(hit.rank)}}</span>
-            <span class="pill">${{hit.extracted ? `extracted ${{hit.text_char_count}} chars` : "not extracted"}}</span>
+            <span class="pill">${escapeHtml(item.target_id)}</span>
+            <span class="pill">${escapeHtml(hit.provider)} #${escapeHtml(hit.rank)}</span>
+            <span class="pill">${hit.extracted ? `extracted ${escapeHtml(hit.text_char_count)} chars` : "not extracted"}</span>
           </div>
-          <a href="${{escapeHtml(hit.url)}}" target="_blank" rel="noreferrer">${{escapeHtml(hit.title || hit.url)}}</a>
-          <p>${{escapeHtml(hit.snippet || "")}}</p>
+          <a href="${escapeHtml(hit.url)}" target="_blank" rel="noreferrer">${escapeHtml(hit.title || hit.url)}</a>
+          <p>${escapeHtml(hit.snippet || "")}</p>
         </article>
       `)).join("");
     }}
-    $("report-btn").addEventListener("click", loadReport);
-    $("plan-btn").addEventListener("click", () => postJson("/api/acquisition-plan"));
-    $("enrich-btn").addEventListener("click", () => postJson("/api/enrich"));
+
+    async function buildAgenda(retrieve=false) {{
+      $("status").textContent = retrieve ? "Enriching..." : "Building agenda...";
+      try {{
+        const path = retrieve ? "/api/enrich" : "/api/acquisition-plan";
+        const response = await fetch(path, {{
+          method: "POST",
+          headers: {{ "Content-Type": "application/json" }},
+          body: JSON.stringify(requestBody(retrieve))
+        }});
+        const payload = await response.json();
+        if (!payload.ok) throw new Error(payload.error || "Request failed");
+        renderAcquisition(payload);
+        if (payload.design_state) {{
+          $("artifact-json").textContent = JSON.stringify(payload.design_state, null, 2);
+        }}
+        $("status").textContent = payload.output_path ? `Saved ${payload.output_path}` : "Ready";
+      }} catch (error) {{
+        $("status").textContent = error.message;
+      }}
+    }}
+
+    $("create-run-btn").addEventListener("click", createRun);
+    $("reload-run-btn").addEventListener("click", reloadRun);
+    $("load-report-btn").addEventListener("click", loadReport);
+    $("plan-btn").addEventListener("click", () => buildAgenda(false));
+    $("enrich-btn").addEventListener("click", () => buildAgenda(true));
+    renderGuide(selectedStageId);
     loadReport();
-    postJson("/api/acquisition-plan");
+    if (currentRunId) {{
+      reloadRun();
+    }} else {{
+      buildAgenda(false);
+    }}
   </script>
 </body>
 </html>"""
+    return (
+        html.replace("__DEFAULT_SOURCE_PACKET__", DEFAULT_SOURCE_PACKET)
+        .replace("__DEFAULT_RESULT__", DEFAULT_RESULT)
+        .replace("__DEFAULT_REPORT__", DEFAULT_REPORT)
+        .replace("__DEFAULT_OUTPUT__", DEFAULT_OUTPUT)
+        .replace("__STAGE_GUIDES__", stage_guides_json)
+        .replace("__STAGE_ORDER__", stage_order_json)
+        .replace("{{", "{")
+        .replace("}}", "}")
+    )
 
 
 def main() -> None:
