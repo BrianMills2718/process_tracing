@@ -320,7 +320,7 @@ endif
 	@python $(SCRIPTS_META)/complete_plan.py --plan $(PLAN)
 
 # --- Quality ---
-.PHONY: audit-result dead-code clean
+.PHONY: audit-result source-acquisition dead-code clean
 
 audit-result:  ## Grade a result/report pair (RESULT=path REPORT=path [FOCAL_YEAR=1799])
 ifndef RESULT
@@ -330,6 +330,18 @@ ifndef REPORT
 	$(error REPORT is required. Usage: make audit-result RESULT=output/run/result.json REPORT=output/run/report.html)
 endif
 	@PYTHONPATH=. python scripts/audit_result_quality.py "$(RESULT)" --report "$(REPORT)" $(if $(FOCAL_YEAR),--focal-year "$(FOCAL_YEAR)",)
+
+SOURCE_ACQUISITION_OUTPUT ?= output/source_acquisition_plan.json
+SOURCE_ACQUISITION_ARGS ?=
+
+source-acquisition:  ## Build source-acquisition agenda (RESULT=path [SOURCE_PACKET=path] [SOURCE_ACQUISITION_ARGS="--retrieve"])
+ifndef RESULT
+	$(error RESULT is required. Usage: make source-acquisition RESULT=output/run/result.json SOURCE_PACKET=docs/source_packets/18_BRUMAIRE_SOURCE_PACKET.json)
+endif
+	@PYTHONPATH=. python scripts/source_acquisition_plan.py "$(RESULT)" \
+		$(if $(SOURCE_PACKET),--source-packet "$(SOURCE_PACKET)",) \
+		--output "$(SOURCE_ACQUISITION_OUTPUT)" \
+		$(SOURCE_ACQUISITION_ARGS)
 
 dead-code:  ## Run dead code detection
 	@python $(SCRIPTS_META)/check_dead_code.py

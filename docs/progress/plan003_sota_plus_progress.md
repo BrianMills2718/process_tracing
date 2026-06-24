@@ -15,6 +15,7 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 - [x] Source-gap disposition metadata distinguishes acquired, partially mitigated, unresolved, unavailable, and accepted-limit source gaps in packet summary, report, and audit.
 - [x] The Brumaire source packet is expanded with private-planning memoir evidence and rerun through live non-mocked E2E.
 - [x] Verified source expansion work is committed and pushed.
+- [x] Trace-derived source-acquisition targets rank missing evidence by inferential payoff and can drive live `open_web_retrieval` searches.
 
 ## Constraints
 
@@ -24,7 +25,7 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 
 ## Current Phase
 
-Claim-scope source expansion is live-verified and landed. Source-aware extraction coverage was committed and pushed in `9ac37fc`. Fresh live run `output/live_plan003_source_expansion_20260623_001` expanded the packet to 6 sources, covered Source F with 8 evidence items, rendered the source-gap disposition table, and kept the high-priority correspondence gap honestly marked as `partially_mitigated`.
+Trace-derived source acquisition is implemented and live-verified. The current loop reads the completed Brumaire trace, ranks missing evidence by claim-scope/source-gap, damaging-absence, sensitivity, and driver-corroboration payoff, then emits concrete search queries for `open_web_retrieval`.
 
 ## Completed
 
@@ -37,7 +38,8 @@ Claim-scope source expansion is live-verified and landed. Source-aware extractio
 - Live retry `output/live_plan003_source_aware_extract_20260623_002` completed end to end. Pass 3 validation repair fired once on overlapping dependence clusters and succeeded. Source coverage is 5/5 packet sources, Source C has 4 evidence items, assigned evidence is 43/43, given-source grade is `A (100/100)`, and claim-scope grade remains `B (82/100)` because the private-correspondence gap is unresolved.
 - Source expansion slice added structured source-gap dispositions and Source F, Bourrienne's private-secretary memoir, to partially mitigate the private-planning gap without pretending direct correspondence is resolved.
 - Live source-expansion run `output/live_plan003_source_expansion_20260623_001` completed end to end in `1112.2s`. Source coverage is 6/6 packet sources, Source F has 8 evidence items, assigned evidence is 50/50, given-source grade is `A (100/100)`, and claim-scope grade remains `B (82/100)` because the high-priority correspondence gap is only partially mitigated. Top support shifted to `h1` at `0.550`, showing the new source changed the inference rather than only increasing evidence volume.
+- Source-acquisition slice added `pt.source_acquisition`, `scripts/source_acquisition_plan.py`, and `make source-acquisition`. The planner derives next-source targets from unresolved source gaps, damaging absences, prior/posterior sensitivity, and top-driver corroboration needs.
 
 ## Next
 
-Next highest-value work is either direct correspondence acquisition or a hypothesis-partition gate. If staying within current public-source constraints, add the partition gate next because the live runs keep producing merge suggestions and prior-sensitive winners.
+Use the source-acquisition output to either acquire/disposition direct correspondence routes or feed the next source into the packet. If public-source retrieval cannot resolve the direct correspondence class, move to the hypothesis-partition gate while preserving the unresolved claim-scope cap.
