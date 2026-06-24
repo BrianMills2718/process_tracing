@@ -10,6 +10,7 @@ Track all implementation work here.
 | 2 | SOTA+ Recovery And Thin-Slice Operating Model | Critical | 🚧 In Progress | Source packet contract, hypothesis partition audit, validation benchmark |
 | 3 | SOTA+ Execution Master Plan | Critical | 🚧 In Progress | All SOTA+ implementation slices |
 | 4 | Portfolio Dossier Spine | High | ✅ Complete | Portfolio wiki dossier coverage for `process_tracing` |
+| 5 | Interactive Trace Execution Host | High | 📋 Planned | Stage-by-stage pipeline review and visual audit host |
 
 ## Status Key
 

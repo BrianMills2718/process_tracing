@@ -27,7 +27,7 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 
 ## Current Phase
 
-Design-plan architecture cleanup is implemented. `docs/ARCHITECTURE.md` now records the current system boundary, domain model, typed data flow, contracts, failure paths, and backward runtime pass for the report/workbench/source-acquisition loop.
+Plan 005 is the next planned UI/workbench slice: a stage-by-stage interactive trace execution host that lets a reviewer trigger each pipeline stage and inspect typed outputs with visual summaries, concise explanations, and tooltips. Implementation is blocked until the static mockup and contract notebook are reviewed.
 
 ## Completed
 
@@ -43,7 +43,8 @@ Design-plan architecture cleanup is implemented. `docs/ARCHITECTURE.md` now reco
 - Source-acquisition slice added `pt.source_acquisition`, `scripts/source_acquisition_plan.py`, and `make source-acquisition`. The planner derives next-source targets from unresolved source gaps, damaging absences, prior/posterior sensitivity, and top-driver corroboration needs.
 - Workbench slice added `pt.workbench` and `make workbench`. Puppeteer verified the local UI loads, renders the acquisition targets, and the `Enrich Top Targets` button saves `output/source_acquisition/workbench_latest.json` with six extracted hits across the top two targets.
 - Design-plan cleanup added `docs/ARCHITECTURE.md` with Mermaid boundary, domain-model, and data-flow diagrams plus typed contract and failure-path tables.
+- Plan 005 added the pre-implementation design artifacts for the interactive trace execution host: `docs/plans/005_interactive_trace_execution_host.md`, `docs/plans/005_interactive_trace_execution_host_mockup.html`, and `docs/plans/005_interactive_trace_execution_host_contracts.ipynb`.
 
 ## Next
 
-Use the source-acquisition output to either acquire/disposition direct correspondence routes or feed the next source into the packet. Before adding more workflow features, keep `docs/ARCHITECTURE.md` synchronized with any new boundary, schema, or data-flow contract.
+Review the Plan 005 mockup. If approved, implement the walking skeleton host with live non-mocked stage execution and keep `docs/ARCHITECTURE.md` synchronized with any new boundary, schema, or data-flow contract.

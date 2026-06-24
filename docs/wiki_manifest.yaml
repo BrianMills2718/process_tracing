@@ -68,6 +68,10 @@ publish:
     type: ProjectPlan
     title: SOTA+ Execution Master Plan
     tags: [analysis, process-tracing, methodology, roadmap, sota, validation]
+  - path: docs/plans/005_interactive_trace_execution_host.md
+    type: ProjectPlan
+    title: Interactive Trace Execution Host
+    tags: [analysis, process-tracing, ui, workbench, planning]
   - glob: evidence/current/Evidence_Plan003*.md
     type: EvidenceArtifact
     tags: [evidence, verification, process-tracing, sota]

@@ -3,6 +3,11 @@
 ## 2026-06-24
 
 * **Ingest** | Added
+  [Interactive Trace Execution Host](plans/interactive-trace-execution-host.md)
+  from `docs/plans/005_interactive_trace_execution_host.md`, including the
+  mockup/contract-notebook gate and the decision to keep the current workbench
+  active until replaced.
+* **Ingest** | Added
   [Design-Plan Compliance Audit](sources/design-plan-compliance-audit.md) after
   reviewing `~/projects/.claude/skills/design-plan` and adding the Plan 003
   mockup/notebook forward gate.

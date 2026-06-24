@@ -42,6 +42,8 @@ turns the SOTA+ vision into a repeatable operating loop.
   boundary, domain-model, and typed data-flow diagrams.
 - `docs/source_packets/18_BRUMAIRE_RESEARCH_DESIGN.md` - first public
   source-packet benchmark candidate and E2E run command.
+- `docs/plans/005_interactive_trace_execution_host.md` - planned stage-by-stage
+  host for running and inspecting the pipeline interactively.
 - `~/projects/.claude/skills/design-plan/SKILL.md` - modality-aware
   planning protocol used to separate specifiable contracts from exploratory
   benchmark calibration, require vertical risk-ordered slices, and keep a live

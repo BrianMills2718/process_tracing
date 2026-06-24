@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interactive Trace Execution Host Mockup</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2933;
+      --muted: #657285;
+      --line: #d7dee8;
+      --band: #f5f7fa;
+      --panel: #ffffff;
+      --blue: #245a7c;
+      --green: #1f7a4d;
+      --amber: #9a6200;
+      --red: #a13c3c;
+      --violet: #6953a8;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #fff;
+      font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    header {
+      min-height: 58px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 18px;
+      flex-wrap: wrap;
+    }
+    h1 { font-size: 18px; margin: 0; letter-spacing: 0; }
+    button {
+      min-height: 34px;
+      border: 1px solid var(--blue);
+      border-radius: 6px;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 650;
+      padding: 0 12px;
+    }
+    button.secondary { background: #fff; color: var(--blue); }
+    main {
+      display: grid;
+      grid-template-columns: 300px minmax(420px, 1fr) 360px;
+      min-height: calc(100vh - 58px);
+      min-width: 0;
+    }
+    aside, .right {
+      background: var(--band);
+      border-right: 1px solid var(--line);
+      padding: 14px;
+      min-width: 0;
+    }
+    .right { border-right: 0; border-left: 1px solid var(--line); }
+    .workspace { padding: 16px 18px; }
+    .label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin: 10px 0 4px;
+    }
+    input {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      padding: 8px 10px;
+      font: inherit;
+      text-overflow: ellipsis;
+    }
+    .run-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .workspace { min-width: 0; }
+    .stage-list { display: grid; gap: 7px; margin-top: 12px; }
+    .stage {
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      padding: 8px;
+    }
+    .stage strong { font-size: 13px; }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--line);
+      justify-self: center;
+    }
+    .done .dot { background: var(--green); }
+    .active { border-color: var(--blue); box-shadow: inset 3px 0 0 var(--blue); }
+    .active .dot { background: var(--blue); }
+    .blocked .dot { background: var(--amber); }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+    .tip {
+      display: inline-grid;
+      place-items: center;
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: help;
+    }
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .explain {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--blue);
+      border-radius: 6px;
+      padding: 10px 12px;
+      background: #fbfdff;
+      margin-bottom: 14px;
+    }
+    .explain h2, .panel h2 { margin: 0 0 6px; font-size: 15px; }
+    .explain p, .panel p { margin: 0; color: var(--muted); }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .metric, .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 12px;
+      min-width: 0;
+    }
+    .metric span { color: var(--muted); font-size: 12px; }
+    .metric strong { display: block; font-size: 21px; margin-top: 2px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+    .timeline {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .event {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+    .date { color: var(--blue); font-weight: 750; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 7px 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-size: 12px; }
+    .matrix td:nth-child(n+2) { text-align: center; }
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: #e5e9f0;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .bar > span { display: block; height: 100%; background: var(--green); }
+    .warning {
+      border-color: #e7c783;
+      background: #fffaf0;
+    }
+    .warning h2 { color: var(--amber); }
+    .json {
+      background: #17202a;
+      color: #e7edf5;
+      border-radius: 7px;
+      padding: 10px;
+      font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      overflow: auto;
+      max-height: 220px;
+      max-width: 100%;
+    }
+    .small {
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+    @media (max-width: 1100px) {
+      main { grid-template-columns: 1fr; }
+      aside, .right { border: 0; border-bottom: 1px solid var(--line); }
+      .metrics, .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Trace Execution Host</h1>
+    <div>
+      <button class="secondary">Load final report</button>
+      <button>Run current stage</button>
+    </div>
+  </header>
+  <main>
+    <aside>
+      <span class="label">Input text</span>
+      <input value="input_text/source_packets/18_brumaire_source_packet.txt">
+      <span class="label">Source packet</span>
+      <input value="docs/source_packets/18_BRUMAIRE_SOURCE_PACKET.json">
+      <span class="label">Research question</span>
+      <input value="Why did the French Revolution culminate in Napoleon Bonaparte's 18 Brumaire coup?">
+      <div class="run-actions">
+        <button class="secondary">Create run</button>
+        <button class="secondary">Resume run</button>
+      </div>
+
+      <div class="stage-list" aria-label="Pipeline stages">
+        <div class="stage done"><span class="dot"></span><strong>Setup</strong><span class="pill">done</span></div>
+        <div class="stage active"><span class="dot"></span><strong>Extract</strong><span class="pill">active</span></div>
+        <div class="stage blocked"><span class="dot"></span><strong>Hypothesize</strong><span class="pill">waiting</span></div>
+        <div class="stage blocked"><span class="dot"></span><strong>Test</strong><span class="pill">waiting</span></div>
+        <div class="stage blocked"><span class="dot"></span><strong>Absence</strong><span class="pill">waiting</span></div>
+        <div class="stage blocked"><span class="dot"></span><strong>Update</strong><span class="pill">waiting</span></div>
+        <div class="stage blocked"><span class="dot"></span><strong>Synthesize</strong><span class="pill">waiting</span></div>
+        <div class="stage blocked"><span class="dot"></span><strong>Refine</strong><span class="pill">optional</span></div>
+        <div class="stage blocked"><span class="dot"></span><strong>Acquire sources</strong><span class="pill">optional</span></div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <div class="topline">
+        <div>
+          <strong>Stage: Extract</strong>
+          <span class="tip" title="Extraction turns the source text into typed actors, events, mechanisms, evidence, text-implied hypotheses, and causal edges.">?</span>
+        </div>
+        <span class="pill">ExtractionResult</span>
+      </div>
+
+      <div class="explain">
+        <h2>What this stage does</h2>
+        <p>Reads the source text and source-packet context, then produces the first structured causal map. Nothing here proves a hypothesis yet; it creates the objects later stages test.</p>
+      </div>
+
+      <div class="metrics">
+        <div class="metric"><span>Events</span><strong>12</strong></div>
+        <div class="metric"><span>Evidence items</span><strong>50</strong></div>
+        <div class="metric"><span>Mechanisms</span><strong>4</strong></div>
+        <div class="metric"><span>Packet sources covered</span><strong>6/6</strong></div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h2>Temporal event lane <span class="tip" title="Dates come from the extracted event fields. Unknown or vague dates remain visible instead of being silently ordered.">?</span></h2>
+          <div class="timeline">
+            <div class="event"><span class="date">1799-10</span><span>Sieyes and allies search for a military partner.</span></div>
+            <div class="event"><span class="date">1799-11-09</span><span>Legislative councils are moved to Saint-Cloud.</span></div>
+            <div class="event"><span class="date">1799-11-10</span><span>Bonaparte's allies force the institutional break.</span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Evidence table <span class="tip" title="Evidence is a quoted or paraphrased observation from the input. It becomes diagnostic only after the testing stage scores it against all hypotheses.">?</span></h2>
+          <table>
+            <thead><tr><th>ID</th><th>Type</th><th>Source</th><th>Summary</th></tr></thead>
+            <tbody>
+              <tr><td>evi_12</td><td>empirical</td><td>Source F</td><td>Private planning memoir describes conversations before Brumaire.</td></tr>
+              <tr><td>evi_18</td><td>interpretive</td><td>Source D</td><td>Historian links constitutional deadlock to elite coalition building.</td></tr>
+              <tr><td>evi_31</td><td>empirical</td><td>Source B</td><td>Council relocation created procedural opening for force-backed intervention.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h2>Diagnostic preview</h2>
+          <table class="matrix">
+            <thead><tr><th>Evidence</th><th>h1</th><th>h2</th><th>h3</th><th>Risk</th></tr></thead>
+            <tbody>
+              <tr><td>evi_12</td><td>high</td><td>mid</td><td>low</td><td>same-source dependence</td></tr>
+              <tr><td>evi_18</td><td>mid</td><td>mid</td><td>mid</td><td>interpretive cap</td></tr>
+              <tr><td>evi_31</td><td>high</td><td>low</td><td>low</td><td>needs event ordering check</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel warning">
+          <h2>Main audit risk</h2>
+          <p>Extraction can over-fragment repeated descriptions of one underlying event. The testing stage must cluster dependent evidence so repeated reports do not double-count support.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="right">
+      <div class="panel">
+        <h2>Consumes</h2>
+        <p>source text, source packet context, research question</p>
+      </div>
+      <div class="panel" style="margin-top: 10px;">
+        <h2>Produces</h2>
+        <p>`extraction.json` using the `ExtractionResult` schema</p>
+      </div>
+      <div class="panel" style="margin-top: 10px;">
+        <h2>Current artifact</h2>
+        <p class="small">output/workbench_runs/run_20260624_001/extraction.json</p>
+        <div class="json" aria-label="Stage JSON preview">{
+  "stage_id": "extract",
+  "status": "complete",
+  "schema_name": "ExtractionResult",
+  "summary": "12 events, 50 evidence items"
+}</div>
+      </div>
+      <div class="panel" style="margin-top: 10px;">
+        <h2>Next stage</h2>
+        <p>Hypothesize will convert extracted causal material into rival explanations with observable predictions.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

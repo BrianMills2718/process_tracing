@@ -28,13 +28,13 @@ implementation decision.
 - [Evidence Policy](/wiki/sources/evidence-policy.md)
 - [Design-Plan Compliance Audit](/wiki/sources/design-plan-compliance-audit.md)
 - [Archive Migration Review 2026-06-24](/wiki/plans/archive-migration-review-2026-06-24.md)
+- [Interactive Trace Execution Host](/wiki/plans/interactive-trace-execution-host.md)
 
 # Open Questions
 
 - Which active docs should be ingested first beyond the initial policy and
   architecture spine?
-- Which archive bundles should be moved to `~/archive/process_tracing` after
-  human review?
+- Which Plan 005 mockup changes are required before implementation starts?
 
 # Citations
 
