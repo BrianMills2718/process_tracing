@@ -65,6 +65,20 @@ Options:
 - `--priors <path>` — JSON object mapping hypothesis ids to positive prior weights
 - `--max-budget <dollars>` — per-call LLM budget cap
 
+### Knowledge Surfaces And Archive Boundary
+
+- Active repo orientation wiki: `process-tracing-current/` (OKF bundle with
+  chronicle at `process-tracing-current/wiki/log.md`). Use it for current-state
+  orientation, then verify against active code, tests, and docs before changing
+  behavior.
+- Archive wiki: `~/archive/process_tracing/` (OKF bundle with chronicle at
+  `~/archive/process_tracing/wiki/log.md`). Do not search it during normal
+  implementation; use it only for history, recovery, previous-attempt review, or
+  explicit archive cleanup.
+- Archive policy: `docs/ARCHIVE_POLICY.md`. Read it before moving retired
+  material out of this repo or promoting archived material back into active docs,
+  plans, code, or tests.
+
 ### Multi-Document Cross-Case Analysis
 
 ```bash
