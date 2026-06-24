@@ -15,6 +15,8 @@ Maintained documentation for `process_tracing`.
 - `ontology.md` - current analytic ontology and report-network semantics.
 - `FUTURE_WORK.md` - current roadmap after the inference-core rebuild.
 - `REVIEWER_WALKTHROUGH.md` - portfolio/reviewer orientation.
+- `ARCHIVE_POLICY.md` - current policy for moving retired material out of
+  `~/projects/` and maintaining OKF wiki logs.
 - `research/PROCESS_TRACING_SOTA_REVIEW_2026.md` - external SOTA map for
   process tracing, mixed methods, and LLM-assisted qualitative/causal work.
 
