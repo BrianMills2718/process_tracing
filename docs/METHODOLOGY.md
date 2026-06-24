@@ -7,6 +7,10 @@ Wiki home: http://localhost:8088/index.php/Project_Wiki
 Goal: make process tracing agent-drivable and auditable without turning it into
 generic summarization or false-precise causal scoring.
 
+Architecture artifact: `docs/ARCHITECTURE.md` is the active design-plan
+architecture reference. It contains the required boundary, domain-model, and
+typed data-flow diagrams for the deductive parts of the system.
+
 The system should help an analyst:
 
 - define a causal question and rival hypotheses

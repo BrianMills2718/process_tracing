@@ -17,6 +17,7 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 - [x] Verified source expansion work is committed and pushed.
 - [x] Trace-derived source-acquisition targets rank missing evidence by inferential payoff and can drive live `open_web_retrieval` searches.
 - [x] Local workbench exposes the acquisition agenda and a click-to-enrich action through an agent-drivable JSON API.
+- [x] Active architecture docs satisfy design-plan diagram requirements for deductive surfaces.
 
 ## Constraints
 
@@ -26,7 +27,7 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 
 ## Current Phase
 
-Trace-derived source acquisition is implemented and live-verified. The current loop reads the completed Brumaire trace, ranks missing evidence by claim-scope/source-gap, damaging-absence, sensitivity, and driver-corroboration payoff, emits concrete search queries for `open_web_retrieval`, and exposes the loop in a local workbench at `python -m pt.workbench`.
+Design-plan architecture cleanup is implemented. `docs/ARCHITECTURE.md` now records the current system boundary, domain model, typed data flow, contracts, failure paths, and backward runtime pass for the report/workbench/source-acquisition loop.
 
 ## Completed
 
@@ -41,7 +42,8 @@ Trace-derived source acquisition is implemented and live-verified. The current l
 - Live source-expansion run `output/live_plan003_source_expansion_20260623_001` completed end to end in `1112.2s`. Source coverage is 6/6 packet sources, Source F has 8 evidence items, assigned evidence is 50/50, given-source grade is `A (100/100)`, and claim-scope grade remains `B (82/100)` because the high-priority correspondence gap is only partially mitigated. Top support shifted to `h1` at `0.550`, showing the new source changed the inference rather than only increasing evidence volume.
 - Source-acquisition slice added `pt.source_acquisition`, `scripts/source_acquisition_plan.py`, and `make source-acquisition`. The planner derives next-source targets from unresolved source gaps, damaging absences, prior/posterior sensitivity, and top-driver corroboration needs.
 - Workbench slice added `pt.workbench` and `make workbench`. Puppeteer verified the local UI loads, renders the acquisition targets, and the `Enrich Top Targets` button saves `output/source_acquisition/workbench_latest.json` with six extracted hits across the top two targets.
+- Design-plan cleanup added `docs/ARCHITECTURE.md` with Mermaid boundary, domain-model, and data-flow diagrams plus typed contract and failure-path tables.
 
 ## Next
 
-Use the source-acquisition output to either acquire/disposition direct correspondence routes or feed the next source into the packet. If public-source retrieval cannot resolve the direct correspondence class, move to the hypothesis-partition gate while preserving the unresolved claim-scope cap.
+Use the source-acquisition output to either acquire/disposition direct correspondence routes or feed the next source into the packet. Before adding more workflow features, keep `docs/ARCHITECTURE.md` synchronized with any new boundary, schema, or data-flow contract.

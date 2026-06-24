@@ -38,6 +38,8 @@ turns the SOTA+ vision into a repeatable operating loop.
 - `docs/OUTPUT_QUALITY_RUBRIC.md` - A-grade standard, academic evidence caps,
   and iteration protocol.
 - `docs/ontology.md` - analytic object model and report-network semantics.
+- `docs/ARCHITECTURE.md` - active design-plan architecture artifact with
+  boundary, domain-model, and typed data-flow diagrams.
 - `docs/source_packets/18_BRUMAIRE_RESEARCH_DESIGN.md` - first public
   source-packet benchmark candidate and E2E run command.
 - `~/projects/.claude/skills/design-plan/SKILL.md` - modality-aware
@@ -82,6 +84,11 @@ The live concern register for this plan is
 ambiguities, and recommendations should go there when they arise rather than
 remaining in chat. Each slice boundary must triage the register before the next
 slice begins.
+
+The active architecture artifact for deductive surfaces is
+`docs/ARCHITECTURE.md`. It is required reading before changing source packets,
+the inference pipeline, acquisition planning, report/workbench behavior, or any
+cross-component data contract.
 
 ---
 
@@ -505,6 +512,7 @@ passing benchmark record and an explanation of remaining external-data limits.
 | tests/test_source_acquisition.py | test_acquisition_plan_prioritizes_unresolved_source_gaps_and_absences | Trace-derived acquisition agenda ranks unresolved source gaps and damaging absences ahead of lower-value corroboration. |
 | tests/test_source_acquisition.py | test_source_acquisition_cli_writes_json_plan | Agent-drivable CLI writes a machine-readable acquisition plan from `result.json` and source packet context. |
 | tests/test_workbench.py | test_workbench_http_exposes_button_and_json_endpoint | Local workbench exposes a click-to-enrich UI and JSON endpoint for the same acquisition flow. |
+| tests/test_architecture_docs.py | test_architecture_doc_has_required_design_plan_diagrams | Active architecture doc preserves boundary, domain-model, and data-flow Mermaid diagrams. |
 | tests/test_pipeline_integration.py | TestVectorCompleteness::test_repairs_overlapping_clusters_once_with_validation_feedback | Live E2E regression: Pass 3 makes one explicit validation-repair call when dependence clusters overlap, then still fails loud if invalid. |
 | `tests/test_cli_source_packet.py` | | Slice 1 CLI `--source-packet` plumbing without an LLM call. |
 | `tests/test_pass_refine.py` | | Regression coverage for the live Slice 1 refinement failure: Pass 5 must not put evidence-to-hypothesis support links into causal edges. |
