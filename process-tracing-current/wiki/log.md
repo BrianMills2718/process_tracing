@@ -2,6 +2,10 @@
 
 ## 2026-06-24
 
+* **Ingest** | Updated
+  [Archive Migration Review 2026-06-24](plans/archive-migration-review-2026-06-24.md)
+  after moving historical debug, testing, validation, and phase-roadmap surfaces
+  to `~/archive/process_tracing/raw/repo-historical-surfaces-2026-06-24/`.
 * **Ingest** | Documented first archive migration batch in
   [Archive Migration Review 2026-06-24](plans/archive-migration-review-2026-06-24.md);
   external archive source summary is

@@ -23,8 +23,8 @@
 - `README.md` - current setup and verification commands.
 - `Makefile` - project interface, `check`, `clean`, and meta-process targets.
 - `docs/CLAUDE.md` - documentation routing rules.
-- `docs/testing/CLAUDE.md` - historical testing surface warning.
-- `docs/validation/CLAUDE.md` - historical validation surface warning.
+- `~/archive/process_tracing/raw/repo-historical-surfaces-2026-06-24/docs/testing/CLAUDE.md` - archived historical testing surface warning.
+- `~/archive/process_tracing/raw/repo-historical-surfaces-2026-06-24/docs/validation/CLAUDE.md` - archived historical validation surface warning.
 - `docs/plans/TEMPLATE.md` - local plan format.
 - `pt/report.py` - largest active module and likely future refactor target.
 - `meta-process.yaml` - dead-code configuration is not enabled.
@@ -37,10 +37,10 @@ This design plan does not authorize implementation changes by itself. Expected f
 
 - Packaging: `pyproject.toml` or `requirements.txt`, `README.md`, `Makefile`
 - Dead-code policy: `meta-process.yaml`, `requirements.txt`, `.vulture_whitelist.py` if needed
-- Historical docs layout: `docs/testing/`, `docs/validation/`,
-  `~/archive/process_tracing/`, `docs/CLAUDE.md`
+- Historical docs layout: `~/archive/process_tracing/`, `docs/CLAUDE.md`
 - Report refactor: `pt/report.py`, possible new `pt/report_*` helpers, `tests/test_pipeline_integration.py`
-- Evaluation/golden tests: `tests/`, `input_text/`, possible `docs/validation/` updates
+- Evaluation/golden tests: `tests/`, `input_text/`, possible active validation
+  docs if reintroduced under current APIs
 
 ---
 
@@ -66,12 +66,14 @@ This design plan does not authorize implementation changes by itself. Expected f
 
 ### Workstream C: Historical Docs Quarantine
 
-1. Decide whether `docs/testing/` and `docs/validation/` should remain in place
-   with warnings or move wholesale into `~/archive/process_tracing/`.
-2. If moving, use `git mv` only, preserve paths in commit history, and update `docs/CLAUDE.md`.
-3. Keep active verification guidance centered on `tests/` and `make check`.
+1. Historical `docs/testing/` and `docs/validation/` surfaces were moved to
+   `~/archive/process_tracing/raw/repo-historical-surfaces-2026-06-24/`.
+2. Keep active verification guidance centered on `tests/` and `make check`.
+3. If a validation helper becomes current again, rebuild it against active `pt/`
+   APIs and put enforced coverage in `tests/`.
 
-**Gate:** Move only if historical path stability is less important than reducing stale-doc discoverability.
+**Gate:** Complete. Future validation work should create current docs/tests
+rather than reviving archived paths in place.
 
 ### Workstream D: Report Renderer Refactor
 

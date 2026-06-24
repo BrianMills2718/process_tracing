@@ -25,8 +25,10 @@ Maintained documentation for `process_tracing`.
 - active implementation planning -> `plans/`
 - SOTA/literature/research synthesis -> `research/`
 - active deterministic verification -> `../tests/` via `make check`
-- historical manual verification helpers -> `testing/`
-- historical validation benchmarks and checks -> `validation/`
+- historical manual verification helpers ->
+  `~/archive/process_tracing/raw/repo-historical-surfaces-2026-06-24/docs/testing/`
+- historical validation benchmarks and checks ->
+  `~/archive/process_tracing/raw/repo-historical-surfaces-2026-06-24/docs/validation/`
 - legacy sprint/status reports and superseded architecture analyses ->
   `~/archive/process_tracing/`
 

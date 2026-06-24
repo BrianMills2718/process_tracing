@@ -78,3 +78,7 @@ exclude:
   - hooks/**
   - .pytest_cache/**
   - docs/archive/**  # retained for compatibility; retired docs now live under ~/archive/process_tracing/
+  - docs/debug/**  # retained for compatibility; retired docs now live under ~/archive/process_tracing/
+  - docs/testing/**  # retained for compatibility; retired docs now live under ~/archive/process_tracing/
+  - docs/validation/**  # retained for compatibility; retired docs now live under ~/archive/process_tracing/
+  - docs/phases/**  # retained for compatibility; retired docs now live under ~/archive/process_tracing/
