@@ -11,6 +11,7 @@ Track all implementation work here.
 | 3 | SOTA+ Execution Master Plan | Critical | 🚧 In Progress | All SOTA+ implementation slices |
 | 4 | Portfolio Dossier Spine | High | ✅ Complete | Portfolio wiki dossier coverage for `process_tracing` |
 | 5 | Interactive Trace Execution Host | High | 📋 Planned | Stage-by-stage pipeline review and visual audit host |
+| 6 | Source Design Engine | Critical | 📋 Planned | Iterative source-design, acquisition, and disposition loop |
 
 ## Status Key
 

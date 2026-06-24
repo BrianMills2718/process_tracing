@@ -30,6 +30,7 @@ implementation decision.
 - [Design-Plan Compliance Audit](/wiki/sources/design-plan-compliance-audit.md)
 - [Archive Migration Review 2026-06-24](/wiki/plans/archive-migration-review-2026-06-24.md)
 - [Interactive Trace Execution Host](/wiki/plans/interactive-trace-execution-host.md)
+- [Source Design Engine](/wiki/plans/source-design-engine.md)
 
 # Open Questions
 

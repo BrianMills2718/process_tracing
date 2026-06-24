@@ -17,3 +17,4 @@
 
 * [Archive Migration Review 2026-06-24](plans/archive-migration-review-2026-06-24.md) - review record for the first archive migration batch.
 * [Interactive Trace Execution Host](plans/interactive-trace-execution-host.md) - current plan for the stage-by-stage process-tracing host.
+* [Source Design Engine](plans/source-design-engine.md) - execution-ready child plan for iterative source design and acquisition.

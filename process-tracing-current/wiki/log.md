@@ -2,6 +2,9 @@
 
 ## 2026-06-24
 
+* **Ingest** | Added [Source Design Engine](plans/source-design-engine.md) from
+  `docs/plans/006_source_design_engine.md` with the required seam mockup and
+  contract notebook for the next execution-ready methodology slice.
 * **Ingest** | Added
   [SOTA+ Target Architecture](architecture/sota-target-architecture.md) from
   `docs/SOTA_PLUS_TARGET_ARCHITECTURE.md` so the current wiki distinguishes the

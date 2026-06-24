@@ -48,6 +48,8 @@ turns the SOTA+ vision into a repeatable operating loop.
   source-packet benchmark candidate and E2E run command.
 - `docs/plans/005_interactive_trace_execution_host.md` - planned stage-by-stage
   host for running and inspecting the pipeline interactively.
+- `docs/plans/006_source_design_engine.md` - execution-ready child plan for
+  iterating source design, acquisition actions, and gap dispositions.
 - `~/projects/.claude/skills/design-plan/SKILL.md` - modality-aware
   planning protocol used to separate specifiable contracts from exploratory
   benchmark calibration, require vertical risk-ordered slices, and keep a live
@@ -121,6 +123,9 @@ priority order for reaching SOTA+ is:
 
 Any slice that improves presentation without advancing one of those priorities
 must justify itself as an audit instrument rather than a cosmetic feature.
+
+The first execution-ready child plan under those priorities is
+`docs/plans/006_source_design_engine.md`.
 
 ---
 
