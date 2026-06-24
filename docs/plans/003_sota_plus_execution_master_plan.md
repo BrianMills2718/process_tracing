@@ -504,6 +504,7 @@ passing benchmark record and an explanation of remaining external-data limits.
 | tests/test_pipeline_integration.py | TestReportConsistency::test_source_packet_is_visible_in_report_and_audit | Report/audit expose source-gap dispositions and unresolved high-priority gap count. |
 | tests/test_source_acquisition.py | test_acquisition_plan_prioritizes_unresolved_source_gaps_and_absences | Trace-derived acquisition agenda ranks unresolved source gaps and damaging absences ahead of lower-value corroboration. |
 | tests/test_source_acquisition.py | test_source_acquisition_cli_writes_json_plan | Agent-drivable CLI writes a machine-readable acquisition plan from `result.json` and source packet context. |
+| tests/test_workbench.py | test_workbench_http_exposes_button_and_json_endpoint | Local workbench exposes a click-to-enrich UI and JSON endpoint for the same acquisition flow. |
 | tests/test_pipeline_integration.py | TestVectorCompleteness::test_repairs_overlapping_clusters_once_with_validation_feedback | Live E2E regression: Pass 3 makes one explicit validation-repair call when dependence clusters overlap, then still fails loud if invalid. |
 | `tests/test_cli_source_packet.py` | | Slice 1 CLI `--source-packet` plumbing without an LLM call. |
 | `tests/test_pass_refine.py` | | Regression coverage for the live Slice 1 refinement failure: Pass 5 must not put evidence-to-hypothesis support links into causal edges. |

@@ -320,7 +320,7 @@ endif
 	@python $(SCRIPTS_META)/complete_plan.py --plan $(PLAN)
 
 # --- Quality ---
-.PHONY: audit-result source-acquisition dead-code clean
+.PHONY: audit-result source-acquisition workbench dead-code clean
 
 audit-result:  ## Grade a result/report pair (RESULT=path REPORT=path [FOCAL_YEAR=1799])
 ifndef RESULT
@@ -342,6 +342,12 @@ endif
 		$(if $(SOURCE_PACKET),--source-packet "$(SOURCE_PACKET)",) \
 		--output "$(SOURCE_ACQUISITION_OUTPUT)" \
 		$(SOURCE_ACQUISITION_ARGS)
+
+WORKBENCH_HOST ?= 127.0.0.1
+WORKBENCH_PORT ?= 8501
+
+workbench:  ## Start local process-tracing workbench (WORKBENCH_PORT=8501)
+	@PYTHONPATH=. python -m pt.workbench --host "$(WORKBENCH_HOST)" --port "$(WORKBENCH_PORT)"
 
 dead-code:  ## Run dead code detection
 	@python $(SCRIPTS_META)/check_dead_code.py

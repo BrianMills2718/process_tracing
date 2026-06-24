@@ -16,6 +16,7 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 - [x] The Brumaire source packet is expanded with private-planning memoir evidence and rerun through live non-mocked E2E.
 - [x] Verified source expansion work is committed and pushed.
 - [x] Trace-derived source-acquisition targets rank missing evidence by inferential payoff and can drive live `open_web_retrieval` searches.
+- [x] Local workbench exposes the acquisition agenda and a click-to-enrich action through an agent-drivable JSON API.
 
 ## Constraints
 
@@ -25,7 +26,7 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 
 ## Current Phase
 
-Trace-derived source acquisition is implemented and live-verified. The current loop reads the completed Brumaire trace, ranks missing evidence by claim-scope/source-gap, damaging-absence, sensitivity, and driver-corroboration payoff, then emits concrete search queries for `open_web_retrieval`.
+Trace-derived source acquisition is implemented and live-verified. The current loop reads the completed Brumaire trace, ranks missing evidence by claim-scope/source-gap, damaging-absence, sensitivity, and driver-corroboration payoff, emits concrete search queries for `open_web_retrieval`, and exposes the loop in a local workbench at `python -m pt.workbench`.
 
 ## Completed
 
@@ -39,6 +40,7 @@ Trace-derived source acquisition is implemented and live-verified. The current l
 - Source expansion slice added structured source-gap dispositions and Source F, Bourrienne's private-secretary memoir, to partially mitigate the private-planning gap without pretending direct correspondence is resolved.
 - Live source-expansion run `output/live_plan003_source_expansion_20260623_001` completed end to end in `1112.2s`. Source coverage is 6/6 packet sources, Source F has 8 evidence items, assigned evidence is 50/50, given-source grade is `A (100/100)`, and claim-scope grade remains `B (82/100)` because the high-priority correspondence gap is only partially mitigated. Top support shifted to `h1` at `0.550`, showing the new source changed the inference rather than only increasing evidence volume.
 - Source-acquisition slice added `pt.source_acquisition`, `scripts/source_acquisition_plan.py`, and `make source-acquisition`. The planner derives next-source targets from unresolved source gaps, damaging absences, prior/posterior sensitivity, and top-driver corroboration needs.
+- Workbench slice added `pt.workbench` and `make workbench`. Puppeteer verified the local UI loads, renders the acquisition targets, and the `Enrich Top Targets` button saves `output/source_acquisition/workbench_latest.json` with six extracted hits across the top two targets.
 
 ## Next
 

@@ -7,8 +7,11 @@ the script or agent layer so the core analysis contract remains deterministic.
 
 from __future__ import annotations
 
+import json
+import os
 import re
-from typing import Literal
+from pathlib import Path
+from typing import Any, Literal, cast
 
 from pydantic import BaseModel, Field
 
@@ -22,6 +25,7 @@ TargetKind = Literal[
     "sensitivity_discriminator",
     "driver_corroboration",
 ]
+Provider = Literal["brave", "searxng", "tavily", "exa"]
 
 
 class AcquisitionTarget(BaseModel):
@@ -45,6 +49,140 @@ class AcquisitionPlan(BaseModel):
     case_name: str = Field(description="Case name inferred from source packet or research question.")
     rationale: str = Field(description="Why these targets are the next best iteration.")
     targets: list[AcquisitionTarget] = Field(description="Targets sorted by descending priority.")
+
+
+def load_process_result(path: Path | str) -> ProcessTracingResult:
+    """Load a process-tracing result JSON artifact."""
+
+    resolved = Path(path).expanduser().resolve()
+    data = json.loads(resolved.read_text(encoding="utf-8"))
+    return ProcessTracingResult.model_validate(data)
+
+
+def load_packet_for_result(
+    path: Path | str | None,
+    result: ProcessTracingResult,
+    *,
+    repo_root: Path | None = None,
+) -> SourcePacket | None:
+    """Load an explicit or result-linked source packet when available."""
+
+    from pt.source_packet import load_source_packet
+
+    if path is not None and str(path):
+        return load_source_packet(path)
+    packet_summary = result.source_packet
+    if packet_summary is None or packet_summary.source_packet_path is None:
+        return None
+    candidate = Path(packet_summary.source_packet_path).expanduser()
+    if not candidate.is_file() and repo_root is not None:
+        candidate = repo_root / packet_summary.source_packet_path
+    if candidate.is_file():
+        return load_source_packet(candidate)
+    return None
+
+
+def available_retrieval_providers(requested: list[str] | None = None) -> list[Provider]:
+    """Return configured retrieval providers in preferred order."""
+
+    if requested:
+        return [cast(Provider, provider) for provider in requested]
+    providers: list[Provider] = []
+    if os.environ.get("EXA_API_KEY"):
+        providers.append("exa")
+    if os.environ.get("TAVILY_API_KEY"):
+        providers.append("tavily")
+    if os.environ.get("BRAVE_API_KEY"):
+        providers.append("brave")
+    if os.environ.get("SEARXNG_BASE_URL"):
+        providers.append("searxng")
+    return providers
+
+
+def retrieve_for_plan(
+    plan: AcquisitionPlan,
+    *,
+    providers: list[Provider],
+    top_k: int,
+    queries_per_target: int,
+    cache_dir: Path | str,
+    timeout_seconds: float = 20.0,
+) -> list[dict[str, Any]]:
+    """Run live open-web retrieval for acquisition targets.
+
+    This optional integration is deliberately outside the deterministic planner:
+    it requires provider credentials, network access, and source availability.
+    """
+
+    from open_web_retrieval.client import OpenWebRetrievalClient
+    from open_web_retrieval.models import SearchQuery
+
+    if not providers:
+        raise RuntimeError(
+            "no open_web_retrieval providers configured; set EXA_API_KEY, "
+            "TAVILY_API_KEY, BRAVE_API_KEY, or SEARXNG_BASE_URL"
+        )
+
+    records: list[dict[str, Any]] = []
+    with OpenWebRetrievalClient(
+        exa_api_key=os.environ.get("EXA_API_KEY"),
+        tavily_api_key=os.environ.get("TAVILY_API_KEY"),
+        brave_api_key=os.environ.get("BRAVE_API_KEY"),
+        searxng_base_url=os.environ.get("SEARXNG_BASE_URL"),
+        cache_dir=str(cache_dir),
+        timeout_seconds=timeout_seconds,
+    ) as client:
+        for target in plan.targets:
+            for query_text in target.search_queries[:queries_per_target]:
+                query = SearchQuery(
+                    query=query_text,
+                    providers=providers,
+                    top_k=top_k,
+                    search_depth="advanced",
+                    result_detail="summary",
+                    retrieval_instruction=target.evidence_need,
+                )
+                batch = client.retrieve(
+                    query,
+                    allow_partial=True,
+                    trace_id=f"source-acquisition-{target.target_id}",
+                    task="process_tracing_source_acquisition",
+                )
+                records.append(
+                    {
+                        "target_id": target.target_id,
+                        "query": query_text,
+                        "providers": providers,
+                        "hits": [
+                            {
+                                "provider": record.search_hit.provider,
+                                "rank": record.search_hit.rank,
+                                "title": record.search_hit.title,
+                                "url": record.search_hit.url,
+                                "snippet": record.search_hit.snippet,
+                                "publisher": record.search_hit.publisher,
+                                "published_at": record.search_hit.published_at.isoformat()
+                                if record.search_hit.published_at is not None
+                                else None,
+                                "fetched": record.fetched_resource is not None,
+                                "extracted": record.extracted_document is not None,
+                                "extracted_title": (
+                                    record.extracted_document.title
+                                    if record.extracted_document is not None
+                                    else None
+                                ),
+                                "text_char_count": (
+                                    len(record.extracted_document.text)
+                                    if record.extracted_document is not None
+                                    else 0
+                                ),
+                                "error": record.provenance.get("error"),
+                            }
+                            for record in batch.records
+                        ],
+                    }
+                )
+    return records
 
 
 def build_acquisition_plan(
