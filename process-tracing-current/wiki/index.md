@@ -10,6 +10,7 @@
 
 * [Archive And Wiki Policy](sources/archive-policy.md) - active policy for repo/archive wiki boundaries and archive search.
 * [Evidence Policy](sources/evidence-policy.md) - active policy for current versus historical evidence records.
+* [Design-Plan Compliance Audit](sources/design-plan-compliance-audit.md) - current audit of design-plan requirements and forward gates.
 
 # Plans
 

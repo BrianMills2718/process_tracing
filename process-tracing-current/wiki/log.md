@@ -2,6 +2,10 @@
 
 ## 2026-06-24
 
+* **Ingest** | Added
+  [Design-Plan Compliance Audit](sources/design-plan-compliance-audit.md) after
+  reviewing `~/projects/.claude/skills/design-plan` and adding the Plan 003
+  mockup/notebook forward gate.
 * **Ingest** | Updated
   [Archive Migration Review 2026-06-24](plans/archive-migration-review-2026-06-24.md)
   after moving legacy guide documents to

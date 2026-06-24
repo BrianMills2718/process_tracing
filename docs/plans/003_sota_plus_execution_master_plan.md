@@ -122,6 +122,7 @@ No implementation slice is complete until all gates below pass.
 | Audit/review | `make audit-result` is run against the live generated JSON/report/sidecar and reviewed against `docs/OUTPUT_QUALITY_RUBRIC.md` plus this plan's slice criteria. |
 | Independent adversarial critique | A fresh reviewer pass identifies what still fails from a PhD methods standpoint and whether the next step is code, prompt, source, benchmark, or scope. Self-review alone does not satisfy this gate. |
 | Concern register triage | New concerns and audit findings are added to `docs/plans/sota_plus_concern_register.md`; every open item is dispositioned as resolved, mitigated, accepted, escalated, or deferred to a named slice. |
+| Mockup/notebook gate | Significant UI surfaces and cross-seam contracts include a static mockup or concrete input/output examples before implementation. Non-trivial contract work includes a planning notebook, or the slice plan records an explicit waiver and rationale. |
 | Cleanup | Stale docs are updated or archived; generated artifacts stay out of git unless intentionally curated; `make check` passes. |
 | Commit | Verified work is committed before moving to the next slice. |
 
@@ -588,12 +589,12 @@ The long-term goal is met only when all of the following are true:
 
 ## Acceptance Criteria For This Plan
 
-- [ ] Plan 003 is linked from the plan index and active roadmap docs.
-- [ ] Plan 003 defines slice order, dependencies, E2E tests, critique gates,
+- [x] Plan 003 is linked from the plan index and active roadmap docs.
+- [x] Plan 003 defines slice order, dependencies, E2E tests, critique gates,
   cleanup gates, and success criteria.
-- [ ] Plan 003 distinguishes execution-ready next slices from directional
+- [x] Plan 003 distinguishes execution-ready next slices from directional
   future skeleton slices to avoid fake precision.
-- [ ] Plan 003 has a live concern register and makes register triage part of
+- [x] Plan 003 has a live concern register and makes register triage part of
   every slice's definition of done.
-- [ ] Future implementation work uses this plan as the stop/go checklist.
-- [ ] `make check` passes after documentation updates.
+- [x] Future implementation work uses this plan as the stop/go checklist.
+- [x] `make check` passes after documentation updates.

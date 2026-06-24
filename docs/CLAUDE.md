@@ -19,6 +19,8 @@ Maintained documentation for `process_tracing`.
   `~/projects/` and maintaining OKF wiki logs.
 - `EVIDENCE_POLICY.md` - current policy for keeping active evidence notes small
   and moving historical evidence to `~/archive/process_tracing/`.
+- `DESIGN_PLAN_COMPLIANCE_AUDIT.md` - current audit of design-plan requirements,
+  including required diagrams, contracts, runtime pass, and forward gates.
 - `research/PROCESS_TRACING_SOTA_REVIEW_2026.md` - external SOTA map for
   process tracing, mixed methods, and LLM-assisted qualitative/causal work.
 

@@ -52,6 +52,10 @@ publish:
     type: ProjectDoc
     title: Process Tracing Output Quality Rubric
     tags: [analysis, process-tracing, validation]
+  - path: docs/DESIGN_PLAN_COMPLIANCE_AUDIT.md
+    type: ProjectDoc
+    title: Process Tracing Design-Plan Compliance Audit
+    tags: [analysis, process-tracing, planning, architecture]
   - path: docs/research/PROCESS_TRACING_SOTA_REVIEW_2026.md
     type: ResearchSynthesis
     title: Process Tracing SOTA Review 2026
