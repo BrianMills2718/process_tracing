@@ -215,7 +215,7 @@ Changes to these prompts should be validated by running the pipeline on a text a
 
 ## Legacy Codebase (Removed 2026-02-15)
 
-The old `core/` graph-based architecture, `universal_llm_kit/`, `tools/`, and all root-level debug scripts (`test_*.py`, `verify_*.py`) have been removed. They imported a non-existent `core/` module. The `tests/` directory was pruned to only files testing active `pt/` code. Historical investigation docs remain in `evidence/`.
+The old `core/` graph-based architecture, `universal_llm_kit/`, `tools/`, and all root-level debug scripts (`test_*.py`, `verify_*.py`) have been removed. They imported a non-existent `core/` module. The `tests/` directory was pruned to only files testing active `pt` code. Historical evidence records have been moved to `~/archive/process_tracing/raw/repo-historical-evidence-2026-06-24/`; active evidence in this repo is limited to Plan 003 notes under `evidence/current/`.
 
 ---
 

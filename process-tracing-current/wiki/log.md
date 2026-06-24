@@ -4,6 +4,13 @@
 
 * **Ingest** | Updated
   [Archive Migration Review 2026-06-24](plans/archive-migration-review-2026-06-24.md)
+  after moving legacy guide documents to
+  `~/archive/process_tracing/raw/repo-historical-guides-2026-06-24/`.
+* **Ingest** | Added [Evidence Policy](sources/evidence-policy.md) after moving
+  historical evidence records to
+  `~/archive/process_tracing/raw/repo-historical-evidence-2026-06-24/`.
+* **Ingest** | Updated
+  [Archive Migration Review 2026-06-24](plans/archive-migration-review-2026-06-24.md)
   after moving historical debug, testing, validation, and phase-roadmap surfaces
   to `~/archive/process_tracing/raw/repo-historical-surfaces-2026-06-24/`.
 * **Ingest** | Documented first archive migration batch in

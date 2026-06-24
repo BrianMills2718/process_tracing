@@ -22,6 +22,10 @@ phase-roadmap surfaces. These files either referenced removed legacy APIs,
 explicitly described themselves as historical, or represented superseded roadmap
 material. Current verification remains centered on `tests/` and `make check`.
 
+The third migration batch moved legacy Phase 23-27, baseline, and retired
+architecture evidence. Active evidence is now limited to Plan 003 notes under
+`evidence/current/`.
+
 # Classification
 
 | Scope | Decision | Rationale |
@@ -32,15 +36,20 @@ material. Current verification remains centered on `tests/` and `make check`.
 | `docs/testing/` | move-to-archive | Legacy script tests targeted removed APIs; active tests live in `tests/`. |
 | `docs/validation/` | move-to-archive | Directory marked itself historical; active validation is documented in `docs/VALIDATION.md`. |
 | `docs/phases/` | move-to-archive | Old phase roadmap material is superseded by active SOTA+ plans. |
+| legacy `evidence/` records | move-to-archive | Phase 23-27/baseline evidence referenced removed architecture and polluted active search. |
+| `docs/guides/` | move-to-archive | Legacy browser testing and validation guides referenced removed outputs and architecture. |
 
 # Next Review Batch
 
-No historical doc directories remain in the active repo. The next cleanup pass
-should scan for stale references in `evidence/` and decide whether evidence
-artifacts need an archive policy of their own.
+No historical doc directories remain in the active repo. The active evidence
+surface is now Plan 003 only. The next cleanup pass should return to SOTA+
+implementation rather than further archive migration unless new stale surfaces
+appear.
 
 # Citations
 
 [1] `../../../docs/ARCHIVE_POLICY.md`
 [2] `~/archive/process_tracing/wiki/sources/repo-archive-2026-06-24.md`
 [3] `~/archive/process_tracing/wiki/sources/repo-historical-surfaces-2026-06-24.md`
+[4] `../../../docs/EVIDENCE_POLICY.md`
+[5] `~/archive/process_tracing/wiki/sources/repo-historical-guides-2026-06-24.md`

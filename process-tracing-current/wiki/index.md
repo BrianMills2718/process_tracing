@@ -9,6 +9,7 @@
 # Policies
 
 * [Archive And Wiki Policy](sources/archive-policy.md) - active policy for repo/archive wiki boundaries and archive search.
+* [Evidence Policy](sources/evidence-policy.md) - active policy for current versus historical evidence records.
 
 # Plans
 

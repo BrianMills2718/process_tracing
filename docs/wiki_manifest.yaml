@@ -64,15 +64,9 @@ publish:
     type: ProjectPlan
     title: SOTA+ Execution Master Plan
     tags: [analysis, process-tracing, methodology, roadmap, sota, validation]
-  - glob: evidence/*.md
+  - glob: evidence/current/Evidence_Plan003*.md
     type: EvidenceArtifact
-    tags: [evidence, verification, process-tracing]
-  - glob: evidence/current/*.md
-    type: EvidenceArtifact
-    tags: [evidence, verification, process-tracing]
-  - glob: evidence/completed/*.md
-    type: EvidenceArtifact
-    tags: [evidence, verification, process-tracing]
+    tags: [evidence, verification, process-tracing, sota]
 exclude:
   - docs/CLAUDE.md
   - hooks/**
@@ -82,3 +76,4 @@ exclude:
   - docs/testing/**  # retained for compatibility; retired docs now live under ~/archive/process_tracing/
   - docs/validation/**  # retained for compatibility; retired docs now live under ~/archive/process_tracing/
   - docs/phases/**  # retained for compatibility; retired docs now live under ~/archive/process_tracing/
+  - docs/guides/**  # retained for compatibility; retired docs now live under ~/archive/process_tracing/

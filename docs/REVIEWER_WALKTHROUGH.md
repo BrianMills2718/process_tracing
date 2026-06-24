@@ -29,7 +29,7 @@ reviewer-safe case bundle is
 | `docs/WHITEPAPER_optimal_automated_process_tracing.md` | Explains the methodology and why the workflow is analytically meaningful |
 | `docs/ontology.md` | Shows the typed analytic objects behind the workflow |
 | `docs/OUTPUT_QUALITY_RUBRIC.md` | Shows how generated reports are graded and capped |
-| `evidence/current/*.md` and `evidence/completed/*.md` | Shows how claims are grounded in inspectable evidence artifacts |
+| `evidence/current/Evidence_Plan003*.md` | Shows how active SOTA+ claims are grounded in inspectable evidence artifacts |
 | `docs/portfolio/FRENCH_DIRECTORY_COLLAPSE_CASE_BUNDLE.md` | Shows one public-source question through evidence, hypothesis updates, absence checks, and report paths |
 
 ## Analyst Differentiator

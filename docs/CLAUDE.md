@@ -17,6 +17,8 @@ Maintained documentation for `process_tracing`.
 - `REVIEWER_WALKTHROUGH.md` - portfolio/reviewer orientation.
 - `ARCHIVE_POLICY.md` - current policy for moving retired material out of
   `~/projects/` and maintaining OKF wiki logs.
+- `EVIDENCE_POLICY.md` - current policy for keeping active evidence notes small
+  and moving historical evidence to `~/archive/process_tracing/`.
 - `research/PROCESS_TRACING_SOTA_REVIEW_2026.md` - external SOTA map for
   process tracing, mixed methods, and LLM-assisted qualitative/causal work.
 
@@ -25,10 +27,13 @@ Maintained documentation for `process_tracing`.
 - active implementation planning -> `plans/`
 - SOTA/literature/research synthesis -> `research/`
 - active deterministic verification -> `../tests/` via `make check`
+- active implementation evidence -> `../evidence/current/Evidence_Plan003*.md`
 - historical manual verification helpers ->
   `~/archive/process_tracing/raw/repo-historical-surfaces-2026-06-24/docs/testing/`
 - historical validation benchmarks and checks ->
   `~/archive/process_tracing/raw/repo-historical-surfaces-2026-06-24/docs/validation/`
+- historical evidence records ->
+  `~/archive/process_tracing/raw/repo-historical-evidence-2026-06-24/`
 - legacy sprint/status reports and superseded architecture analyses ->
   `~/archive/process_tracing/`
 
