@@ -1,12 +1,12 @@
 ---
-status: planned
+status: complete
 owner: process-tracing
 updated: 2026-06-24
 ---
 
 # Plan 006 - Source Design Engine
 
-**Status:** Planned
+**Status:** Complete
 **Type:** implementation
 **Priority:** Critical
 **Blocked By:** None
@@ -53,6 +53,8 @@ integrated, and unresolved source gaps are too easy to leave ambient.
 
 - `pt/source_packet.py` (extend)
 - `pt/source_acquisition.py` (extend/refactor)
+- `pt/source_design.py` (new typed source-design state layer)
+- `scripts/source_acquisition_plan.py` (emit source-design state sidecar)
 - `pt/workbench.py` or successor host route (modify later slice if needed)
 - `tests/test_source_packet.py` (extend)
 - `tests/test_source_acquisition.py` (extend)
@@ -334,13 +336,13 @@ Failure shape:
 
 ## Acceptance Criteria
 
-- [ ] `SourceDesignState` exists as a typed artifact distinct from, but compatible with, the current source packet.
-- [ ] Acquisition planning emits typed action records with explicit status and stop rules.
-- [ ] Review/disposition state is durable and does not confuse candidate retrieval with admitted evidence.
-- [ ] One live non-mocked Brumaire iteration updates source-design state after retrieval/review and rerun.
-- [ ] The report or host can show current gap status, acquisition actions, and review outcomes.
-- [ ] `make check` passes.
-- [ ] Architecture and methodology docs are updated if implementation changes the boundary or data flow.
+- [x] `SourceDesignState` exists as a typed artifact distinct from, but compatible with, the current source packet.
+- [x] Acquisition planning emits typed action records with explicit status and stop rules.
+- [x] Review/disposition state is durable and does not confuse candidate retrieval with admitted evidence.
+- [x] One live non-mocked Brumaire iteration updates source-design state after retrieval/review and rerun.
+- [x] The report or host can show current gap status, acquisition actions, and review outcomes.
+- [x] `make check` passes.
+- [x] Architecture and methodology docs are updated if implementation changes the boundary or data flow.
 
 ---
 

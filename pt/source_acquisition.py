@@ -25,6 +25,14 @@ TargetKind = Literal[
     "sensitivity_discriminator",
     "driver_corroboration",
 ]
+ActionStatus = Literal[
+    "proposed",
+    "attempted",
+    "retrieved",
+    "admitted",
+    "rejected",
+    "deferred",
+]
 Provider = Literal["brave", "searxng", "tavily", "exa"]
 
 
@@ -42,6 +50,24 @@ class AcquisitionTarget(BaseModel):
     search_queries: list[str] = Field(description="Concrete web-retrieval queries for this target.")
     stop_rule: str = Field(description="Condition for stopping this acquisition attempt.")
 
+    def to_action(self, *, status: ActionStatus = "proposed") -> AcquisitionAction:
+        """Convert a target into a typed acquisition action record."""
+
+        return AcquisitionAction(
+            action_id=self.target_id,
+            target_id=self.target_id,
+            kind=self.kind,
+            priority_score=self.priority_score,
+            evidence_need=self.evidence_need,
+            inferential_payoff=self.inferential_payoff,
+            target_source_class=self.target_source_class,
+            related_hypotheses=list(self.related_hypotheses),
+            related_evidence_ids=list(self.related_evidence_ids),
+            search_queries=list(self.search_queries),
+            stop_rule=self.stop_rule,
+            status=status,
+        )
+
 
 class AcquisitionPlan(BaseModel):
     """Ranked evidence-acquisition agenda for one process-tracing result."""
@@ -49,6 +75,18 @@ class AcquisitionPlan(BaseModel):
     case_name: str = Field(description="Case name inferred from source packet or research question.")
     rationale: str = Field(description="Why these targets are the next best iteration.")
     targets: list[AcquisitionTarget] = Field(description="Targets sorted by descending priority.")
+
+    def to_action_records(self, *, status: ActionStatus = "proposed") -> list[AcquisitionAction]:
+        """Return machine-readable action records for the ranked targets."""
+
+        return [target.to_action(status=status) for target in self.targets]
+
+
+class AcquisitionAction(AcquisitionTarget):
+    """Typed acquisition action derived from a ranked acquisition target."""
+
+    action_id: str = Field(description="Stable action identifier.")
+    status: ActionStatus = Field(description="Current action status in the source-design loop.")
 
 
 def load_process_result(path: Path | str) -> ProcessTracingResult:

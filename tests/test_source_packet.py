@@ -6,6 +6,7 @@ import json
 
 import pytest
 
+from pt.source_design import ReviewDecision, SourceDesignState, build_source_design_state
 from pt.source_packet import (
     PreSpecifiedTest,
     SourceCandidate,
@@ -133,3 +134,41 @@ def test_source_packet_loader_accepts_assistant_artifact_shape(tmp_path):
 def test_source_packet_loader_fails_loud_on_missing_file(tmp_path):
     with pytest.raises(SourcePacketError, match="file not found"):
         load_source_packet(tmp_path / "missing.json")
+
+
+@pytest.mark.plans(3)
+def test_source_design_state_round_trips_with_actions_and_review_log():
+    from test_pipeline_integration import _make_audit_stress_result
+
+    packet = _packet()
+    result = _make_audit_stress_result()
+    state = build_source_design_state(result, source_packet=packet, iteration=2)
+
+    assert state.iteration == 2
+    assert state.acquisition_actions
+    assert state.acquisition_actions[0].action_id == state.acquisition_actions[0].target_id
+    assert state.acquisition_actions[0].status == "proposed"
+
+    updated = state.record_review_decision(
+        ReviewDecision(
+            candidate_id="cand_001",
+            action_id=state.acquisition_actions[0].action_id,
+            missing_source_class=state.acquisition_actions[0].target_source_class,
+            decision="reject_as_adjacent",
+            rationale="Retrospective memoir does not satisfy the direct correspondence gap.",
+            admitted_source_id=None,
+        )
+    )
+
+    assert updated.review_log[-1].candidate_id == "cand_001"
+    assert updated.review_log[-1].decision == "reject_as_adjacent"
+    assert updated.source_gap_dispositions[0].status == "partially_mitigated"
+    assert (
+        updated.source_gap_dispositions[0].disposition_reason
+        == "Retrospective memoir does not satisfy the direct correspondence gap."
+    )
+    assert updated.source_candidates == state.source_candidates
+
+    round_tripped = SourceDesignState.model_validate(updated.model_dump())
+    assert round_tripped.review_log[-1].candidate_id == "cand_001"
+    assert round_tripped.acquisition_actions[0].status == "proposed"

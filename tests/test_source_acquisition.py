@@ -9,6 +9,7 @@ import sys
 import pytest
 
 from pt.source_acquisition import build_acquisition_plan
+from pt.source_design import ReviewDecision, build_source_design_state
 from test_pipeline_integration import _make_audit_stress_result, _make_source_packet
 
 
@@ -45,6 +46,42 @@ def test_acquisition_plan_omits_resolved_source_gap():
 
 
 @pytest.mark.plans(3)
+def test_acquisition_plan_emits_action_records_with_status():
+    result = _make_audit_stress_result()
+    packet = _make_source_packet()
+
+    plan = build_acquisition_plan(result, source_packet=packet)
+    actions = plan.to_action_records()
+
+    assert actions[0].action_id == actions[0].target_id
+    assert actions[0].status == "proposed"
+    assert actions[0].stop_rule == plan.targets[0].stop_rule
+    assert actions[0].target_source_class == plan.targets[0].target_source_class
+
+
+@pytest.mark.plans(3)
+def test_review_decision_updates_gap_disposition_without_admitting_evidence():
+    result = _make_audit_stress_result()
+    packet = _make_source_packet()
+    state = build_source_design_state(result, source_packet=packet)
+
+    updated = state.record_review_decision(
+        ReviewDecision(
+            candidate_id="cand_001",
+            action_id=state.acquisition_actions[0].action_id,
+            missing_source_class=state.acquisition_actions[0].target_source_class,
+            decision="reject_as_adjacent",
+            rationale="Retrospective memoir improves observability but remains adjacent.",
+        )
+    )
+
+    assert updated.source_gap_dispositions[0].status == "partially_mitigated"
+    assert updated.source_gap_dispositions[0].relevant_source_ids == ["source_c"]
+    assert updated.source_candidates == state.source_candidates
+    assert updated.review_log[-1].decision == "reject_as_adjacent"
+
+
+@pytest.mark.plans(3)
 def test_source_acquisition_cli_writes_json_plan(tmp_path):
     result = _make_audit_stress_result()
     packet = _make_source_packet()
@@ -78,3 +115,5 @@ def test_source_acquisition_cli_writes_json_plan(tmp_path):
     assert payload["plan"]["targets"][0]["target_source_class"] == (
         "Private correspondence among conspirators"
     )
+    assert payload["design_state"]["iteration"] == 1
+    assert payload["design_state"]["acquisition_actions"][0]["status"] == "proposed"

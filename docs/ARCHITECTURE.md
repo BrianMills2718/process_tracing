@@ -102,7 +102,8 @@ Boundary notes:
 - `llm_client` and `open_web_retrieval` are dependencies, not local
   implementations.
 - The workbench does not mutate the source packet or corpus yet. It writes
-  sidecar acquisition JSON that a later approval step must promote.
+  sidecar acquisition and source-design JSON that a later approval step must
+  promote.
 - `report.html` is a view. `result.json` and typed source packets are the
   durable contracts.
 
@@ -135,6 +136,30 @@ classDiagram
     expected_trace
     claim_implications
     search_actions
+  }
+  class SourceDesignState {
+    iteration
+    acquisition_actions
+    retrieved_candidates
+    review_log
+  }
+  class AcquisitionAction {
+    action_id
+    target_id
+    status
+    target_source_class
+    stop_rule
+  }
+  class RetrievedCandidate {
+    candidate_id
+    action_id
+    retrieved_status
+  }
+  class ReviewDecision {
+    candidate_id
+    action_id
+    decision
+    rationale
   }
   class ProcessTracingResult {
     source_text_sha256
@@ -205,6 +230,10 @@ classDiagram
   SourcePacket "1" --> "1..*" SourceCandidate
   SourcePacket "1" --> "0..*" SourceGap
   SourcePacket "1" --> "0..*" SourceGapDisposition
+  SourcePacket "1" --> "0..1" SourceDesignState
+  SourceDesignState "1" --> "0..*" AcquisitionAction
+  SourceDesignState "1" --> "0..*" RetrievedCandidate
+  SourceDesignState "1" --> "0..*" ReviewDecision
   ProcessTracingResult "1" --> "0..*" Evidence
   ProcessTracingResult "1" --> "1..*" Hypothesis
   ProcessTracingResult "1" --> "0..*" EvidenceLikelihood
@@ -224,6 +253,9 @@ Domain-model notes:
 - `SourceGapDisposition` can partially mitigate a gap without resolving it.
   Partial mitigation still leaves the high-priority gap unresolved for
   claim-scope grading.
+- `SourceDesignState` is the mutable iteration artifact. Acquisition candidates
+  remain candidates until reviewed, and review decisions update gap
+  dispositions without auto-promoting a retrieval hit into evidence.
 - `RetrievalHit` is not evidence until reviewed, added to the source packet or
   corpus, and rerun through extraction/testing.
 

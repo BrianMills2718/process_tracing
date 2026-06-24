@@ -19,6 +19,7 @@ from pt.source_acquisition import (
     load_process_result,
     retrieve_for_plan,
 )
+from pt.source_design import build_source_design_state
 
 
 def _render_text(payload: dict[str, Any]) -> str:
@@ -80,6 +81,12 @@ def main() -> None:
     packet = load_packet_for_result(args.source_packet, result, repo_root=REPO_ROOT)
     plan = build_acquisition_plan(result, source_packet=packet, max_targets=args.max_targets)
     payload: dict[str, Any] = {"plan": plan.model_dump()}
+    if packet is not None:
+        payload["design_state"] = build_source_design_state(
+            result,
+            source_packet=packet,
+            max_targets=args.max_targets,
+        ).model_dump()
     if args.retrieve:
         payload["retrieval"] = retrieve_for_plan(
             plan,

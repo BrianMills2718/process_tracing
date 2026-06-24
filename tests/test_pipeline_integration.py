@@ -42,6 +42,7 @@ from pt.schemas import (
     TestingResult,
     TextHypothesis,
 )
+from pt.source_design import build_source_design_state
 from pt.source_packet import SourceCandidate, SourceGap, SourceGapDisposition, SourcePacket
 
 
@@ -866,6 +867,20 @@ class TestReportConsistency:
         assert "Critical historiography" in captured_contexts[0]
         assert result.source_coverage is not None
         assert result.source_coverage.sources_with_evidence == 2
+
+    @pytest.mark.plans(3)
+    def test_pipeline_result_can_refresh_source_design_state(self):
+        packet = _make_source_packet()
+        result = _make_process_result()
+        result.source_packet = packet.to_summary("packet.json")
+        state = build_source_design_state(result, source_packet=packet, iteration=1)
+
+        refreshed = state.refresh_from_result(result)
+
+        assert refreshed.iteration == 2
+        assert refreshed.limitations == result.source_packet.limitations
+        assert refreshed.source_gap_dispositions[0].status == "partially_mitigated"
+        assert refreshed.proposed_next_steps == result.synthesis.suggested_further_tests
 
     def test_network_keeps_weak_top_driver_edges_visible(self):
         result = _make_audit_stress_result()

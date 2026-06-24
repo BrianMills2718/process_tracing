@@ -27,7 +27,7 @@ Make the process-tracing pipeline defensible at PhD / think-tank / academic qual
 
 ## Current Phase
 
-Plan 005 is the next planned UI/workbench slice: a stage-by-stage interactive trace execution host that lets a reviewer trigger each pipeline stage and inspect typed outputs with visual summaries, concise explanations, and tooltips. At the methodology level, the active frontier is now explicit: source packet -> source-design engine, stronger trace-production modeling, richer dependence handling, and a tighter within-case -> cross-case bridge. `docs/SOTA_PLUS_TARGET_ARCHITECTURE.md` now captures the end-goal boundary/domain/data-flow package for that target, and `docs/plans/006_source_design_engine.md` is the next execution-ready child plan for the non-UI methodology path. Plan 005 implementation remains blocked until the static mockup and contract notebook are reviewed.
+Plan 005 is the next planned UI/workbench slice: a stage-by-stage interactive trace execution host that lets a reviewer trigger each pipeline stage and inspect typed outputs with visual summaries, concise explanations, and tooltips. At the methodology level, the active frontier is now explicit: source packet -> source-design engine, stronger trace-production modeling, richer dependence handling, and a tighter within-case -> cross-case bridge. `docs/SOTA_PLUS_TARGET_ARCHITECTURE.md` now captures the end-goal boundary/domain/data-flow package for that target. Plan 006 is now implemented and folded back into the roadmap as the source-design engine slice, with `pt/source_design.py` and the acquisition/workbench payloads carrying the new typed state. Plan 005 implementation remains blocked until the static mockup and contract notebook are reviewed.
 
 ## Completed
 
@@ -45,6 +45,7 @@ Plan 005 is the next planned UI/workbench slice: a stage-by-stage interactive tr
 - Design-plan cleanup added `docs/ARCHITECTURE.md` with Mermaid boundary, domain-model, and data-flow diagrams plus typed contract and failure-path tables.
 - Plan 005 added the pre-implementation design artifacts for the interactive trace execution host: `docs/plans/005_interactive_trace_execution_host.md`, `docs/plans/005_interactive_trace_execution_host_mockup.html`, and `docs/plans/005_interactive_trace_execution_host_contracts.ipynb`.
 - Plan 006 added the execution-ready source-design-engine child plan and its required seam mockup / contract notebook artifacts.
+- Plan 006 implementation added the typed `SourceDesignState` loop, action records, review decisions, live Brumaire retrieval run, and docs sync.
 
 ## Next
 

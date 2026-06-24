@@ -22,6 +22,7 @@ from pt.source_acquisition import (
     load_process_result,
     retrieve_for_plan,
 )
+from pt.source_design import build_source_design_state
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -51,6 +52,12 @@ def build_app_payload(
     )
     plan = build_acquisition_plan(result, source_packet=packet, max_targets=max_targets)
     payload: dict[str, Any] = {"plan": plan.model_dump()}
+    if packet is not None:
+        payload["design_state"] = build_source_design_state(
+            result,
+            source_packet=packet,
+            max_targets=max_targets,
+        ).model_dump()
     if retrieve:
         payload["retrieval"] = retrieve_for_plan(
             plan,
