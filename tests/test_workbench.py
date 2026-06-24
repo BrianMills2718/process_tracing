@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import threading
+import urllib.parse
 import urllib.request
 from http.server import ThreadingHTTPServer
 
@@ -43,6 +44,7 @@ def test_workbench_payload_builds_acquisition_plan(tmp_path):
 @pytest.mark.plans(3)
 def test_workbench_http_exposes_button_and_json_endpoint(tmp_path):
     result_path, packet_path = _write_artifacts(tmp_path)
+    report_path = "output/live_plan003_source_expansion_20260623_001/report.html"
     server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler())
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -52,6 +54,14 @@ def test_workbench_http_exposes_button_and_json_endpoint(tmp_path):
             html = response.read().decode("utf-8")
         assert "Enrich Top Targets" in html
         assert "/api/enrich" in html
+        assert "report-frame" in html
+        assert "Load Report" in html
+
+        with urllib.request.urlopen(
+            f"{base_url}/artifact?path={urllib.parse.quote(report_path)}", timeout=5
+        ) as response:
+            report_html = response.read().decode("utf-8")
+        assert "Process Tracing" in report_html
 
         body = json.dumps(
             {

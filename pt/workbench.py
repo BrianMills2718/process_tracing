@@ -13,6 +13,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 from pt.source_acquisition import (
     available_retrieval_providers,
@@ -25,6 +26,7 @@ from pt.source_acquisition import (
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RESULT = "output/live_plan003_source_expansion_20260623_001/result.json"
+DEFAULT_REPORT = "output/live_plan003_source_expansion_20260623_001/report.html"
 DEFAULT_SOURCE_PACKET = "docs/source_packets/18_BRUMAIRE_SOURCE_PACKET.json"
 DEFAULT_OUTPUT = "output/source_acquisition/workbench_latest.json"
 
@@ -72,10 +74,25 @@ def make_handler() -> type[BaseHTTPRequestHandler]:
         server_version = "ProcessTracingWorkbench/0.1"
 
         def do_GET(self) -> None:
-            if self.path in {"/", "/index.html"}:
+            parsed = urlparse(self.path)
+            if parsed.path in {"/", "/index.html"}:
                 self._send_html(_html())
                 return
-            if self.path == "/api/health":
+            if parsed.path == "/artifact":
+                query = parse_qs(parsed.query)
+                try:
+                    artifact_path = _resolve_repo_path(query.get("path", [""])[0])
+                    artifact_path.relative_to(REPO_ROOT)
+                except Exception:
+                    self.send_error(HTTPStatus.BAD_REQUEST)
+                    return
+                if not artifact_path.is_file():
+                    self.send_error(HTTPStatus.NOT_FOUND)
+                    return
+                content_type = "text/html; charset=utf-8" if artifact_path.suffix == ".html" else "text/plain; charset=utf-8"
+                self._send_bytes(artifact_path.read_bytes(), content_type=content_type)
+                return
+            if parsed.path == "/api/health":
                 self._send_json({"ok": True})
                 return
             self.send_error(HTTPStatus.NOT_FOUND)
@@ -128,11 +145,14 @@ def make_handler() -> type[BaseHTTPRequestHandler]:
 
         def _send_html(self, body: str) -> None:
             encoded = body.encode("utf-8")
+            self._send_bytes(encoded, content_type="text/html; charset=utf-8")
+
+        def _send_bytes(self, body: bytes, *, content_type: str) -> None:
             self.send_response(HTTPStatus.OK)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(encoded)))
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
             self.end_headers()
-            self.wfile.write(encoded)
+            self.wfile.write(body)
 
     return WorkbenchHandler
 
@@ -233,6 +253,21 @@ def _html() -> str:
     .query {{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: #334155; }}
     .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }}
     .panel-title {{ font-size: 13px; font-weight: 750; color: var(--muted); margin: 0 0 10px; text-transform: uppercase; }}
+    .report-shell {{
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      min-height: 68vh;
+      margin-bottom: 16px;
+    }}
+    iframe {{
+      width: 100%;
+      height: 68vh;
+      border: 0;
+      display: block;
+      background: #fff;
+    }}
     a {{ color: var(--accent); overflow-wrap: anywhere; }}
     @media (max-width: 900px) {{
       main {{ grid-template-columns: 1fr; }}
@@ -250,6 +285,8 @@ def _html() -> str:
     <aside>
       <label for="result-path">Result JSON</label>
       <input id="result-path" value="{DEFAULT_RESULT}">
+      <label for="report-path">Report HTML</label>
+      <input id="report-path" value="{DEFAULT_REPORT}">
       <label for="packet-path">Source Packet</label>
       <input id="packet-path" value="{DEFAULT_SOURCE_PACKET}">
       <div class="row">
@@ -267,12 +304,17 @@ def _html() -> str:
       <label for="output-path">Enrichment Output</label>
       <input id="output-path" value="{DEFAULT_OUTPUT}">
       <div class="actions">
+        <button id="report-btn" class="secondary">Load Report</button>
         <button id="plan-btn" class="secondary">Build Agenda</button>
         <button id="enrich-btn">Enrich Top Targets</button>
       </div>
       <div id="status" class="status"></div>
     </aside>
     <section>
+      <p class="panel-title">Report</p>
+      <div class="report-shell">
+        <iframe id="report-frame" title="Process tracing report"></iframe>
+      </div>
       <div class="grid">
         <div>
           <p class="panel-title">Acquisition Targets</p>
@@ -287,6 +329,12 @@ def _html() -> str:
   </main>
   <script>
     const $ = (id) => document.getElementById(id);
+    function artifactUrl(path) {{
+      return `/artifact?path=${{encodeURIComponent(path)}}`;
+    }}
+    function loadReport() {{
+      $("report-frame").src = artifactUrl($("report-path").value);
+    }}
     function requestBody(enrich=false) {{
       const maxTargets = Number($("max-targets").value || 8);
       return {{
@@ -349,8 +397,10 @@ def _html() -> str:
         </article>
       `)).join("");
     }}
+    $("report-btn").addEventListener("click", loadReport);
     $("plan-btn").addEventListener("click", () => postJson("/api/acquisition-plan"));
     $("enrich-btn").addEventListener("click", () => postJson("/api/enrich"));
+    loadReport();
     postJson("/api/acquisition-plan");
   </script>
 </body>
