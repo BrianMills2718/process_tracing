@@ -2,7 +2,8 @@
 
 This is the current roadmap for `process_tracing`. It records work that remains
 after the inference-core rebuild and report-audit work. Historical phase plans and
-superseded status reports live under `docs/archive/`.
+superseded status reports live under
+`~/archive/process_tracing/raw/repo-archive-2026-06-24/`.
 
 Current SOTA+ recovery source of truth:
 

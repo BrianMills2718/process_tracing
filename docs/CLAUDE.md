@@ -27,13 +27,14 @@ Maintained documentation for `process_tracing`.
 - active deterministic verification -> `../tests/` via `make check`
 - historical manual verification helpers -> `testing/`
 - historical validation benchmarks and checks -> `validation/`
-- legacy sprint/status reports and superseded architecture analyses -> `archive/`
+- legacy sprint/status reports and superseded architecture analyses ->
+  `~/archive/process_tracing/`
 
 ## Working Rules
 
 - Keep this parent file at routing level only.
-- Historical or superseded material belongs in `archive/`, not in new top-level
-  docs files.
+- Historical or superseded material belongs in `~/archive/process_tracing/`, not
+  in new top-level docs files.
 - Do not add a new top-level Markdown file unless it becomes one of the active
   docs listed above.
 - When changing pipeline behavior, update the closest methodological or

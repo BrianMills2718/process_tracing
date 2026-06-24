@@ -77,4 +77,4 @@ exclude:
   - docs/CLAUDE.md
   - hooks/**
   - .pytest_cache/**
-  - docs/archive/**
+  - docs/archive/**  # retained for compatibility; retired docs now live under ~/archive/process_tracing/

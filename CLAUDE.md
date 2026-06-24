@@ -145,7 +145,7 @@ Options:
 The single-text testing/update core was rebuilt to be **coherent**. Canonical spec:
 `docs/PROJECT_THEORY_AND_GOALS.md`; methodology: `docs/WHITEPAPER_optimal_automated_process_tracing.md`;
 build plan: `docs/BUILDPLAN_pragmatic_process_tracing.md`; historical rebuild log:
-`docs/archive/development/REBUILD_SPRINT.md`.
+`~/archive/process_tracing/raw/repo-archive-2026-06-24/docs/archive/development/REBUILD_SPRINT.md`.
 
 - **Likelihood *vectors*, not two-way LRs**: Pass 3 makes **one matrix call** — for each evidence item it emits a relative-likelihood vector across *all* hypotheses (`pt/schemas.py: EvidenceLikelihood`). Per-hypothesis LRs are derived as `relative_likelihood / geomean(vector)`, so pairwise ratios are coherent by construction. `pass_test` fails loud on incomplete/duplicate/unknown vectors.
 - **Coherent joint update**: `pt/bayesian.py` uses a log-space softmax (`post_i = softmax(log prior_i + Σ log LR_i)`) — **order-invariant**, no per-step clamping. (Replaced the earlier per-hypothesis binary-odds-then-normalize, which was order-dependent.)

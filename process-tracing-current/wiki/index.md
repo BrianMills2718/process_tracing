@@ -10,3 +10,6 @@
 
 * [Archive And Wiki Policy](sources/archive-policy.md) - active policy for repo/archive wiki boundaries and archive search.
 
+# Plans
+
+* [Archive Migration Review 2026-06-24](plans/archive-migration-review-2026-06-24.md) - review record for the first archive migration batch.

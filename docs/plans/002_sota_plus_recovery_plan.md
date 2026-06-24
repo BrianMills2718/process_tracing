@@ -31,7 +31,7 @@ implementation; this repo should treat those as bottlenecks to remove.
 | Presentation substituted for inference | Report/network polish improved inspectability but did not always improve source scope, hypothesis design, diagnosticity, or validation. | A UI/report slice cannot claim quality improvement unless it changes an inference check, exposes a failure mode, or blocks an overclaim. |
 | No frozen benchmark | Grades and "optimal" claims were too easy to inflate. | Maintain frozen benchmark cases with expected critique targets and caps. |
 | Agent labor layer left implicit | "Agentic" was used as aspiration without a governed assistant contract for source work, benchmark repair, or critique loops. | Agentic work must run through `llm_client` as a typed, budgeted, observable workspace-agent task. |
-| Current/future drift | Methodology optimum, current code, and old sprint notes blurred together. | Active docs must distinguish implemented / partial / planned; stale docs go to `docs/archive/`. |
+| Current/future drift | Methodology optimum, current code, and old sprint notes blurred together. | Active docs must distinguish implemented / partial / planned; stale docs go to `~/archive/process_tracing/`. |
 | Thin slices lost north-star coupling | Small implementation steps were not always tied to a named SOTA capability. | Each slice must update the capability ladder and add a deterministic or audit check. |
 
 ## SOTA+ Capability Ladder

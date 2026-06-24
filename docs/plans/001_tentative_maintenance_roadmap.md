@@ -37,7 +37,8 @@ This design plan does not authorize implementation changes by itself. Expected f
 
 - Packaging: `pyproject.toml` or `requirements.txt`, `README.md`, `Makefile`
 - Dead-code policy: `meta-process.yaml`, `requirements.txt`, `.vulture_whitelist.py` if needed
-- Historical docs layout: `docs/testing/`, `docs/validation/`, `docs/archive/`, `docs/CLAUDE.md`
+- Historical docs layout: `docs/testing/`, `docs/validation/`,
+  `~/archive/process_tracing/`, `docs/CLAUDE.md`
 - Report refactor: `pt/report.py`, possible new `pt/report_*` helpers, `tests/test_pipeline_integration.py`
 - Evaluation/golden tests: `tests/`, `input_text/`, possible `docs/validation/` updates
 
@@ -65,7 +66,8 @@ This design plan does not authorize implementation changes by itself. Expected f
 
 ### Workstream C: Historical Docs Quarantine
 
-1. Decide whether `docs/testing/` and `docs/validation/` should remain in place with warnings or move wholesale into `docs/archive/`.
+1. Decide whether `docs/testing/` and `docs/validation/` should remain in place
+   with warnings or move wholesale into `~/archive/process_tracing/`.
 2. If moving, use `git mv` only, preserve paths in commit history, and update `docs/CLAUDE.md`.
 3. Keep active verification guidance centered on `tests/` and `make check`.
 

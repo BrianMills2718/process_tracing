@@ -332,7 +332,7 @@ is intentionally not folded into this document:
 
 - Plan 003 still has directional future slices that need per-slice refresh at
   gate time.
-- Archive-era docs under `docs/archive/` should not be treated as active
-  architecture.
+- Archive-era docs under `~/archive/process_tracing/` should not be treated as
+  active architecture.
 - Legacy phase docs describe older dashboard ambitions and are historical unless
   linked from the active plan.

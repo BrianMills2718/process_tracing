@@ -143,7 +143,8 @@ repo should not call Codex/Claude Code directly.
 - `docs/plans/003_sota_plus_execution_master_plan.md` - long-horizon SOTA+
   execution plan with E2E, critique, cleanup, and success gates per slice.
 
-Historical sprint notes and superseded analyses live under `docs/archive/`.
+Historical sprint notes and superseded analyses have been moved out of the
+active repo to `~/archive/process_tracing/raw/repo-archive-2026-06-24/`.
 
 ## Tests
 

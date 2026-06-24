@@ -12,7 +12,7 @@ rank/prior stability, not full elicited likelihood bands with Monte Carlo
 propagation. Slice 5 currently uses scalar dependence-cluster pooling, not
 per-hypothesis redundancy. Slice 6 (qualitative structural critic) and the
 optimum-only machinery remain planned. Historical rebuild notes are archived at
-`docs/archive/development/REBUILD_SPRINT.md`.
+`~/archive/process_tracing/raw/repo-archive-2026-06-24/docs/archive/development/REBUILD_SPRINT.md`.
 
 ---
 

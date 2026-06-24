@@ -25,6 +25,7 @@ implementation decision.
 
 - [Architecture Spine](/wiki/architecture/architecture-spine.md)
 - [Archive And Wiki Policy](/wiki/sources/archive-policy.md)
+- [Archive Migration Review 2026-06-24](/wiki/plans/archive-migration-review-2026-06-24.md)
 
 # Open Questions
 

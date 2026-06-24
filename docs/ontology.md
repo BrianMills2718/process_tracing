@@ -2,7 +2,8 @@
 
 This document defines the current analytic objects used by the `pt` pipeline and
 the report network. It is a reading contract for analysts and agents, not a
-historical implementation plan. Superseded phase notes live in `docs/archive/`.
+historical implementation plan. Superseded phase notes live in
+`~/archive/process_tracing/raw/repo-archive-2026-06-24/`.
 
 ## Core Claim
 
