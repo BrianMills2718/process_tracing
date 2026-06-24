@@ -68,17 +68,30 @@
       "reliability_note": "Interpretive scholarship rather than direct primary evidence; valuable for rival mechanism critique.",
       "expected_observability": "Challenges to standard Brumaire myth, rival interpretation, and cautions about retrospective Bonapartist framing.",
       "relevance_to_question": "Prevents the hypothesis menu from collapsing into the coup's own public explanation."
+    },
+    {
+      "source_id": "source_f_bourrienne_memoirs",
+      "title": "Louis Antoine Fauvelet de Bourrienne, Memoirs of Napoleon Bonaparte, Volume 3",
+      "text_markers": ["Source F"],
+      "source_group": "private-secretary memoir",
+      "source_kind": "memoir",
+      "date_coverage": "1799-10 to 1799-11",
+      "locator": "https://cdn.britannica.com/primary_source/gutenberg/PGCC_classics/nb03v.htm",
+      "provenance_note": "Public-domain Bourrienne memoir text hosted from Project Gutenberg material by Britannica; Bourrienne was Napoleon's private secretary and describes private conversations and planning around Brumaire.",
+      "reliability_note": "Retrospective memoir with self-positioning and possible post-hoc reconstruction; stronger than a public proclamation for private sequence, but not equivalent to contemporaneous correspondence.",
+      "expected_observability": "Private planning sequence, Bonaparte's stated intentions, actor coordination, deception of Barras and Gohier, and generals assembled before the formal transfer to Saint-Cloud.",
+      "relevance_to_question": "Partially mitigates the private-planning gap by adding an insider memoir source that can discriminate civilian initiation, Bonapartist conversion, and coordinated elite-military action."
     }
   ],
   "rival_interpretations": [
     {
       "interpretation": "Sieyes and allied civilians initiated a constitutional revision and used Bonaparte as a risky military instrument.",
-      "supporting_sources": ["Brumaire Decree and Proclamation of the Consuls", "Eymeric Job narrative account"],
+      "supporting_sources": ["Brumaire Decree and Proclamation of the Consuls", "Eymeric Job narrative account", "Bourrienne memoir"],
       "discriminating_implication": "Civilian planning and constitutional design should precede Bonaparte's coercive dominance."
     },
     {
       "interpretation": "Bonaparte and loyal military/family allies converted a faltering civilian plot into personalist rule.",
-      "supporting_sources": ["Bonaparte's Justification", "Constitution of the Year VIII", "Eymeric Job narrative account"],
+      "supporting_sources": ["Bonaparte's Justification", "Constitution of the Year VIII", "Eymeric Job narrative account", "Bourrienne memoir"],
       "discriminating_implication": "The decisive trace should be military coercion, legislative intimidation, or constitutional concentration around Bonaparte."
     },
     {
@@ -92,6 +105,8 @@
     "Legal texts are authoritative for institutional settlement but weak for coercion and motive.",
     "Narrative secondary accounts help organize chronology but must not be double-counted as independent primary traces.",
     "Historiography should preserve rival interpretations and source cautions rather than count as direct empirical evidence."
+    ,
+    "Memoir sources can reveal private planning and actor sequencing, but retrospective insider memoirs remain weaker than contemporaneous private correspondence."
   ],
   "known_gaps": [
     {
@@ -105,6 +120,21 @@
       "why_it_matters": "Would sharpen whether deputies were coerced, confused, or already resigned to constitutional revision.",
       "expected_location": "Memoirs, proceedings, and contemporary press accounts for 18-19 Brumaire.",
       "priority": "medium"
+    }
+  ],
+  "source_gap_dispositions": [
+    {
+      "missing_source_class": "Private correspondence among Sieyes, Bonaparte, Lucien, Murat, and allied conspirators",
+      "status": "partially_mitigated",
+      "relevant_source_ids": ["source_f_bourrienne_memoirs"],
+      "expected_trace": "Private planning sequence, actor intent, coalition bargaining, and whether Bonaparte converted a civilian plot into personalist rule.",
+      "claim_implications": "Bourrienne improves the evidence base for private planning and sequencing, but direct correspondence remains unresolved; publication-strength claims about intent and bargaining stay capped.",
+      "search_actions": [
+        "Searched public web for Bourrienne memoir text around Brumaire.",
+        "Checked a public Napoleon letters/documents PDF route; extraction did not return usable Brumaire correspondence within the slice.",
+        "Added accessible public-domain Bourrienne memoir passages as Source F rather than claiming direct correspondence was acquired."
+      ],
+      "disposition_reason": "The added memoir is an insider private-secretary account with relevant planning traces, but it is retrospective and not a direct private correspondence collection among the named conspirators."
     }
   ],
   "pre_specified_tests": [
@@ -133,10 +163,11 @@
   "proposed_next_steps": [
     "Run the pipeline on input_text/source_packets/18_brumaire_source_packet.txt with this source packet and the rival theory lenses.",
     "After the run, audit whether extracted evidence actually covers the five source groups named here.",
-    "Collect high-priority private correspondence before upgrading the result from current-corpus optimality to publication-strength causal identification."
+    "Use Source F to rerun the pipeline with partial private-planning memoir evidence.",
+    "Continue searching for direct private correspondence before upgrading the result from current-corpus optimality to publication-strength causal identification."
   ],
   "limitations": [
-    "The packet is curated from public online sources and does not yet include archival private correspondence.",
+    "The packet is curated from public online sources and now includes private-secretary memoir evidence, but it still does not include direct archival private correspondence among the named conspirators.",
     "Several source groups are reprints or secondary accounts, so source-lineage dependence must be audited before treating corroboration as independent."
   ]
 }

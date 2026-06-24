@@ -42,7 +42,7 @@ from pt.schemas import (
     TestingResult,
     TextHypothesis,
 )
-from pt.source_packet import SourceCandidate, SourceGap, SourcePacket
+from pt.source_packet import SourceCandidate, SourceGap, SourceGapDisposition, SourcePacket
 
 
 # ── Deterministic fixtures ─────────────────────────────────────────
@@ -273,6 +273,17 @@ def _make_source_packet() -> SourcePacket:
                 why_it_matters="Could reveal planning sequence and agency.",
                 expected_location="Correspondence collections",
                 priority="high",
+            )
+        ],
+        source_gap_dispositions=[
+            SourceGapDisposition(
+                missing_source_class="Private correspondence among conspirators",
+                status="partially_mitigated",
+                relevant_source_ids=["source_c"],
+                expected_trace="Private planning sequence.",
+                claim_implications="Memoir evidence partially mitigates but does not clear the gap.",
+                search_actions=["Checked public memoir source."],
+                disposition_reason="Adjacent evidence exists; direct correspondence remains missing.",
             )
         ],
         limitations=[],
@@ -791,9 +802,13 @@ class TestReportConsistency:
         assert "not themselves criticisms of whether the analysis is coherent given the supplied sources" in normalized
         assert "input corpus and source base" not in normalized
         assert "private correspondence among conspirators" in normalized
+        assert "source gap dispositions" in normalized
+        assert "partially_mitigated" in normalized
         assert audit["categories"]["source_scope_and_absence"]["source_packet_present"] is True
         assert audit["source_material_context"]["has_source_packet"] is True
         assert audit["source_material_context"]["source_count"] == 3
+        assert audit["source_material_context"]["unresolved_high_priority_gap_count"] == 1
+        assert audit["source_material_context"]["source_gap_dispositions"][0]["status"] == "partially_mitigated"
         assert audit["source_material_context"]["accepted_sources"]
         assert audit["conditional_grade"]
         assert audit["claim_scope_grade"]
@@ -806,6 +821,7 @@ class TestReportConsistency:
         assert audit["categories"]["source_scope_and_absence"]["source_count"] == 3
         assert audit["categories"]["source_scope_and_absence"]["sources_with_evidence"] == 2
         assert audit["categories"]["source_scope_and_absence"]["high_priority_gap_count"] == 1
+        assert audit["categories"]["source_scope_and_absence"]["unresolved_high_priority_gap_count"] == 1
         assert any(
             "conditional on accepted sources" in cap["reason"].lower()
             for cap in audit["claim_scope_caps"]

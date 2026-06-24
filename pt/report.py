@@ -814,10 +814,11 @@ def _render_academic_review(
         source_scope_status = (
             f"Source packet accepted for {source_packet.case_name}: "
             f"{source_packet.source_count} source(s), kinds: {source_kinds}; "
-            f"high-priority gaps: {source_packet.high_priority_gap_count}; "
+            f"high-priority gaps: {source_packet.unresolved_high_priority_gap_count} unresolved "
+            f"of {source_packet.high_priority_gap_count}; "
             f"{coverage_phrase}."
         )
-        if source_packet.high_priority_gap_count:
+        if source_packet.unresolved_high_priority_gap_count:
             gap_text = ", ".join(source_packet.high_priority_gaps)
             source_scope_recommendation = (
                 f"Do not treat this as a flaw in the given-source critique. Treat "
@@ -850,7 +851,7 @@ def _render_academic_review(
         source_scope_blockers.append("single-source corpus without source packet")
     elif source_packet is not None and (
         source_packet.source_count < 3
-        or source_packet.high_priority_gap_count > 0
+        or source_packet.unresolved_high_priority_gap_count > 0
         or source_packet.limitations
     ):
         source_scope_blockers.append("source-packet gaps or limitations")
@@ -948,7 +949,7 @@ def _render_academic_review(
               <tr><th>Focal Window</th><td>{_esc(source_packet.focal_window)}</td></tr>
               <tr><th>Outcome</th><td>{_esc(source_packet.outcome)}</td></tr>
               <tr><th>Sources</th><td>{source_packet.source_count} source(s); groups: {_esc(packet_groups)}; kinds: {_esc(', '.join(source_packet.source_kinds) or 'unspecified')}</td></tr>
-              <tr><th>Known Gaps</th><td>{source_packet.known_gap_count} total; high priority: {_esc(packet_gaps)}</td></tr>
+              <tr><th>Known Gaps</th><td>{source_packet.known_gap_count} total; high priority: {_esc(packet_gaps)}; unresolved high priority: {source_packet.unresolved_high_priority_gap_count}</td></tr>
               <tr><th>Pre-specified Tests</th><td>{source_packet.pre_specified_test_count}</td></tr>
               <tr><th>Packet Limitations</th><td>{_esc(packet_limitations)}</td></tr>
               <tr><th>Packet Path</th><td>{_esc(packet_path)}</td></tr>
@@ -958,6 +959,36 @@ def _render_academic_review(
         <p class="small text-muted">Interpretation rule: the packet governs source scope,
         observability, and missing-source claims. Packet metadata is not itself evidence;
         evidence still must appear in the input text and likelihood matrix.</p>"""
+        if source_packet.source_gap_dispositions:
+            disposition_rows = "".join(
+                f"""
+                <tr>
+                  <td>{_esc(disposition.missing_source_class)}</td>
+                  <td>{_esc(disposition.status)}</td>
+                  <td class="small">{_esc(', '.join(disposition.relevant_source_ids) or 'None')}</td>
+                  <td class="small">{_esc(disposition.claim_implications)}</td>
+                  <td class="small">{_esc(disposition.disposition_reason)}</td>
+                </tr>"""
+                for disposition in source_packet.source_gap_dispositions
+            )
+            packet_html += f"""
+            <h5>Source Gap Dispositions</h5>
+            <p class="small text-muted">Dispositions distinguish acquired evidence,
+            partial mitigation, unresolved source classes, unavailable sources, and
+            explicitly accepted limits. Partial mitigation does not clear
+            publication-strength claim-scope caps.</p>
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered">
+                <thead><tr>
+                  <th>Source Gap</th>
+                  <th>Status</th>
+                  <th>Relevant Sources</th>
+                  <th>Claim Implications</th>
+                  <th>Reason</th>
+                </tr></thead>
+                <tbody>{disposition_rows}</tbody>
+              </table>
+            </div>"""
     if source_coverage is None:
         coverage_html = """
         <h5>Packet Source Coverage</h5>

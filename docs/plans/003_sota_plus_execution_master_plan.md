@@ -495,11 +495,13 @@ passing benchmark record and an explanation of remaining external-data limits.
 |---|---|---|
 | `tests/test_assistant.py` | | Slice 0 assistant harness contract, artifact persistence, dependency boundary, CLI errors, and opt-in live smoke. |
 | `tests/test_source_packet.py` | | Slice 1 source-packet loading, assistant-artifact compatibility, and summary metadata. |
+| tests/test_source_packet.py | test_source_packet_summary_preserves_scope_metadata | Source-gap disposition summaries preserve unresolved high-priority gap status. |
 | `tests/test_source_coverage.py` | | Slice 1 packet-source marker coverage for input text, extracted evidence, missing sources, and unconfigured sources. |
 | `tests/test_extraction_quality.py` | | Slice 1b extraction prompt/schema preserve source markers and source-packet marker coverage so packet coverage can be measured on live output. |
 | tests/test_extraction_quality.py | test_extraction_contract_preserves_source_markers_in_prompt_and_schema | Source-marker preservation prompt/schema regression. |
 | tests/test_extraction_quality.py | test_extraction_contract_uses_source_packet_for_marker_coverage | Source-packet marker coverage prompt regression. |
 | tests/test_pipeline_integration.py | TestReportConsistency::test_source_packet_context_reaches_extraction_pass | Source-aware extraction regression: the accepted source packet reaches Pass 1 before hypothesis generation. |
+| tests/test_pipeline_integration.py | TestReportConsistency::test_source_packet_is_visible_in_report_and_audit | Report/audit expose source-gap dispositions and unresolved high-priority gap count. |
 | tests/test_pipeline_integration.py | TestVectorCompleteness::test_repairs_overlapping_clusters_once_with_validation_feedback | Live E2E regression: Pass 3 makes one explicit validation-repair call when dependence clusters overlap, then still fails loud if invalid. |
 | `tests/test_cli_source_packet.py` | | Slice 1 CLI `--source-packet` plumbing without an LLM call. |
 | `tests/test_pass_refine.py` | | Regression coverage for the live Slice 1 refinement failure: Pass 5 must not put evidence-to-hypothesis support links into causal edges. |

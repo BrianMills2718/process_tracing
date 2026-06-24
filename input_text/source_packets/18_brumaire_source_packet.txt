@@ -42,6 +42,12 @@ Source E. Malcolm Crook, "The Myth of the 18th Brumaire," H-France Napoleon
 Forum.
 URL: https://h-france.net/the-myth-of-the-18th-brumaire/
 
+Source F. Louis Antoine Fauvelet de Bourrienne, Memoirs of Napoleon Bonaparte,
+Volume 3, public-domain text hosted from Project Gutenberg material by
+Britannica. Bourrienne was Napoleon's private secretary and writes as a
+retrospective insider memoirist.
+URL: https://cdn.britannica.com/primary_source/gutenberg/PGCC_classics/nb03v.htm
+
 Temporal evidence sequence
 
 1795: The Directory replaced the Thermidorian Convention. Source D says the new
@@ -114,6 +120,49 @@ sole architect.
 1799 before Brumaire: Source D says negotiations between Sieyes and Bonaparte
 began in mutual distrust. Talleyrand and Roederer received concrete parts of the
 plan as powerful safeguards and operators.
+
+1799 before Brumaire: Source F says Bonaparte's plan was confided to very few
+people, only those whose assistance he wanted. The rest followed leaders and the
+impulse given to them. This is private-planning memoir evidence that the coup
+was not simply an open parliamentary correction or spontaneous military rescue.
+
+1799 before Brumaire: Source F says Bonaparte had first considered becoming a
+Director but turned toward possessing the whole office after the age rule made
+that path difficult. The memoir then says mediators converted the animosity
+between Sieyes and Bonaparte into cooperation against a constitution both
+disliked. This directly bears on whether Bonaparte joined a civilian revision
+project or independently authored the institutional replacement.
+
+25 Vendemiaire Year VIII, or 17 October 1799: Source F reports Bonaparte saying
+he was determined to join Sieyes's party rather than Barras's, because Barras
+would never accept an inferior role while Sieyes had no political ambition. This
+is an insider memoir trace about Bonaparte's strategic coalition choice before
+Brumaire.
+
+Days before 18 Brumaire: Source F says the roles in the conspiracy were
+distributed: Lucien worked the two Councils, Sieyes managed the Directory, Real
+worked under Fouche's instructions in the departments, and Fouche warned on 14
+Brumaire that delay would ruin the plot. This provides source-specific evidence
+for a coordinated civilian-police-legislative-military conspiracy.
+
+17 Brumaire: Source F says Bonaparte told Bourrienne to go to Barras in
+Bonaparte's carriage, use Bonaparte's name, and tell Barras that illness delayed
+Bonaparte until the next day. Bourrienne says Barras concluded Bonaparte was
+deceiving him and had settled everything. This is private-sequence evidence for
+deception of a Director on the eve of the coup.
+
+Morning of 18 Brumaire: Source F says Bourrienne found many generals and
+officers assembled at Bonaparte's house; Bernadotte arrived in plain clothes and
+refused to follow without orders. The same source says all generals devoted to
+Bonaparte were assembled in uniform at Rue de la Victoire, along with several
+people initiated into the day's secrets. This is direct insider evidence of
+pre-positioned military support before the decree reached Bonaparte.
+
+Morning of 18 Brumaire: Source F says the Council of Ancients' decree was passed
+by what Bourrienne calls a false majority, because notices were staggered so
+sixty or eighty members not gained by Lucien and his friends would not arrive in
+time. This is evidence that legal authorization was procedurally managed before
+military execution.
 
 Weeks before 18 Brumaire: Source D says conspirators met at Bonaparte's apartment
 on Rue de la Victoire to plan the coup. They set the date as 18 Brumaire Year
@@ -192,10 +241,23 @@ deputies had been dissolved. Deputies panicked and some reportedly fled. This is
 smoking-gun style evidence for the military-coercion mechanism because the
 legislative body did not freely complete the process before force intervened.
 
+19 Brumaire: Source F says Lucien resigned the presidency rather than put the
+question of outlawing Bonaparte, was carried out by soldiers, then addressed the
+troops on horseback. Source F says the troops hesitated until Lucien drew his
+sword and promised to stab his brother if Napoleon violated French liberty; at a
+signal from Bonaparte, Murat and his grenadiers then drove out the
+representatives. This adds insider memoir evidence that military coercion was
+authorized through Lucien's legitimation performance.
+
 19 Brumaire, evening: Source D says several hundred members of the Council of Five
 Hundred were rounded up and a session finally began around 21:00. Chazal proposed
 endorsing the two days' events, abolishing the Directory, and creating an
 executive commission with Sieyes, Ducos, and Bonaparte.
+
+19 Brumaire, late night: Source F says Bonaparte dictated a proclamation to
+Bourrienne after the forceful expulsion, intending Paris to talk about it the
+next morning. This is post-action legitimation evidence from a private-secretary
+memoir, distinct from Source A's public justification.
 
 10 November 1799: Source B says the Brumaire Decree declared that the Directory
 was no more and named Sieyes, Roger-Ducos, and General Bonaparte as Consuls of

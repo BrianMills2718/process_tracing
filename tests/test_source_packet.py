@@ -10,6 +10,7 @@ from pt.source_packet import (
     PreSpecifiedTest,
     SourceCandidate,
     SourceGap,
+    SourceGapDisposition,
     SourcePacket,
     SourcePacketError,
     load_source_packet,
@@ -65,6 +66,17 @@ def _packet() -> SourcePacket:
                 priority="high",
             )
         ],
+        source_gap_dispositions=[
+            SourceGapDisposition(
+                missing_source_class="Private correspondence among conspirators",
+                status="partially_mitigated",
+                relevant_source_ids=["memoir_source"],
+                expected_trace="Private planning sequence and actor intent.",
+                claim_implications="Memoir evidence helps sequence planning but does not resolve direct correspondence claims.",
+                search_actions=["Checked public memoir source."],
+                disposition_reason="Adjacent memoir evidence is available, but private correspondence remains missing.",
+            )
+        ],
         pre_specified_tests=[
             PreSpecifiedTest(
                 test_name="Legislative coercion test",
@@ -93,6 +105,8 @@ def test_source_packet_summary_preserves_scope_metadata():
     ]
     assert summary.high_priority_gap_count == 1
     assert summary.high_priority_gaps == ["Private correspondence among conspirators"]
+    assert summary.unresolved_high_priority_gap_count == 1
+    assert summary.source_gap_dispositions[0].status == "partially_mitigated"
     assert summary.pre_specified_test_count == 1
     assert summary.source_packet_path == "packet.json"
 
@@ -111,6 +125,8 @@ def test_source_packet_loader_accepts_assistant_artifact_shape(tmp_path):
     assert loaded.source_candidates[0].source_group == "official public justification"
     assert "Packet metadata is not itself evidence" not in loaded.to_prompt_context()
     assert "Private correspondence among conspirators" in loaded.to_prompt_context()
+    assert "Source gap dispositions" in loaded.to_prompt_context()
+    assert "partially_mitigated" in loaded.to_prompt_context()
 
 
 @pytest.mark.plans(3)

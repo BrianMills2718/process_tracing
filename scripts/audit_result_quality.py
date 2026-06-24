@@ -242,6 +242,13 @@ def _source_material_context(result: ProcessTracingResult) -> dict[str, Any]:
         "known_gap_count": packet.known_gap_count if packet else 0,
         "high_priority_gap_count": packet.high_priority_gap_count if packet else 0,
         "high_priority_gaps": packet.high_priority_gaps if packet else [],
+        "unresolved_high_priority_gap_count": (
+            packet.unresolved_high_priority_gap_count if packet else 0
+        ),
+        "source_gap_dispositions": [
+            disposition.model_dump()
+            for disposition in packet.source_gap_dispositions
+        ] if packet else [],
         "packet_limitations": packet.limitations if packet else [],
         "has_source_coverage": coverage is not None,
         "sources_with_evidence": coverage.sources_with_evidence if coverage else 0,
@@ -312,7 +319,7 @@ def _academic_caps(
             )
         elif (
             source_packet.source_count < 3
-            or source_packet.high_priority_gap_count > 0
+            or source_packet.unresolved_high_priority_gap_count > 0
             or source_packet.limitations
         ):
             add(
@@ -339,7 +346,7 @@ def _academic_caps(
         and not source_scope_capped
         and (
             source_packet.source_count < 3
-            or source_packet.high_priority_gap_count > 0
+            or source_packet.unresolved_high_priority_gap_count > 0
             or source_packet.limitations
         )
     ):
@@ -682,6 +689,12 @@ def audit_result(
         "unassigned_evidence_count": len(coverage.unassigned_evidence_ids) if coverage else 0,
         "known_gap_count": packet.known_gap_count if packet else 0,
         "high_priority_gap_count": packet.high_priority_gap_count if packet else 0,
+        "unresolved_high_priority_gap_count": (
+            packet.unresolved_high_priority_gap_count if packet else 0
+        ),
+        "source_gap_disposition_count": (
+            len(packet.source_gap_dispositions) if packet else 0
+        ),
         "source_scope_visible": source_scope_visible,
         "recommendations": [] if source_scope_visible else [
             "Caveat damaging absence claims by source scope; specify where the missing trace should be found."
@@ -794,8 +807,17 @@ def _render_text(audit: dict[str, Any]) -> str:
         "known_gap_count",
         "high_priority_gap_count",
         "high_priority_gaps",
+        "unresolved_high_priority_gap_count",
     ]:
         lines.append(f"  {key}: {source_context.get(key)}")
+    if source_context.get("source_gap_dispositions"):
+        lines.append("  source_gap_dispositions:")
+        for disposition in source_context["source_gap_dispositions"]:
+            lines.append(
+                "    - "
+                f"{disposition['missing_source_class']}: {disposition['status']} "
+                f"(sources={', '.join(disposition.get('relevant_source_ids') or []) or 'none'})"
+            )
     if source_context.get("accepted_sources"):
         lines.append("  accepted_sources:")
         for source in source_context["accepted_sources"]:

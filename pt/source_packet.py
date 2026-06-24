@@ -93,6 +93,42 @@ class SourceGap(BaseModel):
     priority: Literal["high", "medium", "low"] = Field(description="Collection priority.")
 
 
+class SourceGapDisposition(BaseModel):
+    """Disposition of a known source gap after search or source expansion."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    missing_source_class: str = Field(description="Known source class being dispositioned.")
+    status: Literal[
+        "acquired",
+        "partially_mitigated",
+        "unresolved",
+        "unavailable",
+        "accepted_limit",
+    ] = Field(
+        description=(
+            "Whether the gap is resolved, partially mitigated by adjacent sources, "
+            "still unresolved, unavailable after search, or explicitly accepted as "
+            "a limit on claim scope."
+        )
+    )
+    relevant_source_ids: list[str] = Field(
+        default_factory=list,
+        description="Packet source ids that acquire or partially mitigate this gap.",
+    )
+    expected_trace: str = Field(description="Trace this source class was expected to reveal.")
+    claim_implications: str = Field(
+        description="Which causal claims remain strengthened, weakened, capped, or unresolved."
+    )
+    search_actions: list[str] = Field(
+        default_factory=list,
+        description="Concrete searches or source checks performed for this gap.",
+    )
+    disposition_reason: str = Field(
+        description="Why this status is assigned; distinguish evidence acquired from limits accepted."
+    )
+
+
 class PreSpecifiedTest(BaseModel):
     """A process-tracing test the source packet expects the later pipeline to run."""
 
@@ -135,6 +171,10 @@ class SourcePacketDraft(BaseModel):
         default_factory=list,
         description="Missing source classes or traces that still limit inference.",
     )
+    source_gap_dispositions: list[SourceGapDisposition] = Field(
+        default_factory=list,
+        description="Structured disposition of known gaps after source search or expansion.",
+    )
     pre_specified_tests: list[PreSpecifiedTest] = Field(
         default_factory=list,
         description="Diagnostic tests pre-specified before likelihood scoring.",
@@ -163,6 +203,14 @@ class SourcePacketSummary(BaseModel):
     known_gap_count: int = Field(description="Number of known missing-source gaps.")
     high_priority_gap_count: int = Field(description="Number of high-priority missing-source gaps.")
     high_priority_gaps: list[str] = Field(description="Names of high-priority missing source classes.")
+    unresolved_high_priority_gap_count: int = Field(
+        default=0,
+        description="High-priority gaps not acquired or explicitly accepted as limits.",
+    )
+    source_gap_dispositions: list[SourceGapDisposition] = Field(
+        default_factory=list,
+        description="Disposition records for known source gaps.",
+    )
     pre_specified_test_count: int = Field(description="Number of pre-specified diagnostic tests.")
     limitations: list[str] = Field(description="Packet-level limitations that should cap claims.")
     source_packet_path: str | None = Field(
@@ -219,6 +267,17 @@ class SourcePacket(SourcePacketDraft):
             for gap in self.known_gaps
             if gap.priority == "high"
         ]
+        resolved_statuses = {"acquired", "accepted_limit"}
+        disposition_by_gap = {
+            disposition.missing_source_class: disposition
+            for disposition in self.source_gap_dispositions
+        }
+        unresolved_high_priority_gaps = [
+            gap_name
+            for gap_name in high_priority_gaps
+            if disposition_by_gap.get(gap_name) is None
+            or disposition_by_gap[gap_name].status not in resolved_statuses
+        ]
         return SourcePacketSummary(
             case_name=self.case_name,
             research_question=self.research_question,
@@ -235,6 +294,8 @@ class SourcePacket(SourcePacketDraft):
             known_gap_count=len(self.known_gaps),
             high_priority_gap_count=len(high_priority_gaps),
             high_priority_gaps=high_priority_gaps,
+            unresolved_high_priority_gap_count=len(unresolved_high_priority_gaps),
+            source_gap_dispositions=list(self.source_gap_dispositions),
             pre_specified_test_count=len(self.pre_specified_tests),
             limitations=list(self.limitations),
             source_packet_path=source_packet_path,
@@ -270,6 +331,16 @@ class SourcePacket(SourcePacketDraft):
             )
             for gap in self.known_gaps
         ) or "- None specified."
+        disposition_lines = "\n".join(
+            (
+                f"- {disposition.status}: {disposition.missing_source_class}; "
+                f"sources={', '.join(disposition.relevant_source_ids) or 'none'}; "
+                f"expected_trace={disposition.expected_trace}; "
+                f"claim_implications={disposition.claim_implications}; "
+                f"reason={disposition.disposition_reason}"
+            )
+            for disposition in self.source_gap_dispositions
+        ) or "- None specified."
         test_lines = "\n".join(
             (
                 f"- {test.test_name}; pair={test.target_rival_pair}; "
@@ -291,6 +362,8 @@ class SourcePacket(SourcePacketDraft):
             f"{rival_lines}\n\n"
             "Known source gaps:\n"
             f"{gap_lines}\n\n"
+            "Source gap dispositions:\n"
+            f"{disposition_lines}\n\n"
             "Pre-specified diagnostic tests:\n"
             f"{test_lines}\n\n"
             "Observability notes:\n"
