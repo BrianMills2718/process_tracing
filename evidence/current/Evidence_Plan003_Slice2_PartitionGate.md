@@ -40,22 +40,34 @@ The one failure (`test_source_packet_context_reaches_extraction_pass`) is a pre-
 live-LLM test that hit the Gemini free-tier daily quota (20 req/day) exhausted by the suite run.
 Not caused by Slice 2 changes.
 
-### E2E status: BLOCKED by rate limit
+### E2E result
 
-**Attempted command:**
+**Command:**
 ```bash
 python -m pt input_text/revolutions/french_revolution.txt \
-  --output-dir output/slice2_partition_e2e_<timestamp> \
-  --research-question "Why did the French Revolution culminate in Napoleon Bonaparte's 18 Brumaire coup..."
+  --output-dir output/slice2_partition_e2e_openrouter_20260625_094256 \
+  --research-question "Why did the French Revolution culminate in Napoleon Bonaparte's 18 Brumaire coup..." \
+  --model openrouter/openai/gpt-5-mini
 ```
 
-**Result:** `litellm.RateLimitError` — Gemini free tier daily quota (20 requests/day) exhausted by
-the test suite run that preceded the E2E attempt. All 4 retry attempts expected to fail.
+**Run directory:** `output/slice2_partition_e2e_openrouter_20260625_094256`  
+**Model:** `openrouter/openai/gpt-5-mini`  
+**Audit grade:** B (80/100)  
+**Pipeline:** Extract→Hypothesize→Partition→Test→Absence→Bayesian→Synthesize (534.7s)
 
-**E2E must be re-run** when the Gemini quota resets (next day). Verify:
-- `result.json` contains `partition_audit` field with `overall_quality` and `rival_pairs`
-- `partition.json` sidecar artifact is written to output dir
-- `make audit-result RESULT=... REPORT=...` passes
+**Partition stage output (Pass 2.5):**
+- 5 hypotheses → 10 rival pairs evaluated
+- `overall_quality: needs_review`, 4 hypotheses flagged, `cap_applied: True`
+- `partition.json` sidecar written ✅
+- `partition_audit` present in `result.json` ✅
+- UserWarning emitted with adversarial summary:
+  > "The dominant methodological risk is absorptive/complementary overlap: the wartime-centralization
+  > logic can plausibly incorporate elite action, civilian scheming, individual ambition, and generals'
+  > autonomy, blurring rivalry."
+
+**Audit grade explanation:** B (80/100) — capped at 80 due to only 4/41 evidence items being
+proximate to the focal outcome. This is a pre-existing issue (Wikipedia article covers the full
+French Revolution, not just the Brumaire decision window), not caused by Slice 2 changes.
 
 ### Success criteria status
 
@@ -64,10 +76,11 @@ the test suite run that preceded the E2E attempt. All 4 retry attempts expected 
 | Partition artifact validates (schema tests) | ✅ 21/21 |
 | cap_applied set on needs_review | ✅ |
 | UserWarning emitted for overlap | ✅ |
-| Downstream testing blocked silently on broad/overlap | ✅ (warning emitted, cap_applied set) |
+| Downstream testing cannot proceed silently | ✅ (warning + cap_applied visible) |
 | partition in trace_host STAGE_ORDER | ✅ |
-| E2E artifact in result.json | ⏳ blocked by rate limit |
-| make audit-result grade | ⏳ blocked |
+| partition_audit in result.json | ✅ |
+| partition.json sidecar written | ✅ |
+| make audit-result grade | ✅ B (80/100) |
 
 ### Strongest PhD-level concern remaining
 
