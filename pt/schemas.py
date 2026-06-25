@@ -14,6 +14,7 @@ RefinementType = Literal["sharpen_mechanism", "add_prediction", "reframe", "merg
 VerdictStatus = Literal[
     "strongly_supported", "supported", "weakened", "eliminated", "indeterminate"
 ]
+PartitionQuality = Literal["adequate", "needs_review"]
 
 
 # ── Pass 1: Extraction ──────────────────────────────────────────────
@@ -119,6 +120,51 @@ class HypothesisSpace(BaseModel):
     def _unique_hypothesis_ids(self) -> "HypothesisSpace":
         _require_unique_ids([h.id for h in self.hypotheses], "hypothesis")
         return self
+
+
+# ── Pass 2.5: Partition Audit ────────────────────────────────────────
+
+class RivalPairAudit(BaseModel):
+    h1_id: str = Field(description="First hypothesis id in the rival pair")
+    h2_id: str = Field(description="Second hypothesis id in the rival pair")
+    overlap_concern: bool = Field(
+        description="True if both hypotheses predict substantially the same observable evidence patterns, making them non-rival"
+    )
+    complementary_concern: bool = Field(
+        description="True if both hypotheses could simultaneously be true (e.g. precondition + trigger + framing); they require merging, not testing"
+    )
+    absorptive_concern: bool = Field(
+        description="True if the winning hypothesis could absorb the rival as a contributing sub-factor without the rival's mechanism being falsified"
+    )
+    discriminator_count: int = Field(
+        ge=0,
+        description="Number of observable predictions that explicitly discriminate between this pair — one predicts X, the other predicts NOT-X"
+    )
+    concern_detail: str = Field(
+        description="Brief explanation of the most serious concern for this pair; empty string if no flags are set"
+    )
+
+
+class PartitionAudit(BaseModel):
+    research_question_adequate: bool = Field(
+        description="True if the research question targets a single outcome with genuinely rival causal explanations; False if compound, tautological, or under-specified"
+    )
+    rival_pairs: list[RivalPairAudit] = Field(
+        description="One entry per unordered (h_i, h_j) pair — every hypothesis paired with every other"
+    )
+    hypotheses_flagged: list[str] = Field(
+        description="Hypothesis IDs flagged as broad, tautological, complementary, or absorptive"
+    )
+    overall_quality: PartitionQuality = Field(
+        description="'adequate' if no critical flags detected; 'needs_review' if any pair fails the discriminator gate or has overlap/complementary concerns"
+    )
+    cap_applied: bool = Field(
+        default=False,
+        description="Set by the pipeline when overall_quality is needs_review; signals that downstream support scores may be inflated by partition problems"
+    )
+    summary: str = Field(
+        description="2-3 sentence adversarial assessment: strongest remaining concern, whether the winning hypothesis could absorb rivals, and whether the focal window is adequate"
+    )
 
 
 # ── Pass 3: Testing ─────────────────────────────────────────────────
@@ -422,6 +468,10 @@ class ProcessTracingResult(BaseModel):
     source_coverage: Optional[SourceCoverageReport] = Field(
         default=None,
         description="Deterministic packet-source coverage against input text and extracted evidence.",
+    )
+    partition_audit: Optional[PartitionAudit] = Field(
+        default=None,
+        description="Pass 2.5: Hypothesis partition audit — flags overlap, complementarity, and absorptive risks before testing.",
     )
     refinement: Optional[RefinementResult] = None
     is_refined: bool = False

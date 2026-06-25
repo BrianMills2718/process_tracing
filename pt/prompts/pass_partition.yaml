@@ -1,0 +1,85 @@
+name: pass_partition
+version: "1.0"
+description: "Pass 2.5: Hypothesis partition audit before diagnostic testing (Van Evera process tracing)"
+messages:
+  - role: user
+    content: |
+      You are performing the HYPOTHESIS PARTITION AUDIT for a Van Evera process tracing run.
+
+      This audit runs BEFORE diagnostic testing. Its purpose: identify hypotheses that are
+      overlapping, complementary, or absorptive — problems that corrupt downstream likelihood
+      scoring by measuring the same causal claim twice or allowing a winner to absorb rivals.
+
+      ## Hypothesis Space
+
+      {{ hypothesis_space_json }}
+
+      ## Audit Instructions
+
+      ### Step 1 — Research question check
+
+      Set `research_question_adequate = false` if any of:
+      - The question asks about two or more distinct outcomes simultaneously.
+      - The outcome is so vague ("why did the revolution happen?") that rival hypotheses cannot
+        make genuinely opposite predictions about observable evidence.
+      - No terminal outcome or counterfactual foil is specified.
+
+      ### Step 2 — Pairwise audit
+
+      For every unordered pair (H_i, H_j) in the hypothesis list, produce one `RivalPairAudit`:
+
+      **overlap_concern = true** when:
+      Both hypotheses predict substantially the same patterns of observable evidence. If H_i
+      predicts "evidence of fiscal collapse" and H_j also predicts "evidence of fiscal collapse,"
+      they are not rivals — they share a causal story. Overlapping predictions inflate support
+      for whichever hypothesis has a marginally better framing.
+
+      **complementary_concern = true** when:
+      Both could be simultaneously true without contradiction. If H_i is "institutional failure
+      opened the door" and H_j is "elite agency walked through it," they are complementary —
+      both belong in a single multi-causal explanation, not as rivals. Rivals must be mutually
+      exclusive in their decisive causal claim: if H_i is the decisive cause, H_j must be wrong
+      (not just less important).
+
+      **absorptive_concern = true** when:
+      The stronger hypothesis could absorb the weaker as a contributing sub-factor without the
+      weaker being falsified. Example: "Structural crisis caused the revolution" can absorb
+      "Napoleon's ambition played a role" — both can be true, with agency demoted to a
+      mechanism under the structural explanation. Absorptive risk means the hypothesis ranking
+      is methodologically hollow: there is no partition that makes the rivals truly rival.
+
+      **discriminator_count**: count the number of observable predictions (across both H_i and
+      H_j) that explicitly discriminate between the pair — one predicts X, the other predicts
+      NOT-X, or one explicitly names the other as predicting differently. Check both hypotheses'
+      `observable_predictions` fields for language like "Unlike H_j..." or "This hypothesis
+      predicts X, while H_j predicts Y."
+
+      **concern_detail**: one concise sentence naming the most serious concern; empty string
+      if all three flags are false.
+
+      ### Step 3 — Absorptive self-test
+
+      Ask: "If the leading hypothesis wins, can it incorporate every rival as a contributing
+      factor or precondition without any rival being falsified?" If yes, flag those rivals in
+      `hypotheses_flagged` and note it in `summary`.
+
+      ### Step 4 — Overall quality
+
+      Set `overall_quality = "needs_review"` if ANY of:
+      - `research_question_adequate = false`
+      - Any pair has `overlap_concern = true` or `complementary_concern = true`
+      - Any pair has `discriminator_count < 1`
+      - More than half the hypotheses are flagged
+
+      Otherwise set `overall_quality = "adequate"`.
+
+      Set `cap_applied = false` — the pipeline sets this field; always output false.
+
+      ### Step 5 — Summary
+
+      Write a 2-3 sentence adversarial assessment covering:
+      - The strongest remaining methodological concern (even if overall_quality is adequate).
+      - Whether the winning hypothesis could absorb all rivals without falsifying them.
+      - Whether the focal window and research question are tight enough to discriminate.
+
+      Produce the structured output.

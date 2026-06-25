@@ -20,6 +20,7 @@ from pt.bayesian import run_bayesian_update
 from pt.pass_absence import run_absence
 from pt.pass_extract import run_extract
 from pt.pass_hypothesize import run_hypothesize
+from pt.pass_partition import run_partition
 from pt.pass_refine import run_refine
 from pt.pass_synthesize import run_synthesize
 from pt.pass_test import run_test
@@ -30,6 +31,7 @@ from pt.schemas import (
     BayesianResult,
     ExtractionResult,
     HypothesisSpace,
+    PartitionAudit,
     ProcessTracingResult,
     RefinementResult,
     SynthesisResult,
@@ -38,7 +40,7 @@ from pt.schemas import (
 from pt.source_packet import SourcePacket, load_source_packet
 from pt.source_coverage import build_source_coverage
 
-StageId = Literal["setup", "extract", "hypothesize", "test", "absence", "update", "synthesize", "refine"]
+StageId = Literal["setup", "extract", "hypothesize", "partition", "test", "absence", "update", "synthesize", "refine"]
 RunStatus = Literal["ready", "running", "complete", "failed"]
 StageStatus = Literal["ready", "blocked", "running", "complete", "failed", "skipped"]
 
@@ -46,6 +48,7 @@ STAGE_ORDER: list[StageId] = [
     "setup",
     "extract",
     "hypothesize",
+    "partition",
     "test",
     "absence",
     "update",
@@ -80,6 +83,17 @@ STAGE_GUIDES: dict[StageId, dict[str, Any]] = {
             "Are rival mechanisms distinct and tied to the same question?",
         ],
         "tooltip": "Hypotheses should compete, not restate the same mechanism.",
+    },
+    "partition": {
+        "purpose": "Audit hypothesis partition quality before diagnostic testing.",
+        "consumes": ["HypothesisSpace"],
+        "produces": ["PartitionAudit"],
+        "audit_questions": [
+            "Do any rival pairs predict the same evidence (overlap)?",
+            "Could rivals be simultaneously true (complementary)?",
+            "Could the leading hypothesis absorb all rivals as sub-factors?",
+        ],
+        "tooltip": "Partition flags inflate support when rivals share predictions.",
     },
     "test": {
         "purpose": "Assign coherent likelihood vectors to each evidence item.",
@@ -363,6 +377,23 @@ class TraceHostStore:
                 f"{len(hypothesis_space.hypotheses)} hypotheses",
                 trace_id=run.run_id,
             )
+        if stage_id == "partition":
+            hypothesis_space = self._load_json_model(output_dir / "hypothesis_space.json", HypothesisSpace)
+            partition_audit = run_partition(hypothesis_space, model=run.model, trace_id=run.run_id)
+            self._write_json(output_dir / "partition.json", partition_audit.model_dump())
+            n_pairs = len(partition_audit.rival_pairs)
+            flagged = len(partition_audit.hypotheses_flagged)
+            quality = partition_audit.overall_quality
+            summary = f"{n_pairs} rival pairs, quality={quality}"
+            if flagged:
+                summary += f", {flagged} flagged"
+            return self._artifact(
+                stage_id,
+                "PartitionAudit",
+                output_dir / "partition.json",
+                summary,
+                trace_id=run.run_id,
+            )
         if stage_id == "test":
             extraction = self._load_json_model(output_dir / "extraction.json", ExtractionResult)
             hypothesis_space = self._load_json_model(output_dir / "hypothesis_space.json", HypothesisSpace)
@@ -441,6 +472,14 @@ class TraceHostStore:
             absence = self._load_json_model(output_dir / "absence.json", AbsenceResult)
             bayesian = self._load_json_model(output_dir / "bayesian.json", BayesianResult)
             synthesis = self._load_json_model(output_dir / "synthesis.json", SynthesisResult)
+            # Preserve pre-refinement state for the delta board visual audit.
+            pre_refine_dir = output_dir / "pre_refine"
+            pre_refine_dir.mkdir(exist_ok=True)
+            for name in ("extraction.json", "hypothesis_space.json", "testing.json",
+                         "absence.json", "bayesian.json", "synthesis.json"):
+                src = output_dir / name
+                if src.is_file():
+                    (pre_refine_dir / name).write_bytes(src.read_bytes())
             refinement = run_refine(
                 text,
                 extraction,
@@ -505,13 +544,20 @@ class TraceHostStore:
         packet: SourcePacket | None,
         refinement: RefinementResult | None = None,
     ) -> ProcessTracingResult:
+        output_dir = self._run_dir(run.run_id)
         source_summary = packet.to_summary(run.source_packet_path) if packet is not None else None
         text = self._read_text(self._resolve_repo_path(run.input_path))
         source_coverage = build_source_coverage(packet, text, extraction) if packet is not None else None
+        partition_path = output_dir / "partition.json"
+        partition_audit = (
+            self._load_json_model(partition_path, PartitionAudit)
+            if partition_path.is_file() else None
+        )
         return ProcessTracingResult(
             source_text_sha256=_source_text_sha256(text),
             extraction=extraction,
             hypothesis_space=hypothesis_space,
+            partition_audit=partition_audit,
             testing=testing,
             absence=absence,
             bayesian=bayesian,
@@ -580,6 +626,7 @@ class TraceHostStore:
         mapping = {
             "extract": [run.input_path, run.source_packet_path or "source_packet:none"],
             "hypothesize": ["extraction.json", run.theories_path or "theories:none"],
+            "partition": ["hypothesis_space.json"],
             "test": ["extraction.json", "hypothesis_space.json"],
             "absence": ["extraction.json", "hypothesis_space.json", "testing.json"],
             "update": ["testing.json"],

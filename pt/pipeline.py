@@ -14,12 +14,14 @@ from pt.bayesian import INTERPRETIVE_LR_CAP, run_bayesian_update
 from pt.pass_absence import run_absence
 from pt.pass_extract import run_extract
 from pt.pass_hypothesize import run_hypothesize
+from pt.pass_partition import run_partition
 from pt.pass_refine import run_refine
 from pt.pass_synthesize import run_synthesize
 from pt.pass_test import run_test
 from pt.schemas import (
     ExtractionResult,
     HypothesisSpace,
+    PartitionAudit,
     ProcessTracingResult,
     RefinementResult,
 )
@@ -257,11 +259,14 @@ def run_pipeline(
                 f"to extract meaningful evidence and hypotheses."
             )
 
+    partition_audit: PartitionAudit | None = None
+
     if from_result is not None:
         refine = True
         source_text_sha256 = _validate_from_result_source(text, from_result)
         extraction = from_result.extraction
         hypothesis_space = from_result.hypothesis_space
+        partition_audit = from_result.partition_audit
         if verbose:
             print(f"Loaded from existing result: {len(extraction.evidence)} evidence, "
                   f"{len(hypothesis_space.hypotheses)} hypotheses")
@@ -295,6 +300,23 @@ def run_pipeline(
         if review:
             fn = review_fn or _default_review
             hypothesis_space = fn(hypothesis_space, output_dir)
+
+        if verbose:
+            print("Pass 2.5: Hypothesis partition audit...")
+        partition_audit = run_partition(hypothesis_space, model=model, trace_id=trace_id)
+        if verbose:
+            quality = partition_audit.overall_quality
+            n_pairs = len(partition_audit.rival_pairs)
+            flagged = len(partition_audit.hypotheses_flagged)
+            cap = " [CAP APPLIED]" if partition_audit.cap_applied else ""
+            print(f"  {n_pairs} rival pairs, quality={quality}{', '+str(flagged)+' flagged' if flagged else ''}{cap}")
+
+        if output_dir:
+            partition_path = os.path.join(output_dir, "partition.json")
+            with open(partition_path, "w", encoding="utf-8") as f:
+                json.dump(partition_audit.model_dump(), f, indent=2)
+            if verbose:
+                print(f"  Partition audit: {partition_path}")
 
     # Run passes 3-4 (initial)
     testing, absence, bayesian, synthesis = _run_passes_3_plus(
@@ -362,6 +384,7 @@ def run_pipeline(
         source_text_sha256=source_text_sha256,
         extraction=extraction,
         hypothesis_space=hypothesis_space,
+        partition_audit=partition_audit,
         testing=testing,
         absence=absence,
         bayesian=bayesian,

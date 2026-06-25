@@ -11,8 +11,25 @@ from http.server import ThreadingHTTPServer
 import pytest
 
 from pt import trace_host
+from pt.schemas import PartitionAudit, RivalPairAudit
 from pt.workbench import build_app_payload, make_handler
 from test_pipeline_integration import _make_audit_stress_result, _make_source_packet
+
+
+def _stub_partition(*_a, **_k) -> PartitionAudit:
+    return PartitionAudit(
+        research_question_adequate=True,
+        rival_pairs=[
+            RivalPairAudit(
+                h1_id="h1", h2_id="h2",
+                overlap_concern=False, complementary_concern=False, absorptive_concern=False,
+                discriminator_count=2, concern_detail="",
+            )
+        ],
+        hypotheses_flagged=[],
+        overall_quality="adequate",
+        summary="Stub partition audit for tests.",
+    )
 
 
 def _write_artifacts(tmp_path):
@@ -110,6 +127,7 @@ def test_refine_stage_saves_pre_refine_artifacts(tmp_path, monkeypatch):
 
     monkeypatch.setattr(trace_host, "run_extract", lambda *a, **k: result.extraction)
     monkeypatch.setattr(trace_host, "run_hypothesize", lambda *a, **k: result.hypothesis_space)
+    monkeypatch.setattr(trace_host, "run_partition", _stub_partition)
     monkeypatch.setattr(trace_host, "run_test", lambda *a, **k: result.testing)
     monkeypatch.setattr(trace_host, "run_absence", lambda *a, **k: result.absence)
     monkeypatch.setattr(trace_host, "run_bayesian_update", lambda *a, **k: result.bayesian)
@@ -124,7 +142,7 @@ def test_refine_stage_saves_pre_refine_artifacts(tmp_path, monkeypatch):
         refine=True,
     ))
     run_id = run.run_id
-    for stage_id in ["extract", "hypothesize", "test", "absence", "update", "synthesize"]:
+    for stage_id in ["extract", "hypothesize", "partition", "test", "absence", "update", "synthesize"]:
         store.run_stage(run_id, stage_id)
 
     store.run_stage(run_id, "refine")
@@ -145,6 +163,7 @@ def test_workbench_http_supports_stage_by_stage_runs(tmp_path, monkeypatch):
 
     monkeypatch.setattr(trace_host, "run_extract", lambda *a, **k: _make_audit_stress_result().extraction)
     monkeypatch.setattr(trace_host, "run_hypothesize", lambda *a, **k: _make_audit_stress_result().hypothesis_space)
+    monkeypatch.setattr(trace_host, "run_partition", _stub_partition)
     monkeypatch.setattr(trace_host, "run_test", lambda *a, **k: _make_audit_stress_result().testing)
     monkeypatch.setattr(trace_host, "run_absence", lambda *a, **k: _make_audit_stress_result().absence)
     monkeypatch.setattr(trace_host, "run_bayesian_update", lambda *a, **k: _make_audit_stress_result().bayesian)
@@ -173,7 +192,7 @@ def test_workbench_http_supports_stage_by_stage_runs(tmp_path, monkeypatch):
         run_id = payload["run"]["run_id"]
         assert payload["run"]["current_stage"] == "extract"
 
-        for stage_id in ["extract", "hypothesize", "test", "absence", "update", "synthesize"]:
+        for stage_id in ["extract", "hypothesize", "partition", "test", "absence", "update", "synthesize"]:
             stage_request = urllib.request.Request(
                 f"{base_url}/api/runs/{run_id}/stages/{stage_id}/run",
                 data=json.dumps({"force": False}).encode("utf-8"),

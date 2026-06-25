@@ -494,9 +494,24 @@ class TestBuildViewPayloadRouting:
 @pytest.mark.plans(5)
 class TestArtifactEndpoint:
     def _start_server(self, monkeypatch, tmp_path):
+        from pt.schemas import PartitionAudit, RivalPairAudit
         result = _make_audit_stress_result()
+        stub_partition = PartitionAudit(
+            research_question_adequate=True,
+            rival_pairs=[
+                RivalPairAudit(
+                    h1_id="h1", h2_id="h2",
+                    overlap_concern=False, complementary_concern=False, absorptive_concern=False,
+                    discriminator_count=2, concern_detail="",
+                )
+            ],
+            hypotheses_flagged=[],
+            overall_quality="adequate",
+            summary="Stub partition for test.",
+        )
         monkeypatch.setattr(trace_host, "run_extract", lambda *a, **k: result.extraction)
         monkeypatch.setattr(trace_host, "run_hypothesize", lambda *a, **k: result.hypothesis_space)
+        monkeypatch.setattr(trace_host, "run_partition", lambda *a, **k: stub_partition)
         monkeypatch.setattr(trace_host, "run_test", lambda *a, **k: result.testing)
         monkeypatch.setattr(trace_host, "run_absence", lambda *a, **k: result.absence)
         monkeypatch.setattr(trace_host, "run_bayesian_update", lambda *a, **k: result.bayesian)
@@ -533,7 +548,7 @@ class TestArtifactEndpoint:
         base_url = f"http://127.0.0.1:{server.server_address[1]}"
         try:
             run_id = self._create_and_advance_run(
-                base_url, tmp_path, ["extract", "hypothesize", "test"]
+                base_url, tmp_path, ["extract", "hypothesize", "partition", "test"]
             )
             with urllib.request.urlopen(
                 f"{base_url}/api/runs/{run_id}/stages/test/artifact", timeout=5
@@ -552,7 +567,7 @@ class TestArtifactEndpoint:
         base_url = f"http://127.0.0.1:{server.server_address[1]}"
         try:
             run_id = self._create_and_advance_run(
-                base_url, tmp_path, ["extract", "hypothesize", "test", "absence", "update"]
+                base_url, tmp_path, ["extract", "hypothesize", "partition", "test", "absence", "update"]
             )
             with urllib.request.urlopen(
                 f"{base_url}/api/runs/{run_id}/stages/update/artifact", timeout=5
