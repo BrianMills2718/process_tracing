@@ -38,9 +38,12 @@ messages:
 
       For every absence finding, also populate:
 
-      - `expected_source_genre`: the genre of source that would typically carry this missing trace.
-        Use one of: "overview", "primary_document", "speech", "legal_constitutional", "memoir",
-        "parliamentary_record", "secondary_analysis", "news_dispatch", "other".
+      - `expected_source_genre`: the genre of the SOURCE TO ACQUIRE — NOT the current text's genre.
+        If the current text is an overview, do not return "overview" unless the missing evidence
+        would specifically be found in a *different* overview or textbook. Ask yourself: "What
+        kind of document would a researcher need to consult to find this evidence?" Then pick the
+        best-fit genre from: "overview", "primary_document", "speech", "legal_constitutional",
+        "memoir", "parliamentary_record", "secondary_analysis", "news_dispatch", "other".
         Populate even when `would_be_extractable` is false — the genre tells the researcher
         what kind of archive or source to acquire next, regardless of what the current text can contain.
 
