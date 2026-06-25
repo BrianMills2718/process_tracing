@@ -529,3 +529,123 @@ class TestPriors:
         testing = _testing(_vec("e1", {"h1": 2.0, "h2": 1.0}))
         with pytest.raises(ValueError, match="positive"):
             run_bayesian_update(testing, ["h1", "h2"], priors={"h1": 1.0, "h2": 0.0})
+
+
+# ── Slice 5: Source-Lineage Dependence Benchmark ─────────────────────
+
+class TestSourceLineageDependence:
+    """Planted fixtures demonstrating that duplicate / shared-source items produce
+    lower effective evidence than independent corroboration, and that EvidenceCluster
+    lineage_type carries the explanation.
+
+    These are the canonical 'it actually works' fixtures for Slice 5.
+    """
+
+    def _support(self, testing: TestingResult, hyp_id: str = "h1") -> float:
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        return next(p.final_posterior for p in result.posteriors if p.hypothesis_id == hyp_id)
+
+    def test_duplicate_items_without_cluster_inflate_support(self):
+        """3 identical evidence items with no cluster: support is much higher than 1 item."""
+        single = _testing(_vec("e0", {"h1": 3.0, "h2": 1.0}))
+        triplicate = _testing(
+            _vec("e0", {"h1": 3.0, "h2": 1.0}),
+            _vec("e1", {"h1": 3.0, "h2": 1.0}),
+            _vec("e2", {"h1": 3.0, "h2": 1.0}),
+        )
+        support_one = self._support(single)
+        support_three = self._support(triplicate)
+        assert support_three > support_one + 0.05  # meaningfully inflated
+
+    def test_duplicate_items_with_cluster_collapse_to_single(self):
+        """Same 3 identical items with a full-redundancy cluster: support = single item."""
+        single_support = self._support(_testing(_vec("e0", {"h1": 3.0, "h2": 1.0})))
+        cluster = EvidenceCluster(
+            evidence_ids=["e0", "e1", "e2"],
+            reason="same passage, three extractions",
+            lineage_type="duplicate",
+            dependence_strength=1.0,
+        )
+        clustered = _testing(
+            _vec("e0", {"h1": 3.0, "h2": 1.0}),
+            _vec("e1", {"h1": 3.0, "h2": 1.0}),
+            _vec("e2", {"h1": 3.0, "h2": 1.0}),
+            clusters=[cluster],
+        )
+        assert self._support(clustered) == pytest.approx(single_support, abs=1e-6)
+
+    def test_shared_source_cluster_partially_corrects_inflation(self):
+        """Shared-source items (dependence=0.7): support is between single and independent."""
+        support_single = self._support(_testing(_vec("e0", {"h1": 3.0, "h2": 1.0})))
+        support_indep = self._support(_testing(
+            _vec("e0", {"h1": 3.0, "h2": 1.0}),
+            _vec("e1", {"h1": 3.0, "h2": 1.0}),
+            _vec("e2", {"h1": 3.0, "h2": 1.0}),
+        ))
+        cluster = EvidenceCluster(
+            evidence_ids=["e0", "e1", "e2"],
+            reason="same document, different sections",
+            lineage_type="shared_source",
+            dependence_strength=0.7,
+        )
+        support_shared = self._support(_testing(
+            _vec("e0", {"h1": 3.0, "h2": 1.0}),
+            _vec("e1", {"h1": 3.0, "h2": 1.0}),
+            _vec("e2", {"h1": 3.0, "h2": 1.0}),
+            clusters=[cluster],
+        ))
+        # Shared-source correction must sit strictly between the two extremes
+        assert support_single < support_shared < support_indep
+
+    def test_same_event_cluster_partially_corrects_inflation(self):
+        """Same-event cluster (dependence=0.6): same monotonicity as shared_source."""
+        support_single = self._support(_testing(_vec("e0", {"h1": 2.5, "h2": 1.0})))
+        support_indep = self._support(_testing(
+            _vec("e0", {"h1": 2.5, "h2": 1.0}),
+            _vec("e1", {"h1": 2.5, "h2": 1.0}),
+        ))
+        cluster = EvidenceCluster(
+            evidence_ids=["e0", "e1"],
+            reason="two accounts of the same battle",
+            lineage_type="same_event",
+            dependence_strength=0.6,
+        )
+        support_pooled = self._support(_testing(
+            _vec("e0", {"h1": 2.5, "h2": 1.0}),
+            _vec("e1", {"h1": 2.5, "h2": 1.0}),
+            clusters=[cluster],
+        ))
+        assert support_single < support_pooled < support_indep
+
+    def test_lineage_type_field_on_cluster(self):
+        """lineage_type is stored and round-trips through the schema."""
+        for lt in ("duplicate", "shared_source", "same_event", "same_mechanism", "other"):
+            c = EvidenceCluster(evidence_ids=["e0", "e1"], reason="r", lineage_type=lt)  # type: ignore[arg-type]
+            assert c.lineage_type == lt
+            restored = EvidenceCluster.model_validate_json(c.model_dump_json())
+            assert restored.lineage_type == lt
+
+    def test_lineage_type_defaults_to_none(self):
+        """lineage_type is Optional — old clusters without it still load cleanly."""
+        c = EvidenceCluster(evidence_ids=["e0", "e1"], reason="r")
+        assert c.lineage_type is None
+
+    def test_lineage_type_rejects_invalid(self):
+        with pytest.raises(Exception):
+            EvidenceCluster(evidence_ids=["e0", "e1"], reason="r", lineage_type="gossip")  # type: ignore[arg-type]
+
+    def test_inflation_delta_is_material(self):
+        """The support difference between clustered and unclustered duplicates is substantial.
+        This is the core 'duplicate evidence cannot materially inflate support' criterion.
+        """
+        items = [_vec(f"d{i}", {"h1": 4.0, "h2": 1.0}) for i in range(5)]
+        cluster = EvidenceCluster(
+            evidence_ids=[f"d{i}" for i in range(5)],
+            reason="same paragraph, re-extracted 5 times",
+            lineage_type="duplicate",
+            dependence_strength=1.0,
+        )
+        support_clustered = self._support(_testing(*items, clusters=[cluster]))
+        support_unclustered = self._support(_testing(*items))
+        # The unclustered version should be meaningfully more extreme
+        assert support_unclustered - support_clustered > 0.05

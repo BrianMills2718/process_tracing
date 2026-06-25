@@ -93,11 +93,16 @@ messages:
       event, the same mechanism, or the same sub-narrative, so they carry OVERLAPPING
       information. Cluster broadly: many historical "items" are really facets of one
       storyline and should not each count as independent confirmation. Each cluster
-      needs >= 2 distinct evidence ids, a brief `reason`, and a `dependence_strength`
+      needs >= 2 distinct evidence ids, a brief `reason`, a `lineage_type`, and a `dependence_strength`
       in [0,1]:
       - **1.0** — duplicates / same-source copies / restatements of one fact.
       - **0.6–0.8** — same event or mechanism, partly independent details.
       - **0.3–0.5** — same broad sub-narrative but meaningfully different observations.
+
+      Set `lineage_type` to the best-fit category explaining WHY the items are dependent:
+      `"duplicate"` (verbatim copy), `"shared_source"` (same document/section),
+      `"same_event"` (same historical event), `"same_mechanism"` (same causal process),
+      or `"other"`.
 
       An item appears in at most one cluster; genuinely independent observations stay
       unclustered. A cluster contributes an *effective* count

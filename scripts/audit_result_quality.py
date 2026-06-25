@@ -416,6 +416,41 @@ def _academic_caps(
             track="conditional",
         )
 
+    # Source-lineage inflation check: high-influence items sharing a source_group but
+    # not covered by any dependence cluster are potential raw-count inflation.
+    clustered_eids = {
+        eid
+        for c in result.testing.dependence_clusters
+        for eid in c.evidence_ids
+    }
+    # Identify top-driver evidence IDs across all hypotheses
+    top_driver_ids: set[str] = set()
+    for hp in result.bayesian.posteriors:
+        top_driver_ids.update(hp.top_drivers)
+    # Group top drivers by source_group (only if source_group is populated)
+    from collections import defaultdict
+    group_to_top_drivers: dict[str, list[str]] = defaultdict(list)
+    for ev in result.extraction.evidence:
+        if ev.id in top_driver_ids and ev.source_group and ev.source_group != "Main text":
+            group_to_top_drivers[ev.source_group].append(ev.id)
+    unclustered_shared = {
+        grp: eids
+        for grp, eids in group_to_top_drivers.items()
+        if len(eids) >= 2 and not any(eid in clustered_eids for eid in eids)
+    }
+    if unclustered_shared:
+        examples = "; ".join(
+            f"'{grp}': {', '.join(eids[:3])}" for grp, eids in list(unclustered_shared.items())[:3]
+        )
+        add(
+            84,
+            f"{len(unclustered_shared)} source group(s) have multiple top-driver evidence items not covered by any dependence cluster: {examples}.",
+            "Review these items for shared-source dependence; if they draw from the same document section or event, add them to a dependence cluster to prevent raw-count inflation.",
+            "test_design",
+            "Every set of top-driver evidence items drawn from the same named source group is either in a dependence cluster or explicitly confirmed as independent observations.",
+            track="conditional",
+        )
+
     total = temporal["total"] or 1
     proximate_share = temporal["proximate"] / total
     if proximate_share < 0.20:

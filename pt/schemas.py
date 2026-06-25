@@ -35,6 +35,13 @@ TraceProductionRelevance = Literal[
 DiscriminatorStrength = Literal["decisive", "strong"]
 # decisive: |log(LR_h1/LR_h2)| >= log(5) ≈ 1.61
 # strong:   |log(LR_h1/LR_h2)| >= log(2) ≈ 0.69
+LineageType = Literal[
+    "duplicate",       # verbatim or near-verbatim copy of the same passage
+    "shared_source",   # different quotes from the same document or section
+    "same_event",      # different descriptions of the same historical event
+    "same_mechanism",  # different expressions of the same causal process
+    "other",
+]
 
 
 # ── Pass 1: Extraction ──────────────────────────────────────────────
@@ -298,6 +305,18 @@ class EvidenceCluster(BaseModel):
         "underlying sub-narrative and therefore carry overlapping (non-independent) information."
     )
     reason: str = Field(description="Why these items are dependent (shared source/event/mechanism).")
+    lineage_type: Optional[LineageType] = Field(
+        default=None,
+        description=(
+            "Structured classification of the dependence cause. "
+            "'duplicate' = verbatim or near-verbatim copy; "
+            "'shared_source' = different quotes from the same document/section; "
+            "'same_event' = different descriptions of the same historical event; "
+            "'same_mechanism' = different expressions of the same causal process; "
+            "'other' = none of the above. "
+            "Set this so the audit can verify that each cluster has a visible lineage explanation."
+        ),
+    )
     dependence_strength: float = Field(
         default=1.0, ge=0.0, le=1.0, allow_inf_nan=False,
         description="How redundant the members are (0=independent, 1=fully redundant). "
