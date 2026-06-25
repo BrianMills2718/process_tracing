@@ -36,6 +36,19 @@ This project is automated process tracing and mixed-methods causal inference, no
 
 The working premise is that expert process-tracing tasks are not protected by an inherent human advantage. Humans are often slower, less reproducible, less exhaustive, and not automatically less biased. The quality target is achieved through architecture: structured prompts and schemas, provenance, adversarial critic roles, independence checks, sensitivity analysis, trace-production modeling, cross-case quantitative integration, and iterative process tracing ↔ quantitative feedback. Human review remains valuable as direction-setting, validation, and accountability, but it is not treated as the only source of methodological rigor or as a permanent bottleneck.
 
+### Future Workbench Alignment
+
+This repo is the causal/process-tracing engine for a future
+`mixed_methods_workbench`, alongside `~/projects/qualitative_coding` as the
+qualitative evidence engine. Preserve the boundary: this repo owns source
+packets, source coverage, rival causal hypotheses, observable predictions,
+diagnostic evidence testing, likelihood-vector elicitation, deterministic
+comparative support updates, absence checks, trace-production/dependence
+modeling, and process-tracing reports. Do **not** rebuild broad qualitative
+coding, QDA export, or general codebook review here; instead consume qualitative
+claims, patterns, source anchors, and candidate explanations through typed
+contracts when the workbench bridge is ready.
+
 Given a text, the pipeline:
 1. **Extracts** evidence, actors, events, mechanisms, causal edges
 2. **Hypothesizes** competing causal explanations with observable predictions
@@ -260,6 +273,7 @@ python -m pt.multi input_text/case_a.txt input_text/case_b.txt --output-dir outp
 - **Structured output**: all LLM calls return Pydantic models; `if/elif` chains for semantic understanding are prohibited
 - **Fail loud**: raise on LLM failure, never return None/0/[] silently
 - **Generalist**: no dataset-specific hardcoding; the pipeline must work on any historical text
+- **Workbench boundary**: this repo is the causal/process-tracing engine for a future `mixed_methods_workbench`; do not rebuild broad qualitative coding or QDA review here, and consume `qualitative_coding` outputs only through typed contracts when that bridge is ready.
 
 ## Workflow
 

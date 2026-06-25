@@ -44,6 +44,7 @@ read `CLAUDE.md` directly.
 - **Structured output**: all LLM calls return Pydantic models; `if/elif` chains for semantic understanding are prohibited
 - **Fail loud**: raise on LLM failure, never return None/0/[] silently
 - **Generalist**: no dataset-specific hardcoding; the pipeline must work on any historical text
+- **Workbench boundary**: this repo is the causal/process-tracing engine for a future `mixed_methods_workbench`; do not rebuild broad qualitative coding or QDA review here, and consume `qualitative_coding` outputs only through typed contracts when that bridge is ready.
 
 ### Workflow
 
