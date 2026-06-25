@@ -1,12 +1,12 @@
 ---
-status: in progress
+status: complete
 owner: process-tracing
-updated: 2026-06-24
+updated: 2026-06-25
 ---
 
 # Plan 005 - Interactive Trace Execution Host
 
-**Status:** In progress
+**Status:** Complete
 **Type:** implementation
 **Priority:** High
 **Blocked By:** None for the current host slice; later visual-audit slices remain open
@@ -411,6 +411,298 @@ views driven from stage artifacts.
 
 **Done when:** adversarial review finds the views improve method
 interpretability without creating unsupported causal claims.
+
+### Slice 005d - Visual Audit Panels (Full Spec)
+
+**Goal:** add evidence × hypothesis matrix, support bars with sensitivity bands,
+evidence provenance panel, and dependence cluster overlay driven from stage
+artifacts. Make the causal structure visually auditable without creating
+unsupported causal claims.
+
+**Concern register:** `docs/plans/CONCERNS_005d.md` — triage at every slice
+boundary.
+
+**Modality split:**
+
+| Surface | Mode | Reason |
+|---|---|---|
+| Stage view API contracts | Deductive | Input/output specifiable from artifact schemas |
+| Evidence × hypothesis matrix layout | Deductive | Structure follows from TestingResult schema |
+| Support bars + sensitivity bands | Deductive | Structure follows from BayesianResult |
+| HTML template extraction boundary | Deductive | Component responsibility split is specifiable |
+| 59-item matrix legibility | **Exploratory** | Can't predict until rendered with real data |
+| Fragile/robust visual treatment | **Exploratory** | Reviewer reaction is emergent |
+
+**ADR-005-HTML — HTML architecture for visual audit panels:**
+
+- **Decision:** Extract `_html()` to `pt/templates/workbench.html` loaded at
+  server startup via `Path(__file__).parent / 'templates' / 'workbench.html'`.
+  `_html()` becomes a one-liner calling `template.format(...)` with named keys
+  (no `{{`/`}}` escaping).
+- **Context:** `_html()` was 495 lines before Slice 005d. Adding matrix,
+  support bars, provenance, and cluster panels would push it to 1000+ lines
+  of inline Python-string HTML with brittle `{{`/`}}` double-escaping.
+- **Alternatives considered:** Keep inline (rejected — unmaintainable, no static
+  analysis, no browser DevTools editing); Vite/React (deferred per the
+  borrow-vs-build table in the Frame section — revisit when the contract is
+  proven by a running slice).
+- **Consequences:** Template file can be edited with normal HTML tooling.
+  Tested in isolation. Loaded once at import time (no per-request I/O).
+- **Superseded by:** Vite/React migration, if and when the plan gate is reached.
+
+**Done when:**
+- Deterministic tests cover each ViewRenderer projection, view API error paths,
+  and template load.
+- Live non-mocked Brumaire run produces all panels with correct data.
+- Adversarial audit passes the 5-case battery (incomplete run, malformed
+  artifact, refine=False, all-below-threshold, single hypothesis).
+- CONCERNS_005d.md fully triaged.
+- `make check` passes.
+- Plan doc and `docs/progress/plan003_sota_plus_progress.md` updated.
+
+---
+
+## Slice 005d Design Artifacts
+
+### Boundary Diagram (updated for Slice 005d)
+
+```mermaid
+flowchart LR
+  subgraph External["External"]
+    Browser["Human browser"]
+    Agent["Agent / curl"]
+  end
+
+  subgraph Host["process_tracing workbench host"]
+    Server["WorkbenchHandler\nHTTP routing"]
+    Template["WorkbenchTemplate\npt/templates/workbench.html"]
+    HostStore["TraceHostStore\nrun creation + stage execution"]
+    ViewRenderer["ViewRenderer\nstage artifact → ViewPayload"]
+    RunStore["RunStore\noutput/workbench_runs/{run_id}/"]
+    PreRefineStore["PreRefineStore\noutput/workbench_runs/{run_id}/pre_refine/"]
+  end
+
+  subgraph Core["process_tracing core"]
+    Pipeline["pt.pipeline / pass_*"]
+    Schemas["pt.schemas"]
+    SchemasView["pt.schemas_view\nViewPayload types"]
+    Report["pt.report"]
+  end
+
+  Browser -->|"GET /"| Server
+  Browser -->|"GET /api/runs/{id}/stages/{id}/view"| Server
+  Agent -->|"POST /api/runs, /api/runs/{id}/stages/{id}/run"| Server
+  Server -->|"load template"| Template
+  Server -->|"create_run / run_stage"| HostStore
+  Server -->|"render_*_view(artifact)"| ViewRenderer
+  ViewRenderer -->|"read stage JSON"| RunStore
+  ViewRenderer -->|"read pre_refine JSON"| PreRefineStore
+  ViewRenderer -->|"ViewPayload"| Server
+  ViewRenderer -->|"imports"| SchemasView
+  HostStore -->|"write stage artifacts"| RunStore
+  HostStore -->|"write pre_refine/ before overwrite"| PreRefineStore
+  HostStore -->|"calls pass functions"| Pipeline
+  HostStore -->|"imports"| Schemas
+  RunStore -->|"result.json"| Report
+```
+
+### Domain Model Diagram (updated for Slice 005d)
+
+```mermaid
+classDiagram
+  class TraceRun {
+    run_id
+    case_name
+    input_path
+    status : RunStatus
+    current_stage : StageId
+    result_path
+    report_path
+  }
+  class StageExecution {
+    stage_id : StageId
+    status : StageStatus
+    artifacts : list[StageArtifact]
+  }
+  class StageArtifact {
+    artifact_id
+    stage_id
+    schema_name
+    path
+    summary
+    provenance : dict
+  }
+  class MatrixViewPayload {
+    stage_id = "test"
+    hypotheses : list[str]
+    rows : list[MatrixRow]
+    cluster_overlays : list[ClusterOverlay]
+    below_threshold_count : int
+  }
+  class MatrixRow {
+    evidence_id
+    lr_vector : dict[str, float]
+    relevance : float
+    below_threshold : bool
+    diagnostic_type : str
+    justification_snippet : str
+    cluster_id : str | None
+  }
+  class ClusterOverlay {
+    cluster_id
+    evidence_ids : list[str]
+    strength : float
+    reason_snippet : str
+  }
+  class SupportViewPayload {
+    stage_id = "update"
+    bars : list[SupportBar]
+    prior_sensitivity_stable : bool
+    perturbation_factor : float
+  }
+  class SupportBar {
+    hypothesis_id
+    label : str
+    posterior : float
+    posterior_low : float
+    posterior_high : float
+    robustness : str
+    rank_stable : bool
+  }
+  class ProvenanceViewPayload {
+    stage_id = "synthesize"
+    rows : list[ProvenanceRow]
+    items_with_marker : int
+    items_total : int
+  }
+  class ProvenanceRow {
+    evidence_id
+    source_quote_snippet : str
+    source_marker : str | None
+    favored_hypothesis_id : str
+    peak_lr : float
+  }
+  class DeltaViewPayload {
+    stage_id = "refine"
+    new_evidence_count : int
+    reinterpreted_count : int
+    spurious_count : int
+    hypothesis_refined_count : int
+    posterior_shifts : list[PosteriorShift]
+  }
+  class PosteriorShift {
+    hypothesis_id
+    before : float
+    after : float
+    delta : float
+  }
+
+  TraceRun "1" --> "1..*" StageExecution
+  StageExecution "1" --> "0..*" StageArtifact
+  MatrixViewPayload "1" --> "1..*" MatrixRow
+  MatrixViewPayload "1" --> "0..*" ClusterOverlay
+  SupportViewPayload "1" --> "1..*" SupportBar
+  ProvenanceViewPayload "1" --> "0..*" ProvenanceRow
+  DeltaViewPayload "1" --> "0..*" PosteriorShift
+```
+
+### Data Flow Diagram (updated for Slice 005d — view rendering path)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant B as Browser
+  participant H as WorkbenchHandler
+  participant V as ViewRenderer
+  participant S as RunStore
+
+  B->>H: GET /api/runs/{run_id}/stages/{stage_id}/view
+  H->>S: get_run(run_id)
+  alt run not found
+    S-->>H: TraceHostError
+    H-->>B: 404 {ok:false, error_type:"TraceHostError"}
+  else run found
+    S-->>H: TraceRun
+    H->>H: check stage status == "complete"
+    alt stage not complete
+      H-->>B: 400 {ok:false, error_type:"StageNotComplete"}
+    else stage complete
+      H->>V: render_view(stage_id, run_dir)
+      V->>S: read stage artifact JSON (e.g. testing.json)
+      S-->>V: raw artifact bytes
+      alt artifact read/parse error
+        V-->>H: ProjectionError with trace_id
+        H-->>B: 500 {ok:false, error_type:"ProjectionError", trace_id}
+      else artifact valid
+        V->>V: project artifact → ViewPayload
+        V-->>H: ViewPayload (Pydantic model)
+        H-->>B: 200 {ok:true, view: ViewPayload.model_dump()}
+      end
+    end
+  end
+```
+
+### Backward Runtime Pass — per panel
+
+The backward pass works from the final rendered payload backward to what must
+exist at runtime. Each panel's chain:
+
+**Matrix panel (stage: test)**
+
+1. **Final payload:** `MatrixViewPayload` — `hypotheses: list[str]`, `rows:
+   list[MatrixRow]` sorted by `max(abs(log(lr)))` descending, `cluster_overlays`
+   grouping correlated rows, `below_threshold_count`.
+2. **Selector:** stage_id == "test" and stage status == "complete".
+3. **Evidence needed at request time:** `testing.json` → `evidence_likelihoods`
+   (for `lr_vector`, `relevance`, `diagnostic_type`) + `dependence_clusters`
+   (for `ClusterOverlay`). Also `extraction.json` → `evidence[*].source_text`
+   (for `justification_snippet`).
+4. **Offline artifacts:** `testing.json` and `extraction.json` written by
+   `TraceHostStore.run_stage("test")` and `run_stage("extract")`.
+5. **Contract reconciliation:** `ViewRenderer.render_matrix_view(testing,
+   extraction) -> MatrixViewPayload`. Input: `TestingResult + ExtractionResult`.
+   Output: `MatrixViewPayload`. Failure: raises `ProjectionError` if evidence
+   IDs in `evidence_likelihoods` don't match `extraction.evidence`.
+
+**Support panel (stage: update)**
+
+1. **Final payload:** `SupportViewPayload` — `bars: list[SupportBar]` ordered by
+   `posterior` descending, `prior_sensitivity_stable`, `perturbation_factor`.
+2. **Selector:** stage_id == "update" and stage status == "complete".
+3. **Evidence needed:** `bayesian.json` → `posteriors` (posterior, robustness,
+   top_drivers), `sensitivity` (posterior_low, posterior_high, rank_stable),
+   `prior_sensitivity`. `hypothesis_space.json` → `hypotheses[*].label` for
+   human-readable bar labels.
+4. **Offline artifacts:** `bayesian.json` and `hypothesis_space.json`.
+5. **Contract:** `ViewRenderer.render_support_view(bayesian, hypothesis_space)
+   -> SupportViewPayload`.
+
+**Provenance panel (stage: synthesize)**
+
+1. **Final payload:** `ProvenanceViewPayload` — `rows: list[ProvenanceRow]`
+   sorted by `abs(peak_lr)` descending, `items_with_marker`, `items_total`.
+2. **Selector:** stage_id == "synthesize" and stage status == "complete".
+3. **Evidence needed:** `testing.json` → `evidence_likelihoods` (for LRs).
+   `extraction.json` → `evidence[*].source_text` (for quote snippet) and
+   `evidence[*].source_ids` (for source marker).
+4. **Offline artifacts:** `testing.json` and `extraction.json`.
+5. **Contract:** `ViewRenderer.render_provenance_view(testing, extraction)
+   -> ProvenanceViewPayload`. `peak_lr` = max `relative_likelihood` across all
+   hypotheses for that evidence item (signed by direction of favored hypothesis).
+
+**Delta panel (stage: refine)**
+
+1. **Final payload:** `DeltaViewPayload` — counts of delta categories +
+   `posterior_shifts` comparing `pre_refine/bayesian.json` to `bayesian.json`.
+2. **Selector:** stage_id == "refine" and stage status == "complete" and
+   `pre_refine/bayesian.json` exists.
+3. **Evidence needed:** `pre_refine/bayesian.json` (before), `bayesian.json`
+   (after), `refinement.json` (counts).
+4. **Offline artifacts:** `pre_refine/` directory written by Task 2's fix.
+5. **Contract:** `ViewRenderer.render_delta_view(refinement, pre_bayesian,
+   post_bayesian) -> DeltaViewPayload`.
+
+---
 
 ### Slice 005e - Retire Or Fold Old Workbench
 

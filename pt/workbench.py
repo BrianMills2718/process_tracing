@@ -146,7 +146,14 @@ def make_handler() -> type[BaseHTTPRequestHandler]:
                     )
                     return
                 run_dir = REPO_ROOT / run.output_dir
-                payload = build_view_payload(run_dir, stage_id)
+                try:
+                    payload = build_view_payload(run_dir, stage_id)
+                except Exception as exc:
+                    self._send_json(
+                        {"ok": False, "error": str(exc), "error_type": exc.__class__.__name__},
+                        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                    )
+                    return
                 if payload is None:
                     self._send_json(
                         {"ok": False, "error": f"no view renderer for stage: {stage_id}"},

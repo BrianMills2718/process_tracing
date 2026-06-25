@@ -8,9 +8,9 @@ Track all implementation work here.
 |---|------|----------|--------|--------|
 | 1 | Tentative Maintenance Roadmap | Medium | 📋 Planned | Future cleanup/refactor implementation plans |
 | 2 | SOTA+ Recovery And Thin-Slice Operating Model | Critical | 🚧 In Progress | Source packet contract, hypothesis partition audit, validation benchmark |
-| 3 | SOTA+ Execution Master Plan | Critical | 🚧 In Progress | All SOTA+ implementation slices |
+| 3 | SOTA+ Execution Master Plan | Critical | ✅ Complete | All SOTA+ implementation slices |
 | 4 | Portfolio Dossier Spine | High | ✅ Complete | Portfolio wiki dossier coverage for `process_tracing` |
-| 5 | Interactive Trace Execution Host | High | 🚧 In Progress | Stage-by-stage pipeline review and visual audit host |
+| 5 | Interactive Trace Execution Host | High | ✅ Complete | Stage-by-stage pipeline review and visual audit host |
 | 6 | Source Design Engine | Critical | ✅ Complete | Iterative source-design, acquisition, and disposition loop |
 
 ## Status Key

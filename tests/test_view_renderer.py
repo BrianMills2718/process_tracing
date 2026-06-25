@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import threading
+import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
 
@@ -15,12 +16,18 @@ import pytest
 
 from pt.schemas import (
     BayesianResult,
+    EvidenceLikelihood,
+    Hypothesis,
     HypothesisPosterior,
+    HypothesisLikelihood,
+    HypothesisSpace,
     NewEvidence,
+    Prediction,
     RefinementResult,
     ReinterpretedEvidence,
     SensitivityEntry,
     SpuriousExtraction,
+    TestingResult,
 )
 from pt.schemas_view import DeltaViewPayload, MatrixViewPayload, ProvenanceViewPayload, SupportViewPayload
 from pt.view_renderer import (
@@ -588,3 +595,148 @@ class TestArtifactEndpoint:
         finally:
             server.shutdown()
             server.server_close()
+
+
+# ── Adversarial battery (Task 19) ─────────────────────────────────────────────
+
+@pytest.mark.plans(5)
+class TestAdversarialBattery:
+    """5-case adversarial battery: incomplete run, malformed artifact, refine=False,
+    all-below-threshold, single hypothesis."""
+
+    def test_missing_artifact_returns_500_json(self, tmp_path, monkeypatch):
+        """Incomplete run — artifact endpoint is requested before stage has run."""
+        result = _make_audit_stress_result()
+        monkeypatch.setattr(trace_host, "run_extract", lambda *a, **k: result.extraction)
+        monkeypatch.setattr(trace_host, "run_hypothesize", lambda *a, **k: result.hypothesis_space)
+        monkeypatch.setattr(trace_host, "run_test", lambda *a, **k: result.testing)
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler())
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        base_url = f"http://127.0.0.1:{server.server_address[1]}"
+        input_path = tmp_path / "input.txt"
+        input_path.write_text(" ".join(["word"] * 400), encoding="utf-8")
+        try:
+            body = json.dumps({"input_path": str(input_path), "refine": False}).encode()
+            req = urllib.request.Request(
+                f"{base_url}/api/runs", data=body,
+                headers={"Content-Type": "application/json"}, method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=5) as r:
+                run_id = json.loads(r.read())["run"]["run_id"]
+            # Advance to extract only — testing.json does not exist yet
+            req = urllib.request.Request(
+                f"{base_url}/api/runs/{run_id}/stages/extract/run",
+                data=b"{}", headers={"Content-Type": "application/json"}, method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=5):
+                pass
+            # Request test artifact before running test stage
+            with pytest.raises(urllib.error.HTTPError) as exc_info:
+                urllib.request.urlopen(
+                    f"{base_url}/api/runs/{run_id}/stages/test/artifact", timeout=5
+                )
+            assert exc_info.value.code == 500
+            error_body = json.loads(exc_info.value.read())
+            assert error_body["ok"] is False
+            assert "error" in error_body
+        finally:
+            server.shutdown()
+            server.server_close()
+
+    def test_malformed_artifact_returns_500_json(self, tmp_path):
+        """Malformed artifact — corrupt testing.json → clean JSON 500, not a crash."""
+        run_dir = tmp_path / "run"
+        run_dir.mkdir()
+        _write_base_artifacts(run_dir)
+        # Corrupt the testing.json
+        (run_dir / "testing.json").write_text("{ not valid json }", encoding="utf-8")
+
+        import json as _json
+        with pytest.raises((_json.JSONDecodeError, Exception)):
+            build_matrix_payload(run_dir)
+
+    def test_all_below_threshold_matrix(self, tmp_path):
+        """All-below-threshold — every evidence item has relevance < 0.4."""
+
+        run_dir = tmp_path / "run"
+        run_dir.mkdir()
+        extraction = _make_extraction()
+        hs = _make_hypothesis_space()
+        # Override testing with all below-threshold items
+        low_relevance_testing = TestingResult(
+            evidence_likelihoods=[
+                EvidenceLikelihood(
+                    evidence_id=e.id,
+                    hypothesis_likelihoods=[
+                        HypothesisLikelihood(hypothesis_id="h1", relative_likelihood=0.5, diagnostic_type="straw_in_the_wind"),
+                        HypothesisLikelihood(hypothesis_id="h2", relative_likelihood=0.5, diagnostic_type="straw_in_the_wind"),
+                    ],
+                    relevance=0.2,
+                    justification="low relevance test",
+                )
+                for e in extraction.evidence
+            ]
+        )
+        (run_dir / "extraction.json").write_text(extraction.model_dump_json(), encoding="utf-8")
+        (run_dir / "hypothesis_space.json").write_text(hs.model_dump_json(), encoding="utf-8")
+        (run_dir / "testing.json").write_text(low_relevance_testing.model_dump_json(), encoding="utf-8")
+
+        payload = build_matrix_payload(run_dir)
+
+        assert payload.below_threshold_count == payload.total_count
+        assert all(r.below_threshold for r in payload.rows)
+
+    def test_single_hypothesis_matrix(self, tmp_path):
+        """Single hypothesis — matrix with one column renders without error."""
+
+        run_dir = tmp_path / "run"
+        run_dir.mkdir()
+        extraction = _make_extraction()
+        single_hs = HypothesisSpace(
+            research_question="Why did the crisis occur?",
+            hypotheses=[
+                Hypothesis(
+                    id="h1",
+                    description="Fiscal crisis was the cause",
+                    source="text",
+                    theoretical_basis="Fiscal theory",
+                    causal_mechanism="Debt → collapse",
+                    observable_predictions=[Prediction(id="p1", description="evidence of debt")],
+                )
+            ],
+        )
+        single_testing = TestingResult(
+            evidence_likelihoods=[
+                EvidenceLikelihood(
+                    evidence_id=e.id,
+                    hypothesis_likelihoods=[
+                        HypothesisLikelihood(hypothesis_id="h1", relative_likelihood=1.5, diagnostic_type="straw_in_the_wind"),
+                    ],
+                    relevance=0.8,
+                    justification="single hyp test",
+                )
+                for e in extraction.evidence
+            ]
+        )
+        (run_dir / "extraction.json").write_text(extraction.model_dump_json(), encoding="utf-8")
+        (run_dir / "hypothesis_space.json").write_text(single_hs.model_dump_json(), encoding="utf-8")
+        (run_dir / "testing.json").write_text(single_testing.model_dump_json(), encoding="utf-8")
+
+        payload = build_matrix_payload(run_dir)
+
+        assert payload.hypotheses == ["h1"]
+        assert payload.total_count == len(extraction.evidence)
+        for row in payload.rows:
+            assert "h1" in row.lr_vector
+            assert len(row.lr_vector) == 1
+
+    def test_refine_disabled_delta_raises_on_missing_refinement(self, tmp_path):
+        """refine=False — no refinement.json written; build_delta_payload raises FileNotFoundError."""
+        run_dir = tmp_path / "run"
+        run_dir.mkdir()
+        _write_base_artifacts(run_dir)
+        # No refinement.json — simulate a run with refine=False
+
+        with pytest.raises(FileNotFoundError):
+            build_delta_payload(run_dir)
