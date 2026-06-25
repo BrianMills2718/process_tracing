@@ -144,6 +144,7 @@ Options:
 | `pt/pass_hypothesize.py` | Pass 2: Hypothesis generation | Yes |
 | `pt/pass_test.py` | Pass 3: likelihood-vector elicitation (one matrix call: per-evidence vector across all hypotheses) | Yes |
 | `pt/pass_absence.py` | Pass 3b: Absence-of-evidence evaluation (all hypotheses, single call) | Yes |
+| `pt/pass_diagnostic.py` | Pass 3.6: deterministic diagnostic test matrix derivation (no LLM) | No |
 | `pt/bayesian.py` | Pass 3.5: coherent joint update (log-space softmax, pure math, no LLM) | No |
 | `pt/pass_synthesize.py` | Pass 4: Written synthesis | Yes |
 | `pt/verdict_calibration.py` | Deterministic calibration of synthesis verdict labels against computed support | No |
