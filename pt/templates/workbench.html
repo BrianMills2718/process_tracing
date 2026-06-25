@@ -276,6 +276,30 @@ table.mx{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-
     </div>
   </div>
 
+  <!-- Real-mode run creation — hidden in demo mode -->
+  <div id="create-run-card" class="card" style="display:none;border:1.5px solid #4a90d9;padding:18px 20px">
+    <h2 style="color:#4a90d9;margin-bottom:12px">New Run</h2>
+    <div style="display:grid;gap:10px;max-width:540px">
+      <label style="font-size:13px;font-weight:600">Input path <span style="color:var(--red)">*</span>
+        <input id="real-input-path" type="text"
+          style="display:block;width:100%;margin-top:4px;padding:7px 10px;border-radius:5px;border:1px solid var(--line);background:var(--band);color:var(--ink);font-size:12px;font-family:monospace"
+          placeholder="input_text/revolutions/french_revolution.txt">
+      </label>
+      <label style="font-size:13px;font-weight:600">Model override <small style="font-weight:400;color:var(--muted)">(optional)</small>
+        <input id="real-model" type="text"
+          style="display:block;width:100%;margin-top:4px;padding:7px 10px;border-radius:5px;border:1px solid var(--line);background:var(--band);color:var(--ink);font-size:12px;font-family:monospace"
+          placeholder="gemini/gemini-2.5-flash">
+      </label>
+      <div style="display:flex;align-items:center;gap:14px;margin-top:2px">
+        <button id="btn-create-run" onclick="createRun()" class="run-btn" style="flex-shrink:0"><span class="ico">▶</span> Create Run</button>
+        <span id="real-err-create" style="display:none;font-size:12px;color:var(--red)"></span>
+      </div>
+      <div id="real-run-status" style="display:none;font-size:12px;color:var(--muted)">
+        Run ID: <code id="real-run-id" style="font-size:11px"></code>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <h2>Stage quick-reference</h2>
     <table class="stage-table">
@@ -341,8 +365,9 @@ table.mx{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-
   </div>
 
   <div style="display:flex;align-items:center;margin-bottom:16px">
-    <button class="run-btn demo-disabled" id="btn-extract"><span class="ico">▶</span> Run Extract</button>
+    <button class="run-btn demo-disabled" id="btn-extract" onclick="runStage('extract')"><span class="ico">▶</span> Run Extract</button>
     <span class="demo-note" id="demo-note-extract">★ Demo — showing Brumaire fixture data</span>
+    <span id="real-err-extract" style="display:none;font-size:12px;color:var(--red);margin-left:10px"></span>
   </div>
 
   <div class="card">
@@ -389,8 +414,9 @@ table.mx{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-
   </div>
 
   <div style="display:flex;align-items:center;margin-bottom:16px">
-    <button class="run-btn demo-disabled"><span class="ico">▶</span> Run Hypothesize</button>
+    <button class="run-btn demo-disabled" id="btn-hypothesize" onclick="runStage('hypothesize')"><span class="ico">▶</span> Run Hypothesize</button>
     <span class="demo-note">★ Demo — showing Brumaire fixture data</span>
+    <span id="real-err-hypothesize" style="display:none;font-size:12px;color:var(--red);margin-left:10px"></span>
   </div>
 
   <div class="card">
@@ -437,8 +463,9 @@ table.mx{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-
   </div>
 
   <div style="display:flex;align-items:center;margin-bottom:16px">
-    <button class="run-btn demo-disabled"><span class="ico">▶</span> Run Test</button>
+    <button class="run-btn demo-disabled" id="btn-test" onclick="runStage('test')"><span class="ico">▶</span> Run Test</button>
     <span class="demo-note">★ Demo — showing Brumaire fixture data</span>
+    <span id="real-err-test" style="display:none;font-size:12px;color:var(--red);margin-left:10px"></span>
   </div>
 
   <div class="alert alert-warn">
@@ -479,8 +506,9 @@ table.mx{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-
     <p>Design constraint: absence findings are qualitative only. They inform the synthesis narrative but do not receive speculative LR values — which would add noise to the Bayesian update.</p>
   </div>
   <div style="display:flex;align-items:center;margin-bottom:16px">
-    <button class="run-btn demo-disabled"><span class="ico">▶</span> Run Absence</button>
+    <button class="run-btn demo-disabled" id="btn-absence" onclick="runStage('absence')"><span class="ico">▶</span> Run Absence</button>
     <span class="demo-note">★ Demo — showing Brumaire fixture data</span>
+    <span id="real-err-absence" style="display:none;font-size:12px;color:var(--red);margin-left:10px"></span>
   </div>
   <div class="card">
     <h2>Absence findings</h2>
@@ -522,8 +550,9 @@ table.mx{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-
   </div>
 
   <div style="display:flex;align-items:center;margin-bottom:16px">
-    <button class="run-btn demo-disabled"><span class="ico">▶</span> Run Update</button>
+    <button class="run-btn demo-disabled" id="btn-update" onclick="runStage('update')"><span class="ico">▶</span> Run Update</button>
     <span class="demo-note">★ Demo — showing Brumaire fixture data</span>
+    <span id="real-err-update" style="display:none;font-size:12px;color:var(--red);margin-left:10px"></span>
   </div>
 
   <div class="alert alert-crit">
@@ -562,8 +591,9 @@ table.mx{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-
     <p>Verdict calibration: <code>verdict_calibration.py</code> deterministically downgrades any verdict label that overstates the computed comparative support. The LLM writes reasoning; it does not have final authority on verdict labels.</p>
   </div>
   <div style="display:flex;align-items:center;margin-bottom:16px">
-    <button class="run-btn demo-disabled"><span class="ico">▶</span> Run Synthesize</button>
+    <button class="run-btn demo-disabled" id="btn-synthesize" onclick="runStage('synthesize')"><span class="ico">▶</span> Run Synthesize</button>
     <span class="demo-note">★ Demo — showing Brumaire fixture data</span>
+    <span id="real-err-synthesize" style="display:none;font-size:12px;color:var(--red);margin-left:10px"></span>
   </div>
   <div class="card">
     <h2>Synthesis narrative (excerpt)</h2>
@@ -611,8 +641,9 @@ table.mx{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-
     <p>Pre-refinement artifacts are saved to <code>pre_refine/</code> before being overwritten, enabling the Delta Board in the workbench to show before/after posterior comparison.</p>
   </div>
   <div style="display:flex;align-items:center;margin-bottom:16px">
-    <button class="run-btn" id="btn-refine"><span class="ico">▶</span> Run Refine</button>
+    <button class="run-btn" id="btn-refine" onclick="runStage('refine')"><span class="ico">▶</span> Run Refine</button>
     <span style="font-size:12px;color:var(--muted);margin-left:10px">Runs passes 3–5 again after delta is applied. ~$0.15 additional cost.</span>
+    <span id="real-err-refine" style="display:none;font-size:12px;color:var(--red);margin-left:10px"></span>
   </div>
   <div style="background:var(--band);border:1.5px dashed var(--line);border-radius:8px;padding:24px;text-align:center;color:var(--faint);font-size:13px;max-width:480px">
     Refine stage not yet run for this session.<br>Run it above to see the delta board and before/after posteriors.
@@ -645,8 +676,9 @@ table.mx{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-
     <p>No LLM calls — fully deterministic from the upstream structured results. Run again at any time to regenerate without re-running any LLM passes.</p>
   </div>
   <div style="display:flex;align-items:center;margin-bottom:16px">
-    <button class="run-btn demo-disabled"><span class="ico">▶</span> Generate Report</button>
-    <span class="demo-note">★ Demo — showing Brumaire fixture data</span>
+    <button class="run-btn demo-disabled" id="btn-report" onclick="openReport()"><span class="ico">▶</span> Open Report</button>
+    <span class="demo-note">★ Demo — report.html generated by synthesize stage</span>
+    <span id="real-err-report" style="display:none;font-size:12px;color:var(--red);margin-left:10px"></span>
   </div>
   <div class="card">
     <h2>result.json summary</h2>
@@ -826,7 +858,8 @@ function setMode(mode) {
     b.classList.toggle('demo-disabled', isDe);
   });
   document.querySelectorAll('.demo-note').forEach(n=> n.style.display = isDe?'':'none');
-  document.getElementById('run-label').textContent = isDe ? '· Brumaire 18 (demo)' : '· Brumaire 18 (real)';
+  document.getElementById('run-label').textContent = isDe ? '· Brumaire 18 (demo)' : '· (real — no run yet)';
+  document.getElementById('create-run-card').style.display = isDe ? 'none' : '';
 
   if(!isDe) {
     // In real mode, grey out stages that depend on order
@@ -1097,6 +1130,98 @@ SUP.forEach(d=>{
     <div class="bar-val">${d.post<0.0001?'<0.0001':d.post.toFixed(4)}</div>`;
   supEl.appendChild(div);
 });
+
+// ── Real-mode run API ──────────────────────────────────────────────────────
+let _runId = null;
+
+async function createRun() {
+  const ip = (document.getElementById('real-input-path').value || '').trim();
+  if (!ip) { _showRealErr('create', 'Input path is required.'); return; }
+  const btn = document.getElementById('btn-create-run');
+  btn.disabled = true; btn.innerHTML = '<span class="ico">⏳</span> Creating…';
+  _showRealErr('create', '');
+  try {
+    const modelVal = (document.getElementById('real-model').value || '').trim();
+    const body = {input_path: ip};
+    if (modelVal) body.model = modelVal;
+    const r = await fetch('/api/runs', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'create run failed');
+    _runId = d.run.run_id;
+    document.getElementById('run-label').textContent = '· ' + ip.split('/').pop() + ' (real)';
+    document.getElementById('real-run-id').textContent = _runId;
+    document.getElementById('real-run-status').style.display = '';
+    await _stageApi('setup');
+    // Mark extract as next-up
+    const extDot = document.getElementById('dot-extract');
+    if (extDot && !extDot.className.includes('dot-complete')) extDot.className = 'nav-dot dot-pending';
+  } catch(e) {
+    _showRealErr('create', e.message);
+    _runId = null;
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<span class="ico">▶</span> Create Run';
+  }
+}
+
+async function runStage(stageId) {
+  if (!_runId) { alert('Go to Overview → Real mode and create a run first.'); return; }
+  const btn = document.getElementById('btn-' + stageId);
+  if (!btn) return;
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="ico">⏳</span> Running…';
+  btn.style.background = ''; btn.style.color = '';
+  _showRealErr(stageId, '');
+  try {
+    await _stageApi(stageId);
+    btn.innerHTML = '<span class="ico">✓</span> Complete';
+    btn.style.background = '#16a34a'; btn.style.color = '#fff';
+    const dot = document.getElementById('dot-' + stageId);
+    if (dot) dot.className = 'nav-dot dot-complete';
+    if (stageId === 'synthesize') {
+      const rd = document.getElementById('dot-report');
+      if (rd) rd.className = 'nav-dot dot-complete';
+    }
+    const ORDER = ['extract','hypothesize','test','absence','update','synthesize','refine'];
+    const idx = ORDER.indexOf(stageId);
+    if (idx >= 0 && idx < ORDER.length - 1) {
+      const nextDot = document.getElementById('dot-' + ORDER[idx + 1]);
+      if (nextDot && !nextDot.className.includes('dot-complete')) nextDot.className = 'nav-dot dot-pending';
+    }
+  } catch(e) {
+    btn.disabled = false; btn.innerHTML = orig;
+    _showRealErr(stageId, e.message);
+  }
+}
+
+async function openReport() {
+  if (!_runId) { alert('Run Synthesize first to generate the report.'); return; }
+  try {
+    const r = await fetch('/api/runs/' + _runId);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'could not fetch run');
+    const rp = d.run.report_path;
+    if (!rp) throw new Error('report not yet generated — run Synthesize first');
+    window.open('/artifact?path=' + encodeURIComponent(rp), '_blank');
+  } catch(e) {
+    _showRealErr('report', e.message);
+  }
+}
+
+async function _stageApi(stageId) {
+  const r = await fetch('/api/runs/' + _runId + '/stages/' + stageId + '/run', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}'
+  });
+  const d = await r.json();
+  if (!d.ok) throw new Error(d.error || stageId + ' failed');
+  return d;
+}
+
+function _showRealErr(ctx, msg) {
+  const el = document.getElementById('real-err-' + ctx);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? '' : 'none';
+}
 </script>
 </body>
 </html>
