@@ -32,6 +32,9 @@ TraceProductionRelevance = Literal[
     "indirect",  # evidence points to a trace (circumstantial)
     "background",  # contextual; not a direct causal trace
 ]
+DiscriminatorStrength = Literal["decisive", "strong"]
+# decisive: |log(LR_h1/LR_h2)| >= log(5) ≈ 1.61
+# strong:   |log(LR_h1/LR_h2)| >= log(2) ≈ 0.69
 
 
 # ── Pass 1: Extraction ──────────────────────────────────────────────
@@ -381,6 +384,66 @@ class BayesianResult(BaseModel):
     )
 
 
+# ── Pass 3.6: Diagnostic Test Matrix (deterministic derivation) ─────
+
+class RivalDiscriminator(BaseModel):
+    """One evidence item that discriminates between a specific rival pair."""
+    evidence_id: str = Field(description="ID of the discriminating evidence item")
+    log_lr_h1_over_h2: float = Field(
+        description="log(LR_h1 / LR_h2) using effective LRs from the testing matrix. "
+        "Positive means the evidence favors h1 over h2; negative favors h2."
+    )
+    favors: Literal["h1", "h2"] = Field(
+        description="Which hypothesis this evidence favors: 'h1' or 'h2'."
+    )
+    strength: DiscriminatorStrength = Field(
+        description="'decisive' if |log_lr| >= log(5) ≈ 1.61; 'strong' if >= log(2) ≈ 0.69."
+    )
+    diagnostic_type_h1: Optional[DiagnosticType] = Field(
+        default=None,
+        description="Van Evera type assigned by the LLM for this evidence under h1.",
+    )
+    diagnostic_type_h2: Optional[DiagnosticType] = Field(
+        default=None,
+        description="Van Evera type assigned by the LLM for this evidence under h2.",
+    )
+
+
+class RivalPairDiagnostic(BaseModel):
+    """Discriminator summary for one rival hypothesis pair."""
+    h1_id: str
+    h2_id: str
+    discriminators: list[RivalDiscriminator] = Field(
+        description="Evidence items that distinguish this pair (|log LR_h1/LR_h2| >= log(2))."
+    )
+    discriminator_count: int = Field(
+        ge=0,
+        description="Number of discriminating evidence items for this pair.",
+    )
+    grade_capped: bool = Field(
+        description="True if discriminator_count == 0; an A-level claim requires at least one "
+        "source-grounded discriminator per rival pair."
+    )
+
+
+class DiagnosticMatrix(BaseModel):
+    """Derived artifact: which evidence items discriminate which rival pairs.
+
+    Computed deterministically from the testing result's likelihood vectors.
+    No LLM call required. A grade cap is applied for every pair with zero discriminators.
+    """
+    rival_pair_diagnostics: list[RivalPairDiagnostic] = Field(
+        description="One entry per rival hypothesis pair."
+    )
+    pairs_without_discriminators: list[list[str]] = Field(
+        default_factory=list,
+        description="Pairs of [h1_id, h2_id] with zero discriminating evidence items.",
+    )
+    grade_cap_applied: bool = Field(
+        description="True if any rival pair lacks discriminators."
+    )
+
+
 # ── Pass 3b: Absence-of-Evidence ───────────────────────────────────
 
 class AbsenceEvaluation(BaseModel):
@@ -527,6 +590,10 @@ class ProcessTracingResult(BaseModel):
     partition_audit: Optional[PartitionAudit] = Field(
         default=None,
         description="Pass 2.5: Hypothesis partition audit — flags overlap, complementarity, and absorptive risks before testing.",
+    )
+    diagnostic_matrix: Optional[DiagnosticMatrix] = Field(
+        default=None,
+        description="Pass 3.6: Diagnostic test matrix — which evidence items discriminate each rival pair, derived deterministically from likelihood vectors.",
     )
     refinement: Optional[RefinementResult] = None
     is_refined: bool = False

@@ -1913,6 +1913,79 @@ def generate_report(result: ProcessTracingResult) -> str:
       </div>
     </div>"""
 
+    # ===== Section 6b: Diagnostic Test Matrix =====
+    diagnostic_section = ""
+    if result.diagnostic_matrix:
+        dm = result.diagnostic_matrix
+        ev_lookup = {ev.id: ev for ev in result.extraction.evidence}
+        h_lookup = {h.id: h.description[:50] for h in result.hypothesis_space.hypotheses}
+        dm_rows = []
+        for pair in dm.rival_pair_diagnostics:
+            cap_badge = '<span class="badge bg-danger ms-1">NO DISCRIMINATORS — CAPPED</span>' if pair.grade_capped else ""
+            disc_items = []
+            for d in sorted(pair.discriminators, key=lambda x: -abs(x.log_lr_h1_over_h2))[:5]:
+                ev = ev_lookup.get(d.evidence_id)
+                ev_label = (ev.description[:55] + "…") if ev else d.evidence_id
+                strength_cls = "bg-danger" if d.strength == "decisive" else "bg-warning text-dark"
+                favors_label = pair.h1_id if d.favors == "h1" else pair.h2_id
+                lr_ratio = abs(d.log_lr_h1_over_h2)
+                disc_items.append(
+                    f'<li class="small">'
+                    f'<span class="badge {strength_cls}">{d.strength}</span> '
+                    f'<span data-bs-toggle="tooltip" title="{_esc(ev.source_text[:200]) if ev else ""}">{_esc(ev_label)}</span> '
+                    f'→ favors <strong>{_esc(favors_label)}</strong> '
+                    f'(log-ratio={lr_ratio:.2f})'
+                    f'</li>'
+                )
+            overflow = len(pair.discriminators) - 5
+            if overflow > 0:
+                disc_items.append(f'<li class="small text-muted">…and {overflow} more</li>')
+            disc_html = (
+                f'<ul class="mb-0 ps-3">{"".join(disc_items)}</ul>'
+                if disc_items
+                else '<span class="text-muted small">none</span>'
+            )
+            dm_rows.append(f"""
+            <tr>
+              <td class="small"><code>{_esc(pair.h1_id)}</code> <span class="text-muted">vs</span> <code>{_esc(pair.h2_id)}</code>{cap_badge}</td>
+              <td class="small">{_esc(h_lookup.get(pair.h1_id, pair.h1_id))}</td>
+              <td class="small">{_esc(h_lookup.get(pair.h2_id, pair.h2_id))}</td>
+              <td>{_esc(str(pair.discriminator_count))}</td>
+              <td>{disc_html}</td>
+            </tr>""")
+        cap_note = (
+            f'<div class="alert alert-danger mb-3 small">A-level claim blocked: '
+            f'{len(dm.pairs_without_discriminators)} rival pair(s) have no source-grounded discriminators. '
+            f'These pairs: {", ".join(f"{p[0]}↔{p[1]}" for p in dm.pairs_without_discriminators)}.'
+            f'</div>'
+            if dm.grade_cap_applied else ""
+        )
+        diagnostic_section = f"""
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0" data-bs-toggle="tooltip" title="For each rival pair, which evidence items discriminate between them (LR ratio ≥ 2×). An A-level claim requires at least one source-grounded discriminator per pair. Derived deterministically from the likelihood matrix — no additional LLM call.">Diagnostic Test Matrix</h4>
+        <button class="btn btn-sm btn-outline-primary section-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#diagnosticBody">Expand</button>
+      </div>
+      <div class="collapse" id="diagnosticBody">
+        <div class="card-body">
+          {cap_note}
+          <p class="small text-muted">Discriminators are evidence items where |log(LR_h1/LR_h2)| ≥ log(2). Strong = 2–5× LR ratio; decisive = 5×+. Up to 5 strongest shown per pair.</p>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped sortable-table" id="diagnostic-matrix-table">
+              <thead><tr>
+                {_th("Rival pair")}
+                {_th("H1 description")}
+                {_th("H2 description")}
+                {_th("# discriminators")}
+                {_th("Top discriminators")}
+              </tr></thead>
+              <tbody>{''.join(dm_rows)}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>"""
+
     # ===== Section 7: Evidence List (collapsed by default) =====
     _GENRE_BADGE: dict[str, str] = {
         "overview": "bg-secondary",
@@ -2290,6 +2363,7 @@ def generate_report(result: ProcessTracingResult) -> str:
   {robustness_section}
   {test_matrix}
   {bayesian_section}
+  {diagnostic_section}
   {evidence_section}
   {absence_section}
   {refinement_section}

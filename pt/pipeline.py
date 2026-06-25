@@ -14,11 +14,13 @@ from pt.bayesian import INTERPRETIVE_LR_CAP, run_bayesian_update
 from pt.pass_absence import run_absence
 from pt.pass_extract import run_extract
 from pt.pass_hypothesize import run_hypothesize
+from pt.pass_diagnostic import compute_diagnostic_matrix
 from pt.pass_partition import run_partition
 from pt.pass_refine import run_refine
 from pt.pass_synthesize import run_synthesize
 from pt.pass_test import run_test
 from pt.schemas import (
+    DiagnosticMatrix,
     ExtractionResult,
     HypothesisSpace,
     PartitionAudit,
@@ -134,7 +136,7 @@ def _run_passes_3_plus(
     trace_id: str | None = None,
     priors: dict[str, float] | None = None,
 ) -> tuple:
-    """Run passes 3, 3b, Bayesian, and 4. Returns (testing, absence, bayesian, synthesis)."""
+    """Run passes 3, 3b, Bayesian, 3.6 (diagnostic matrix), and 4. Returns (testing, absence, bayesian, synthesis, diagnostic_matrix)."""
     prefix = f"{pass_label} " if pass_label else ""
 
     if verbose:
@@ -172,13 +174,21 @@ def _run_passes_3_plus(
         )
         print(f"  Top hypothesis: {top} (support: {top_post:.3f})")
 
+    interpretive_ids = {ev.id for ev in extraction.evidence if ev.evidence_type == "interpretive"}
+    diagnostic_matrix = compute_diagnostic_matrix(testing, hypothesis_space, interpretive_ids)
+    if verbose:
+        n_pairs = len(diagnostic_matrix.rival_pair_diagnostics)
+        n_capped = len(diagnostic_matrix.pairs_without_discriminators)
+        cap_note = f" [{n_capped} pairs capped — no discriminators]" if n_capped else ""
+        print(f"  Diagnostic matrix: {n_pairs} rival pairs{cap_note}")
+
     if verbose:
         print(f"{prefix}Pass 4: Synthesizing analysis...")
     synthesis = run_synthesize(extraction, hypothesis_space, testing, bayesian, absence, model=model, trace_id=trace_id)
     if verbose:
         print(f"  Narrative: {len(synthesis.analytical_narrative)} chars")
 
-    return testing, absence, bayesian, synthesis
+    return testing, absence, bayesian, synthesis, diagnostic_matrix
 
 
 def run_pipeline(
@@ -319,7 +329,7 @@ def run_pipeline(
                 print(f"  Partition audit: {partition_path}")
 
     # Run passes 3-4 (initial)
-    testing, absence, bayesian, synthesis = _run_passes_3_plus(
+    testing, absence, bayesian, synthesis, diagnostic_matrix = _run_passes_3_plus(
         extraction, hypothesis_space, text, model=model, verbose=verbose, trace_id=trace_id,
         priors=priors,
     )
@@ -362,7 +372,7 @@ def run_pipeline(
         # Re-run passes 3-4 with updated data
         if verbose:
             print("\nRe-running passes 3-4 with refined data...")
-        testing, absence, bayesian, synthesis = _run_passes_3_plus(
+        testing, absence, bayesian, synthesis, diagnostic_matrix = _run_passes_3_plus(
             extraction, hypothesis_space, text, model=model, verbose=verbose,
             pass_label="[Refined]", trace_id=trace_id, priors=priors,
         )
@@ -385,6 +395,7 @@ def run_pipeline(
         extraction=extraction,
         hypothesis_space=hypothesis_space,
         partition_audit=partition_audit,
+        diagnostic_matrix=diagnostic_matrix,
         testing=testing,
         absence=absence,
         bayesian=bayesian,
