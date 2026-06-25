@@ -401,6 +401,21 @@ def _academic_caps(
             track="conditional",
         )
 
+    if result.diagnostic_matrix and result.diagnostic_matrix.grade_cap_applied:
+        missing = result.diagnostic_matrix.pairs_without_discriminators
+        pair_labels = ", ".join(f"{p[0]}↔{p[1]}" for p in missing[:5])
+        overflow = len(missing) - 5
+        if overflow > 0:
+            pair_labels += f" (+{overflow} more)"
+        add(
+            82,
+            f"{len(missing)} rival pair(s) have no source-grounded discriminators: {pair_labels}.",
+            "Add or pre-specify evidence items that would distinguish these pairs — at least one hoop, smoking-gun, or doubly-decisive item per rival pair.",
+            "test_design",
+            "Every rival pair has at least one evidence item with |log(LR_h1/LR_h2)| >= log(2) (a 2× likelihood ratio difference).",
+            track="conditional",
+        )
+
     total = temporal["total"] or 1
     proximate_share = temporal["proximate"] / total
     if proximate_share < 0.20:
