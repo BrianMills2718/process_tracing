@@ -12,11 +12,21 @@ import math
 from pathlib import Path
 from typing import Optional
 
-from pt.schemas import BayesianResult, ExtractionResult, HypothesisSpace, TestingResult
+from pt.schemas import (
+    BayesianResult,
+    ExtractionResult,
+    HypothesisSpace,
+    RefinementResult,
+    TestingResult,
+)
 from pt.schemas_view import (
     ClusterOverlay,
+    DeltaViewPayload,
     MatrixRow,
     MatrixViewPayload,
+    PosteriorShift,
+    ProvenanceRow,
+    ProvenanceViewPayload,
     SupportBar,
     SupportViewPayload,
     ViewPayload,
@@ -29,6 +39,10 @@ def build_view_payload(run_dir: Path, stage_id: str) -> Optional[ViewPayload]:
         return build_matrix_payload(run_dir)
     if stage_id == "update":
         return build_support_payload(run_dir)
+    if stage_id == "synthesize":
+        return build_provenance_payload(run_dir)
+    if stage_id == "refine":
+        return build_delta_payload(run_dir)
     return None
 
 
@@ -152,4 +166,98 @@ def build_support_payload(run_dir: Path) -> SupportViewPayload:
         perturbation_factor=ps.perturbation_factor if ps else 2.0,
         fragile_warning=fragile_warning,
         rank_instability_warning=rank_instability_warning,
+    )
+
+
+def build_provenance_payload(run_dir: Path) -> ProvenanceViewPayload:
+    """Project TestingResult + ExtractionResult (+ optional source_coverage) → ProvenanceViewPayload."""
+    testing = TestingResult.model_validate(
+        json.loads((run_dir / "testing.json").read_bytes())
+    )
+    extraction = ExtractionResult.model_validate(
+        json.loads((run_dir / "extraction.json").read_bytes())
+    )
+
+    # Optional: map evidence_id → packet source marker from result.json source_coverage
+    marker_for: dict[str, str] = {}
+    result_path = run_dir / "result.json"
+    if result_path.exists():
+        try:
+            sc = json.loads(result_path.read_bytes()).get("source_coverage") or {}
+            for item in sc.get("items", []):
+                markers = item.get("text_markers") or [item.get("source_id", "")]
+                label = markers[0] if markers else None
+                if label:
+                    for eid in item.get("evidence_ids", []):
+                        marker_for[eid] = label
+        except Exception:
+            pass
+
+    evidence_lookup = {e.id: e for e in extraction.evidence}
+
+    rows: list[ProvenanceRow] = []
+    for el in testing.evidence_likelihoods:
+        lr_vals = {hl.hypothesis_id: hl.relative_likelihood for hl in el.hypothesis_likelihoods}
+        if lr_vals:
+            favored = max(lr_vals, key=lambda k: lr_vals[k])
+            peak_lr = lr_vals[favored]
+        else:
+            favored = ""
+            peak_lr = 1.0
+        ev = evidence_lookup.get(el.evidence_id)
+        rows.append(
+            ProvenanceRow(
+                evidence_id=el.evidence_id,
+                source_quote_snippet=(ev.source_text[:120] if ev else el.evidence_id),
+                source_marker=marker_for.get(el.evidence_id),
+                favored_hypothesis_id=favored,
+                peak_lr=peak_lr,
+            )
+        )
+
+    rows.sort(
+        key=lambda r: abs(math.log(max(r.peak_lr, 1e-9))),
+        reverse=True,
+    )
+    return ProvenanceViewPayload(
+        rows=rows,
+        items_with_marker=sum(1 for r in rows if r.source_marker is not None),
+        items_total=len(rows),
+    )
+
+
+def build_delta_payload(run_dir: Path) -> DeltaViewPayload:
+    """Project RefinementResult + optional pre_refine/bayesian.json → DeltaViewPayload."""
+    refinement = RefinementResult.model_validate(
+        json.loads((run_dir / "refinement.json").read_bytes())
+    )
+
+    pre_refine_dir = run_dir / "pre_refine"
+    pre_refine_available = (pre_refine_dir / "bayesian.json").exists()
+    posterior_shifts: list[PosteriorShift] = []
+
+    if pre_refine_available:
+        pre_bay = BayesianResult.model_validate(
+            json.loads((pre_refine_dir / "bayesian.json").read_bytes())
+        )
+        post_bay = BayesianResult.model_validate(
+            json.loads((run_dir / "bayesian.json").read_bytes())
+        )
+        pre_map = {p.hypothesis_id: p.final_posterior for p in pre_bay.posteriors}
+        post_map = {p.hypothesis_id: p.final_posterior for p in post_bay.posteriors}
+        for hid, before in pre_map.items():
+            after = post_map.get(hid, before)
+            posterior_shifts.append(
+                PosteriorShift(hypothesis_id=hid, before=before, after=after, delta=after - before)
+            )
+        posterior_shifts.sort(key=lambda s: abs(s.delta), reverse=True)
+
+    hyp_refined_ids = {r.hypothesis_id for r in refinement.hypothesis_refinements}
+    return DeltaViewPayload(
+        new_evidence_count=len(refinement.new_evidence),
+        reinterpreted_count=len(refinement.reinterpreted_evidence),
+        spurious_count=len(refinement.spurious_extractions),
+        hypothesis_refined_count=len(hyp_refined_ids),
+        posterior_shifts=posterior_shifts,
+        pre_refine_available=pre_refine_available,
     )
