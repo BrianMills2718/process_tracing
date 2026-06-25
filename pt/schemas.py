@@ -605,6 +605,67 @@ class SynthesisResult(BaseModel):
     suggested_further_tests: list[str]
 
 
+# ── Structural Critic (Pass 3.7) ────────────────────────────────────
+
+CriticFindingType = Literal[
+    "confound",          # a third variable explains both cause and effect
+    "missing_pathway",   # a causal mechanism missing from the extraction
+    "void_link",         # a causal edge with no evidentiary support in the matrix
+    "too_strong_claim",  # a diagnostic type not justified by the justification text
+    "confirmed_link",    # a well-supported causal link worth explicitly affirming
+]
+
+
+class CriticFinding(BaseModel):
+    finding_type: CriticFindingType
+    target: str = Field(
+        description="ID of the evidence item, hypothesis, or causal edge (format: 'src_id->tgt_id') "
+        "this finding refers to. Use an exact ID from the input data."
+    )
+    target_type: Literal["evidence", "hypothesis", "causal_edge"] = Field(
+        description="'evidence' for an evidence_id, 'hypothesis' for a hypothesis_id, "
+        "'causal_edge' for a 'src_id->tgt_id' edge string."
+    )
+    severity: Literal["high", "medium", "low"] = Field(
+        description="'high' if this likely distorts posterior rankings; 'medium' if worth correcting; "
+        "'low' if informational only."
+    )
+    reasoning: str = Field(description="Why this is a structural problem and what supports the concern.")
+    recommendation: str = Field(description="Concrete action: re-elicit, cluster, merge, or discard.")
+
+
+class CriticResult(BaseModel):
+    findings: list[CriticFinding] = []
+    summary: str = Field(description="2-3 sentence overall structural assessment.")
+    re_elicitation_needed: bool = Field(
+        default=False,
+        description="Computed post-parse: True if any finding has severity='high'. "
+        "Do not set this field — it is derived automatically.",
+    )
+
+    @model_validator(mode="after")
+    def _compute_re_elicitation(self) -> "CriticResult":
+        """re_elicitation_needed is deterministic: any high-severity finding triggers a re-run."""
+        self.re_elicitation_needed = any(f.severity == "high" for f in self.findings)
+        return self
+
+
+class CriticDelta(BaseModel):
+    """Per-hypothesis posterior change between base and critic runs."""
+    hypothesis_id: str
+    posterior_base: float
+    posterior_critic: float
+    delta: float = Field(description="posterior_critic - posterior_base")
+    top_driver_change: list[str] = Field(
+        default_factory=list,
+        description="Evidence IDs added or removed from top drivers between runs.",
+    )
+    critic_findings_count: int = Field(
+        default=0,
+        description="Number of critic findings targeting this hypothesis or its evidence.",
+    )
+
+
 # ── Combined Result ─────────────────────────────────────────────────
 
 class ProcessTracingResult(BaseModel):
@@ -636,3 +697,8 @@ class ProcessTracingResult(BaseModel):
     )
     refinement: Optional[RefinementResult] = None
     is_refined: bool = False
+    critic: Optional[CriticResult] = Field(
+        default=None,
+        description="Pass 3.7: Structural critic findings — confounds, missing pathways, void links, "
+        "too-strong claims, and confirmed links. Populated only when --critic flag is active.",
+    )

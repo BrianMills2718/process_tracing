@@ -12,6 +12,7 @@ from uuid import uuid4
 from pt.apply_refinement import apply_refinement
 from pt.bayesian import INTERPRETIVE_LR_CAP, run_bayesian_update
 from pt.pass_absence import run_absence
+from pt.pass_critic import run_critic
 from pt.pass_extract import run_extract
 from pt.pass_hypothesize import run_hypothesize
 from pt.pass_diagnostic import compute_diagnostic_matrix
@@ -20,12 +21,17 @@ from pt.pass_refine import run_refine
 from pt.pass_synthesize import run_synthesize
 from pt.pass_test import run_test
 from pt.schemas import (
+    AbsenceResult,
+    BayesianResult,
+    CriticDelta,
+    CriticResult,
     DiagnosticMatrix,
     ExtractionResult,
     HypothesisSpace,
     PartitionAudit,
     ProcessTracingResult,
     RefinementResult,
+    TestingResult,
 )
 from pt.source_coverage import build_source_coverage
 from pt.source_packet import SourcePacket
@@ -125,23 +131,30 @@ def _default_refine_review(refinement: RefinementResult, output_dir: str | None)
     return RefinementResult.model_validate(edited)
 
 
-def _run_passes_3_plus(
+def _run_core_passes(
     extraction: ExtractionResult,
     hypothesis_space: HypothesisSpace,
-    text: str,
     *,
     model: str | None = None,
     verbose: bool = True,
     pass_label: str = "",
     trace_id: str | None = None,
     priors: dict[str, float] | None = None,
-) -> tuple:
-    """Run passes 3, 3b, Bayesian, 3.6 (diagnostic matrix), and 4. Returns (testing, absence, bayesian, synthesis, diagnostic_matrix)."""
+    critic_context: str | None = None,
+) -> tuple[TestingResult, AbsenceResult, BayesianResult, DiagnosticMatrix]:
+    """Run passes 3, 3b, Bayesian update, and 3.6 (diagnostic matrix).
+
+    Returns (testing, absence, bayesian, diagnostic_matrix) without synthesis.
+    critic_context: optional critic summary to inject into Pass 3 re-elicitation.
+    """
     prefix = f"{pass_label} " if pass_label else ""
 
     if verbose:
-        print(f"{prefix}Pass 3: Diagnostic testing ({len(hypothesis_space.hypotheses)} hypotheses)...")
-    testing = run_test(extraction, hypothesis_space, model=model, trace_id=trace_id)
+        ctx_note = " [with critic context]" if critic_context else ""
+        print(f"{prefix}Pass 3: Diagnostic testing ({len(hypothesis_space.hypotheses)} hypotheses){ctx_note}...")
+    testing = run_test(
+        extraction, hypothesis_space, model=model, trace_id=trace_id, critic_context=critic_context
+    )
     if verbose:
         print(f"  {len(testing.evidence_likelihoods)} evidence likelihood vectors "
               f"across {len(hypothesis_space.hypotheses)} hypotheses")
@@ -182,13 +195,87 @@ def _run_passes_3_plus(
         cap_note = f" [{n_capped} pairs capped — no discriminators]" if n_capped else ""
         print(f"  Diagnostic matrix: {n_pairs} rival pairs{cap_note}")
 
+    return testing, absence, bayesian, diagnostic_matrix
+
+
+def _run_passes_3_plus(
+    extraction: ExtractionResult,
+    hypothesis_space: HypothesisSpace,
+    text: str,
+    *,
+    model: str | None = None,
+    verbose: bool = True,
+    pass_label: str = "",
+    trace_id: str | None = None,
+    priors: dict[str, float] | None = None,
+) -> tuple:
+    """Run passes 3, 3b, Bayesian, 3.6, and 4. Returns (testing, absence, bayesian, synthesis, diagnostic_matrix)."""
+    prefix = f"{pass_label} " if pass_label else ""
+
+    testing, absence, bayesian, diagnostic_matrix = _run_core_passes(
+        extraction, hypothesis_space,
+        model=model, verbose=verbose, pass_label=pass_label, trace_id=trace_id, priors=priors,
+    )
+
     if verbose:
         print(f"{prefix}Pass 4: Synthesizing analysis...")
-    synthesis = run_synthesize(extraction, hypothesis_space, testing, bayesian, absence, model=model, trace_id=trace_id)
+    synthesis = run_synthesize(
+        extraction, hypothesis_space, testing, bayesian, absence, model=model, trace_id=trace_id
+    )
     if verbose:
         print(f"  Narrative: {len(synthesis.analytical_narrative)} chars")
 
     return testing, absence, bayesian, synthesis, diagnostic_matrix
+
+
+def _compute_critic_delta(
+    base_bayesian: BayesianResult,
+    critic_bayesian: BayesianResult,
+    critic_result: CriticResult,
+) -> list[CriticDelta]:
+    """Compute per-hypothesis posterior change between base and critic runs."""
+    base_map = {p.hypothesis_id: p for p in base_bayesian.posteriors}
+    critic_map = {p.hypothesis_id: p for p in critic_bayesian.posteriors}
+
+    # Which evidence IDs does each critic finding target?
+    ev_targets_by_hyp: dict[str, set[str]] = {}
+    for f in critic_result.findings:
+        if f.target_type == "evidence":
+            # Evidence-level findings affect all hypotheses
+            for h in base_map:
+                ev_targets_by_hyp.setdefault(h, set()).add(f.target)
+
+    deltas = []
+    all_hyp_ids = sorted(set(base_map) | set(critic_map))
+    for hyp_id in all_hyp_ids:
+        base_p = base_map.get(hyp_id)
+        critic_p = critic_map.get(hyp_id)
+        post_base = base_p.final_posterior if base_p else 0.0
+        post_critic = critic_p.final_posterior if critic_p else 0.0
+
+        # Top-driver change: IDs in one set but not the other
+        base_drivers = set(base_p.top_drivers) if base_p else set()
+        critic_drivers = set(critic_p.top_drivers) if critic_p else set()
+        driver_changes = (
+            [f"added:{eid}" for eid in sorted(critic_drivers - base_drivers)]
+            + [f"removed:{eid}" for eid in sorted(base_drivers - critic_drivers)]
+        )
+
+        # Count critic findings that target this hypothesis or its top drivers
+        hyp_finding_count = sum(
+            1 for f in critic_result.findings
+            if f.target == hyp_id or f.target in (base_drivers | critic_drivers)
+        )
+
+        deltas.append(CriticDelta(
+            hypothesis_id=hyp_id,
+            posterior_base=round(post_base, 6),
+            posterior_critic=round(post_critic, 6),
+            delta=round(post_critic - post_base, 6),
+            top_driver_change=driver_changes,
+            critic_findings_count=hyp_finding_count,
+        ))
+    return deltas
 
 
 def run_pipeline(
@@ -207,10 +294,12 @@ def run_pipeline(
     source_packet_path: str | None = None,
     trace_id: str | None = None,
     priors: dict[str, float] | None = None,
+    critic: bool = False,
 ) -> ProcessTracingResult:
     """Run the full process tracing pipeline.
 
-    Pass 1: Extract → Pass 2: Hypothesize → [Review] → Pass 3: Test → 3b: Absence → Bayes → Pass 4: Synthesize
+    Pass 1: Extract → Pass 2: Hypothesize → [Review] → Pass 3: Test → 3b: Absence → Bayes → 3.6 →
+    [Pass 3.7: Critic] → Pass 4: Synthesize
     With --refine: → Pass 5: Refine → [Review] → Apply → Re-run passes 3-4
 
     Args:
@@ -224,6 +313,9 @@ def run_pipeline(
         from_result: Load extraction + hypothesis_space from existing result, skip passes 1-2. Implies refine.
         source_packet: Optional source-packet contract that pins source scope,
             observability assumptions, and the research question before inference.
+        critic: If True, run structural critic (Pass 3.7) after diagnostic matrix and before
+            synthesis. Writes result_base.json, result_critic.json, and critic_delta.json to
+            output_dir. Re-elicits Pass 3 when high-severity findings are present.
     """
     t0 = time.time()
     if trace_id is None:
@@ -329,10 +421,112 @@ def run_pipeline(
                 print(f"  Partition audit: {partition_path}")
 
     # Run passes 3-4 (initial)
-    testing, absence, bayesian, synthesis, diagnostic_matrix = _run_passes_3_plus(
-        extraction, hypothesis_space, text, model=model, verbose=verbose, trace_id=trace_id,
-        priors=priors,
-    )
+    critic_result: CriticResult | None = None
+
+    if critic:
+        # Run core passes (3, 3b, Bayesian, 3.6) without synthesis first
+        if verbose:
+            print("Pass 3/4: Running core passes (critic mode — synthesis deferred)...")
+        testing, absence, bayesian, diagnostic_matrix = _run_core_passes(
+            extraction, hypothesis_space,
+            model=model, verbose=verbose, trace_id=trace_id, priors=priors,
+        )
+
+        # Run synthesis for the base snapshot (needed for result_base.json audit)
+        if verbose:
+            print("Pass 4 (base): Synthesizing for base snapshot...")
+        synthesis_base = run_synthesize(
+            extraction, hypothesis_space, testing, bayesian, absence,
+            model=model, trace_id=f"{trace_id}-base",
+        )
+
+        # Write result_base.json
+        if output_dir:
+            base_result = ProcessTracingResult(
+                source_text_sha256=source_text_sha256,
+                extraction=extraction,
+                hypothesis_space=hypothesis_space,
+                partition_audit=partition_audit,
+                diagnostic_matrix=diagnostic_matrix,
+                testing=testing,
+                absence=absence,
+                bayesian=bayesian,
+                synthesis=synthesis_base,
+                source_packet=source_packet_summary,
+            )
+            base_path = os.path.join(output_dir, "result_base.json")
+            with open(base_path, "w", encoding="utf-8") as f:
+                json.dump(base_result.model_dump(), f, indent=2)
+            if verbose:
+                print(f"  Base snapshot: {base_path}")
+
+        # Run structural critic (Pass 3.7)
+        if verbose:
+            print("Pass 3.7: Structural critic review...")
+        critic_result = run_critic(
+            extraction, hypothesis_space, testing, diagnostic_matrix,
+            model=model, trace_id=f"{trace_id}-critic",
+        )
+        base_bayesian = bayesian  # save for delta computation
+
+        # Re-elicit Pass 3 if high-severity findings were found
+        if critic_result.re_elicitation_needed:
+            if verbose:
+                print("  Re-eliciting Pass 3 with critic context...")
+            testing, absence, bayesian, diagnostic_matrix = _run_core_passes(
+                extraction, hypothesis_space,
+                model=model, verbose=verbose, pass_label="[Critic re-elicit]",
+                trace_id=f"{trace_id}-reelicit", priors=priors,
+                critic_context=critic_result.summary,
+            )
+
+        # Final synthesis (after re-elicitation if it happened, or base data if not)
+        if verbose:
+            print("Pass 4 (critic): Final synthesis...")
+        synthesis = run_synthesize(
+            extraction, hypothesis_space, testing, bayesian, absence,
+            model=model, trace_id=f"{trace_id}-critic-synth",
+        )
+        if verbose:
+            print(f"  Narrative: {len(synthesis.analytical_narrative)} chars")
+
+        # Compute and write critic delta
+        if output_dir:
+            deltas = _compute_critic_delta(base_bayesian, bayesian, critic_result)
+            delta_path = os.path.join(output_dir, "critic_delta.json")
+            with open(delta_path, "w", encoding="utf-8") as f:
+                json.dump([d.model_dump() for d in deltas], f, indent=2)
+            if verbose:
+                n_moved = sum(1 for d in deltas if abs(d.delta) > 0.001)
+                print(f"  Critic delta: {delta_path} ({n_moved}/{len(deltas)} hypotheses moved)")
+
+        # Write result_critic.json (snapshot after critic intervention)
+        if output_dir:
+            critic_result_obj = ProcessTracingResult(
+                source_text_sha256=source_text_sha256,
+                extraction=extraction,
+                hypothesis_space=hypothesis_space,
+                partition_audit=partition_audit,
+                diagnostic_matrix=diagnostic_matrix,
+                testing=testing,
+                absence=absence,
+                bayesian=bayesian,
+                synthesis=synthesis,
+                source_packet=source_packet_summary,
+                critic=critic_result,
+            )
+            critic_path = os.path.join(output_dir, "result_critic.json")
+            with open(critic_path, "w", encoding="utf-8") as f:
+                json.dump(critic_result_obj.model_dump(), f, indent=2)
+            if verbose:
+                print(f"  Critic snapshot: {critic_path}")
+
+    else:
+        # Standard flow: no critic
+        testing, absence, bayesian, synthesis, diagnostic_matrix = _run_passes_3_plus(
+            extraction, hypothesis_space, text, model=model, verbose=verbose, trace_id=trace_id,
+            priors=priors,
+        )
 
     refinement_result = None
 
@@ -404,4 +598,5 @@ def run_pipeline(
         source_coverage=source_coverage,
         refinement=refinement_result,
         is_refined=refine,
+        critic=critic_result,
     )

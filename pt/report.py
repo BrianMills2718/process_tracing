@@ -1986,6 +1986,89 @@ def generate_report(result: ProcessTracingResult) -> str:
       </div>
     </div>"""
 
+    # ===== Section 6c: Structural Critic (collapsed by default) =====
+    _CRITIC_SEVERITY_COLOR = {"high": "danger", "medium": "warning", "low": "secondary"}
+    _CRITIC_TYPE_COLOR = {
+        "confound": "danger",
+        "missing_pathway": "warning",
+        "void_link": "secondary",
+        "too_strong_claim": "warning",
+        "confirmed_link": "success",
+    }
+
+    critic_section = ""
+    if result.critic:
+        cr = result.critic
+        reelicit_note = ""
+        if cr.re_elicitation_needed:
+            reelicit_note = (
+                '<div class="alert alert-info mt-2 mb-2 py-2 px-3">'
+                '<strong>Pass 3 was re-elicited</strong> after high-severity findings. '
+                'result_critic.json contains updated posteriors; result_base.json has the pre-critic snapshot.'
+                '</div>'
+            )
+
+        # Build findings table
+        ev_ids = {ev.id for ev in result.extraction.evidence}
+        hyp_ids = {h.id for h in result.hypothesis_space.hypotheses}
+        finding_rows = []
+        for f in cr.findings:
+            sev_color = _CRITIC_SEVERITY_COLOR.get(f.severity, "secondary")
+            type_color = _CRITIC_TYPE_COLOR.get(f.finding_type, "secondary")
+            # Link target to evidence/hypothesis anchor if it exists in the report
+            target_html = _esc(f.target)
+            if f.target_type == "evidence" and f.target in ev_ids:
+                target_html = f'<a href="#ev-{_esc(f.target)}">{_esc(f.target)}</a>'
+            elif f.target_type == "hypothesis" and f.target in hyp_ids:
+                target_html = f'<a href="#hyp-{_esc(f.target)}">{_esc(f.target)}</a>'
+
+            finding_rows.append(f"""
+            <tr>
+              <td><span class="badge bg-{type_color}">{_esc(f.finding_type)}</span></td>
+              <td class="small font-monospace">{target_html}</td>
+              <td><span class="badge bg-{sev_color}">{_esc(f.severity)}</span></td>
+              <td class="small">{_esc(f.reasoning)}</td>
+              <td class="small">{_esc(f.recommendation)}</td>
+            </tr>""")
+
+        findings_html = ""
+        if finding_rows:
+            findings_html = f"""
+          <div class="table-responsive mt-3">
+            <table class="table table-sm table-striped">
+              <thead><tr>
+                <th>Type</th><th>Target</th><th>Severity</th><th>Reasoning</th><th>Recommendation</th>
+              </tr></thead>
+              <tbody>{''.join(finding_rows)}</tbody>
+            </table>
+          </div>"""
+        else:
+            findings_html = '<p class="text-muted small mt-2">No findings.</p>'
+
+        n_high = sum(1 for f in cr.findings if f.severity == "high")
+        n_finding_badge = (
+            f'<span class="badge bg-danger ms-2">{n_high} high</span>'
+            if n_high else
+            f'<span class="badge bg-secondary ms-2">{len(cr.findings)} findings</span>'
+        )
+
+        critic_section = f"""
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0" data-bs-toggle="tooltip" title="Structural review of causal graph and likelihood claims. Flags confounds, missing pathways, void links, too-strong claims, and confirmed links. Advisory only — numeric changes route through re-elicitation of Pass 3.">
+          Structural Critic{n_finding_badge}
+        </h4>
+        <button class="btn btn-sm btn-outline-primary section-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#criticBody">Expand</button>
+      </div>
+      <div class="collapse" id="criticBody">
+        <div class="card-body">
+          {reelicit_note}
+          <p class="small text-muted mb-2">{_esc(cr.summary)}</p>
+          {findings_html}
+        </div>
+      </div>
+    </div>"""
+
     # ===== Section 7: Evidence List (collapsed by default) =====
     _GENRE_BADGE: dict[str, str] = {
         "overview": "bg-secondary",
@@ -2373,6 +2456,7 @@ def generate_report(result: ProcessTracingResult) -> str:
   {test_matrix}
   {bayesian_section}
   {diagnostic_section}
+  {critic_section}
   {evidence_section}
   {absence_section}
   {refinement_section}

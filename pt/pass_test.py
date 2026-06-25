@@ -210,8 +210,13 @@ def run_test(
     *,
     model: str | None = None,
     trace_id: str | None = None,
+    critic_context: str | None = None,
 ) -> TestingResult:
-    """Elicit the evidence×hypothesis likelihood matrix in a single call."""
+    """Elicit the evidence×hypothesis likelihood matrix in a single call.
+
+    critic_context: optional summary from Pass 3.7 structural critic to inject
+    into the prompt when re-eliciting after a critic review.
+    """
     if trace_id is None:
         trace_id = uuid4().hex[:8]
 
@@ -243,6 +248,7 @@ def run_test(
         hypotheses_json=json.dumps(brief_hypotheses, indent=2),
         evidence_json=json.dumps(evidence_json, indent=2),
         hypothesis_ids=json.dumps([h.id for h in hyps]),
+        critic_context=critic_context or "",
     )
     expected_hyp_ids = [h.id for h in hyps]
     expected_ev_ids = [e.id for e in evidence]

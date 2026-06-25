@@ -141,6 +141,23 @@ messages:
       items a hypothesis truly stakes its case on. Conversely, do NOT inflate a label beyond its
       ratio: a 1.5× tilt is a straw, not a smoking gun.
 
+      {% if critic_context %}
+      ## Structural critic findings (address these in your vector elicitation)
+
+      A prior elicitation of this likelihood matrix was reviewed by a structural critic.
+      The following issues were flagged. Take them into account when assigning relative
+      likelihoods — do not simply reproduce the prior scores. Specifically:
+      - For **confound** findings: control for the named third variable when scoring the
+        affected evidence item. Do not give the hypothesis extra credit for evidence that
+        the confound also predicts.
+      - For **void_link** findings: if an edge has no evidentiary support, discount
+        evidence that relies on that mechanism operating.
+      - For **too_strong_claim** findings: downgrade the diagnostic label to match the
+        actual strength of the justification; do not re-inflate it.
+
+      {{ critic_context }}
+
+      {% endif %}
       ## Hypotheses (assign a likelihood for EACH, for EVERY evidence item)
 
       {{ hypotheses_json }}

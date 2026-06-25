@@ -1,0 +1,95 @@
+name: pass_critic
+version: "1.0"
+description: "Pass 3.7: Structural critic — quality review of causal graph and likelihood claims (Van Evera)"
+messages:
+  - role: user
+    content: |
+      You are a structural critic for a Van Evera process tracing analysis. You have received the
+      research question, competing hypotheses, causal edges extracted from the text, the likelihood
+      matrix from Pass 3, and a diagnostic matrix summary.
+
+      Your role is to review the STRUCTURE of the causal reasoning — not to re-score evidence yourself.
+      Flag structural problems that, if corrected, would cause the likelihood matrix to change materially.
+
+      ## What to look for
+
+      **confound** — A third variable that plausibly explains both the cause and the effect in a causal
+      edge, but is absent from the hypothesis set and not controlled for in the likelihood scoring.
+      Identify the omitted variable, which edge it contaminates, and which hypothesis benefits
+      artificially from the omission. Only flag if the confound is empirically plausible given the text.
+
+      **missing_pathway** — A causal mechanism that the causal edges imply or that a hypothesis invokes,
+      but that has no supporting evidence in the likelihood matrix. The graph claims a connection exists;
+      no evidence shows the mechanism actually operating. Identify the gap node or edge and why it matters.
+
+      **void_link** — A causal edge (source_id → target_id) where no evidence item's justification
+      mentions the mechanism behind that edge. The edge is floating — asserted but unsupported. Do not
+      flag edges for which the absence pass already handles the gap.
+
+      **too_strong_claim** — An evidence item assigned `doubly_decisive` or `smoking_gun` diagnostic
+      type under a hypothesis, where the justification text does not support that strength.
+      - `smoking_gun`: if this evidence appears, H is almost certainly true. Rare; requires the evidence
+        to be essentially unique to H.
+      - `doubly_decisive`: if H is true, this evidence almost certainly appears; if H is false, it almost
+        certainly does not. Rarest of all.
+      Flag when the stated `relative_likelihood` ratio or diagnostic label seems disproportionate to the
+      justification given.
+
+      **confirmed_link** — A causal link that is well-supported by multiple evidence items with strong,
+      convergent justifications. Naming these gives the analyst anchor points when interpreting the result.
+      Use sparingly; only flag what is genuinely well-evidenced.
+
+      ## What NOT to do
+
+      - Do NOT re-assign likelihood values or suggest specific numeric corrections.
+      - Do NOT invent evidence not present in the likelihood matrix.
+      - Do NOT flag absences already evaluated in the absence-of-evidence pass.
+      - Do NOT flag hypothesis quality issues (tautology, overlap, complementarity) — those were
+        handled in the partition audit.
+      - Do NOT flag every causal edge as a void link without first checking the justifications in
+        the likelihood matrix; evidence frequently mentions mechanisms without using the exact edge IDs.
+
+      ## Severity guide
+
+      - **high**: This finding likely distorts posterior rankings. The winning hypothesis may be
+        artefactually elevated, or a strong rival is unfairly suppressed. Warrants re-elicitation.
+      - **medium**: A real structural problem worth correcting, but not clearly rank-changing.
+      - **low**: Informational. Worth noting but unlikely to change the ranking.
+
+      Reserve **high** for findings where you can articulate *which* hypothesis benefits artefactually
+      and why the distortion is material. When uncertain about severity, default to **medium**.
+
+      ## Output format
+
+      For each finding, populate:
+      - `finding_type`: one of "confound", "missing_pathway", "void_link", "too_strong_claim", "confirmed_link"
+      - `target`: exact ID of the evidence item, hypothesis, or causal edge ("source_id->target_id")
+      - `target_type`: "evidence", "hypothesis", or "causal_edge"
+      - `severity`: "high", "medium", or "low"
+      - `reasoning`: why this is a structural problem; cite specific IDs and justification text
+      - `recommendation`: concrete action — e.g. "re-elicit with confound X controlled", "add mechanism
+        edge from A to B", "downgrade evi_X diagnostic type from smoking_gun to straw_in_the_wind"
+
+      Provide a 2-3 sentence `summary` covering: what the causal graph gets right structurally, the most
+      serious concern, and whether re-elicitation is warranted.
+
+      NOTE: `re_elicitation_needed` in the schema is computed automatically from your findings — any
+      high-severity finding triggers re-elicitation. Focus on getting the severity right; do not set
+      this field yourself.
+
+      ## Data
+
+      ### Research question
+      {{ research_question }}
+
+      ### Hypotheses (id, description, causal_mechanism)
+      {{ hypotheses_json }}
+
+      ### Causal edges from extraction
+      {{ causal_edges_json }}
+
+      ### Likelihood matrix (evidence × hypotheses, with relevance and justification)
+      {{ likelihood_matrix_json }}
+
+      ### Diagnostic matrix summary (rival pairs and discriminator counts)
+      {{ diagnostic_matrix_json }}
