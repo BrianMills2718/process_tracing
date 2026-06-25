@@ -474,6 +474,26 @@ class AbsenceEvaluation(BaseModel):
     would_be_extractable: bool = Field(
         description="Would this evidence appear in a text of this scope if it existed?"
     )
+    expected_source_genre: Optional[SourceGenre] = Field(
+        default=None,
+        description=(
+            "The genre of source that would typically carry this missing trace — "
+            "e.g. 'primary_document' for correspondence, 'parliamentary_record' for debate logs, "
+            "'secondary_analysis' for academic interpretation. Populate regardless of "
+            "would_be_extractable: even when the current text cannot carry the evidence, "
+            "naming the genre tells the researcher what to acquire next."
+        ),
+    )
+    expected_source_location: Optional[str] = Field(
+        default=None,
+        description=(
+            "Specific type of source where this evidence would appear — "
+            "e.g. 'police surveillance reports from the Directory period', "
+            "'minutes of the Conseil des Cinq-Cents', 'private correspondence of Napoleon'. "
+            "Be concrete enough to drive an acquisition decision. Populate whenever "
+            "you can name a plausible archive, collection, or document type."
+        ),
+    )
 
 
 class AbsenceResult(BaseModel):

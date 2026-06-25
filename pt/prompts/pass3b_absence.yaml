@@ -34,6 +34,23 @@ messages:
 
       **Severity is capped by extractability.** A finding may only be "damaging" if `would_be_extractable` is true — i.e. the text genuinely would have carried this evidence if it existed. If the missing evidence is the kind this genre would NOT contain regardless of the hypothesis's truth, the absence tells you about the source, not the hypothesis: set `would_be_extractable` to false and severity to "minor".
 
+      ## Source acquisition guidance (required for every finding)
+
+      For every absence finding, also populate:
+
+      - `expected_source_genre`: the genre of source that would typically carry this missing trace.
+        Use one of: "overview", "primary_document", "speech", "legal_constitutional", "memoir",
+        "parliamentary_record", "secondary_analysis", "news_dispatch", "other".
+        Populate even when `would_be_extractable` is false — the genre tells the researcher
+        what kind of archive or source to acquire next, regardless of what the current text can contain.
+
+      - `expected_source_location`: a concrete, specific description of the type of source or
+        collection where this evidence would appear — e.g. "minutes of the Conseil des Cinq-Cents
+        1798–1799", "private correspondence of Napoleon Bonaparte held in Archives nationales",
+        "police surveillance reports from the Directoire period". Be specific enough to drive
+        an acquisition decision. Do not write vague phrases like "a primary source" — name the
+        document type, institution, or collection.
+
       ## Key judgment: `would_be_extractable`
 
       Would this evidence appear in a text of THIS genre if it existed in the historical record? Set to **false** whenever the missing evidence is, by its nature, not the kind a summary/overview/tertiary text records, for example:

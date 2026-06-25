@@ -13,6 +13,7 @@ import pytest
 
 from pt.pass_extract import run_extract
 from pt.schemas import (
+    AbsenceEvaluation,
     DateConfidence,
     Event,
     Evidence,
@@ -299,3 +300,104 @@ class TestTraceProductionRelevanceType:
         for val in ("direct", "indirect", "background"):
             ev = Evidence(id="evi_t", description="a" * 25, source_text="q", trace_production_relevance=val)  # type: ignore[arg-type]
             assert ev.trace_production_relevance == val
+
+
+# ── Slice 6: Source-Design / Observability-Weighted Absence ──────────
+
+def _absence_eval(**kwargs) -> AbsenceEvaluation:
+    return AbsenceEvaluation(  # type: ignore[call-overload]
+        hypothesis_id=kwargs.get("hypothesis_id", "h1"),
+        prediction_id=kwargs.get("prediction_id", "pred_h1_1"),
+        missing_evidence=kwargs.get("missing_evidence", "No evidence of X found"),
+        reasoning=kwargs.get("reasoning", "The text covers this period comprehensively"),
+        severity=kwargs.get("severity", "notable"),
+        would_be_extractable=kwargs.get("would_be_extractable", True),
+        expected_source_genre=kwargs.get("expected_source_genre", None),
+        expected_source_location=kwargs.get("expected_source_location", None),
+    )
+
+
+class TestAbsenceAcquisitionFields:
+    """New fields on AbsenceEvaluation: expected_source_genre + expected_source_location."""
+
+    def test_defaults_to_none(self):
+        ae = _absence_eval()
+        assert ae.expected_source_genre is None
+        assert ae.expected_source_location is None
+
+    def test_expected_source_genre_accepts_all_valid_literals(self):
+        valid: list[SourceGenre] = [
+            "overview", "primary_document", "speech", "legal_constitutional",
+            "memoir", "parliamentary_record", "secondary_analysis", "news_dispatch", "other",
+        ]
+        for genre in valid:
+            ae = _absence_eval(expected_source_genre=genre)
+            assert ae.expected_source_genre == genre
+
+    def test_expected_source_genre_rejects_invalid(self):
+        with pytest.raises(Exception):
+            _absence_eval(expected_source_genre="blog_post")  # type: ignore[arg-type]
+
+    def test_expected_source_location_stores_string(self):
+        ae = _absence_eval(
+            expected_source_genre="parliamentary_record",
+            expected_source_location="Minutes of the Conseil des Cinq-Cents, 1799",
+        )
+        assert ae.expected_source_location == "Minutes of the Conseil des Cinq-Cents, 1799"
+
+    def test_roundtrip_preserves_both_fields(self):
+        ae = _absence_eval(
+            expected_source_genre="primary_document",
+            expected_source_location="Napoleon's private correspondence, Archives nationales",
+        )
+        restored = AbsenceEvaluation.model_validate_json(ae.model_dump_json())
+        assert restored.expected_source_genre == "primary_document"
+        assert restored.expected_source_location == ae.expected_source_location
+
+    def test_backward_compat_old_absence_without_new_fields_loads_cleanly(self):
+        """Old result.json AbsenceEvaluation without new fields parses without error."""
+        old_style = {
+            "hypothesis_id": "h1",
+            "prediction_id": "pred_h1_1",
+            "missing_evidence": "No military order found",
+            "reasoning": "The text would mention this",
+            "severity": "damaging",
+            "would_be_extractable": True,
+        }
+        ae = AbsenceEvaluation.model_validate(old_style)
+        assert ae.expected_source_genre is None
+        assert ae.expected_source_location is None
+
+    def test_genre_independent_of_extractability(self):
+        """expected_source_genre should be populated even when would_be_extractable=False."""
+        ae = _absence_eval(
+            would_be_extractable=False,
+            expected_source_genre="primary_document",
+            expected_source_location="Police surveillance dossiers, not available in this overview",
+        )
+        assert ae.would_be_extractable is False
+        assert ae.expected_source_genre == "primary_document"
+
+    def test_prompt_contract_includes_expected_source_genre(self):
+        """Pass 3b prompt must mention expected_source_genre to instruct the LLM."""
+        import os
+        prompt_path = os.path.join(
+            os.path.dirname(__file__), "..", "pt", "prompts", "pass3b_absence.yaml"
+        )
+        with open(prompt_path) as f:
+            content = f.read()
+        assert "expected_source_genre" in content, (
+            "Pass 3b prompt must instruct the LLM to populate expected_source_genre"
+        )
+
+    def test_prompt_contract_includes_expected_source_location(self):
+        """Pass 3b prompt must mention expected_source_location to instruct the LLM."""
+        import os
+        prompt_path = os.path.join(
+            os.path.dirname(__file__), "..", "pt", "prompts", "pass3b_absence.yaml"
+        )
+        with open(prompt_path) as f:
+            content = f.read()
+        assert "expected_source_location" in content, (
+            "Pass 3b prompt must instruct the LLM to populate expected_source_location"
+        )

@@ -2071,19 +2071,27 @@ def generate_report(result: ProcessTracingResult) -> str:
             h_label = f"{hid}: {hyp.description[:60]}" if hyp else hid
             rows = ""
             for ae in aes:
-                pred_desc = pred_desc_map.get(ae.prediction_id, ae.prediction_id)
+                pred_desc = pred_desc_map.get(ae.prediction_id) or ae.prediction_id
                 extractable_tip = "Would this evidence appear in a text of this scope if it existed?"
                 extractable_badge = (
                     f'<span class="badge bg-warning text-dark" data-bs-toggle="tooltip" title="{extractable_tip}">Yes</span>'
                     if ae.would_be_extractable
                     else f'<span class="badge bg-secondary" data-bs-toggle="tooltip" title="{extractable_tip}">No</span>'
                 )
+                genre_cell = ""
+                if ae.expected_source_genre:
+                    genre_cell = f'<span class="badge bg-info text-dark">{_esc(ae.expected_source_genre)}</span>'
+                    if ae.expected_source_location:
+                        genre_cell += f'<br><small class="text-muted">{_esc(ae.expected_source_location)}</small>'
+                else:
+                    genre_cell = '<span class="text-muted small">—</span>'
                 rows += f"""
                 <tr>
                   <td class="small">{_esc(pred_desc[:100])}</td>
                   <td>{_esc(ae.missing_evidence)}</td>
                   <td>{_severity_badge(ae.severity)}</td>
                   <td>{extractable_badge}</td>
+                  <td>{genre_cell}</td>
                   <td class="small">{_esc(ae.reasoning)}</td>
                 </tr>"""
 
@@ -2096,6 +2104,7 @@ def generate_report(result: ProcessTracingResult) -> str:
                   {_th("Missing Evidence")}
                   {_th("Severity")}
                   {_th("Extractable?", "Would this evidence appear in a text of this scope and genre if it actually existed?")}
+                  {_th("Acquire from", "Source genre and collection where this missing trace would appear — use to plan source acquisition.")}
                   {_th("Reasoning")}
                 </tr></thead>
                 <tbody>{rows}</tbody>
