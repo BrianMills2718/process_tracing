@@ -49,6 +49,17 @@ coding, QDA export, or general codebook review here; instead consume qualitative
 claims, patterns, source anchors, and candidate explanations through typed
 contracts when the workbench bridge is ready.
 
+**Estimand boundaries — must not blur across the workbench seam:**
+
+- **Comparative support is an intra-case ranking, not a probability.** `HypothesisPosterior.final_posterior` is a comparative weight derived from within-case diagnostic tests — not a frequentist probability, not a Bayesian truth probability, and not equivalent to qualitative claim confidence. Any workbench synthesis that collapses it into a generic "confidence" or "support" score shared with QC claim strength is a methodological error. Display as "comparative support" with sensitivity range and robustness label (robust/fragile/moderate). Never display or export as "probability of truth."
+- **`Evidence` here is for causal diagnostic testing, not qualitative coding.** `Evidence.source_text` anchors a causal inference chain item and must quote or closely paraphrase the source. Do not add codebook fields, segment IDs, annotation categories, or thematic tags to `Evidence` — those belong in `qualitative_coding`. Coded passages and QC claims arrive through typed contracts only.
+- **Absence findings are synthesis inputs, not Bayesian inputs.** `AbsenceEvaluation` (Pass 3b) feeds the synthesis narrative but must never be assigned a likelihood ratio or incorporated into the Bayesian update. Doing so assigns speculative probability to the absence of evidence.
+- **Source coverage drives claim limits.** `SourceCoverageReport` is the primary signal for capping inference confidence in any workbench export. A PT run without a source packet, or with low coverage, must carry explicit `claim_limits`. Never strip coverage metadata to make results look stronger.
+
+**Future adapter surface:**
+
+The workbench must not import `pt.schemas` directly or parse `result.json` without a versioned adapter. `result.json` is PT's internal artifact (raw LR values, dependence clusters, log-space internals) and is free to evolve. When the bridge is ready, expose a `pt_export_v1.json` via `pt/export.py` (or `make export`). That export — not `result.json` — is the cross-engine contract. Minimum fields: `schema_version`, `research_question`, `source_scope` (claim_limits from SourceCoverageReport, known_gaps), `hypotheses` (ids + descriptions + observable_predictions), `comparative_support` (per-hypothesis: final_posterior, robustness, posterior_low, posterior_high, rank_stable), `absence_findings` (with severity and would_be_extractable), `verdicts` (hypothesis_id + status + steelman), `run_metadata` (source_text_sha256, model, artifact_path). Raw LRs and Bayesian internals stay in `result.json`.
+
 Given a text, the pipeline:
 1. **Extracts** evidence, actors, events, mechanisms, causal edges
 2. **Hypothesizes** competing causal explanations with observable predictions
