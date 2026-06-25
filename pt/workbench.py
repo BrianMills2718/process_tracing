@@ -24,6 +24,7 @@ from pt.source_acquisition import (
 )
 from pt.source_design import build_source_design_state
 from pt.trace_host import StageGuide, TraceHostError, TraceHostStore, TraceRunRequest, build_stage_guides
+from pt.view_renderer import build_view_payload
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -129,6 +130,30 @@ def make_handler() -> type[BaseHTTPRequestHandler]:
                     )
                     return
                 self._send_json({"ok": True, "run": run.model_dump()})
+                return
+            if (
+                len(parts) == 6
+                and parts[:2] == ["api", "runs"]
+                and parts[3] == "stages"
+                and parts[5] == "artifact"
+            ):
+                run_id, stage_id = parts[2], parts[4]
+                try:
+                    run = store.get_run(run_id)
+                except Exception as exc:
+                    self._send_json(
+                        {"ok": False, "error": str(exc)}, status=HTTPStatus.NOT_FOUND
+                    )
+                    return
+                run_dir = REPO_ROOT / run.output_dir
+                payload = build_view_payload(run_dir, stage_id)
+                if payload is None:
+                    self._send_json(
+                        {"ok": False, "error": f"no view renderer for stage: {stage_id}"},
+                        status=HTTPStatus.NOT_FOUND,
+                    )
+                    return
+                self._send_json({"ok": True, "stage_id": stage_id, "payload": payload.model_dump()})
                 return
             self.send_error(HTTPStatus.NOT_FOUND)
 

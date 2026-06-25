@@ -476,7 +476,7 @@ table.mx{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-
   <div class="card">
     <h2>Likelihood matrix (top 8 rows by discriminating power)</h2>
     <div class="matrix-mini" id="matrix-output"></div>
-    <p style="font-size:11.5px;color:var(--muted);margin-top:8px">6 rows with relevance &lt;0.40 greyed (LR forced to 1.0). Rows sorted by max|log LR| descending.</p>
+    <p id="matrix-caption" style="font-size:11.5px;color:var(--muted);margin-top:8px">Loading…</p>
   </div>
 </div>
 
@@ -867,7 +867,7 @@ function setMode(mode) {
   }
 }
 
-// ── Matrix mini render ──
+// ── Matrix panel — data-driven ──────────────────────────────────────────────
 function lrBg(lr, off) {
   if(off) return {bg:'#d0d8e2',text:'#7a8a99'};
   const l = Math.log(lr);
@@ -875,29 +875,49 @@ function lrBg(lr, off) {
   if(l>0){const t=Math.min(l/Math.log(9),1);return{bg:`rgb(${Math.round(247-103*t)},${Math.round(228-146*t)},${Math.round(217-186*t)})`,text:t>.55?'#fff':'#1a2330'};}
   const t=Math.min(-l/Math.log(9),1);return{bg:t>.55?'#2756a3':t>.25?'#6a9fd8':'#d5e3f5',text:t>.55?'#fff':'#1a2330'};
 }
-const MX_DATA = [
-  {id:'evi_murat_grenadiers',    src:'Murat entered the Orangerie…',         rel:0.92, lrs:{h1:1.5,h2:9.0,h3:2.0,h4:1.2,h5:1.0}},
-  {id:'evi_conspirators',        src:'Conspirators at rue de la Victoire…',   rel:0.94, lrs:{h1:1.5,h2:8.5,h3:1.8,h4:2.0,h5:1.0}},
-  {id:'evi_first_consul_powers', src:'First Consul promulgated laws…',         rel:0.95, lrs:{h1:2.0,h2:3.5,h3:2.2,h4:8.5,h5:1.2}},
-  {id:'evi_sieyes_director',     src:'Sieyès elected to Directory, May 1799', rel:0.88, lrs:{h1:7.0,h2:1.2,h3:2.0,h4:2.5,h5:1.0}},
-  {id:'evi_brumaire_decree',     src:'Brumaire Decree: three-consul commission', rel:0.95, lrs:{h1:2.5,h2:2.0,h3:3.0,h4:8.0,h5:1.0}},
-  {id:'evi_constitution_yr8',    src:'Constitution of Year VIII: citizenship lists', rel:0.92, lrs:{h1:2.0,h2:1.2,h3:2.5,h4:8.0,h5:1.5}},
-  {id:'evi_directory_1795',      src:'1795: Directory established under Year III', rel:0.35, lrs:{h1:1.0,h2:1.0,h3:1.0,h4:1.0,h5:1.0}, off:true},
-];
-const HYPS = ['h1','h2','h3','h4','h5'];
-const mxEl = document.getElementById('matrix-output');
-let mxHtml = `<table class="mx"><thead><tr><th class="lh">Evidence</th><th>Rel.</th>${HYPS.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
-MX_DATA.forEach(r=>{
-  mxHtml += `<tr><td style="font-family:monospace;font-size:11px;color:var(--muted)">${r.id}<br><span style="font-family:system-ui;color:var(--ink);font-size:11px">${r.src.substring(0,45)}…</span></td>`;
-  mxHtml += `<td style="font-size:11px;color:${r.off?'var(--faint)':'var(--ink)'}">${r.rel.toFixed(2)}</td>`;
-  HYPS.forEach(h=>{
-    const {bg,text}=lrBg(r.lrs[h],r.off||false);
-    mxHtml+=`<td><span class="lrc" style="background:${bg};color:${text}">${r.off?'—':r.lrs[h].toFixed(1)}</span></td>`;
+
+function renderMatrix(payload) {
+  // payload: MatrixViewPayload — {hypotheses, rows, below_threshold_count, total_count}
+  const mxEl = document.getElementById('matrix-output');
+  if (!mxEl) return;
+  const hyps = payload.hypotheses;
+  let html = `<table class="mx"><thead><tr><th class="lh">Evidence</th><th>Rel.</th>${hyps.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+  payload.rows.forEach(r => {
+    const off = r.below_threshold;
+    const src = (r.source_quote_snippet || r.justification_snippet || r.evidence_id).substring(0, 45);
+    html += `<tr><td style="font-family:monospace;font-size:11px;color:var(--muted)">${r.evidence_id}<br><span style="font-family:system-ui;color:var(--ink);font-size:11px">${src}…</span></td>`;
+    html += `<td style="font-size:11px;color:${off?'var(--faint)':'var(--ink)'}">${r.relevance.toFixed(2)}</td>`;
+    hyps.forEach(h => {
+      const lr = r.lr_vector[h] ?? 1.0;
+      const {bg,text} = lrBg(lr, off);
+      html += `<td><span class="lrc" style="background:${bg};color:${text}">${off?'—':lr.toFixed(1)}</span></td>`;
+    });
+    html += '</tr>';
   });
-  mxHtml += '</tr>';
-});
-mxHtml += '</tbody></table>';
-mxEl.innerHTML = mxHtml;
+  html += '</tbody></table>';
+  mxEl.innerHTML = html;
+  // update count caption
+  const cap = document.getElementById('matrix-caption');
+  if (cap) cap.textContent = `${payload.total_count} items · ${payload.below_threshold_count} below threshold (rel < 0.4, forced to LR=1.0)`;
+}
+
+function _fixtureToMatrixPayload(fixture) {
+  const hyps = fixture.hypothesis_space.hypotheses.map(h => h.id);
+  const rows = fixture.testing.top_evidence.map(e => ({
+    evidence_id: e.evidence_id,
+    lr_vector: e.lr_vector,
+    relevance: e.relevance,
+    below_threshold: e.below_threshold,
+    diagnostic_type: e.diagnostic_type || 'straw_in_the_wind',
+    justification_snippet: '',
+    cluster_id: null,
+    source_quote_snippet: e.source_text_snippet || e.evidence_id
+  }));
+  return {hypotheses: hyps, rows, below_threshold_count: fixture.testing.below_threshold_count, total_count: fixture.testing.total_count};
+}
+
+// Load matrix in demo mode on init
+fetch('/fixtures/brumaire_demo.json').then(r=>r.json()).then(f=>renderMatrix(_fixtureToMatrixPayload(f))).catch(()=>{});
 
 // ── Refine loop annotation on simple graph ──
 // After all nodes are added, add dashed loop-back label
@@ -1180,6 +1200,12 @@ async function runStage(stageId) {
     if (stageId === 'synthesize') {
       const rd = document.getElementById('dot-report');
       if (rd) rd.className = 'nav-dot dot-complete';
+    }
+    // Refresh data-driven panels after their stage completes
+    if (stageId === 'test' && _runId) {
+      fetch(`/api/runs/${_runId}/stages/test/artifact`).then(r=>r.json()).then(d=>{
+        if (d.ok) renderMatrix(d.payload);
+      }).catch(()=>{});
     }
     const ORDER = ['extract','hypothesize','test','absence','update','synthesize','refine'];
     const idx = ORDER.indexOf(stageId);
