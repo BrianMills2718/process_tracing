@@ -15,6 +15,23 @@ VerdictStatus = Literal[
     "strongly_supported", "supported", "weakened", "eliminated", "indeterminate"
 ]
 PartitionQuality = Literal["adequate", "needs_review"]
+SourceGenre = Literal[
+    "overview",              # secondary overview / encyclopedia / textbook
+    "primary_document",      # primary historical document (letter, treaty, edict)
+    "speech",                # speech or oral statement
+    "legal_constitutional",  # law, constitution, decree, procedural rules, office design
+    "memoir",                # memoir, diary, personal account
+    "parliamentary_record",  # parliamentary or assembly debate record
+    "secondary_analysis",    # academic analysis or scholarly interpretation
+    "news_dispatch",         # contemporary newspaper or dispatch
+    "other",
+]
+DateConfidence = Literal["high", "medium", "low"]
+TraceProductionRelevance = Literal[
+    "direct",    # evidence IS a causal trace (the mechanism acting)
+    "indirect",  # evidence points to a trace (circumstantial)
+    "background",  # contextual; not a direct causal trace
+]
 
 
 # ── Pass 1: Extraction ──────────────────────────────────────────────
@@ -53,6 +70,44 @@ class Evidence(BaseModel):
     approximate_date: Optional[str] = Field(
         default=None,
         description="Approximate date from the text, e.g. '1788', '1799-11', '1793-06'"
+    )
+    date_confidence: Optional[DateConfidence] = Field(
+        default=None,
+        description=(
+            "'high' = explicit date in the text; 'medium' = approximate or inferred from context; "
+            "'low' = only a rough period or no date at all"
+        ),
+    )
+    source_group: Optional[str] = Field(
+        default=None,
+        description=(
+            "Short label for the source section or document within the input text where this "
+            "evidence appears, e.g. 'Background section', 'Primary source A', 'Witness testimony'. "
+            "Use the same label for all evidence drawn from the same source block so that "
+            "cross-source comparison is possible."
+        ),
+    )
+    source_genre: Optional[SourceGenre] = Field(
+        default=None,
+        description=(
+            "Genre of the source this evidence comes from. "
+            "Use 'overview' for secondary/encyclopedia/textbook summaries, "
+            "'primary_document' for original historical documents, "
+            "'speech' for speeches or oral statements, "
+            "'legal_constitutional' for laws, constitutions, decrees, "
+            "'memoir' for diaries or personal accounts, "
+            "'parliamentary_record' for assembly/parliamentary debates, "
+            "'secondary_analysis' for academic interpretations, "
+            "'news_dispatch' for contemporary press, 'other' otherwise."
+        ),
+    )
+    trace_production_relevance: Optional[TraceProductionRelevance] = Field(
+        default=None,
+        description=(
+            "'direct' = this evidence IS a causal trace (the mechanism visibly acting); "
+            "'indirect' = this evidence points to a trace but is circumstantial; "
+            "'background' = contextual, not a direct causal trace."
+        ),
     )
 
 

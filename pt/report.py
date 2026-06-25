@@ -1914,17 +1914,47 @@ def generate_report(result: ProcessTracingResult) -> str:
     </div>"""
 
     # ===== Section 7: Evidence List (collapsed by default) =====
+    _GENRE_BADGE: dict[str, str] = {
+        "overview": "bg-secondary",
+        "primary_document": "bg-success",
+        "speech": "bg-info text-dark",
+        "legal_constitutional": "bg-primary",
+        "memoir": "bg-warning text-dark",
+        "parliamentary_record": "bg-dark",
+        "secondary_analysis": "bg-secondary",
+        "news_dispatch": "bg-danger",
+        "other": "bg-light text-dark border",
+    }
+    _TRACE_BADGE: dict[str, str] = {
+        "direct": "bg-success",
+        "indirect": "bg-warning text-dark",
+        "background": "bg-light text-dark border",
+    }
+
     ev_rows = []
     for ev in result.extraction.evidence:
         type_badge = '<span class="badge bg-info">Empirical</span>' if ev.evidence_type == "empirical" else '<span class="badge bg-warning text-dark">Interpretive</span>'
+        genre_html = (
+            f'<span class="badge {_GENRE_BADGE.get(ev.source_genre, "bg-secondary")}">{_esc(ev.source_genre)}</span>'
+            if ev.source_genre
+            else '<span class="text-muted small">—</span>'
+        )
+        trace_html = (
+            f'<span class="badge {_TRACE_BADGE.get(ev.trace_production_relevance, "bg-secondary")}">{_esc(ev.trace_production_relevance)}</span>'
+            if ev.trace_production_relevance
+            else '<span class="text-muted small">—</span>'
+        )
+        group_html = f'<span class="small text-muted">{_esc(ev.source_group)}</span>' if ev.source_group else ""
         ev_rows.append(f"""
         <tr>
           <td><code class="small">{_esc(ev.id)}</code></td>
           <td>{_esc(ev.description)}</td>
           <td>{type_badge}</td>
           <td>{_esc(ev.approximate_date or 'N/A')}</td>
+          <td>{genre_html}{(' ' + group_html) if group_html else ''}</td>
+          <td>{trace_html}</td>
           <td>
-            <span class="d-inline-block text-truncate" style="max-width:250px" data-bs-toggle="tooltip" title="{_esc(ev.source_text)}">{_esc(ev.source_text[:80])}...</span>
+            <span class="d-inline-block text-truncate" style="max-width:200px" data-bs-toggle="tooltip" title="{_esc(ev.source_text)}">{_esc(ev.source_text[:80])}...</span>
           </td>
         </tr>""")
 
@@ -1944,6 +1974,8 @@ def generate_report(result: ProcessTracingResult) -> str:
               {_th("Description")}
               {_th("Type", "Empirical = facts/events/actions. Interpretive = historian arguments/scholarly claims.")}
               {_th("Date")}
+              {_th("Genre / Group", "Source genre and section group for provenance auditing.")}
+              {_th("Trace role", "direct = mechanism acting; indirect = circumstantial; background = context.")}
               {_th("Source Text")}
             </tr></thead>
             <tbody>{''.join(ev_rows)}</tbody>

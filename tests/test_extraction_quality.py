@@ -9,8 +9,17 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
+
 from pt.pass_extract import run_extract
-from pt.schemas import Event, Evidence, ExtractionResult
+from pt.schemas import (
+    DateConfidence,
+    Event,
+    Evidence,
+    ExtractionResult,
+    SourceGenre,
+    TraceProductionRelevance,
+)
 
 
 def _source_text() -> str:
@@ -144,3 +153,149 @@ def test_extraction_sanitizes_non_ascii_evidence_ids():
     assert ids == ["evi_levee_en_masse", "evi_cote", "evi_cote_2"]
     for i in ids:
         assert i.isascii()
+
+
+# ===== Slice 3: Source provenance metadata fields =====
+
+
+class TestEvidenceProvenanceFields:
+    """Evidence schema now carries source_group, source_genre, date_confidence,
+    trace_production_relevance — all Optional, all None by default for backward compat."""
+
+    def test_new_fields_default_to_none(self):
+        ev = Evidence(id="evi_x", description="a" * 25, source_text="q")
+        assert ev.source_group is None
+        assert ev.source_genre is None
+        assert ev.date_confidence is None
+        assert ev.trace_production_relevance is None
+
+    def test_source_genre_accepts_valid_literals(self):
+        for genre in (
+            "overview", "primary_document", "speech", "legal_constitutional",
+            "memoir", "parliamentary_record", "secondary_analysis", "news_dispatch", "other",
+        ):
+            ev = Evidence(id="evi_x", description="a" * 25, source_text="q", source_genre=genre)
+            assert ev.source_genre == genre
+
+    def test_source_genre_rejects_unknown_value(self):
+        with pytest.raises(Exception):
+            Evidence(id="evi_x", description="a" * 25, source_text="q", source_genre="gossip")  # type: ignore[arg-type]
+
+    def test_date_confidence_accepts_valid_literals(self):
+        for dc in ("high", "medium", "low"):
+            ev = Evidence(id="evi_x", description="a" * 25, source_text="q", date_confidence=dc)
+            assert ev.date_confidence == dc
+
+    def test_date_confidence_rejects_unknown_value(self):
+        with pytest.raises(Exception):
+            Evidence(id="evi_x", description="a" * 25, source_text="q", date_confidence="uncertain")  # type: ignore[arg-type]
+
+    def test_trace_production_relevance_accepts_valid_literals(self):
+        for tpr in ("direct", "indirect", "background"):
+            ev = Evidence(id="evi_x", description="a" * 25, source_text="q", trace_production_relevance=tpr)
+            assert ev.trace_production_relevance == tpr
+
+    def test_trace_production_relevance_rejects_unknown_value(self):
+        with pytest.raises(Exception):
+            Evidence(id="evi_x", description="a" * 25, source_text="q", trace_production_relevance="unknown")  # type: ignore[arg-type]
+
+    def test_source_group_is_free_text(self):
+        ev = Evidence(id="evi_x", description="a" * 25, source_text="q", source_group="Primary sources section")
+        assert ev.source_group == "Primary sources section"
+
+    def test_all_new_fields_populated(self):
+        ev = Evidence(
+            id="evi_x",
+            description="a" * 25,
+            source_text="q",
+            source_group="Main text",
+            source_genre="primary_document",
+            date_confidence="high",
+            trace_production_relevance="direct",
+        )
+        assert ev.source_group == "Main text"
+        assert ev.source_genre == "primary_document"
+        assert ev.date_confidence == "high"
+        assert ev.trace_production_relevance == "direct"
+
+    def test_roundtrip_json_preserves_new_fields(self):
+        ev = Evidence(
+            id="evi_x",
+            description="a" * 25,
+            source_text="q",
+            source_group="Background",
+            source_genre="overview",
+            date_confidence="medium",
+            trace_production_relevance="background",
+        )
+        restored = Evidence.model_validate_json(ev.model_dump_json())
+        assert restored.source_group == "Background"
+        assert restored.source_genre == "overview"
+        assert restored.date_confidence == "medium"
+        assert restored.trace_production_relevance == "background"
+
+    def test_old_evidence_without_new_fields_loads_cleanly(self):
+        """Backward compat: result.json from before Slice 3 has no new fields."""
+        old_json = '{"id": "evi_old", "description": "' + "a" * 25 + '", "source_text": "q"}'
+        ev = Evidence.model_validate_json(old_json)
+        assert ev.source_group is None
+        assert ev.source_genre is None
+        assert ev.date_confidence is None
+        assert ev.trace_production_relevance is None
+
+    def test_extraction_prompt_includes_source_provenance_metadata_section(self):
+        captured: list[str] = []
+
+        def _capture(prompt, schema, **kwargs):
+            captured.append(prompt)
+            return _quality_extraction()
+
+        with patch("pt.pass_extract.call_llm", side_effect=_capture):
+            run_extract(_source_text(), trace_id="slice3-prompt-contract")
+
+        prompt = captured[0].lower()
+        assert "source provenance metadata" in prompt
+        assert "source_genre" in prompt
+        assert "trace_production_relevance" in prompt
+        assert "date_confidence" in prompt
+        assert "source_group" in prompt
+
+    def test_extraction_prompt_explains_trace_production_relevance_values(self):
+        captured: list[str] = []
+
+        def _capture(prompt, schema, **kwargs):
+            captured.append(prompt)
+            return _quality_extraction()
+
+        with patch("pt.pass_extract.call_llm", side_effect=_capture):
+            run_extract(_source_text(), trace_id="slice3-trace-values")
+
+        prompt = captured[0].lower()
+        assert "'direct'" in prompt or "direct" in prompt
+        assert "'indirect'" in prompt or "indirect" in prompt
+        assert "'background'" in prompt or "background" in prompt
+
+
+class TestSourceGenreType:
+    def test_all_genre_values_are_valid_literals(self):
+        valid: list[SourceGenre] = [
+            "overview", "primary_document", "speech", "legal_constitutional",
+            "memoir", "parliamentary_record", "secondary_analysis", "news_dispatch", "other",
+        ]
+        for genre in valid:
+            ev = Evidence(id="evi_g", description="a" * 25, source_text="q", source_genre=genre)
+            assert ev.source_genre == genre
+
+
+class TestDateConfidenceType:
+    def test_all_confidence_values(self):
+        for val in ("high", "medium", "low"):
+            ev = Evidence(id="evi_d", description="a" * 25, source_text="q", date_confidence=val)  # type: ignore[arg-type]
+            assert ev.date_confidence == val
+
+
+class TestTraceProductionRelevanceType:
+    def test_all_relevance_values(self):
+        for val in ("direct", "indirect", "background"):
+            ev = Evidence(id="evi_t", description="a" * 25, source_text="q", trace_production_relevance=val)  # type: ignore[arg-type]
+            assert ev.trace_production_relevance == val

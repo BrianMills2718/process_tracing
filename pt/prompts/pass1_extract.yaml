@@ -69,6 +69,18 @@ messages:
 
       For EVERY evidence item, set `approximate_date` if the text provides temporal information (e.g., "1788", "1793-06", "1799-11"). Leave null only if no date can be inferred.
 
+      ## Source provenance metadata (fill for every evidence item)
+
+      For EVERY evidence item, also fill these four fields:
+
+      - `date_confidence`: "high" if the text states an explicit date; "medium" if the date is approximate or inferred from surrounding context; "low" if only a rough period is available or no date can be inferred at all.
+
+      - `source_group`: A short label (2–5 words) for the section or document block within the input text where this evidence appears (e.g., "Background", "Primary sources", "Witness accounts", "Economic data section"). Assign the SAME label to all evidence drawn from the same identifiable block, so items from different sections can be compared. If the text is undivided, use "Main text".
+
+      - `source_genre`: The genre of the source material from which this evidence is drawn. Choose the most specific applicable value from: "overview" (secondary summary / encyclopedia / textbook), "primary_document" (original historical document), "speech" (speech or oral statement), "legal_constitutional" (law, constitution, decree, office design), "memoir" (diary or personal account), "parliamentary_record" (assembly or parliamentary debates), "secondary_analysis" (academic interpretation or scholarly argument), "news_dispatch" (contemporary press), "other". If the text is a single undivided secondary overview, all items are "overview".
+
+      - `trace_production_relevance`: "direct" if this evidence IS a causal trace (the mechanism is visibly acting — e.g., a decree, a military order, a named meeting); "indirect" if it points toward a trace but is circumstantial (e.g., an observer's inference, a reported outcome with no direct mechanism quote); "background" if it is contextual or structural (e.g., population figures, economic trends, constitutional provisions that constrain but do not themselves act).
+
       Each evidence item needs `source_text`: a direct quote (1-2 sentences) that preserves any source marker or citation label in the selected span. Keep `description` to 1 sentence.
 
       **Hypotheses in text** (3-6): Causal claims the author makes or implies. Include `source_text`.
