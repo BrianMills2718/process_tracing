@@ -87,7 +87,19 @@ def make_handler() -> type[BaseHTTPRequestHandler]:
         def do_GET(self) -> None:
             parsed = urlparse(self.path)
             if parsed.path in {"/", "/index.html"}:
-                self._send_html(_html(stage_guides))
+                template = REPO_ROOT / "pt" / "templates" / "workbench.html"
+                self._send_bytes(template.read_bytes(), content_type="text/html; charset=utf-8")
+                return
+            if parsed.path.startswith("/fixtures/"):
+                fixture_name = parsed.path.removeprefix("/fixtures/")
+                if ".." in fixture_name or "/" in fixture_name:
+                    self.send_error(HTTPStatus.BAD_REQUEST)
+                    return
+                fixture_path = REPO_ROOT / "pt" / "fixtures" / fixture_name
+                if not fixture_path.is_file():
+                    self.send_error(HTTPStatus.NOT_FOUND)
+                    return
+                self._send_bytes(fixture_path.read_bytes(), content_type="application/json; charset=utf-8")
                 return
             if parsed.path == "/artifact":
                 query = parse_qs(parsed.query)

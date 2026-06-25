@@ -1,0 +1,430 @@
+{
+  "run_id": "run_20260624_200616_d4f6",
+  "case_name": "18 Brumaire",
+  "model": "gpt-5-mini",
+  "stages": [
+    {
+      "stage_id": "setup",
+      "status": "complete"
+    },
+    {
+      "stage_id": "extract",
+      "status": "complete"
+    },
+    {
+      "stage_id": "hypothesize",
+      "status": "complete"
+    },
+    {
+      "stage_id": "test",
+      "status": "complete"
+    },
+    {
+      "stage_id": "absence",
+      "status": "complete"
+    },
+    {
+      "stage_id": "update",
+      "status": "complete"
+    },
+    {
+      "stage_id": "synthesize",
+      "status": "complete"
+    },
+    {
+      "stage_id": "refine",
+      "status": "complete"
+    }
+  ],
+  "hypothesis_space": {
+    "research_question": "Why did the French Revolution culminate in Napoleon Bonaparte's 18 Brumaire coup?",
+    "hypotheses": [
+      {
+        "id": "h1",
+        "description": "Siey\u00e8s-led civilian constitutional revision was the decisive cause: civilians initiated and organized the seizure and recruited Bonaparte as a military instrument subordinate to a planned legal redesign.",
+        "causal_mechanism": "Siey\u00e8s and allied financiers drafted commission-based constitutional revisions, enlisted mediators (Talleyrand, Roederer) to secure elite buy-in and force Barras's resignation, and recruited Bonaparte as a subordinate military protector to enforce procedural moves (staggered notices, relocation) prior to or concurrent with limited troop positioning."
+      },
+      {
+        "id": "h2",
+        "description": "Bonaparte's personalist military conversion was the decisive cause: Napoleon and his loyal officers transformed a faltering civilian plot into a military-backed personal regime through intimidation, theatrical legitimation, and subsequent constitutional concentration.",
+        "causal_mechanism": "Bonaparte provided proximate coercive capacity (pre-positioned generals, command of 17th Division); Lucien's theatrical intervention and personal oath to troops removed hesitation, enabling Murat/grenadiers to physically disperse deputies and secure the legislative hoop votes that led to the Decree and subsequent constitutional concentration."
+      },
+      {
+        "id": "h3",
+        "description": "Contingent institutional path closure: structural collapse of the Directory (war reverses, factional purges, elite fear) made an extra-constitutional solution inevitable and caused elites to accept a military-led coup and the Consulate irrespective of which coalition executed it.",
+        "causal_mechanism": "Military setbacks, fiscal and political crises, and fear of Jacobin or royalist resurgence delegitimized the Directory; elites across finance, administration, and regional notables concluded institutional survival required closing the constitutional path and endorsing a decisive solution, thereby enabling acceptance of a coup and rapid institutional redesign into the Consulate."
+      },
+      {
+        "id": "h4",
+        "description": "Elite legal-engineering and constitutional institutionalization (Siey\u00e8s and allied notables) was the decisive cause of the Consulate outcome: post-seizure constitutional design turned a temporary seizure into a stable executive-centered regime.",
+        "causal_mechanism": "After the seizure, Siey\u00e8s, legal experts, and elite notables drafted the Constitution of Year VIII to concentrate appointment power (citizenship lists, Conservative Senate, First Consul prerogatives), creating legal channels that made reversal unlikely and converting a contingent coup into a lasting Consulate."
+      },
+      {
+        "id": "h5",
+        "description": "Broad popular demand for order and endorsement of Bonaparte was the decisive cause: mass-level desire for order and a charismatic military leader created a popular and local-notable base that allowed elites to justify and implement the coup and Consulate.",
+        "causal_mechanism": "Widespread urban and departmental demand for restoration of order (petitions, cheering on Bonaparte at Frejus, local notable endorsements) gave political elites cover to endorse Bonaparte; elites then coordinated legal moves knowing Bonaparte had popular backing, turning the seizure into a politically sustainable Consulate."
+      }
+    ]
+  },
+  "testing": {
+    "total_count": 59,
+    "below_threshold_count": 2,
+    "top_evidence": [
+      {
+        "evidence_id": "evi_murat_and_grenadiers_drove_out_representatives",
+        "source_text_snippet": "",
+        "relevance": 0.92,
+        "below_threshold": false,
+        "lr_vector": {
+          "h1": 1.5,
+          "h2": 9.0,
+          "h3": 2.0,
+          "h4": 1.2,
+          "h5": 1.0
+        },
+        "diagnostic_type": "straw_in_the_wind"
+      },
+      {
+        "evidence_id": "evi_first_consul_powers",
+        "source_text_snippet": "",
+        "relevance": 0.95,
+        "below_threshold": false,
+        "lr_vector": {
+          "h1": 2.0,
+          "h2": 3.5,
+          "h3": 2.2,
+          "h4": 8.5,
+          "h5": 1.2
+        },
+        "diagnostic_type": "straw_in_the_wind"
+      },
+      {
+        "evidence_id": "evi_generals_assembled_morning_18",
+        "source_text_snippet": "",
+        "relevance": 0.85,
+        "below_threshold": false,
+        "lr_vector": {
+          "h1": 2.0,
+          "h2": 8.0,
+          "h3": 2.5,
+          "h4": 1.5,
+          "h5": 1.2
+        },
+        "diagnostic_type": "straw_in_the_wind"
+      },
+      {
+        "evidence_id": "evi_bonaparte_command_17th_division_18brumaire",
+        "source_text_snippet": "",
+        "relevance": 0.9,
+        "below_threshold": false,
+        "lr_vector": {
+          "h1": 2.0,
+          "h2": 8.0,
+          "h3": 2.5,
+          "h4": 1.5,
+          "h5": 1.2
+        },
+        "diagnostic_type": "straw_in_the_wind"
+      },
+      {
+        "evidence_id": "evi_brumaire_decree_content_commissions_10nov",
+        "source_text_snippet": "",
+        "relevance": 0.95,
+        "below_threshold": false,
+        "lr_vector": {
+          "h1": 2.5,
+          "h2": 2.0,
+          "h3": 3.0,
+          "h4": 8.0,
+          "h5": 1.0
+        },
+        "diagnostic_type": "straw_in_the_wind"
+      },
+      {
+        "evidence_id": "evi_constitution_citizenship_lists_december1799",
+        "source_text_snippet": "",
+        "relevance": 0.92,
+        "below_threshold": false,
+        "lr_vector": {
+          "h1": 2.0,
+          "h2": 1.2,
+          "h3": 2.5,
+          "h4": 8.0,
+          "h5": 1.5
+        },
+        "diagnostic_type": "straw_in_the_wind"
+      },
+      {
+        "evidence_id": "evi_bonaparte_entered_five_hundred_with_grenadiers",
+        "source_text_snippet": "",
+        "relevance": 0.9,
+        "below_threshold": false,
+        "lr_vector": {
+          "h1": 1.5,
+          "h2": 7.5,
+          "h3": 2.0,
+          "h4": 1.2,
+          "h5": 1.0
+        },
+        "diagnostic_type": "straw_in_the_wind"
+      },
+      {
+        "evidence_id": "evi_conservative_senate_powers",
+        "source_text_snippet": "",
+        "relevance": 0.9,
+        "below_threshold": false,
+        "lr_vector": {
+          "h1": 2.0,
+          "h2": 1.5,
+          "h3": 2.2,
+          "h4": 7.5,
+          "h5": 1.2
+        },
+        "diagnostic_type": "straw_in_the_wind"
+      },
+      {
+        "evidence_id": "evi_lefebvre_assemble_generals_17brumaire",
+        "source_text_snippet": "",
+        "relevance": 0.85,
+        "below_threshold": false,
+        "lr_vector": {
+          "h1": 2.5,
+          "h2": 7.0,
+          "h3": 2.0,
+          "h4": 1.5,
+          "h5": 1.2
+        },
+        "diagnostic_type": "straw_in_the_wind"
+      },
+      {
+        "evidence_id": "evi_consuls_proclamation_frame_12nov",
+        "source_text_snippet": "",
+        "relevance": 0.9,
+        "below_threshold": false,
+        "lr_vector": {
+          "h1": 2.0,
+          "h2": 2.2,
+          "h3": 2.5,
+          "h4": 7.0,
+          "h5": 1.8
+        },
+        "diagnostic_type": "straw_in_the_wind"
+      }
+    ],
+    "dependence_clusters": [
+      {
+        "evidence_ids": [
+          "evi_13_vendemiaire_bonaparte_1795",
+          "evi_bonaparte_army_italy_1796",
+          "evi_italian_victories_1796_97",
+          "evi_egypt_appointment_1798",
+          "evi_nile_and_military_failures_1798_99",
+          "evi_aboukir_victory_25july1799",
+          "evi_bonaparte_return_leaves_kleber_1799",
+          "evi_land_frejus_cheered_1799"
+        ],
+        "reason": "Linked sequence of Bonaparte's military career and return \u2014 same actor trajectory (campaign orders, victories, return) so partly dependent.",
+        "dependence_strength": 0.7
+      },
+      {
+        "evidence_ids": [
+          "evi_conspirators_assembled_rue_victoire_planning",
+          "evi_roles_distributed_days_before",
+          "evi_generals_assembled_morning_18",
+          "evi_lefebvre_assemble_generals_17brumaire",
+          "evi_false_majority_staggered_notices",
+          "evi_rumor_jacobin_plot_move_to_saint_cloud_18",
+          "evi_bonaparte_command_17th_division_18brumaire",
+          "evi_military_pawns_positioned_across_paris",
+          "evi_murat_and_grenadiers_drove_out_representatives",
+          "evi_bonaparte_entered_five_hundred_with_grenadiers",
+          "evi_lucien_theatrical_legitimation",
+          "evi_deception_of_barras_17brumaire",
+          "evi_generals_assembled_morning_18",
+          "evi_ref_02"
+        ],
+        "reason": "Operational and tactical actions on 18-19 Brumaire form the same event complex (orders, troop placements, forced expulsions, theatrical legitimations).",
+        "dependence_strength": 0.8
+      },
+      {
+        "evidence_ids": [
+          "evi_brumaire_decree_content_commissions_10nov",
+          "evi_commissions_of_25_appointed",
+          "evi_consuls_proclamation_frame_12nov",
+          "evi_constitution_citizenship_lists_december1799",
+          "evi_conservative_senate_powers",
+          "evi_first_consul_powers",
+          "evi_public_force_obedient_no_armed_bodies_deliberate",
+          "evi_emergency_clause_suspend_authority"
+        ],
+        "reason": "Constitutional and legal instruments produced in immediate aftermath (Decree and Year VIII provisions) are parts of a single institutional design sequence.",
+        "dependence_strength": 0.7
+      },
+      {
+        "evidence_ids": [
+          "evi_sieyes_elected_director_may1799",
+          "evi_sieyes_searched_for_military_backer",
+          "evi_sieyes_hesitation_bonaparte_dangerous",
+          "evi_negotiations_sieyes_bonaparte_mutual_distrust",
+          "evi_sieyes_original_plan_commissionary_revision"
+        ],
+        "reason": "Siey\u00e8s-related planning traces belong to the same civilian-initiator sub-narrative and derive from similar political correspondence and memoir material.",
+        "dependence_strength": 0.6
+      },
+      {
+        "evidence_ids": [
+          "evi_bourrienne_confined_to_few",
+          "evi_bourrienne_partially_mitigates_gap",
+          "evi_packet_gap_private_correspondence"
+        ],
+        "reason": "Sources and gaps involving private correspondence and Bourrienne memoir are analytically linked (same evidentiary problem and partial mitigation).",
+        "dependence_strength": 0.6
+      },
+      {
+        "evidence_ids": [
+          "evi_crook_near_miscarriage_and_gradual_consolidation",
+          "evi_crook_directory_pluralistic_features",
+          "evi_crook_bonaparte_created_crisis",
+          "evi_postcoup_consolidation_marengo_concordat",
+          "evi_constitution_dropped_declaration_of_rights"
+        ],
+        "reason": "Crook's interpretive claims are from the same secondary-analytic voice and address similar themes (crisis, consolidation, constitutional change).",
+        "dependence_strength": 0.5
+      },
+      {
+        "evidence_ids": [
+          "evi_barras_resignation_talleyrand",
+          "evi_ref_01"
+        ],
+        "reason": "Two items restate the same event (Barras's resignation via Talleyrand) and are effectively duplicate sources.",
+        "dependence_strength": 1.0
+      },
+      {
+        "evidence_ids": [
+          "evi_bonaparte_public_justification_refuses_faction",
+          "evi_bonaparte_claim_assassins_saint_cloud",
+          "evi_bonaparte_public_narrative_rescue",
+          "evi_ref_03"
+        ],
+        "reason": "Public speeches and claims by Bonaparte form a connected set of legitimation narratives produced to shape public opinion.",
+        "dependence_strength": 0.8
+      },
+      {
+        "evidence_ids": [
+          "evi_19_brumaire_deputies_renew_vows",
+          "evi_evening_roundup_and_proposal",
+          "evi_bonaparte_dictated_proclamation_post_expulsion"
+        ],
+        "reason": "Immediate parliamentary reactions, rounding up of deputies, and post-expulsion proclamations form the same late-19 Brumaire sequence.",
+        "dependence_strength": 0.6
+      }
+    ]
+  },
+  "bayesian": {
+    "posteriors": [
+      {
+        "hypothesis_id": "h2",
+        "posterior": 0.994163,
+        "robustness": "fragile",
+        "rank_stable": true,
+        "posterior_low": 0.480547,
+        "posterior_high": 0.999963,
+        "top_driver_ids": [
+          "evi_conspirators_assembled_rue_victoire_planning",
+          "evi_13_vendemiaire_bonaparte_1795",
+          "evi_moreau_protect_gohier_moulin"
+        ]
+      },
+      {
+        "hypothesis_id": "h1",
+        "posterior": 0.004683,
+        "robustness": "fragile",
+        "rank_stable": false,
+        "posterior_low": 2.8e-05,
+        "posterior_high": 0.43911,
+        "top_driver_ids": [
+          "evi_sieyes_elected_director_may1799",
+          "evi_13_vendemiaire_bonaparte_1795",
+          "evi_conspirators_assembled_rue_victoire_planning"
+        ]
+      },
+      {
+        "hypothesis_id": "h4",
+        "posterior": 0.000817,
+        "robustness": "moderate",
+        "rank_stable": false,
+        "posterior_low": 2e-06,
+        "posterior_high": 0.215614,
+        "top_driver_ids": [
+          "evi_brumaire_decree_content_commissions_10nov",
+          "evi_13_vendemiaire_bonaparte_1795",
+          "evi_sieyes_elected_director_may1799"
+        ]
+      },
+      {
+        "hypothesis_id": "h3",
+        "posterior": 0.000337,
+        "robustness": "fragile",
+        "rank_stable": false,
+        "posterior_low": 6e-06,
+        "posterior_high": 0.017381,
+        "top_driver_ids": [
+          "evi_crook_near_miscarriage_and_gradual_consolidation",
+          "evi_sieyes_elected_director_may1799",
+          "evi_earlyphysical_stresses_1795_97"
+        ]
+      },
+      {
+        "hypothesis_id": "h5",
+        "posterior": 0.0,
+        "robustness": "robust",
+        "rank_stable": true,
+        "posterior_low": 0.0,
+        "posterior_high": 1e-05,
+        "top_driver_ids": [
+          "evi_conspirators_assembled_rue_victoire_planning",
+          "evi_brumaire_decree_content_commissions_10nov",
+          "evi_sieyes_elected_director_may1799"
+        ]
+      }
+    ],
+    "prior_sensitivity": {
+      "top_hypothesis_id": "h2",
+      "stable_under_prior_perturbation": true,
+      "perturbation_factor": 2.0
+    }
+  },
+  "absence": {
+    "findings": []
+  },
+  "synthesis": {
+    "narrative_excerpt": "",
+    "verdicts": [
+      {
+        "hypothesis_id": "h1",
+        "status": "weakened",
+        "steelman": "Siey\u00e8s secured a Director's office, explicitly sought a military protector, negotiated mediated bargains, and distributed roles days before 18 Brumaire; contemporaneous reports of staggered notices an"
+      },
+      {
+        "hypothesis_id": "h2",
+        "status": "strongly_supported",
+        "steelman": "Bonaparte returned clandestinely, gathered loyal generals, received formal command authority, and used concentrated armed force at critical moments to decide outcomes. Eyewitness legislative accounts "
+      },
+      {
+        "hypothesis_id": "h3",
+        "status": "weakened",
+        "steelman": "The Directory faced repeated shocks (internal conspiracies, military setbacks, factional defections) that eroded confidence in constitutional repair; elites in finance and administration had incentive"
+      },
+      {
+        "hypothesis_id": "h4",
+        "status": "weakened",
+        "steelman": "The Brumaire Decree and the Year VIII Constitution created concrete mechanisms (commissions of 25, Conservative Senate, citizenship lists, First Consul prerogatives) that locked in elite control and c"
+      },
+      {
+        "hypothesis_id": "h5",
+        "status": "eliminated",
+        "steelman": "Bonaparte enjoyed visible popular acclamation on landing at Fr\u00e9jus and fashioned a public rescue narrative that plausibly gave elites cover to endorse him. If municipal councils, large petitions, or b"
+      }
+    ]
+  }
+}
