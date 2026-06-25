@@ -12,11 +12,13 @@ import math
 from pathlib import Path
 from typing import Optional
 
-from pt.schemas import ExtractionResult, HypothesisSpace, TestingResult
+from pt.schemas import BayesianResult, ExtractionResult, HypothesisSpace, TestingResult
 from pt.schemas_view import (
     ClusterOverlay,
     MatrixRow,
     MatrixViewPayload,
+    SupportBar,
+    SupportViewPayload,
     ViewPayload,
 )
 
@@ -25,6 +27,8 @@ def build_view_payload(run_dir: Path, stage_id: str) -> Optional[ViewPayload]:
     """Route stage_id to the appropriate view builder. Returns None for unmapped stages."""
     if stage_id == "test":
         return build_matrix_payload(run_dir)
+    if stage_id == "update":
+        return build_support_payload(run_dir)
     return None
 
 
@@ -108,4 +112,44 @@ def build_matrix_payload(run_dir: Path) -> MatrixViewPayload:
         cluster_overlays=cluster_overlays,
         below_threshold_count=below_count,
         total_count=len(rows),
+    )
+
+
+def build_support_payload(run_dir: Path) -> SupportViewPayload:
+    """Project BayesianResult + HypothesisSpace → SupportViewPayload."""
+    bayesian = BayesianResult.model_validate(
+        json.loads((run_dir / "bayesian.json").read_bytes())
+    )
+    hs = HypothesisSpace.model_validate(
+        json.loads((run_dir / "hypothesis_space.json").read_bytes())
+    )
+
+    label_for = {h.id: h.description[:60] for h in hs.hypotheses}
+    sens_for = {s.hypothesis_id: s for s in bayesian.sensitivity}
+
+    bars: list[SupportBar] = []
+    for hp in sorted(bayesian.posteriors, key=lambda p: p.final_posterior, reverse=True):
+        s = sens_for.get(hp.hypothesis_id)
+        bars.append(
+            SupportBar(
+                hypothesis_id=hp.hypothesis_id,
+                label=label_for.get(hp.hypothesis_id, hp.hypothesis_id),
+                posterior=hp.final_posterior,
+                posterior_low=s.posterior_low if s else hp.final_posterior,
+                posterior_high=s.posterior_high if s else hp.final_posterior,
+                robustness=hp.robustness,
+                rank_stable=s.rank_stable if s else True,
+                top_driver_ids=hp.top_drivers,
+            )
+        )
+
+    fragile_warning = any(b.posterior > 0.5 and b.robustness == "fragile" for b in bars)
+    rank_instability_warning = any(not b.rank_stable for b in bars)
+    ps = bayesian.prior_sensitivity
+    return SupportViewPayload(
+        bars=bars,
+        prior_sensitivity_stable=ps.stable_under_prior_perturbation if ps else True,
+        perturbation_factor=ps.perturbation_factor if ps else 2.0,
+        fragile_warning=fragile_warning,
+        rank_instability_warning=rank_instability_warning,
     )

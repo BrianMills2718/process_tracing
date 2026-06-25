@@ -64,10 +64,10 @@ def test_workbench_http_exposes_button_and_json_endpoint(tmp_path):
     try:
         with urllib.request.urlopen(base_url, timeout=5) as response:
             html = response.read().decode("utf-8")
-        assert "Enrich Top Targets" in html
-        assert "/api/enrich" in html
-        assert "report-frame" in html
-        assert "Load Report" in html
+        assert "matrix-output" in html
+        assert "/api/runs" in html
+        assert "support-output" in html
+        assert "openReport" in html
 
         with urllib.request.urlopen(
             f"{base_url}/artifact?path={urllib.parse.quote(report_path)}", timeout=5
@@ -95,6 +95,45 @@ def test_workbench_http_exposes_button_and_json_endpoint(tmp_path):
     finally:
         server.shutdown()
         server.server_close()
+
+
+@pytest.mark.plans(5)
+def test_refine_stage_saves_pre_refine_artifacts(tmp_path, monkeypatch):
+    """Refine stage must copy pre-refinement artifacts to pre_refine/ before overwriting."""
+    from pt.schemas import RefinementResult
+    from pt.trace_host import TraceHostStore, TraceRunRequest
+
+    input_path, packet_path, theories_path = _write_run_inputs(tmp_path)
+    store = TraceHostStore(repo_root=tmp_path, output_root=tmp_path / "runs")
+    result = _make_audit_stress_result()
+    stub_refinement = RefinementResult(analyst_notes="stub")
+
+    monkeypatch.setattr(trace_host, "run_extract", lambda *a, **k: result.extraction)
+    monkeypatch.setattr(trace_host, "run_hypothesize", lambda *a, **k: result.hypothesis_space)
+    monkeypatch.setattr(trace_host, "run_test", lambda *a, **k: result.testing)
+    monkeypatch.setattr(trace_host, "run_absence", lambda *a, **k: result.absence)
+    monkeypatch.setattr(trace_host, "run_bayesian_update", lambda *a, **k: result.bayesian)
+    monkeypatch.setattr(trace_host, "run_synthesize", lambda *a, **k: result.synthesis)
+    monkeypatch.setattr(trace_host, "run_refine", lambda *a, **k: stub_refinement)
+    monkeypatch.setattr(trace_host, "apply_refinement", lambda e, h, r, **k: (e, h))
+    monkeypatch.setattr(trace_host, "generate_report", lambda *a, **k: "<html>report</html>")
+
+    run = store.create_run(TraceRunRequest(
+        input_path=str(input_path),
+        source_packet_path=str(packet_path),
+        refine=True,
+    ))
+    run_id = run.run_id
+    for stage_id in ["extract", "hypothesize", "test", "absence", "update", "synthesize"]:
+        store.run_stage(run_id, stage_id)
+
+    store.run_stage(run_id, "refine")
+
+    pre_refine_dir = tmp_path / "runs" / run_id / "pre_refine"
+    assert pre_refine_dir.is_dir(), "pre_refine/ directory must be created by refine stage"
+    for name in ("extraction.json", "hypothesis_space.json", "testing.json",
+                 "absence.json", "bayesian.json", "synthesis.json"):
+        assert (pre_refine_dir / name).is_file(), f"pre_refine/{name} must be saved before overwrite"
 
 
 @pytest.mark.plans(3)

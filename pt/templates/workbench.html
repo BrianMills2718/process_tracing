@@ -916,8 +916,11 @@ function _fixtureToMatrixPayload(fixture) {
   return {hypotheses: hyps, rows, below_threshold_count: fixture.testing.below_threshold_count, total_count: fixture.testing.total_count};
 }
 
-// Load matrix in demo mode on init
-fetch('/fixtures/brumaire_demo.json').then(r=>r.json()).then(f=>renderMatrix(_fixtureToMatrixPayload(f))).catch(()=>{});
+// Load matrix + support bars in demo mode on init
+fetch('/fixtures/brumaire_demo.json').then(r=>r.json()).then(f=>{
+  renderMatrix(_fixtureToMatrixPayload(f));
+  renderSupport(_fixtureToSupportPayload(f));
+}).catch(()=>{});
 
 // ── Refine loop annotation on simple graph ──
 // After all nodes are added, add dashed loop-back label
@@ -1123,33 +1126,68 @@ fetch('/fixtures/brumaire_demo.json').then(r=>r.json()).then(f=>renderMatrix(_fi
 })();
 
 // ── Support bars render ──
-const SUP = [
-  {id:'h2',label:'Military conversion', post:0.9942,lo:0.481,hi:1.000,rob:'fragile',  color:'#b02820'},
-  {id:'h1',label:'Civilian revision',   post:0.0047,lo:0.000,hi:0.439,rob:'fragile',  color:'#b02820'},
-  {id:'h4',label:'Legal engineering',   post:0.0008,lo:0.000,hi:0.216,rob:'moderate', color:'#9a620c'},
-  {id:'h3',label:'Path closure',        post:0.0003,lo:0.000,hi:0.017,rob:'fragile',  color:'#b02820'},
-  {id:'h5',label:'Popular endorsement', post:0.00001,lo:0.000,hi:0.00001,rob:'robust',color:'#28714a'},
-];
-const supEl = document.getElementById('support-output');
-SUP.forEach(d=>{
-  const div = document.createElement('div');
-  div.className = 'bar-row';
-  div.style.marginBottom='10px';
-  div.innerHTML = `
-    <div style="font-size:12.5px;line-height:1.3">
-      <span style="font-family:monospace;font-size:11px;color:var(--faint)">${d.id}</span>&ensp;${d.label}
-      <span style="font-size:10.5px;font-weight:700;color:${d.color};margin-left:4px">${d.rob}</span>
-    </div>
-    <div>
-      <div class="bar-track">
-        <div class="bar-sens" style="left:${d.lo*100}%;width:${Math.max(0,(d.hi-d.lo)*100)}%;background:${d.color}"></div>
-        <div class="bar-fill" style="width:${d.post*100}%;background:${d.color}"></div>
+const _robColor = {robust:'#28714a', moderate:'#9a620c', fragile:'#b02820'};
+
+function renderSupport(payload) {
+  const supEl = document.getElementById('support-output');
+  if (!supEl) return;
+  supEl.innerHTML = '';
+  const warn = [];
+  if (payload.fragile_warning) warn.push('<span style="color:var(--red);font-weight:700">⚠ Fragile leader</span> — driven by many weak LRs, not decisive tests');
+  if (payload.rank_instability_warning) warn.push('<span style="color:var(--amber);font-weight:700">⚠ Rank unstable</span> under driver perturbation');
+  if (!payload.prior_sensitivity_stable) warn.push('<span style="color:var(--amber);font-weight:700">⚠ Prior sensitive</span> — ranking shifts under ±' + payload.perturbation_factor + '× prior perturbation');
+  if (warn.length) {
+    const wb = document.createElement('div');
+    wb.style.cssText = 'font-size:12px;line-height:1.8;margin-bottom:10px;padding:6px 8px;background:var(--band);border-radius:4px';
+    wb.innerHTML = warn.join('<br>');
+    supEl.appendChild(wb);
+  }
+  payload.bars.forEach(d => {
+    const color = _robColor[d.robustness] || '#555';
+    const div = document.createElement('div');
+    div.className = 'bar-row';
+    div.style.marginBottom = '10px';
+    div.innerHTML = `
+      <div style="font-size:12.5px;line-height:1.3">
+        <span style="font-family:monospace;font-size:11px;color:var(--faint)">${d.hypothesis_id}</span>&ensp;${d.label}
+        <span style="font-size:10.5px;font-weight:700;color:${color};margin-left:4px">${d.robustness}</span>
+        ${d.rank_stable === false ? '<span style="font-size:10px;color:var(--amber);margin-left:4px">rank-unstable</span>' : ''}
       </div>
-      <div style="font-size:10.5px;color:var(--muted);margin-top:2px">band: ${d.lo<0.001?'<0.001':d.lo.toFixed(3)} – ${d.hi.toFixed(3)}</div>
-    </div>
-    <div class="bar-val">${d.post<0.0001?'<0.0001':d.post.toFixed(4)}</div>`;
-  supEl.appendChild(div);
-});
+      <div>
+        <div class="bar-track">
+          <div class="bar-sens" style="left:${d.posterior_low*100}%;width:${Math.max(0,(d.posterior_high-d.posterior_low)*100)}%;background:${color}"></div>
+          <div class="bar-fill" style="width:${d.posterior*100}%;background:${color}"></div>
+        </div>
+        <div style="font-size:10.5px;color:var(--muted);margin-top:2px">band: ${d.posterior_low<0.001?'<0.001':d.posterior_low.toFixed(3)} – ${d.posterior_high.toFixed(3)}</div>
+      </div>
+      <div class="bar-val">${d.posterior<0.0001?'<0.0001':d.posterior.toFixed(4)}</div>`;
+    supEl.appendChild(div);
+  });
+}
+
+function _fixtureToSupportPayload(fixture) {
+  const ps = fixture.bayesian.prior_sensitivity;
+  const labelFor = {};
+  fixture.hypothesis_space.hypotheses.forEach(h => { labelFor[h.id] = (h.description || h.id).substring(0, 60); });
+  const sorted = [...fixture.bayesian.posteriors].sort((a,b) => b.posterior - a.posterior);
+  const bars = sorted.map(p => ({
+    hypothesis_id: p.hypothesis_id,
+    label: labelFor[p.hypothesis_id] || p.hypothesis_id,
+    posterior: p.posterior,
+    posterior_low: p.posterior_low != null ? p.posterior_low : p.posterior,
+    posterior_high: p.posterior_high != null ? p.posterior_high : p.posterior,
+    robustness: p.robustness || 'moderate',
+    rank_stable: p.rank_stable !== false,
+    top_driver_ids: p.top_driver_ids || [],
+  }));
+  return {
+    bars,
+    prior_sensitivity_stable: ps ? ps.stable_under_prior_perturbation !== false : true,
+    perturbation_factor: ps ? (ps.perturbation_factor || 2.0) : 2.0,
+    fragile_warning: bars.some(b => b.posterior > 0.5 && b.robustness === 'fragile'),
+    rank_instability_warning: bars.some(b => !b.rank_stable),
+  };
+}
 
 // ── Real-mode run API ──────────────────────────────────────────────────────
 let _runId = null;
@@ -1205,6 +1243,11 @@ async function runStage(stageId) {
     if (stageId === 'test' && _runId) {
       fetch(`/api/runs/${_runId}/stages/test/artifact`).then(r=>r.json()).then(d=>{
         if (d.ok) renderMatrix(d.payload);
+      }).catch(()=>{});
+    }
+    if (stageId === 'update' && _runId) {
+      fetch(`/api/runs/${_runId}/stages/update/artifact`).then(r=>r.json()).then(d=>{
+        if (d.ok) renderSupport(d.payload);
       }).catch(()=>{});
     }
     const ORDER = ['extract','hypothesize','test','absence','update','synthesize','refine'];
