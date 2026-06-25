@@ -1,86 +1,71 @@
-updated: "2026-06-25T14:20:00"
+updated: "2026-06-25T15:30:00"
 project: process_tracing
 scope: repo
 status: active
-git_commit: "5f6853f"
+git_commit: "00433d8"
 git_branch: "master"
-summary: "Slices 3-6 fully audited and verified (U1 resolved). All 18 commits pushed to remote. Ready to implement Slice 7: Structural Critic Ablation."
-next_action: "Implement Slice 7 — Structural Critic Ablation. See pending P1 for full spec and constraints."
+summary: "Slice 7 (Structural Critic Ablation) implemented and pushed. 157 deterministic tests pass. Ready for E2E validation."
+next_action: "Run E2E validation of --critic flag on french_revolution.txt. Then consider P2 (audit gap fix) or Slice 8."
 
 completed:
-  - "Audit of Slices 3-6: schema coherence, prompt quality, test coverage, audit cap exercisability, report rendering — all verified (this session)"
-  - "U1 resolved: ba9f07b prompt fix verified by fresh E2E (output/slice6_postfix). Zero 'overview' values in expected_source_genre post-fix."
-  - "U2 accepted: lineage_type=null on all clusters is gpt-5-mini model-tier limitation; no code change needed."
-  - "18 commits pushed to remote (origin master)"
+  - "Audit of Slices 3-6: all verified (previous session)"
+  - "U1 resolved: ba9f07b prompt fix verified (previous session)"
+  - "U2 accepted: lineage_type=null on gpt-5-mini, no code change needed (previous session)"
+  - "Slice 7 — Structural Critic Ablation (this session): schemas, pass, prompt, pipeline, CLI, report, 22 tests"
 
 pending:
   - id: P1
     priority: high
-    effort: large
-    summary: "Slice 7 — Structural Critic Ablation"
+    effort: medium
+    summary: "E2E validation of --critic flag"
     details: >
-      New critic pass that reads causal extraction + likelihood vectors and flags:
-      confounds, missing pathways, void links, too-strong likelihood claims, confirmed links.
+      Run the two E2E commands below. Use --model openrouter/openai/gpt-5-mini (Gemini quota exhausted).
 
-      CONSTRAINTS (hard — do not violate):
-      (1) No direct LR mutation — any numeric change must route through re-elicitation of Pass 3.
-      (2) On/off CLI flag: --critic (off by default).
-      (3) Ablation artifacts: result_base.json + result_critic.json + critic_delta.json written
-          to the output directory when --critic is active.
-      (4) Critic output is ADVISORY — it flags issues for re-elicitation, does not patch LRs.
+      # Base run (critic OFF)
+      PYTHONPATH=. python -m pt input_text/revolutions/french_revolution.txt \
+          --output-dir output/slice7_base --model openrouter/openai/gpt-5-mini --json-only
 
-      SCHEMA CHANGES needed:
-      - New Pydantic model CriticFinding (in pt/schemas.py) with fields: finding_type (Literal[
-        "confound", "missing_pathway", "void_link", "too_strong_claim", "confirmed_link"]),
-        target (str -- evidence_id, hypothesis_id, or causal edge "src->tgt"), severity
-        (Literal["high", "medium", "low"]), reasoning (str), recommendation (str).
-      - New CriticResult model: findings (list[CriticFinding]), summary (str), re_elicitation_needed (bool).
-      - ProcessTracingResult gets an optional critic field: Optional[CriticResult] = None.
+      # Critic run (critic ON)
+      PYTHONPATH=. python -m pt input_text/revolutions/french_revolution.txt \
+          --output-dir output/slice7_critic --model openrouter/openai/gpt-5-mini --json-only --critic
 
-      NEW FILES:
-      - pt/pass_critic.py — LLM call reading extraction + testing results, returns CriticResult.
-      - pt/prompts/pass_critic.yaml — prompt for the critic pass.
+      # Verify delta
+      python3 -c "
+      import json
+      delta = json.load(open('output/slice7_critic/critic_delta.json'))
+      print('Delta entries:', len(delta))
+      for d in delta:
+          print(f\"  {d['hypothesis_id']}: base={d['posterior_base']:.3f} critic={d['posterior_critic']:.3f}\")
+      "
 
-      PIPELINE CHANGES:
-      - pt/pipeline.py: if --critic flag, run pass_critic after pass_diagnostic (Pass 3.6),
-        before Bayesian update. If critic.re_elicitation_needed, re-run pass_test and
-        pass_diagnostic with the critic summary injected into the pass3 prompt context.
-        Save result_base.json before critic re-elicitation; save result_critic.json after.
-        Compute critic_delta.json = diff of posteriors and top drivers between base and critic.
-      - pt/cli.py: add --critic flag (bool, default False).
+      # Audit both
+      PYTHONPATH=. python scripts/audit_result_quality.py output/slice7_base/result.json \
+          --report output/slice7_base/report.html
+      PYTHONPATH=. python scripts/audit_result_quality.py output/slice7_critic/result.json \
+          --report output/slice7_critic/report.html
 
-      REPORT CHANGES:
-      - pt/report.py: if result.critic, add a collapsed "Structural Critic" section listing
-        findings by severity. Link each finding to the evidence/hypothesis it references.
-
-      AUDIT CHANGES:
-      - scripts/audit_result_quality.py: if result.critic and re_elicitation_needed and
-        critic field is None (i.e., critic was available but not run), add a note.
-        No new cap needed for Slice 7 — the critic is advisory.
-
-      E2E:
-      - Run Brumaire (input_text/18_brumaire/) with --critic OFF, save to output/slice7_base/
-      - Run Brumaire with --critic ON, save to output/slice7_critic/
-      - Verify critic_delta.json exists and shows non-trivial posterior changes when critic fires
-      - Run make audit-result on both outputs and compare grades
+      # Deterministic tests
+      PYTHONPATH=. pytest tests/ -q --tb=short
 
       SUCCESS CRITERIA:
-      - Critic catches at least one confound or missing pathway in the Brumaire run
-      - re_elicitation_needed=True triggers a second pass3 call (observable in logs/trace_id)
-      - result_base.json posteriors differ from result_critic.json posteriors (delta > 0)
-      - No LR is directly patched — all numeric changes come from re-elicitation
-      - 135+ deterministic tests still pass (no regressions)
-      - Audit grade does not drop below B on either Brumaire result
+      1. result.critic populated in critic run, None in base run
+      2. critic_delta.json has one entry per hypothesis (list of dicts)
+      3. If re_elicitation_needed=True: posteriors differ between base and critic (delta > 0.01 on at least one)
+      4. No direct LR mutation (all numeric changes traceable to re-elicitation trace_id in logs)
+      5. At least one CriticFinding with finding_type in ["confound", "missing_pathway"]
+      6. 157+ deterministic tests still pass
+      7. Audit grade not below B on either output
 
   - id: P2
     priority: medium
     effort: small
-    summary: "Audit coverage gap — add test for pass3b acquisition-target clarification"
+    summary: "Audit coverage gap — strengthen pass3b acquisition-target test"
     details: >
       Add one assertion to test_extraction_quality.py:
       TestAbsenceAcquisitionFields::test_prompt_contract_includes_expected_source_genre
       should also assert that the pass3b prompt contains text like "NOT the current text"
       or "SOURCE TO ACQUIRE" so the critical disambiguation survives future prompt edits.
+      (Text is present in the prompt: "the SOURCE TO ACQUIRE — NOT the current text's genre")
 
   - id: P3
     priority: medium
@@ -88,11 +73,8 @@ pending:
     summary: "Audit coverage gap — cap-84 source-lineage inflation needs multi-source E2E"
     details: >
       Cap-84 source-lineage inflation path (audit_result_quality.py lines 421-452) cannot be
-      exercised by the French Revolution Wikipedia corpus because all evidence gets
-      source_group='Main text' and the check explicitly excludes 'Main text' items.
-      The planted-fixture tests prove the Bayesian math; what's missing is an E2E with a
-      source-packet run where sources have distinct source_group labels.
-      Log in concern register as deferred to Slice 10 (frozen benchmark suite).
+      exercised by the French Revolution Wikipedia corpus. Deferred to Slice 10 (frozen benchmark
+      suite). Log in concern register.
 
   - id: P4
     priority: low
@@ -104,8 +86,6 @@ pending:
       - docs/plans/005d_workbench_mockup_v2.html
       - docs/plans/005d_workbench_mockup_v3.html
       - pt/schemas_view.py (verify not imported: grep -r "schemas_view" pt/ tests/)
-      All four appear safe to gitignore or delete. HTML mockups are superseded Plan 5
-      design artifacts. schemas_view.py is an untracked view payload file.
 
 uncertainties: []
 
@@ -113,16 +93,18 @@ warnings:
   - "DO NOT add numeric likelihood adjustments inside the critic pass — all numeric changes must route through re-elicitation of Pass 3, not direct LR mutation"
   - "DO NOT assign likelihood ratios to absence findings (AbsenceEvaluation) — absence stays qualitative/synthesis-only"
   - "Critic pass is advisory: CriticFinding flags issues but does not modify TestingResult or BayesianResult directly"
+  - "re_elicitation_needed is computed by model_validator (any high-severity finding → True); do NOT treat it as LLM-produced"
   - "pt/schemas_view.py is untracked — verify it is not imported before deleting"
   - "docs/plans/CLAUDE.md is generated by the plan-status sync script; do not hand-edit it"
   - "AGENTS.md is a generated mirror; update canonical CLAUDE.md instead"
+  - "Gemini quota exhausted — use --model openrouter/openai/gpt-5-mini for all E2E runs"
 
 sanity_checks:
-  - cmd: "PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_extraction_quality.py tests/test_pass_diagnostic.py -q"
-    expect: "135 passed"
-  - cmd: "python3 -c \"from pt.pass_diagnostic import compute_diagnostic_matrix; print('ok')\""
+  - cmd: "PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_extraction_quality.py tests/test_pass_diagnostic.py tests/test_pass_critic.py -q"
+    expect: "157 passed"
+  - cmd: "python3 -c \"from pt.pass_critic import run_critic; print('ok')\""
     expect: "ok"
-  - cmd: "python3 -c \"from pt.schemas import AbsenceEvaluation, DiagnosticMatrix, EvidenceCluster; print('ok')\""
-    expect: "ok"
+  - cmd: "python3 -c \"from pt.schemas import CriticResult, CriticFinding, CriticDelta; r = CriticResult(findings=[], summary='ok'); print(r.re_elicitation_needed)\""
+    expect: "False"
   - cmd: "git status --short"
     expect: "only the 4 untracked files (docs/plans/005d_*.html, pt/schemas_view.py)"
