@@ -1,11 +1,11 @@
-updated: "2026-06-25T20:00:00"
+updated: "2026-06-25T22:00:00"
 project: process_tracing
 scope: repo
 status: active
-git_commit: "2358d5a"
+git_commit: "564be28"
 git_branch: "master"
-summary: "Slice 7 (Structural Critic Ablation) complete with 4 post-E2E bug fixes committed. 170 deterministic tests pass. Review-ready."
-next_action: "Human review of Slice 7 changes. After review: P2 (strengthen pass3b assertion), P4 (untracked file cleanup), or start Slice 8."
+summary: "Slice 7 fully complete. 172 deterministic tests. Concern register triaged (C-015, C-016, C-017 added). Entering Slice 8."
+next_action: "Implement Slice 8: synthesis calibration and report regression gates."
 
 completed:
   - "Audit of Slices 3-6: all verified (previous session)"
@@ -22,19 +22,17 @@ completed:
     # Bug 3: conditional synthesis — synthesis_base reused when re_elicitation_needed=False
     # Bug 4: redundant result_critic.json write removed; ablation pair is result_base.json vs result.json
     # Prompt fix: pass_critic.yaml "What NOT to do" section now gives actionable phrasing examples
+  - "Slice 7 deep review fixes (commit 5c87d1f): 10 issues resolved, 171 tests pass"
+    # dead variable removed, anchor links fixed, stale references removed, multi-hop validator,
+    # --critic+--refine guard, absence deduplication, confirmed_link separation, CLAUDE.md docs
+  - "Slice 7 E2E evidence note (commit 7cce23d): audit grade B (80/100), schema valid, 22 findings"
+    # output/slice7_v2: critic 22 findings (0 high, 10 medium void_link, 12 low confirmed_link)
+    # No re-elicitation; all target_type/target combos pass model_validator; 334.9s
+  - "P2 resolved (commit 564be28): pass3b SOURCE TO ACQUIRE disambiguation assertion added"
+  - "P4 resolved (commit ff5e746): pt/schemas_view.py and docs/plans/005d_*.html committed"
+  - "Concern register triaged: C-015 (same-model critic accepted), C-016 (missing_pathway accepted), C-017 (open — frozen benchmark not yet run)"
 
 pending:
-  - id: P2
-    priority: medium
-    effort: small
-    summary: "Audit coverage gap — strengthen pass3b acquisition-target test"
-    details: >
-      Add one assertion to test_extraction_quality.py:
-      TestAbsenceAcquisitionFields::test_prompt_contract_includes_expected_source_genre
-      should also assert that the pass3b prompt contains text like "NOT the current text"
-      or "SOURCE TO ACQUIRE" so the critical disambiguation survives future prompt edits.
-      (Text is present in the prompt: "the SOURCE TO ACQUIRE — NOT the current text's genre")
-
   - id: P3
     priority: medium
     effort: small
@@ -43,17 +41,6 @@ pending:
       Cap-84 source-lineage inflation path (audit_result_quality.py lines 421-452) cannot be
       exercised by the French Revolution Wikipedia corpus. Deferred to Slice 10 (frozen benchmark
       suite). Log in concern register.
-
-  - id: P4
-    priority: low
-    effort: small
-    summary: "Untracked files cleanup"
-    details: >
-      Four untracked files to resolve:
-      - docs/plans/005d_visual_audit_mockup.html
-      - docs/plans/005d_workbench_mockup_v2.html
-      - docs/plans/005d_workbench_mockup_v3.html
-      - pt/schemas_view.py (verify not imported: grep -r "schemas_view" pt/ tests/)
 
 uncertainties: []
 
