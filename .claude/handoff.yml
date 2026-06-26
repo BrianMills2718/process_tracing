@@ -1,11 +1,11 @@
-updated: "2026-06-26T08:15:00"
+updated: "2026-06-26T09:45:00"
 project: process_tracing
 scope: repo
 status: active
-git_commit: "60a0476"
+git_commit: "6443b5d"
 git_branch: "master"
-summary: "All Plan 003 concerns resolved. C-017 (--critic-model, E2E verified). C-018 (acyclic DAG prompt fix, live verified: 10-var clean DAG on french+american revolutions). 210 deterministic tests. No open concerns."
-next_action: "Hypothesis partition audit (FUTURE_WORK.md #1) or trace_eval integration (diagnose which pipeline stage caused a failure)."
+summary: "Deep audit complete. Fixed CRIT-2 (guard fires before LLM), HIGH-1 (robustness from individual LRs), HIGH-2 (absence threshold mismatch), HIGH-3 (robustness cross-validation), HIGH-4 (source-lineage audit), MED-5 (unique ID validators). 221 deterministic tests. Live E2E grade: B (80/100)."
+next_action: "Hypothesis partition audit (FUTURE_WORK.md #1) — highest leverage for result quality."
 
 completed:
   - "Audit of Slices 3-6: all verified (previous session)"
@@ -58,6 +58,16 @@ completed:
     # Independent-model E2E: output/critic_model_confound/ → confound=high + too_strong=high×2 + re_elicitation=True
     # benchmark_config.yaml: both cases as optional result_file entries (before/after comparison)
     # 210 deterministic tests pass
+  - "Deep audit: 5 real bugs fixed (commits d40d247, cdcbb98, 6443b5d)"
+    # CRIT-2: --critic+--refine guard moved to top of run_pipeline (before LLM calls)
+    # HIGH-1: _compute_robustness now uses individual (pre-pool) LRs — not cluster-inflated
+    # HIGH-2: _build_testing_summary threshold changed 0.6→RELEVANCE_GATE(0.4) — false positive absence fix
+    # HIGH-3: calibrate_synthesis_verdicts always overwrites posterior_robustness with computed value
+    # HIGH-4: source-lineage audit no longer excludes "Main text" labeled evidence
+    # MED-5: ExtractionResult now validates unique actor/event/mechanism IDs
+    # 221 deterministic tests pass; E2E grade B (80/100) unchanged
+    # CRIT-1 (order-dependent audit trail): not a bug — sequential trail is expected behavior
+    # CRIT-4 (for/else unreachable path): confirmed provably unreachable, pragma: no cover is correct
 
 pending:
   - id: P3
@@ -108,8 +118,8 @@ warnings:
   - "Pydantic models use extra='ignore' by default — wrong field names are silently dropped; always verify field names against pt/schemas.py"
 
 sanity_checks:
-  - cmd: "PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_extraction_quality.py tests/test_pass_diagnostic.py tests/test_pass_critic.py tests/test_multi_contracts.py tests/test_benchmark.py -q"
-    expect: "208 passed"
+  - cmd: "PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_extraction_quality.py tests/test_pass_diagnostic.py tests/test_pass_critic.py tests/test_multi_contracts.py tests/test_benchmark.py tests/test_verdict_calibration.py tests/test_pass_absence.py -q"
+    expect: "221 passed"
   - cmd: "python3 -c \"from pt.pass_critic import run_critic; print('ok')\""
     expect: "ok"
   - cmd: "python3 -c \"from pt.schemas import CriticResult, CriticFinding, CriticDelta; r = CriticResult(findings=[], summary='ok'); print(r.re_elicitation_needed)\""
