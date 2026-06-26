@@ -1,24 +1,23 @@
 {
   "total": 3,
-  "passed": 2,
-  "failed": 1,
+  "passed": 3,
+  "failed": 0,
   "skipped": 0,
-  "required_failures": 1,
-  "all_required_pass": false,
+  "required_failures": 0,
+  "all_required_pass": true,
   "cases": [
     {
       "name": "adversarial_fragile_overclaim",
       "type": "fixture",
       "optional": false,
       "description": "Planted failure: 12 weak background items dominate, fragile winner, broad legitimacy-vacuum hypothesis. Audit must flag broad_winning_hypothesis and cap at grade C.\n",
-      "passed": false,
+      "passed": true,
       "skipped": false,
-      "failures": [
-        "expected flag 'broad_winning_hypothesis' not raised by audit"
-      ],
+      "failures": [],
       "score": 76,
       "grade": "C",
       "flags_found": [
+        "broad_winning_hypothesis",
         "verdict_calibration_mismatch"
       ],
       "audit_summary": {

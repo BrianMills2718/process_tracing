@@ -388,14 +388,15 @@ def _run_case(case: dict, verbose: bool = False) -> dict[str, Any]:
 
     # Collect flags present
     flags_found: list[str] = []
+    cats = audit.get("categories", {})
     # Check broad_winning_hypothesis
-    if audit.get("categories", {}).get("inference_depth_and_clarity", {}).get("broad_winner_risk"):
+    if cats.get("hypothesis_discrimination", {}).get("broad_winner_risk"):
         flags_found.append("broad_winning_hypothesis")
     # Check verdict_calibration_mismatch
-    if audit.get("categories", {}).get("comparative_support_discipline", {}).get("verdict_issues"):
+    if cats.get("comparative_support_discipline", {}).get("verdict_issues"):
         flags_found.append("verdict_calibration_mismatch")
     # Check overclaim
-    if audit.get("categories", {}).get("comparative_support_discipline", {}).get("overclaim_issues"):
+    if cats.get("comparative_support_discipline", {}).get("overclaim_issues"):
         flags_found.append("overclaim")
     result_record["flags_found"] = flags_found
 
