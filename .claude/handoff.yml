@@ -1,61 +1,29 @@
-updated: "2026-06-25T15:30:00"
+updated: "2026-06-25T20:00:00"
 project: process_tracing
 scope: repo
 status: active
-git_commit: "00433d8"
+git_commit: "2358d5a"
 git_branch: "master"
-summary: "Slice 7 (Structural Critic Ablation) implemented and pushed. 157 deterministic tests pass. Ready for E2E validation."
-next_action: "Run E2E validation of --critic flag on french_revolution.txt. Then consider P2 (audit gap fix) or Slice 8."
+summary: "Slice 7 (Structural Critic Ablation) complete with 4 post-E2E bug fixes committed. 170 deterministic tests pass. Review-ready."
+next_action: "Human review of Slice 7 changes. After review: P2 (strengthen pass3b assertion), P4 (untracked file cleanup), or start Slice 8."
 
 completed:
   - "Audit of Slices 3-6: all verified (previous session)"
   - "U1 resolved: ba9f07b prompt fix verified (previous session)"
   - "U2 accepted: lineage_type=null on gpt-5-mini, no code change needed (previous session)"
-  - "Slice 7 — Structural Critic Ablation (this session): schemas, pass, prompt, pipeline, CLI, report, 22 tests"
+  - "Slice 7 — Structural Critic Ablation: schemas, pass, prompt, pipeline, CLI, report, 22 tests"
+  - "P1 — E2E validation of --critic flag: all 7 success criteria pass"
+    # Results: 9 findings (confound+missing_pathway+void_link+too_strong+confirmed), re_elicitation=True
+    # h1 posterior shift: 0.457→0.178 (-0.280), h5: 0.098→0.296 (+0.197)
+    # Working model: openrouter/openai/gpt-5.4-mini (265s) or openrouter/anthropic/claude-haiku-4-5 (673s)
+  - "Slice 7 post-E2E bug fixes (commit 2358d5a): 4 bugs fixed, 13 new tests, 170 total pass"
+    # Bug 1: schema validator on CriticFinding rejects target_type/target mismatches upstream
+    # Bug 2: hyp_finding_count type-dispatch — causal_edge findings not attributed to hypotheses
+    # Bug 3: conditional synthesis — synthesis_base reused when re_elicitation_needed=False
+    # Bug 4: redundant result_critic.json write removed; ablation pair is result_base.json vs result.json
+    # Prompt fix: pass_critic.yaml "What NOT to do" section now gives actionable phrasing examples
 
 pending:
-  - id: P1
-    priority: high
-    effort: medium
-    summary: "E2E validation of --critic flag"
-    details: >
-      Run the two E2E commands below. Use --model openrouter/openai/gpt-5-mini (Gemini quota exhausted).
-
-      # Base run (critic OFF)
-      PYTHONPATH=. python -m pt input_text/revolutions/french_revolution.txt \
-          --output-dir output/slice7_base --model openrouter/openai/gpt-5-mini --json-only
-
-      # Critic run (critic ON)
-      PYTHONPATH=. python -m pt input_text/revolutions/french_revolution.txt \
-          --output-dir output/slice7_critic --model openrouter/openai/gpt-5-mini --json-only --critic
-
-      # Verify delta
-      python3 -c "
-      import json
-      delta = json.load(open('output/slice7_critic/critic_delta.json'))
-      print('Delta entries:', len(delta))
-      for d in delta:
-          print(f\"  {d['hypothesis_id']}: base={d['posterior_base']:.3f} critic={d['posterior_critic']:.3f}\")
-      "
-
-      # Audit both
-      PYTHONPATH=. python scripts/audit_result_quality.py output/slice7_base/result.json \
-          --report output/slice7_base/report.html
-      PYTHONPATH=. python scripts/audit_result_quality.py output/slice7_critic/result.json \
-          --report output/slice7_critic/report.html
-
-      # Deterministic tests
-      PYTHONPATH=. pytest tests/ -q --tb=short
-
-      SUCCESS CRITERIA:
-      1. result.critic populated in critic run, None in base run
-      2. critic_delta.json has one entry per hypothesis (list of dicts)
-      3. If re_elicitation_needed=True: posteriors differ between base and critic (delta > 0.01 on at least one)
-      4. No direct LR mutation (all numeric changes traceable to re-elicitation trace_id in logs)
-      5. At least one CriticFinding with finding_type in ["confound", "missing_pathway"]
-      6. 157+ deterministic tests still pass
-      7. Audit grade not below B on either output
-
   - id: P2
     priority: medium
     effort: small
@@ -89,6 +57,23 @@ pending:
 
 uncertainties: []
 
+e2e_model:
+  recommended: "openrouter/openai/gpt-5.4-mini"
+  verified: "2026-06-25"
+  notes: >
+    265s for full French Rev pipeline (Pass 1: 74s, Pass 3: 135s, Pass 4: 22s).
+    123/123 evidence items vectorized with no zero-likelihood failures.
+    openrouter/anthropic/claude-haiku-4-5 also works (673s, slower).
+  avoid:
+    - model: "gemini/gemini-2.5-flash"
+      reason: "free-tier daily quota (20 req/day) exhausted"
+    - model: "deepseek/deepseek-chat"
+      reason: "returns relative_likelihood=0 — violates gt=0.0 schema constraint in Pass 3"
+    - model: "openrouter/openai/gpt-5-mini"
+      reason: "very slow on Pass 3 (~30+ min) due to TIMEOUT_DISABLED policy"
+    - model: "openrouter/openai/gpt-4o-mini"
+      reason: "hard-blocked in llm_client"
+
 warnings:
   - "DO NOT add numeric likelihood adjustments inside the critic pass — all numeric changes must route through re-elicitation of Pass 3, not direct LR mutation"
   - "DO NOT assign likelihood ratios to absence findings (AbsenceEvaluation) — absence stays qualitative/synthesis-only"
@@ -97,11 +82,10 @@ warnings:
   - "pt/schemas_view.py is untracked — verify it is not imported before deleting"
   - "docs/plans/CLAUDE.md is generated by the plan-status sync script; do not hand-edit it"
   - "AGENTS.md is a generated mirror; update canonical CLAUDE.md instead"
-  - "Gemini quota exhausted — use --model openrouter/openai/gpt-5-mini for all E2E runs"
 
 sanity_checks:
   - cmd: "PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_extraction_quality.py tests/test_pass_diagnostic.py tests/test_pass_critic.py -q"
-    expect: "157 passed"
+    expect: "170 passed"
   - cmd: "python3 -c \"from pt.pass_critic import run_critic; print('ok')\""
     expect: "ok"
   - cmd: "python3 -c \"from pt.schemas import CriticResult, CriticFinding, CriticDelta; r = CriticResult(findings=[], summary='ok'); print(r.re_elicitation_needed)\""
