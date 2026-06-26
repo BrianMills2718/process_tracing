@@ -755,14 +755,36 @@ def audit_result(
     broad_risk = _broad_winner_risk(result)
     broad_visible = (not broad_risk) or _report_has(report_html, "broad winning hypothesis")
     discrimination_points = 10 if broad_visible else 4
+
+    # Partition audit quality (Pass 2.5): needs_review means overlap/complementary concerns
+    # that can inflate support scores by letting the winner absorb rivals.
+    partition_needs_review = (
+        result.partition_audit is not None
+        and result.partition_audit.overall_quality == "needs_review"
+    )
+    partition_visible = not partition_needs_review or _report_has(
+        report_html, "partition audit", "needs review"
+    )
+    if partition_needs_review and not partition_visible:
+        discrimination_points -= 3
+    discrimination_points = max(discrimination_points, 0)
+
+    disc_recs: list[str] = []
+    if not broad_visible:
+        disc_recs.append("Flag broad winners and add sharper discriminators against overlapping rival hypotheses.")
+    if partition_needs_review and not partition_visible:
+        disc_recs.append(
+            "Hypothesis partition needs review (overlap or complementary concerns). "
+            "Run with --partition-review or check partition.json before trusting support scores."
+        )
     categories["hypothesis_discrimination"] = {
         "points": discrimination_points,
         "max": 10,
         "broad_winner_risk": broad_risk,
         "broad_warning_visible": broad_visible,
-        "recommendations": [] if broad_visible else [
-            "Flag broad winners and add sharper discriminators against overlapping rival hypotheses."
-        ],
+        "partition_needs_review": partition_needs_review,
+        "partition_visible": partition_visible,
+        "recommendations": disc_recs,
     }
     score += discrimination_points
 

@@ -1369,6 +1369,107 @@ def _render_network_interpretation_guide(
         </div>"""
 
 
+def _partition_audit_section(result: ProcessTracingResult) -> str:
+    """Render the hypothesis partition audit (Pass 2.5) as a collapsible card.
+
+    Returns empty string when no partition audit is stored (e.g. --from-result without re-run).
+    """
+    if result.partition_audit is None:
+        return ""
+
+    audit = result.partition_audit
+    quality = audit.overall_quality
+
+    if quality == "needs_review":
+        quality_badge = '<span class="badge bg-danger">Needs Review</span>'
+        header_style = 'background:#dc3545;color:white'
+        alert_html = (
+            '<div class="alert alert-danger mb-3">'
+            "<strong>Partition concerns detected.</strong> "
+            f"{_esc(audit.summary)} "
+            "Support scores in this run may reflect hypothesis overlap rather than genuine causal discrimination. "
+            "Use <code>--partition-review</code> on the next run to address these concerns before re-testing."
+            "</div>"
+        )
+    else:
+        quality_badge = '<span class="badge bg-success">Adequate</span>'
+        header_style = 'background:#28a745;color:white'
+        alert_html = f'<p class="text-muted">{_esc(audit.summary)}</p>'
+
+    pair_rows = ""
+    for pair in audit.rival_pairs:
+        concern_badges = ""
+        if pair.overlap_concern:
+            concern_badges += ' <span class="badge bg-danger">Overlap</span>'
+        if pair.complementary_concern:
+            concern_badges += ' <span class="badge bg-warning text-dark">Complementary</span>'
+        if pair.absorptive_concern:
+            concern_badges += ' <span class="badge bg-info">Absorptive</span>'
+        if not concern_badges:
+            concern_badges = '<span class="badge bg-success">None</span>'
+        disc_color = "#dc3545" if pair.discriminator_count < 1 else (
+            "#f0ad4e" if pair.discriminator_count < 3 else "#28a745"
+        )
+        pair_rows += f"""
+        <tr>
+          <td><code>{_esc(pair.h1_id)}</code> &harr; <code>{_esc(pair.h2_id)}</code></td>
+          <td>{concern_badges}</td>
+          <td><strong style="color:{disc_color}">{pair.discriminator_count}</strong></td>
+          <td class="small">{_esc(pair.concern_detail)}</td>
+        </tr>"""
+
+    flagged_html = ""
+    if audit.hypotheses_flagged:
+        flagged_labels = ", ".join(f"<code>{_esc(h)}</code>" for h in audit.hypotheses_flagged)
+        flagged_html = f"<p><strong>Flagged hypotheses:</strong> {flagged_labels}</p>"
+
+    rq_badge = (
+        '<span class="badge bg-success">Adequate</span>'
+        if audit.research_question_adequate
+        else '<span class="badge bg-warning text-dark">Needs clarification</span>'
+    )
+
+    table_html = ""
+    if audit.rival_pairs:
+        table_html = f"""
+        <h6>Rival Pair Assessment</h6>
+        <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+          <thead><tr>
+            {_th("Pair")}
+            {_th("Concerns")}
+            {_th("Discriminators", "Number of observable predictions where H1 predicts X and H2 predicts NOT-X (or vice versa). Fewer than 3 is weak; 0 is a critical gap.")}
+            {_th("Detail")}
+          </tr></thead>
+          <tbody>{pair_rows}</tbody>
+        </table>
+        </div>"""
+    else:
+        table_html = "<p class='text-muted'>No rival pairs (single hypothesis).</p>"
+
+    return f"""
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center" style="{header_style}">
+        <h4 class="mb-0" data-bs-toggle="tooltip" title="Pass 2.5: Assesses whether hypotheses are genuine rivals with distinct observable predictions before diagnostic testing. Overlap or complementary hypotheses inflate support scores.">Hypothesis Partition Audit {quality_badge}</h4>
+        <button class="btn btn-sm btn-outline-light section-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#partitionBody">Expand</button>
+      </div>
+      <div class="collapse" id="partitionBody">
+      <div class="card-body">
+        {alert_html}
+        <p><strong>Research question:</strong> {rq_badge}</p>
+        {flagged_html}
+        {table_html}
+        <p class="small text-muted mt-2 mb-0">
+          <strong>Overlap:</strong> both hypotheses predict the same evidence patterns (can&rsquo;t discriminate).
+          <strong>Complementary:</strong> both could be simultaneously true &mdash; merge, don&rsquo;t test as rivals.
+          <strong>Absorptive:</strong> the winner could absorb the rival as a sub-mechanism without falsifying it.
+          <strong>Discriminators:</strong> predictions where H<sub>i</sub> expects X but H<sub>j</sub> expects NOT-X (&#8805;3 strongly preferred per pair).
+        </p>
+      </div>
+      </div>
+    </div>"""
+
+
 def generate_report(result: ProcessTracingResult) -> str:
     """Generate self-contained HTML report."""
 
@@ -1493,6 +1594,9 @@ def generate_report(result: ProcessTracingResult) -> str:
     )
 
     temporal_timeline = _render_temporal_timeline(result)
+
+    # ===== Section 2.5: Hypothesis Partition Audit =====
+    partition_section = _partition_audit_section(result)
 
     # ===== Section 2: Interactive Network =====
     network_section = f"""
@@ -2474,6 +2578,7 @@ def generate_report(result: ProcessTracingResult) -> str:
   {academic_review}
   {temporal_timeline}
   {network_section}
+  {partition_section}
   {comparison_table}
   {robustness_section}
   {test_matrix}
@@ -2506,7 +2611,7 @@ document.querySelectorAll('.section-toggle').forEach(function(btn) {{
 (function() {{
   var expandAllBtn = document.getElementById('expand-all-btn');
   var allExpanded = false;
-  var sectionIds = ['#networkBody','#comparisonBody','#robustnessBody','#testMatrixBody','#bayesianBody','#evidenceBody','#absenceBody','#refinementBody'];
+  var sectionIds = ['#networkBody','#partitionBody','#comparisonBody','#robustnessBody','#testMatrixBody','#bayesianBody','#evidenceBody','#absenceBody','#refinementBody'];
   expandAllBtn.addEventListener('click', function() {{
     allExpanded = !allExpanded;
     sectionIds.forEach(function(id) {{

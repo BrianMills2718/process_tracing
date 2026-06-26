@@ -361,3 +361,28 @@ class TestProcessTracingResultPartitionField:
         annotation = field.annotation
         args = typing.get_args(annotation)
         assert type(None) in args, f"partition_audit should be Optional, got {annotation}"
+
+
+# ── CLI flag ──────────────────────────────────────────────────────────
+
+class TestPartitionReviewCLIFlag:
+    """--partition-review flag is registered and accepted by argparse."""
+
+    def test_partition_review_flag_in_cli(self):
+        """argparse accepts --partition-review without error."""
+        import argparse
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("input")
+        parser.add_argument("--partition-review", action="store_true")
+        args = parser.parse_args(["dummy.txt", "--partition-review"])
+        assert args.partition_review is True
+
+    def test_partition_review_flag_defaults_false(self):
+        """--partition-review defaults to False when not supplied."""
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument("input")
+        parser.add_argument("--partition-review", action="store_true")
+        args = parser.parse_args(["dummy.txt"])
+        assert args.partition_review is False

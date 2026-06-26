@@ -96,6 +96,70 @@ def _default_review(hypothesis_space: HypothesisSpace, output_dir: str | None) -
     return edited_space
 
 
+def _default_partition_review(
+    hypothesis_space: HypothesisSpace,
+    partition_audit: PartitionAudit,
+    output_dir: str | None,
+) -> HypothesisSpace:
+    """Interactive partition review: display partition concerns, let user edit hypotheses."""
+    print("\n" + "=" * 60)
+    print("PARTITION AUDIT REVIEW CHECKPOINT")
+    print("=" * 60)
+    print(f"\nPartition quality: {partition_audit.overall_quality.upper()}")
+    print(f"Summary: {partition_audit.summary}")
+
+    if partition_audit.hypotheses_flagged:
+        print(f"\nFlagged hypotheses: {', '.join(partition_audit.hypotheses_flagged)}")
+
+    print("\nProblem pairs:")
+    any_flagged = False
+    for pair in partition_audit.rival_pairs:
+        concerns = []
+        if pair.overlap_concern:
+            concerns.append("OVERLAP")
+        if pair.complementary_concern:
+            concerns.append("COMPLEMENTARY")
+        if pair.absorptive_concern:
+            concerns.append("ABSORPTIVE")
+        if pair.discriminator_count < 1:
+            concerns.append("NO-DISCRIMINATORS")
+        if not concerns:
+            continue
+        any_flagged = True
+        print(f"  {pair.h1_id} <-> {pair.h2_id}: [{', '.join(concerns)}] (discriminators: {pair.discriminator_count})")
+        if pair.concern_detail:
+            print(f"    {pair.concern_detail}")
+    if not any_flagged:
+        print("  (no individual pair problems — overall quality set by LLM judgment)")
+
+    print("\nRemediation:")
+    print("  OVERLAP: add NOT-X predictions to discriminate or merge")
+    print("  COMPLEMENTARY: merge into one hypothesis with both mechanisms")
+    print("  ABSORPTIVE: split the broad hypothesis or add exclusive predictions")
+    print("  NO-DISCRIMINATORS: add predictions where H1 expects X but H2 expects NOT-X")
+
+    hyp_path = os.path.join(output_dir, "hypotheses.json") if output_dir else "hypotheses.json"
+    with open(hyp_path, "w", encoding="utf-8") as f:
+        json.dump(hypothesis_space.model_dump(), f, indent=2)
+    print(f"\nHypotheses written to: {hyp_path}")
+    print("Edit the file to fix partition concerns, then press Enter.")
+    print("Or press Enter without editing to continue as-is.")
+    print("=" * 60)
+
+    input("\nPress Enter to continue...")
+
+    with open(hyp_path, "r", encoding="utf-8") as f:
+        edited = json.load(f)
+    edited_space = HypothesisSpace.model_validate(edited)
+
+    if len(edited_space.hypotheses) != len(hypothesis_space.hypotheses):
+        print(f"  Hypotheses changed: {len(hypothesis_space.hypotheses)} -> {len(edited_space.hypotheses)}")
+    else:
+        print("  Hypotheses unchanged.")
+
+    return edited_space
+
+
 def _default_refine_review(refinement: RefinementResult, output_dir: str | None) -> RefinementResult:
     """Interactive refinement review: display delta summary, let user edit JSON."""
     print("\n" + "=" * 60)
@@ -281,6 +345,8 @@ def run_pipeline(
     verbose: bool = True,
     review: bool = False,
     review_fn: Callable[[HypothesisSpace, str | None], HypothesisSpace] | None = None,
+    partition_review: bool = False,
+    partition_review_fn: Callable[[HypothesisSpace, PartitionAudit, str | None], HypothesisSpace] | None = None,
     output_dir: str | None = None,
     theories: str | None = None,
     research_question: str | None = None,
@@ -302,6 +368,9 @@ def run_pipeline(
     Args:
         review: If True, pause after hypothesis generation (and after refinement) for user review.
         review_fn: Custom review function. Defaults to interactive CLI review.
+        partition_review: If True, pause after Pass 2.5 partition audit when quality is
+            needs_review; presents problem pairs and remediation, lets user edit hypotheses.
+        partition_review_fn: Custom partition review function. Defaults to interactive CLI review.
         output_dir: Directory for writing review files.
         theories: Optional plain-text theoretical frameworks for hypothesis generation.
         research_question: Optional researcher-pinned research question. Pins the outcome to
@@ -424,6 +493,11 @@ def run_pipeline(
                 json.dump(partition_audit.model_dump(), f, indent=2)
             if verbose:
                 print(f"  Partition audit: {partition_path}")
+
+        # Optional partition review checkpoint: pause when quality is needs_review
+        if partition_review and partition_audit.overall_quality == "needs_review":
+            fn = partition_review_fn or _default_partition_review
+            hypothesis_space = fn(hypothesis_space, partition_audit, output_dir)
 
     # Run passes 3-4 (initial)
     critic_result: CriticResult | None = None

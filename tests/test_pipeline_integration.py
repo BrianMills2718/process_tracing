@@ -398,8 +398,28 @@ def _make_audit_stress_result() -> ProcessTracingResult:
 # ── Mock dispatcher ────────────────────────────────────────────────
 
 
+def _make_adequate_partition():
+    from pt.schemas import PartitionAudit, RivalPairAudit
+    return PartitionAudit(
+        research_question_adequate=True,
+        rival_pairs=[
+            RivalPairAudit(
+                h1_id="h1", h2_id="h2",
+                overlap_concern=False, complementary_concern=False, absorptive_concern=False,
+                discriminator_count=3, concern_detail="",
+            )
+        ],
+        hypotheses_flagged=[],
+        overall_quality="adequate",
+        summary="Hypotheses make opposite predictions; no partition concerns.",
+    )
+
+
 def _mock_call_llm(prompt: str, response_model: type, *, task: str = "", trace_id: str = "", **kwargs):
-    """Return deterministic data based on the response model type."""
+    """Return deterministic data based on the response model type.
+
+    mock-ok: LLM boundaries are mocked to keep the suite deterministic and fast.
+    """
     model_name = response_model.__name__
 
     if model_name == "ExtractionResult":
@@ -412,6 +432,8 @@ def _mock_call_llm(prompt: str, response_model: type, *, task: str = "", trace_i
         return _make_absence()
     elif model_name == "SynthesisResult":
         return _make_synthesis()
+    elif model_name == "PartitionAudit":
+        return _make_adequate_partition()
     else:
         raise ValueError(f"Unexpected response_model in mock: {model_name}")
 
@@ -433,6 +455,7 @@ class TestInputValidation:
         text = " ".join(["word"] * 300)
         with patch("pt.pass_extract.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_hypothesize.call_llm", side_effect=_mock_call_llm), \
+             patch("pt.pass_partition.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_test.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_absence.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_synthesize.call_llm", side_effect=_mock_call_llm):
@@ -448,6 +471,7 @@ class TestPipelineOrchestration:
         text = " ".join(["substantive"] * 400)
         with patch("pt.pass_extract.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_hypothesize.call_llm", side_effect=_mock_call_llm), \
+             patch("pt.pass_partition.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_test.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_absence.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_synthesize.call_llm", side_effect=_mock_call_llm):
@@ -496,6 +520,7 @@ class TestPipelineOrchestration:
 
         with patch("pt.pass_extract.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_hypothesize.call_llm", side_effect=fake_hypothesize), \
+             patch("pt.pass_partition.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_test.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_absence.call_llm", side_effect=_mock_call_llm), \
              patch("pt.pass_synthesize.call_llm", side_effect=_mock_call_llm):
@@ -846,6 +871,7 @@ class TestReportConsistency:
         with (
             patch("pt.pipeline.run_extract", side_effect=_capture_extract),
             patch("pt.pipeline.run_hypothesize", return_value=_make_hypothesis_space()),
+            patch("pt.pipeline.run_partition", return_value=_make_adequate_partition()),
             patch(
                 "pt.pipeline._run_passes_3_plus",
                 return_value=(
@@ -1286,3 +1312,195 @@ class TestAuditSynthesisCalibration:
         assert cs["overclaim_issues"], "Expected overclaim_issues in audit output when narrative has certainty word + fragile winner"
         assert cs["points"] < 15, "Overclaim deduction should reduce comparative support discipline score"
         assert cs["recommendations"], "Overclaim should produce a recommendation"
+
+
+class TestPartitionAuditReport:
+    """Partition audit section visibility in HTML report and audit score effects."""
+
+    def _needs_review_partition(self):
+        from pt.schemas import PartitionAudit, RivalPairAudit
+        return PartitionAudit(
+            research_question_adequate=True,
+            rival_pairs=[
+                RivalPairAudit(
+                    h1_id="h1", h2_id="h2",
+                    overlap_concern=True, complementary_concern=False, absorptive_concern=False,
+                    discriminator_count=0,
+                    concern_detail="Both hypotheses predict the same evidence patterns.",
+                )
+            ],
+            hypotheses_flagged=["h2"],
+            overall_quality="needs_review",
+            summary="H1 and H2 are not genuine rivals.",
+        )
+
+    def _result_with_partition(self, audit):
+        result = _make_process_result()
+        result.partition_audit = audit
+        return result
+
+    def test_partition_section_present_when_audit_exists(self):
+        """Report contains partition audit card when partition_audit is set."""
+        result = self._result_with_partition(_make_adequate_partition())
+        html = generate_report(result)
+        assert "hypothesis partition audit" in html.lower()
+
+    def test_partition_section_absent_when_no_audit(self):
+        """Report does not contain partition card when partition_audit is None."""
+        result = _make_process_result()
+        assert result.partition_audit is None
+        html = generate_report(result)
+        # Card heading is absent; '#partitionBody' appears in expand-all JS list regardless
+        assert "hypothesis partition audit" not in html.lower()
+
+    def test_partition_adequate_shows_success_badge(self):
+        """Adequate partition shows green badge, no alert."""
+        result = self._result_with_partition(_make_adequate_partition())
+        html = generate_report(result)
+        assert "Adequate" in html
+        assert "Partition concerns detected" not in html
+
+    def test_partition_needs_review_shows_danger_badge(self):
+        """needs_review partition shows danger badge and alert text."""
+        result = self._result_with_partition(self._needs_review_partition())
+        html = generate_report(result)
+        normalized = " ".join(html.lower().split())
+        assert "needs review" in normalized
+        assert "partition concerns detected" in normalized
+        assert "--partition-review" in html
+
+    def test_pair_table_renders_concern_badges(self):
+        """Overlap concern renders an Overlap badge in the pair table."""
+        result = self._result_with_partition(self._needs_review_partition())
+        html = generate_report(result)
+        assert "Overlap" in html
+
+    def test_audit_score_deducts_for_needs_review_not_visible(self):
+        """Audit deducts from hypothesis_discrimination when partition needs_review and not in report."""
+        from scripts.audit_result_quality import audit_result
+
+        # Build a result with needs_review partition but NO report — simulate no partition section
+        result = self._result_with_partition(self._needs_review_partition())
+        # Generate report normally — partition section IS in report
+        html_with_partition = generate_report(result)
+        audit_with = audit_result(result, html_with_partition)
+
+        # Also test with empty HTML (partition not visible)
+        audit_without = audit_result(result, "<html>no partition here</html>")
+
+        disc_with = audit_with["categories"]["hypothesis_discrimination"]
+        disc_without = audit_without["categories"]["hypothesis_discrimination"]
+
+        assert disc_with["partition_needs_review"] is True
+        assert disc_without["partition_needs_review"] is True
+        assert disc_with["partition_visible"] is True, "Report has partition section — should be visible"
+        assert disc_without["partition_visible"] is False, "Empty HTML — partition not visible"
+        assert disc_without["points"] < disc_with["points"], (
+            "Deduction should apply when partition needs_review but not visible in report"
+        )
+
+    def test_audit_score_no_deduction_for_adequate_partition(self):
+        """Audit does not deduct when partition quality is adequate."""
+        from scripts.audit_result_quality import audit_result
+
+        result = self._result_with_partition(_make_adequate_partition())
+        html = generate_report(result)
+        audit = audit_result(result, html)
+
+        disc = audit["categories"]["hypothesis_discrimination"]
+        assert disc["partition_needs_review"] is False
+        assert disc["recommendations"] == [] or not any(
+            "partition" in r.lower() for r in disc["recommendations"]
+        )
+
+
+class TestPartitionReviewCheckpoint:
+    """Verify pipeline partition_review flag triggers review_fn at the right time.
+
+    mock-ok: LLM boundaries are mocked; only the partition review callback logic is tested.
+    """
+
+    def _run_with_partition_audit(self, partition_audit, partition_review: bool, review_fn=None):
+        """Run the pipeline with a mocked partition audit and optional review fn."""
+        text = " ".join(["substantive"] * 400)
+        with patch("pt.pass_extract.call_llm", side_effect=_mock_call_llm), \
+             patch("pt.pass_hypothesize.call_llm", side_effect=_mock_call_llm), \
+             patch("pt.pass_partition.call_llm", return_value=partition_audit), \
+             patch("pt.pass_test.call_llm", side_effect=_mock_call_llm), \
+             patch("pt.pass_absence.call_llm", side_effect=_mock_call_llm), \
+             patch("pt.pass_synthesize.call_llm", side_effect=_mock_call_llm):
+            return run_pipeline(
+                text,
+                verbose=False,
+                partition_review=partition_review,
+                partition_review_fn=review_fn,
+            )
+
+    def test_review_fn_called_when_needs_review_and_flag_set(self):
+        """partition_review_fn is invoked when quality=needs_review and partition_review=True."""
+        from pt.schemas import PartitionAudit, RivalPairAudit
+        audit = PartitionAudit(
+            research_question_adequate=True,
+            rival_pairs=[
+                RivalPairAudit(
+                    h1_id="h1", h2_id="h2",
+                    overlap_concern=True, complementary_concern=False, absorptive_concern=False,
+                    discriminator_count=0, concern_detail="Overlap.",
+                )
+            ],
+            hypotheses_flagged=["h2"],
+            overall_quality="needs_review",
+            summary="Overlap found.",
+        )
+
+        called_with = {}
+
+        def fake_review(hypothesis_space, partition_audit, output_dir):
+            called_with["called"] = True
+            called_with["quality"] = partition_audit.overall_quality
+            return hypothesis_space  # pass through unchanged
+
+        self._run_with_partition_audit(audit, partition_review=True, review_fn=fake_review)
+
+        assert called_with.get("called"), "partition_review_fn must be called when quality=needs_review"
+        assert called_with["quality"] == "needs_review"
+
+    def test_review_fn_not_called_when_adequate(self):
+        """partition_review_fn is NOT called when quality=adequate, even with flag set."""
+        called = []
+
+        def fake_review(hypothesis_space, partition_audit, output_dir):
+            called.append(True)
+            return hypothesis_space
+
+        self._run_with_partition_audit(
+            _make_adequate_partition(), partition_review=True, review_fn=fake_review
+        )
+
+        assert called == [], "partition_review_fn must NOT be called when quality=adequate"
+
+    def test_review_fn_not_called_when_flag_false(self):
+        """partition_review_fn is NOT called when partition_review=False, even if needs_review."""
+        from pt.schemas import PartitionAudit, RivalPairAudit
+        audit = PartitionAudit(
+            research_question_adequate=True,
+            rival_pairs=[
+                RivalPairAudit(
+                    h1_id="h1", h2_id="h2",
+                    overlap_concern=True, complementary_concern=False, absorptive_concern=False,
+                    discriminator_count=0, concern_detail="Overlap.",
+                )
+            ],
+            hypotheses_flagged=["h2"],
+            overall_quality="needs_review",
+            summary="Overlap found.",
+        )
+        called = []
+
+        def fake_review(hypothesis_space, partition_audit, output_dir):
+            called.append(True)
+            return hypothesis_space
+
+        self._run_with_partition_audit(audit, partition_review=False, review_fn=fake_review)
+
+        assert called == [], "partition_review_fn must NOT be called when partition_review=False"
