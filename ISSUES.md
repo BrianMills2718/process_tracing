@@ -4,7 +4,7 @@ Observed problems, concerns, and technical debt. Items start as **unconfirmed**
 observations and get triaged through investigation into confirmed issues, plans,
 or dismissed.
 
-**Last reviewed:** (date)
+**Last reviewed:** 2026-06-26
 
 ---
 
@@ -45,6 +45,19 @@ or dismissed.
 ## Confirmed
 
 (Items that need a fix but don't have a plan yet.)
+
+### ISSUE-002: `make check` uses the wrong test/runtime surface
+
+**Observed:** 2026-06-26  
+**Status:** `confirmed`
+
+`make check` invokes bare `pytest`, which resolved to `/home/brian/.local/bin/pytest` in this session. That run failed 11 critic tests with `ModuleNotFoundError: No module named 'tests.test_pipeline_integration'`. The same suite passed under the repo-local interpreter with `PYTHONPATH=. .venv/bin/python -m pytest tests -q --tb=short` (`385 passed, 2 skipped`).
+
+The repo-local virtualenv also lacks `mypy`, while global `mypy pt --ignore-missing-imports` reports six type errors in `pt/report.py`, `pt/pass_diagnostic.py`, `pt/pipeline.py`, and `pt/multi_pipeline.py`.
+
+**Why it matters:** `make check` is the documented agent-facing verification target. It currently mixes interpreter surfaces and can fail or pass depending on user PATH/global packages rather than repo state.
+
+**Fix direction:** Make the target use the repo-local Python consistently, add/ensure `mypy` in the project dependency surface, and fix the reported type errors. Avoid test-to-test imports from `tests.*`; move shared fixtures to `tests/conftest.py` or a dedicated helper module.
 
 ---
 
