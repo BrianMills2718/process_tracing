@@ -853,6 +853,7 @@ class TestReportConsistency:
                     _make_absence(),
                     run_bayesian_update(_make_testing(), ["h1", "h2"]),
                     _make_synthesis(),
+                    None,  # diagnostic_matrix (optional)
                 ),
             ),
         ):

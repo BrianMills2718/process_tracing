@@ -370,45 +370,67 @@ class TestRelevanceDiscountMath:
         assert h1.updates[0].likelihood_ratio == pytest.approx(0.5, abs=0.01)
 
 
-# ── Robustness computation (operates on EvidenceUpdate, unchanged) ──
+# ── Robustness computation (operates on individual LR floats, pre-pool) ──
 
 
 class TestRobustness:
-    def _make_update(self, lr: float, eid: str = "e1") -> EvidenceUpdate:
-        return EvidenceUpdate(evidence_id=eid, likelihood_ratio=lr, prior=0.5, posterior=0.5)
-
     def test_robust_few_decisive(self):
-        updates = [
-            self._make_update(10.0, "e1"),
-            self._make_update(0.1, "e2"),
-            self._make_update(8.0, "e3"),
-            self._make_update(0.15, "e4"),
-        ]
-        assert _compute_robustness(updates) == "robust"
+        # Individual (pre-pool) LRs: 4 decisive items
+        lrs = [10.0, 0.1, 8.0, 0.15]
+        assert _compute_robustness(lrs) == "robust"
 
     def test_fragile_many_weak(self):
-        updates = [self._make_update(0.8, f"e{i}") for i in range(15)]
-        assert _compute_robustness(updates) == "fragile"
+        lrs = [0.8] * 15
+        assert _compute_robustness(lrs) == "fragile"
 
     def test_unknown_empty(self):
         assert _compute_robustness([]) == "unknown"
 
     def test_unknown_all_uninformative(self):
-        updates = [self._make_update(1.0, f"e{i}") for i in range(10)]
-        assert _compute_robustness(updates) == "unknown"
+        lrs = [1.0] * 10
+        assert _compute_robustness(lrs) == "unknown"
 
     def test_uninformative_items_do_not_force_fragile(self):
-        updates = (
-            [self._make_update(3.0, f"m{i}") for i in range(4)]
-            + [self._make_update(1.0, f"u{i}") for i in range(10)]
-        )
-        assert _compute_robustness(updates) != "fragile"
+        # 4 moderate items + 10 uninformative — should not be fragile
+        lrs = [3.0] * 4 + [1.0] * 10
+        assert _compute_robustness(lrs) != "fragile"
 
     def test_robustness_populated_in_result(self):
         testing = _testing(_vec("e1", {"h1": 19.0, "h2": 1.0}))
         result = run_bayesian_update(testing, ["h1", "h2"])
         for p in result.posteriors:
             assert p.robustness in ("robust", "fragile", "moderate", "unknown")
+
+    def test_robustness_uses_individual_lrs_not_pooled(self):
+        """HIGH-1: Robustness must be classified from individual LRs, not cluster-pooled LRs.
+
+        A cluster of 10 weak items (LR≈1.4) with rho=0 would have k_eff=10 and a
+        combined LR of 1.4^10 ≈ 28.9 — which looks decisive. The result must be
+        classified as 'fragile' (many weak items), not 'robust' (one big combined LR).
+        """
+        from pt.schemas import EvidenceCluster
+        # 10 weakly-discriminating items for h1 vs h2
+        items = [_vec(f"e{i}", {"h1": 1.4, "h2": 1.0}) for i in range(10)]
+        testing = _testing(*items)
+        # Put all 10 items in one fully-independent cluster (rho=0 → k_eff=10)
+        # This makes the pooled LR = 1.4^10 ≈ 28.9 (decisive) but individual LRs are weak
+        testing = testing.model_copy(update={
+            "dependence_clusters": [
+                EvidenceCluster(
+                    evidence_ids=[f"e{i}" for i in range(10)],
+                    reason="same source section",
+                    dependence_strength=0.0,  # fully independent → k_eff=10
+                )
+            ]
+        })
+        result = run_bayesian_update(testing, ["h1", "h2"])
+        h1 = next(p for p in result.posteriors if p.hypothesis_id == "h1")
+        # With pooled LRs, this would be classified as "robust" (combined LR ≈ 28.9)
+        # With individual LRs (each ≈ 1.4), this must be "fragile" or "moderate"
+        assert h1.robustness in ("fragile", "moderate"), (
+            f"Expected 'fragile' or 'moderate' for 10 weak items in one cluster, "
+            f"got {h1.robustness!r} — robustness may be computed from pooled LRs."
+        )
 
 
 # ── Top drivers ────────────────────────────────────────────────────

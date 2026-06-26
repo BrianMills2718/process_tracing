@@ -756,3 +756,24 @@ class TestComputeCriticDeltaFindingCounts:
         h2_delta = next(d for d in deltas if d.hypothesis_id == "h2")
         assert h1_delta.critic_findings_count == 1
         assert h2_delta.critic_findings_count == 0
+
+
+# ── CRIT-2: critic+refine guard fires before any LLM calls ─────────
+
+class TestCriticRefineGuardFiresEarly:
+    """CRIT-2: --critic + --refine raises ValueError before any LLM call."""
+
+    def test_critic_and_refine_raises_before_llm(self):
+        """Guard must fire before run_extract so no budget is wasted."""
+        from pt.pipeline import run_pipeline
+
+        with patch("pt.pipeline.run_extract") as mock_extract:
+            with pytest.raises(ValueError, match="--critic and --refine cannot be used together"):
+                run_pipeline(
+                    " ".join(["word"] * 350),
+                    critic=True,
+                    refine=True,
+                )
+
+        # No LLM call should have been made
+        mock_extract.assert_not_called()
