@@ -1,11 +1,11 @@
-updated: "2026-06-26T09:45:00"
+updated: "2026-06-26T12:00:00"
 project: process_tracing
 scope: repo
 status: active
-git_commit: "6443b5d"
+git_commit: "dde1182"
 git_branch: "master"
-summary: "Deep audit complete. Fixed CRIT-2 (guard fires before LLM), HIGH-1 (robustness from individual LRs), HIGH-2 (absence threshold mismatch), HIGH-3 (robustness cross-validation), HIGH-4 (source-lineage audit), MED-5 (unique ID validators). 221 deterministic tests. Live E2E grade: B (80/100)."
-next_action: "Hypothesis partition audit (FUTURE_WORK.md #1) — highest leverage for result quality."
+summary: "Partition audit UX complete (Plan #3 FUTURE_WORK.md #1). --partition-review flag, HTML report badge/pair table, audit score deduction. 307 deterministic tests. Live E2E (deepseek-chat): adequate partition, 10/10 discrimination, green badge visible. B grade (80/100)."
+next_action: "FUTURE_WORK.md #2 or #3: source coverage cap on inference confidence, or per-hypothesis redundancy/trace-production auditing."
 
 completed:
   - "Audit of Slices 3-6: all verified (previous session)"
@@ -68,6 +68,12 @@ completed:
     # 221 deterministic tests pass; E2E grade B (80/100) unchanged
     # CRIT-1 (order-dependent audit trail): not a bug — sequential trail is expected behavior
     # CRIT-4 (for/else unreachable path): confirmed provably unreachable, pragma: no cover is correct
+  - "Plan #3 FUTURE_WORK.md #1 — Partition Audit UX (commit dde1182): 307 deterministic tests"
+    # --partition-review CLI flag: pauses after Pass 2.5 when quality=needs_review, shows problem pairs
+    # HTML report: Hypothesis Partition Audit section with quality badge, pair table (Overlap/Complementary/Absorptive badges)
+    # audit_result_quality.py: -3 from hypothesis_discrimination when partition needs_review and not visible
+    # 10 new tests (7 report section + 3 checkpoint); all pipeline fixtures updated with partition mock
+    # Live E2E: deepseek-chat, French Rev → adequate partition, 10/10 discrimination, green badge, 314.7s
 
 pending:
   - id: P3
@@ -102,7 +108,7 @@ e2e_model:
     - model: "gemini/gemini-2.5-flash"
       reason: "free-tier daily quota (20 req/day) exhausted"
     - model: "deepseek/deepseek-chat"
-      reason: "returns relative_likelihood=0 — violates gt=0.0 schema constraint in Pass 3"
+      reason: "FORMERLY: returns relative_likelihood=0 (schema constraint). 2026-06-26: worked cleanly for partition E2E (314.7s, adequate partition). May depend on prompt/temperature. Treat as experimental."
     - model: "openrouter/openai/gpt-5-mini"
       reason: "very slow on Pass 3 (~30+ min) due to TIMEOUT_DISABLED policy"
     - model: "openrouter/openai/gpt-4o-mini"
@@ -118,11 +124,13 @@ warnings:
   - "Pydantic models use extra='ignore' by default — wrong field names are silently dropped; always verify field names against pt/schemas.py"
 
 sanity_checks:
-  - cmd: "PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_extraction_quality.py tests/test_pass_diagnostic.py tests/test_pass_critic.py tests/test_multi_contracts.py tests/test_benchmark.py tests/test_verdict_calibration.py tests/test_pass_absence.py -q"
-    expect: "221 passed"
+  - cmd: "PYTHONPATH=. pytest tests/ -q --tb=short"
+    expect: "307 passed"
+  - cmd: "python3 -c \"from pt.pass_partition import run_partition; print('ok')\""
+    expect: "ok"
+  - cmd: "python3 -c \"from pt.schemas import PartitionAudit, RivalPairAudit; print('ok')\""
+    expect: "ok"
   - cmd: "python3 -c \"from pt.pass_critic import run_critic; print('ok')\""
     expect: "ok"
-  - cmd: "python3 -c \"from pt.schemas import CriticResult, CriticFinding, CriticDelta; r = CriticResult(findings=[], summary='ok'); print(r.re_elicitation_needed)\""
-    expect: "False"
   - cmd: "git status --short"
-    expect: "only the 3 untracked html files (docs/plans/005d_*.html)"
+    expect: "clean (only untracked output/ and docs/plans/*.html)"
