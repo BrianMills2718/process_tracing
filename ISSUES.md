@@ -61,6 +61,26 @@ The repo-local virtualenv also lacks `mypy`, while global `mypy pt --ignore-miss
 
 ---
 
+## Planned
+
+### ISSUE-003: Workbench-safe `pt_export_v1` artifact
+
+**Observed:** 2026-06-26
+**Status:** `planned`
+**Plan:** `docs/plans/007_workbench_export_v1.md`
+
+`mixed_methods_workbench` needs process-tracing outputs, but must not parse
+internal `result.json` or import `pt.schemas`. The repo needs a versioned public
+export that preserves source scope, hypotheses, comparative support, absence
+findings, verdicts, run metadata, and caveats without exposing raw internals as
+the cross-repo contract.
+
+**Why it matters:** Without this seam, the workbench either couples to PT
+internals or flattens process-tracing comparative support into a generic
+confidence score.
+
+---
+
 ## Resolved
 
 | ID | Description | Resolution | Date |
