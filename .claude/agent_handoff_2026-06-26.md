@@ -72,9 +72,7 @@ python -m pt.multi \
   --skip-cq --json-only
 ```
 
-**If successful** (output/c018_live_verify/multi_result.json exists with a valid acyclic `CausalModelSpec`): mark C-018 resolved in `docs/plans/sota_plus_concern_register.md`, update handoff.
-
-**If still cyclic** (exception or ValidationError on CausalModelSpec): document failure, try with `--causal-model models/skocpol_revolution.yaml` (theory-driven mode), and note that C-018 requires a stronger acyclicity constraint or retry logic enhancement.
+**Result: RESOLVED.** `output/c018_live_verify/multi_result.json` — model `comparative_revolutionary_escalation`, 10 variables, 10 edges, topological sort confirms ACYCLIC. C-018 marked resolved in concern register.
 
 ---
 

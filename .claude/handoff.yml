@@ -4,8 +4,8 @@ scope: repo
 status: active
 git_commit: "60a0476"
 git_branch: "master"
-summary: "C-017 fully resolved. --critic-model implemented and E2E verified: independent critic detects confounds same-model critic misses (confound=high, re_elicitation=True). 210 deterministic tests. Only open concern: C-018-live-verify."
-next_action: "C-018-live-verify: run pt.multi data-driven on 2+ texts to confirm acyclic DAG. Then: hypothesis partition audit (FUTURE_WORK.md #1) or trace_eval integration."
+summary: "All Plan 003 concerns resolved. C-017 (--critic-model, E2E verified). C-018 (acyclic DAG prompt fix, live verified: 10-var clean DAG on french+american revolutions). 210 deterministic tests. No open concerns."
+next_action: "Hypothesis partition audit (FUTURE_WORK.md #1) or trace_eval integration (diagnose which pipeline stage caused a failure)."
 
 completed:
   - "Audit of Slices 3-6: all verified (previous session)"
@@ -68,8 +68,7 @@ pending:
       Cap-84 source-lineage inflation path (audit_result_quality.py lines 421-452) cannot be
       exercised by the French Revolution Wikipedia corpus. Deferred to future work with multi-source corpus.
 
-  - id: C-018-live-verify
-    # (C-017 is now resolved — see completed section)
+  # All concerns from Plan 003 are now resolved. Only deferred item is P3 (needs multi-source corpus).
 
   - id: C-018-live-verify
     priority: low
