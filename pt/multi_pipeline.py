@@ -20,7 +20,9 @@ from pt.schemas_multi import (
     CaseBinarization,
     CausalModelSpec,
     CausalQueriesResult,
+    CrossCaseEligibility,
     MultiDocResult,
+    VariableEligibility,
 )
 
 
@@ -244,6 +246,138 @@ def _run_sensitivity(
     )
 
 
+def _check_cross_case_eligibility(
+    binarizations: list[CaseBinarization],
+    causal_model: CausalModelSpec,
+) -> CrossCaseEligibility:
+    """Deterministic eligibility assessment for CausalQueries estimation.
+
+    CQ requires outcome variation and a minimum number of cases. This check
+    runs after binarization and gates the CQ bridge — it never involves an LLM.
+    """
+    n_cases = len(binarizations)
+    outcome_var = causal_model.outcome_variable
+    var_names = causal_model.variable_names
+
+    # Collect per-variable coding statistics
+    var_stats: dict[str, dict] = {
+        name: {"n_coded": 0, "n_na": 0, "n_zero": 0, "n_one": 0,
+               "confidences": [], "warnings": []}
+        for name in var_names
+    }
+
+    for b in binarizations:
+        coded = {c.variable_name: c for c in b.codings}
+        for name in var_names:
+            s = var_stats[name]
+            if name not in coded:
+                s["n_na"] += 1
+            else:
+                c = coded[name]
+                s["confidences"].append(c.confidence)
+                if c.value is None:
+                    s["n_na"] += 1
+                elif c.value == 0:
+                    s["n_coded"] += 1
+                    s["n_zero"] += 1
+                else:
+                    s["n_coded"] += 1
+                    s["n_one"] += 1
+
+    variable_checks: list[VariableEligibility] = []
+    for name in var_names:
+        s = var_stats[name]
+        confs = s["confidences"]
+        mean_conf = sum(confs) / len(confs) if confs else 0.0
+        varies = s["n_zero"] > 0 and s["n_one"] > 0
+        warnings: list[str] = []
+        if mean_conf < 0.5 and s["n_coded"] > 0:
+            warnings.append(f"mean confidence {mean_conf:.2f} < 0.50 — codings may be unreliable")
+        if s["n_na"] == n_cases:
+            warnings.append("no cases have a non-NA coding")
+        elif s["n_na"] > 0:
+            warnings.append(f"{s['n_na']}/{n_cases} cases have NA coding")
+        if not varies and s["n_coded"] > 0:
+            val = "all-1" if s["n_one"] > 0 else "all-0"
+            warnings.append(f"no variation ({val}) — cannot identify effect")
+        variable_checks.append(VariableEligibility(
+            variable_name=name,
+            n_cases=n_cases,
+            n_coded=s["n_coded"],
+            n_na=s["n_na"],
+            n_zero=s["n_zero"],
+            n_one=s["n_one"],
+            mean_confidence=round(mean_conf, 4),
+            varies=varies,
+            warnings=warnings,
+        ))
+
+    # Outcome-specific stats
+    os_ = var_stats[outcome_var]
+    outcome_varies = os_["n_zero"] > 0 and os_["n_one"] > 0
+
+    n_variables_with_variation = sum(
+        1 for vc in variable_checks
+        if vc.variable_name != outcome_var and vc.varies
+    )
+
+    # Eligibility logic
+    ineligible_reasons: list[str] = []
+    warnings: list[str] = []
+
+    if n_cases < 2:
+        ineligible_reasons.append(
+            f"only {n_cases} case(s) — CausalQueries requires ≥2"
+        )
+    if os_["n_coded"] == 0:
+        ineligible_reasons.append(
+            f"outcome variable '{outcome_var}' has no non-NA codings across all cases"
+        )
+    elif not outcome_varies:
+        dominant = "1" if os_["n_one"] > 0 else "0"
+        ineligible_reasons.append(
+            f"outcome '{outcome_var}' does not vary: all coded cases have value={dominant}. "
+            "CausalQueries cannot estimate causal effects without outcome variation."
+        )
+
+    if n_variables_with_variation == 0 and not ineligible_reasons:
+        warnings.append(
+            "no non-outcome variables vary across cases — effect estimation will be degenerate"
+        )
+    elif n_variables_with_variation < 2:
+        warnings.append(
+            f"only {n_variables_with_variation} non-outcome variable(s) vary — "
+            "estimation power is very low"
+        )
+
+    # Check for NA-heavy variables
+    na_heavy = [
+        vc.variable_name for vc in variable_checks
+        if vc.n_na > n_cases // 2
+    ]
+    if na_heavy:
+        warnings.append(
+            f"high NA rate (>50%) on: {', '.join(na_heavy)} — "
+            "consider collecting more evidence before cross-case analysis"
+        )
+
+    eligible_for_cq = len(ineligible_reasons) == 0
+
+    return CrossCaseEligibility(
+        n_cases=n_cases,
+        outcome_variable=outcome_var,
+        outcome_n_coded=os_["n_coded"],
+        outcome_n_zero=os_["n_zero"],
+        outcome_n_one=os_["n_one"],
+        outcome_varies=outcome_varies,
+        variable_checks=variable_checks,
+        n_variables_with_variation=n_variables_with_variation,
+        eligible_for_cq=eligible_for_cq,
+        ineligible_reasons=ineligible_reasons,
+        warnings=warnings,
+    )
+
+
 def run_multi_pipeline(
     input_paths: list[str],
     output_dir: str,
@@ -354,12 +488,34 @@ def run_multi_pipeline(
     var_order = causal_model.variable_names
     data_frame = [b.to_row(var_order) for b in binarizations]
 
+    # ── Step 3.5: Cross-case eligibility check ─────────────────────
+    print(f"\n{'='*60}")
+    print("STEP 3.5: Cross-case eligibility assessment")
+    print(f"{'='*60}")
+
+    eligibility = _check_cross_case_eligibility(binarizations, causal_model)
+    print(f"  Outcome '{eligibility.outcome_variable}' varies: {eligibility.outcome_varies}")
+    print(f"  Non-outcome variables with variation: {eligibility.n_variables_with_variation}")
+    print(f"  Eligible for CausalQueries: {eligibility.eligible_for_cq}")
+    if eligibility.ineligible_reasons:
+        for reason in eligibility.ineligible_reasons:
+            print(f"  INELIGIBLE: {reason}")
+    for w in eligibility.warnings:
+        print(f"  WARNING: {w}")
+
     # ── Step 4: CausalQueries bridge ───────────────────────────────
     cq_result: CausalQueriesResult | None = None
     sensitivity: BinarizationSensitivity | None = None
 
     if skip_cq:
         print("\n  Skipping CausalQueries (--skip-cq)")
+    elif not eligibility.eligible_for_cq:
+        print(f"\n{'='*60}")
+        print("STEP 4: CausalQueries estimation — BLOCKED by eligibility gate")
+        print(f"{'='*60}")
+        for reason in eligibility.ineligible_reasons:
+            print(f"  {reason}")
+        print("  To override, fix the eligibility issues or supply cases with outcome variation.")
     else:
         print(f"\n{'='*60}")
         print("STEP 4: CausalQueries estimation")
@@ -402,5 +558,6 @@ def run_multi_pipeline(
         data_frame=data_frame,
         cq_result=cq_result,
         sensitivity=sensitivity,
+        eligibility=eligibility,
         workflow=workflow,
     )

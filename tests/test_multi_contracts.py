@@ -14,7 +14,12 @@ import pytest
 from pydantic import ValidationError
 
 from pt.cq_bridge import is_r_available
-from pt.multi_pipeline import _apply_confidence_threshold, _run_single_case, run_multi_pipeline
+from pt.multi_pipeline import (
+    _apply_confidence_threshold,
+    _check_cross_case_eligibility,
+    _run_single_case,
+    run_multi_pipeline,
+)
 from pt.pass_binarize import (
     _BinarizationResponse,
     _binarization_response_model,
@@ -26,6 +31,7 @@ from pt.schemas_multi import (
     CausalModelSpec,
     CausalQueriesResult,
     CausalVariable,
+    CrossCaseEligibility,
     VariableCoding,
 )
 
@@ -326,11 +332,15 @@ class TestCausalQueriesCaseIds:
         calls = []
 
         monkeypatch.setattr("pt.multi_pipeline._run_single_case", lambda *a, **k: _minimal_result())
+        # Give case_a revolution=1 and case_b revolution=0 so outcome varies
+        # and the eligibility gate allows the CQ bridge to run.
+        outcome_by_case = {"case_a": 1, "case_b": 0}
         monkeypatch.setattr(
             "pt.pass_binarize.binarize_case",
             lambda case_id, **k: _case(
                 case_id,
-                [("fiscal_crisis", 1), ("state_breakdown", 0), ("revolution", 1)],
+                [("fiscal_crisis", 1), ("state_breakdown", 0),
+                 ("revolution", outcome_by_case[case_id])],
             ),
         )
         monkeypatch.setattr("pt.cq_bridge.is_r_available", lambda: True)
@@ -354,3 +364,154 @@ class TestCausalQueriesCaseIds:
 
         assert calls
         assert calls[0] == ["case_a", "case_b"]
+
+
+# ── CrossCaseEligibility ──────────────────────────────────────────
+
+def _binarizations_from_rows(
+    rows: list[tuple[str, dict[str, int | None]]],
+    confidences: dict[str, float] | None = None,
+) -> list[CaseBinarization]:
+    """Build CaseBinarization list from (case_id, {var: value}) rows."""
+    conf = confidences or {}
+    result = []
+    for case_id, vals in rows:
+        codings = [
+            VariableCoding(
+                variable_name=k,
+                value=v,
+                confidence=conf.get(k, 0.9),
+                justification="test",
+            )
+            for k, v in vals.items()
+            if v is not None
+        ] + [
+            VariableCoding(
+                variable_name=k,
+                value=None,
+                confidence=0.0,
+                justification="insufficient evidence",
+            )
+            for k, v in vals.items()
+            if v is None
+        ]
+        result.append(CaseBinarization(
+            case_id=case_id,
+            source_file=f"{case_id}.txt",
+            codings=codings,
+        ))
+    return result
+
+
+class TestCrossCaseEligibility:
+    def test_eligible_when_outcome_varies(self):
+        bins = _binarizations_from_rows([
+            ("case_a", {"fiscal_crisis": 1, "state_breakdown": 1, "revolution": 1}),
+            ("case_b", {"fiscal_crisis": 0, "state_breakdown": 0, "revolution": 0}),
+        ])
+        elig = _check_cross_case_eligibility(bins, _model())
+        assert elig.eligible_for_cq is True
+        assert elig.outcome_varies is True
+        assert elig.ineligible_reasons == []
+
+    def test_ineligible_when_outcome_all_ones(self):
+        # Revolution corpus: all cases have revolution=1
+        bins = _binarizations_from_rows([
+            ("french_rev", {"fiscal_crisis": 1, "state_breakdown": 1, "revolution": 1}),
+            ("american_rev", {"fiscal_crisis": 0, "state_breakdown": 1, "revolution": 1}),
+        ])
+        elig = _check_cross_case_eligibility(bins, _model())
+        assert elig.eligible_for_cq is False
+        assert elig.outcome_varies is False
+        assert any("does not vary" in r for r in elig.ineligible_reasons)
+
+    def test_ineligible_when_outcome_all_zeros(self):
+        bins = _binarizations_from_rows([
+            ("case_a", {"fiscal_crisis": 1, "state_breakdown": 0, "revolution": 0}),
+            ("case_b", {"fiscal_crisis": 0, "state_breakdown": 0, "revolution": 0}),
+        ])
+        elig = _check_cross_case_eligibility(bins, _model())
+        assert elig.eligible_for_cq is False
+        assert any("does not vary" in r for r in elig.ineligible_reasons)
+
+    def test_ineligible_when_single_case(self):
+        bins = _binarizations_from_rows([
+            ("only_case", {"fiscal_crisis": 1, "state_breakdown": 1, "revolution": 1}),
+        ])
+        elig = _check_cross_case_eligibility(bins, _model())
+        assert elig.eligible_for_cq is False
+        assert any("≥2" in r for r in elig.ineligible_reasons)
+
+    def test_ineligible_when_outcome_all_na(self):
+        bins = _binarizations_from_rows([
+            ("case_a", {"fiscal_crisis": 1, "state_breakdown": 0, "revolution": None}),
+            ("case_b", {"fiscal_crisis": 0, "state_breakdown": 1, "revolution": None}),
+        ])
+        elig = _check_cross_case_eligibility(bins, _model())
+        assert elig.eligible_for_cq is False
+        assert any("no non-NA" in r for r in elig.ineligible_reasons)
+
+    def test_n_variables_with_variation_counts_non_outcome(self):
+        bins = _binarizations_from_rows([
+            ("case_a", {"fiscal_crisis": 1, "state_breakdown": 0, "revolution": 1}),
+            ("case_b", {"fiscal_crisis": 0, "state_breakdown": 0, "revolution": 0}),
+        ])
+        elig = _check_cross_case_eligibility(bins, _model())
+        # fiscal_crisis varies (1→0), state_breakdown does not (0, 0)
+        assert elig.n_variables_with_variation == 1
+
+    def test_variable_check_reflects_coding_stats(self):
+        bins = _binarizations_from_rows([
+            ("case_a", {"fiscal_crisis": 1, "state_breakdown": 1, "revolution": 1}),
+            ("case_b", {"fiscal_crisis": 1, "state_breakdown": 0, "revolution": 0}),
+        ])
+        elig = _check_cross_case_eligibility(bins, _model())
+        fc = next(vc for vc in elig.variable_checks if vc.variable_name == "fiscal_crisis")
+        assert fc.n_coded == 2
+        assert fc.n_one == 2
+        assert fc.n_zero == 0
+        assert fc.varies is False
+
+    def test_warning_on_low_confidence(self):
+        bins = _binarizations_from_rows(
+            [
+                ("case_a", {"fiscal_crisis": 1, "state_breakdown": 1, "revolution": 1}),
+                ("case_b", {"fiscal_crisis": 0, "state_breakdown": 0, "revolution": 0}),
+            ],
+            confidences={"fiscal_crisis": 0.3},
+        )
+        elig = _check_cross_case_eligibility(bins, _model())
+        fc = next(vc for vc in elig.variable_checks if vc.variable_name == "fiscal_crisis")
+        assert any("confidence" in w for w in fc.warnings)
+
+    def test_eligibility_stored_in_multidoc_result(self, tmp_path, monkeypatch):
+        case_a = tmp_path / "case_a.txt"
+        case_b = tmp_path / "case_b.txt"
+        case_a.write_text("case a text " * 80, encoding="utf-8")
+        case_b.write_text("case b text " * 80, encoding="utf-8")
+
+        monkeypatch.setattr("pt.multi_pipeline._run_single_case", lambda *a, **k: _minimal_result())
+        monkeypatch.setattr(
+            "pt.pass_binarize.binarize_case",
+            lambda case_id, **k: CaseBinarization(
+                case_id=case_id,
+                source_file=f"{case_id}.txt",
+                codings=[
+                    VariableCoding(variable_name="fiscal_crisis", value=1, confidence=0.9, justification="j"),
+                    VariableCoding(variable_name="state_breakdown", value=1, confidence=0.9, justification="j"),
+                    VariableCoding(variable_name="revolution", value=1, confidence=0.9, justification="j"),
+                ],
+            ),
+        )
+
+        result = run_multi_pipeline(
+            [str(case_a), str(case_b)],
+            str(tmp_path / "out"),
+            causal_model=_model(),
+            skip_cq=True,
+        )
+        assert result.eligibility is not None
+        assert isinstance(result.eligibility, CrossCaseEligibility)
+        # Both cases have revolution=1 → outcome does not vary → ineligible
+        assert result.eligibility.eligible_for_cq is False
+        assert result.eligibility.outcome_varies is False

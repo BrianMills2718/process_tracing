@@ -267,6 +267,54 @@ class BinarizationSensitivity(BaseModel):
     )
 
 
+# ── Cross-Case Eligibility ────────────────────────────────────────
+
+
+class VariableEligibility(BaseModel):
+    variable_name: str
+    n_cases: int = Field(description="Total number of cases evaluated")
+    n_coded: int = Field(description="Cases with non-None coding")
+    n_na: int = Field(description="Cases with None (insufficient evidence)")
+    n_zero: int = Field(description="Cases coded 0")
+    n_one: int = Field(description="Cases coded 1")
+    mean_confidence: float = Field(description="Mean coding confidence across cases")
+    varies: bool = Field(description="True when at least one 0 and one 1 appear")
+    warnings: list[str] = Field(default_factory=list)
+
+
+class CrossCaseEligibility(BaseModel):
+    """Eligibility assessment for cross-case quantitative estimation.
+
+    Computed deterministically from binarizations before CausalQueries is
+    called. eligible_for_cq=False blocks the CQ bridge; warnings appear
+    even when eligible.
+    """
+
+    n_cases: int
+    outcome_variable: str
+    outcome_n_coded: int = Field(description="Cases with non-None outcome coding")
+    outcome_n_zero: int
+    outcome_n_one: int
+    outcome_varies: bool = Field(
+        description="True when outcome has at least one 0 and one 1 across cases",
+    )
+    variable_checks: list[VariableEligibility]
+    n_variables_with_variation: int = Field(
+        description="Count of non-outcome variables that vary across cases",
+    )
+    eligible_for_cq: bool = Field(
+        description="True when minimum criteria for CausalQueries are met",
+    )
+    ineligible_reasons: list[str] = Field(
+        description="Specific reasons CQ is blocked (empty when eligible)",
+        default_factory=list,
+    )
+    warnings: list[str] = Field(
+        description="Non-blocking issues that may limit estimation quality",
+        default_factory=list,
+    )
+
+
 # ── Top-Level Result ──────────────────────────────────────────────
 
 
@@ -281,4 +329,8 @@ class MultiDocResult(BaseModel):
     )
     cq_result: Optional[CausalQueriesResult] = None
     sensitivity: Optional[BinarizationSensitivity] = None
+    eligibility: Optional[CrossCaseEligibility] = Field(
+        default=None,
+        description="Cross-case eligibility assessment; populated whenever binarization completes",
+    )
     workflow: str = Field(description="'theory_driven' or 'data_driven'")
