@@ -181,7 +181,13 @@ class TestBenchmarkRunner:
         assert "flags_found" in case
 
     def test_result_file_case_without_report_path_does_not_crash(self, tmp_path):
-        """result_file cases with no report_path must not fail with 'Is a directory'."""
+        """result_file cases with no report_path must run the audit, not fail with 'Is a directory'.
+
+        Regression: _REPO_ROOT / "" resolves to the repo root directory. When the runner
+        checked `if report_path and report_path.exists()`, that directory both was truthy
+        and existed, causing open() to raise IsADirectoryError. Fix: only construct
+        report_path when case["report_path"] is non-empty.
+        """
         from scripts.run_benchmark import run_benchmark
 
         # Build a minimal fixture result and write it as result.json
@@ -195,26 +201,27 @@ class TestBenchmarkRunner:
             {
                 "name": "no_report_path",
                 "type": "result_file",
-                "result_path": str(result_json.relative_to(result_json.parent.parent)),
+                # Absolute path: Path(_REPO_ROOT) / "/absolute" == "/absolute" in Python
+                "result_path": str(result_json),
                 "optional": False,
                 "expected": {},
             },
         ]}
-        # Manually set result_path to absolute so the runner resolves it correctly
-        config["cases"][0]["result_path"] = str(result_json)
         config_path = tmp_path / "cfg.yaml"
         import yaml
         with config_path.open("w") as f:
             yaml.dump(config, f)
 
-        # Override _REPO_ROOT resolution by passing absolute result_path
-        # The runner uses _REPO_ROOT / result_path, so pass an absolute path
-        # that _REPO_ROOT / absolute_path == absolute_path (Path behaviour on absolute)
         scorecard = run_benchmark(
             config_path=config_path,
             output_path=tmp_path / "scorecard.json",
         )
-        # Must not fail — the case may pass or fail on score expectations
-        # but must NOT raise "Is a directory"
         assert scorecard["total"] == 1
-        assert all("Loading failed" not in str(r.get("failures", [])) for r in scorecard["cases"])
+        case = scorecard["cases"][0]
+        # The case must reach the audit step: score is populated (not None)
+        assert case["score"] is not None, (
+            "result_file case without report_path never reached the audit — "
+            f"failures: {case.get('failures')}"
+        )
+        # No loading error (which would leave score=None and include the error string)
+        assert not any("Loading failed" in str(f) for f in case.get("failures", []))

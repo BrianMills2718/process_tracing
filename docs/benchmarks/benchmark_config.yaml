@@ -24,6 +24,11 @@ cases:
       Planted failure: 12 weak background items dominate, fragile winner,
       broad legitimacy-vacuum hypothesis. Audit must flag broad_winning_hypothesis
       and cap at grade C.
+      NOTE: This fixture also incidentally triggers verdict_calibration_mismatch
+      (h2 is labeled "supported" but has posterior ~0.001 due to absence evidence),
+      which is an unintended second failure mode of the same fixture — not a
+      separately designed test. must_flag only asserts broad_winning_hypothesis;
+      verdict_calibration_mismatch is not asserted but is expected to appear in flags_found.
     focal_year: 1799
     optional: false
     expected:

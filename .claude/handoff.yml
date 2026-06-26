@@ -4,8 +4,8 @@ scope: repo
 status: active
 git_commit: "60a0476"
 git_branch: "master"
-summary: "Plan 003 + all open concerns complete. 208 deterministic tests. C-018 prompt hardened against cyclic DAGs. C-017 critic benchmark added (confound miss documented as Known Gap #6 confirmation)."
-next_action: "Start new methodology slice: --critic-model flag for independent critic (Known Gap #6), trace-production modeling (Known Gap #3), or multi-source corpus for P3."
+summary: "Plan 003 complete. 208 deterministic tests. Post-plan audit: C-017 correctly reopened (critic missed planted confound — confirmed risk), C-018 correctly downgraded to mitigated (live verify deferred). last_scorecard.json untracked. --critic-model documented in FUTURE_WORK.md."
+next_action: "Highest-value: implement --critic-model flag (C-017-critic-model). Or start hypothesis partition audit (FUTURE_WORK.md #1). Or live-verify C-018 data-driven acyclicity fix."
 
 completed:
   - "Audit of Slices 3-6: all verified (previous session)"
@@ -69,22 +69,25 @@ pending:
       Cap-84 source-lineage inflation path (audit_result_quality.py lines 421-452) cannot be
       exercised by the French Revolution Wikipedia corpus. Deferred to future work with multi-source corpus.
 
-  - id: C-017-critic-benchmark
+  - id: C-017-critic-model
     priority: medium
     effort: medium
-    summary: "Add critic-specific frozen benchmark case to docs/benchmarks/benchmark_config.yaml"
+    summary: "Implement --critic-model flag for independent critic (C-017 open)"
     details: >
-      Run python -m pt ... --critic on a text with a planted confound, save result.json,
-      add result_file case to benchmark config checking that critic finds a 'confound' finding.
-      This will verify the critic catches real structural issues, not just generic void-link flags.
+      C-017 is open (risk confirmed, not reduced). The same-model critic missed a planted confound
+      even when explicitly stated in the text. Implement --critic-model flag to run Pass 3.7 with a
+      distinct model. Add critic_model field to PipelineConfig, thread through pass_critic.run_critic(),
+      update CLI. See FUTURE_WORK.md for spec. After implementation, run on confound_planted.txt and
+      verify confound detection improves. Only then close C-017.
 
-  - id: C-018
-    priority: medium
+  - id: C-018-live-verify
+    priority: low
     effort: small
-    summary: "Harden pass_propose_model prompt against cyclic DAG proposals"
+    summary: "Live-verify C-018 propose_model acyclicity fix (C-018 mitigated, not resolved)"
     details: >
-      Data-driven mode proposes cyclic DAGs that fail CausalModelSpec validation.
-      Fix: add explicit acyclicity examples and before-you-submit check to pass_propose_model.yaml.
+      C-018 prompt was hardened but live verification was deferred. Run python -m pt.multi on 2+
+      cases in data-driven mode (no --causal-model) and confirm the proposed model is acyclic.
+      Mark C-018 resolved only after a successful data-driven run.
 
 uncertainties: []
 

@@ -58,6 +58,9 @@ validation_output.txt
 *_graph.json
 test_extraction.json
 
+# Generated benchmark artifacts (changes every run, not useful in git history)
+docs/benchmarks/last_scorecard.json
+
 # Cache and build artifacts
 .mypy_cache/
 .pytest_cache/
