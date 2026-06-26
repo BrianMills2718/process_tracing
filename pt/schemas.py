@@ -154,8 +154,11 @@ class ExtractionResult(BaseModel):
     causal_edges: list[CausalEdge] = []
 
     @model_validator(mode="after")
-    def _unique_evidence_ids(self) -> "ExtractionResult":
+    def _unique_extraction_ids(self) -> "ExtractionResult":
         _require_unique_ids([e.id for e in self.evidence], "evidence")
+        _require_unique_ids([a.id for a in self.actors], "actor")
+        _require_unique_ids([e.id for e in self.events], "event")
+        _require_unique_ids([m.id for m in self.mechanisms], "mechanism")
         return self
 
 
