@@ -59,17 +59,57 @@ def _report_has(report_html: str, *phrases: str) -> bool:
 
 
 def _verdict_calibration_issues(result: ProcessTracingResult) -> list[str]:
-    posterior = {p.hypothesis_id: p.final_posterior for p in result.bayesian.posteriors}
+    posteriors = {p.hypothesis_id: p for p in result.bayesian.posteriors}
     issues: list[str] = []
     for verdict in result.synthesis.verdicts:
-        support = posterior.get(verdict.hypothesis_id)
-        if support is None:
+        post = posteriors.get(verdict.hypothesis_id)
+        if post is None:
             continue
+        support = post.final_posterior
         if verdict.status in {"supported", "strongly_supported"} and support < 0.10:
             issues.append(
                 f"{verdict.hypothesis_id} is labeled {verdict.status} with support {support:.3f}"
             )
+        elif verdict.status == "strongly_supported" and support < 0.50:
+            issues.append(
+                f"{verdict.hypothesis_id} is labeled strongly_supported but support "
+                f"{support:.3f} < 0.50 (STRONG_SUPPORT_FLOOR)"
+            )
     return issues
+
+
+# Words that signal unwarranted certainty when the winning hypothesis is fragile.
+# "decisive" is intentionally excluded — it is a Van Evera diagnostic category term.
+_OVERCLAIM_WORDS: tuple[str, ...] = (
+    "conclusive",
+    "proven",
+    "proves",
+    "definitively",
+    "beyond doubt",
+    "with certainty",
+)
+
+
+def _synthesis_overclaim_check(result: ProcessTracingResult) -> list[str]:
+    """Return list of certainty phrases found in analytical_narrative when winner is fragile.
+
+    Only checks when the top-ranked hypothesis is fragile — robust winners can legitimately
+    attract stronger language. Fragile winners are driven by many small effects that could
+    individually go either way; strong certainty claims in that context are unwarranted.
+    """
+    top_id = result.bayesian.ranking[0] if result.bayesian.ranking else None
+    top = next((p for p in result.bayesian.posteriors if p.hypothesis_id == top_id), None)
+    if top is None or top.robustness != "fragile":
+        return []
+    text = result.synthesis.analytical_narrative.lower()
+    found: list[str] = []
+    for word in _OVERCLAIM_WORDS:
+        if word in text:
+            idx = text.index(word)
+            raw = result.synthesis.analytical_narrative
+            snippet = raw[max(0, idx - 20):idx + len(word) + 20].replace("\n", " ")
+            found.append(f'"{word}" in narrative (fragile winner): "...{snippet}..."')
+    return found
 
 
 def _temporal_stats(result: ProcessTracingResult, focal_year: int | None) -> dict[str, Any]:
@@ -604,6 +644,7 @@ def audit_result(
     score += categories["contract_integrity"]["points"]
 
     verdict_issues = _verdict_calibration_issues(result)
+    overclaim_issues = _synthesis_overclaim_check(result)
     comparative_visible = _report_has(report_html, "comparative support", "not absolute")
     calibration_visible = (not verdict_issues) or _report_has(
         report_html, "verdict calibration", "secondary mechanism"
@@ -613,15 +654,27 @@ def audit_result(
         comparative_points -= 7
     if not calibration_visible:
         comparative_points -= 6
+    if overclaim_issues:
+        comparative_points -= 3
+    recs: list[str] = []
+    if not comparative_visible or not calibration_visible:
+        recs.append(
+            "State that support is comparative, not absolute; caveat low-posterior supported "
+            "verdicts as secondary mechanisms."
+        )
+    if overclaim_issues:
+        recs.append(
+            "Synthesis narrative uses certainty language inconsistent with a fragile winner. "
+            "Hedge claims with 'comparative support suggests' rather than 'conclusively proves'."
+        )
     categories["comparative_support_discipline"] = {
         "points": max(comparative_points, 0),
         "max": 15,
         "verdict_issues": verdict_issues,
+        "overclaim_issues": overclaim_issues,
         "comparative_visible": comparative_visible,
         "calibration_visible": calibration_visible,
-        "recommendations": [] if comparative_visible and calibration_visible else [
-            "State that support is comparative, not absolute; caveat low-posterior supported verdicts as secondary mechanisms."
-        ],
+        "recommendations": recs,
     }
     score += categories["comparative_support_discipline"]["points"]
 

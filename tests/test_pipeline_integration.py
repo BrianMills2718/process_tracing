@@ -26,6 +26,8 @@ from pt.schemas import (
     AbsenceResult,
     Actor,
     CausalEdge,
+    CriticFinding,
+    CriticResult,
     Evidence,
     EvidenceCluster,
     EvidenceLikelihood,
@@ -898,6 +900,66 @@ class TestReportConsistency:
         assert top_driver_edges
         assert any("top driver edge" in edge.get("title", "") for edge in top_driver_edges)
 
+    @pytest.mark.plans(3)
+    def test_critic_section_renders_confirmed_links_separately(self):
+        """confirmed_link findings appear in Structural Anchors subsection, not defect table."""
+        result = _make_process_result()
+        result.critic = CriticResult(
+            findings=[
+                CriticFinding(
+                    finding_type="confirmed_link",
+                    target="evi_debt->evi_tax_revolt",
+                    target_type="causal_edge",
+                    severity="low",
+                    reasoning="Both items converge on the same fiscal mechanism.",
+                    recommendation="No action needed; this link is well-supported.",
+                ),
+                CriticFinding(
+                    finding_type="void_link",
+                    target="evi_elite_plot->evi_debt",
+                    target_type="causal_edge",
+                    severity="medium",
+                    reasoning="No evidence item's justification mentions this mechanism.",
+                    recommendation="Collect evidence of the causal pathway from elite action to debt.",
+                ),
+            ],
+            summary="One well-supported link; one void link. No re-elicitation needed.",
+        )
+        html = generate_report(result)
+        assert "Structural Anchors" in html, (
+            "confirmed_link findings must appear in a separate Structural Anchors section"
+        )
+        # void_link defect must appear in the main critic table
+        assert "void_link" in html or "void link" in html.lower(), (
+            "void_link finding must appear in the main critic defects table"
+        )
+
+    @pytest.mark.plans(3)
+    def test_absence_table_renders_acquire_from_column(self):
+        """Absence table includes Acquire from column when expected_source_genre is set."""
+        result = _make_process_result()
+        result.absence = AbsenceResult(
+            evaluations=[
+                AbsenceEvaluation(
+                    hypothesis_id="h1",
+                    prediction_id="pred_h1_01",
+                    missing_evidence="Correspondence showing fiscal negotiations",
+                    reasoning="Private correspondence would document negotiating positions.",
+                    severity="damaging",
+                    would_be_extractable=True,
+                    expected_source_genre="primary_document",
+                    expected_source_location="Archives nationales, Série AF III (Executive papers)",
+                ),
+            ]
+        )
+        html = generate_report(result)
+        assert "Acquire from" in html, (
+            "Absence table must include Acquire from column when expected_source_genre is set"
+        )
+        assert "primary_document" in html or "primary document" in html.lower(), (
+            "Absence table must display the expected_source_genre value"
+        )
+
 
 class TestFromResultProvenance:
     def test_from_result_rejects_missing_source_hash(self):
@@ -1077,3 +1139,149 @@ class TestExecutiveSummary:
 
     def test_no_overconfidence_banner_on_normal_result(self):
         assert "Likely overconfident" not in generate_report(self._result())
+
+
+class TestAuditSynthesisCalibration:
+    """Slice 8: overclaim language check and verdict calibration threshold tests."""
+
+    def _fragile_result(self, narrative: str) -> ProcessTracingResult:
+        """Build a result where h1 wins but robustness=fragile (many weak items)."""
+        items = [_ev_like(f"e{i}", h1=2.0, h2=1.0, relevance=0.9) for i in range(12)]
+        testing = TestingResult(evidence_likelihoods=items)
+        bayesian = run_bayesian_update(testing, ["h1", "h2"])
+        synthesis = SynthesisResult(
+            verdicts=[
+                HypothesisVerdict(
+                    hypothesis_id="h1", status="supported",
+                    key_evidence_for=["e0"], key_evidence_against=[],
+                    reasoning="Many weak items favor h1.",
+                    steelman="Pattern is clear despite fragility.",
+                    posterior_robustness="fragile",
+                ),
+                HypothesisVerdict(
+                    hypothesis_id="h2", status="weakened",
+                    key_evidence_for=[], key_evidence_against=["e0"],
+                    reasoning="H2 is outweighed.", steelman="Has some merit.",
+                    posterior_robustness="fragile",
+                ),
+            ],
+            comparative_analysis="H1 leads via many weak items.",
+            analytical_narrative=narrative,
+            limitations=["Fragile result"], suggested_further_tests=[],
+        )
+        return ProcessTracingResult(
+            extraction=_make_extraction(), hypothesis_space=_make_hypothesis_space(),
+            testing=testing, absence=AbsenceResult(evaluations=[]),
+            bayesian=bayesian, synthesis=synthesis,
+        )
+
+    def test_overclaim_flagged_when_winner_fragile_and_narrative_has_certainty_word(self):
+        from scripts.audit_result_quality import _synthesis_overclaim_check
+        result = self._fragile_result(
+            "The evidence conclusively establishes that the fiscal crisis caused the revolution."
+        )
+        top = result.bayesian.posteriors[0]
+        assert top.robustness == "fragile", f"Expected fragile winner; got robustness={top.robustness}"
+        issues = _synthesis_overclaim_check(result)
+        assert issues, "Expected overclaim issues when narrative contains 'conclusively' and winner is fragile"
+        assert any("conclusive" in issue for issue in issues)
+
+    def test_overclaim_not_flagged_when_winner_not_fragile(self):
+        from scripts.audit_result_quality import _synthesis_overclaim_check
+        # DECISIVE_COUNT_FOR_ROBUST=3: need ≥3 items with |log(LR)|>1.6 for "robust".
+        # Use 4 decisive items (h1=5.0, h2=0.1 each → LR≈7, |log|≈1.96 > 1.6).
+        testing = TestingResult(
+            evidence_likelihoods=[
+                _ev_like(f"e{i}", h1=5.0, h2=0.1, relevance=0.95, dtype="smoking_gun")
+                for i in range(4)
+            ]
+        )
+        bayesian = run_bayesian_update(testing, ["h1", "h2"])
+        synthesis = SynthesisResult(
+            verdicts=[
+                HypothesisVerdict(
+                    hypothesis_id="h1", status="supported",
+                    key_evidence_for=["e0"], key_evidence_against=[],
+                    reasoning="Decisive item.", steelman="Clear.",
+                    posterior_robustness="robust",
+                ),
+                HypothesisVerdict(
+                    hypothesis_id="h2", status="weakened",
+                    key_evidence_for=[], key_evidence_against=["e0"],
+                    reasoning="Outweighed.", steelman="Has merit.",
+                    posterior_robustness="robust",
+                ),
+            ],
+            comparative_analysis="H1 leads decisively.",
+            analytical_narrative="This conclusively proves that fiscal collapse caused the revolution.",
+            limitations=[], suggested_further_tests=[],
+        )
+        result = ProcessTracingResult(
+            extraction=_make_extraction(), hypothesis_space=_make_hypothesis_space(),
+            testing=testing, absence=AbsenceResult(evaluations=[]),
+            bayesian=bayesian, synthesis=synthesis,
+        )
+        top = result.bayesian.posteriors[0]
+        assert top.robustness != "fragile", f"Expected non-fragile winner; got robustness={top.robustness}"
+        issues = _synthesis_overclaim_check(result)
+        assert not issues, f"Should not flag overclaim language when winner is {top.robustness} (not fragile)"
+
+    def test_overclaim_not_flagged_when_narrative_is_hedged(self):
+        from scripts.audit_result_quality import _synthesis_overclaim_check
+        result = self._fragile_result(
+            "Comparative support suggests the fiscal hypothesis is the stronger explanation, "
+            "but the result is fragile and sensitive to rival interpretations."
+        )
+        issues = _synthesis_overclaim_check(result)
+        assert not issues, "Should not flag hedged language even when winner is fragile"
+
+    def test_verdict_calibration_flags_strongly_supported_below_strong_floor(self):
+        from scripts.audit_result_quality import _verdict_calibration_issues
+        # Two items weakly favoring h2 → h1 posterior ~0.30 (above 0.10, below 0.50 threshold).
+        testing = TestingResult(
+            evidence_likelihoods=[
+                _ev_like("e0", h1=0.3, h2=0.7, relevance=0.9),
+                _ev_like("e1", h1=0.3, h2=0.7, relevance=0.9),
+            ]
+        )
+        bayesian = run_bayesian_update(testing, ["h1", "h2"])
+        h1_post = next(p.final_posterior for p in bayesian.posteriors if p.hypothesis_id == "h1")
+        assert 0.10 <= h1_post < 0.50, f"Expected h1 posterior in (0.10, 0.50), got {h1_post:.3f}"
+        synthesis = SynthesisResult(
+            verdicts=[
+                HypothesisVerdict(
+                    hypothesis_id="h1", status="strongly_supported",  # overclaim
+                    key_evidence_for=[], key_evidence_against=["e0"],
+                    reasoning="Overclaiming verdict.", steelman="Has some merit.",
+                    posterior_robustness="fragile",
+                ),
+                HypothesisVerdict(
+                    hypothesis_id="h2", status="supported",
+                    key_evidence_for=["e0"], key_evidence_against=[],
+                    reasoning="Supported.", steelman="Clear.", posterior_robustness="fragile",
+                ),
+            ],
+            comparative_analysis="H2 leads.", analytical_narrative="H1 is strongly supported.",
+            limitations=[], suggested_further_tests=[],
+        )
+        result = ProcessTracingResult(
+            extraction=_make_extraction(), hypothesis_space=_make_hypothesis_space(),
+            testing=testing, absence=AbsenceResult(evaluations=[]),
+            bayesian=bayesian, synthesis=synthesis,
+        )
+        issues = _verdict_calibration_issues(result)
+        assert any("strongly_supported" in issue for issue in issues), (
+            f"Expected strongly_supported calibration issue for h1 with posterior {h1_post:.3f}; got: {issues}"
+        )
+
+    def test_audit_overclaim_deducts_from_comparative_support_score(self):
+        from scripts.audit_result_quality import audit_result
+        result = self._fragile_result(
+            "The evidence conclusively proves that the fiscal crisis was the decisive cause."
+        )
+        html = generate_report(result)
+        audit = audit_result(result, html)
+        cs = audit["categories"]["comparative_support_discipline"]
+        assert cs["overclaim_issues"], "Expected overclaim_issues in audit output when narrative has certainty word + fragile winner"
+        assert cs["points"] < 15, "Overclaim deduction should reduce comparative support discipline score"
+        assert cs["recommendations"], "Overclaim should produce a recommendation"
