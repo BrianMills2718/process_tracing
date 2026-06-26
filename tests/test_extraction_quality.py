@@ -389,6 +389,14 @@ class TestAbsenceAcquisitionFields:
         assert "expected_source_genre" in content, (
             "Pass 3b prompt must instruct the LLM to populate expected_source_genre"
         )
+        # Guard the critical disambiguation: expected_source_genre is the SOURCE TO ACQUIRE,
+        # not the genre of the current input text. If this phrase disappears, the LLM will
+        # misinterpret the field and populate it with the current corpus genre instead.
+        assert "SOURCE TO ACQUIRE" in content or "NOT the current text" in content, (
+            "Pass 3b prompt must clarify that expected_source_genre is the genre of the "
+            "source to acquire, not the genre of the current input text. "
+            "Expected phrase: 'SOURCE TO ACQUIRE' or 'NOT the current text'"
+        )
 
     def test_prompt_contract_includes_expected_source_location(self):
         """Pass 3b prompt must mention expected_source_location to instruct the LLM."""
