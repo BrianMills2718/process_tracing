@@ -179,3 +179,42 @@ class TestBenchmarkRunner:
         assert "score" in case
         assert "grade" in case
         assert "flags_found" in case
+
+    def test_result_file_case_without_report_path_does_not_crash(self, tmp_path):
+        """result_file cases with no report_path must not fail with 'Is a directory'."""
+        from scripts.run_benchmark import run_benchmark
+
+        # Build a minimal fixture result and write it as result.json
+        from scripts.run_benchmark import _build_calibration_mismatch_fixture
+        import json as _json
+        result = _build_calibration_mismatch_fixture()
+        result_json = tmp_path / "result.json"
+        result_json.write_text(_json.dumps(result.model_dump()))
+
+        config = {"cases": [
+            {
+                "name": "no_report_path",
+                "type": "result_file",
+                "result_path": str(result_json.relative_to(result_json.parent.parent)),
+                "optional": False,
+                "expected": {},
+            },
+        ]}
+        # Manually set result_path to absolute so the runner resolves it correctly
+        config["cases"][0]["result_path"] = str(result_json)
+        config_path = tmp_path / "cfg.yaml"
+        import yaml
+        with config_path.open("w") as f:
+            yaml.dump(config, f)
+
+        # Override _REPO_ROOT resolution by passing absolute result_path
+        # The runner uses _REPO_ROOT / result_path, so pass an absolute path
+        # that _REPO_ROOT / absolute_path == absolute_path (Path behaviour on absolute)
+        scorecard = run_benchmark(
+            config_path=config_path,
+            output_path=tmp_path / "scorecard.json",
+        )
+        # Must not fail — the case may pass or fail on score expectations
+        # but must NOT raise "Is a directory"
+        assert scorecard["total"] == 1
+        assert all("Loading failed" not in str(r.get("failures", [])) for r in scorecard["cases"])

@@ -1,6 +1,6 @@
 {
-  "total": 3,
-  "passed": 3,
+  "total": 4,
+  "passed": 4,
   "failed": 0,
   "skipped": 0,
   "required_failures": 0,
@@ -45,6 +45,24 @@
         "grade": "C",
         "base_score": 94,
         "academic_cap": 76
+      }
+    },
+    {
+      "name": "critic_pipeline_confound_text",
+      "type": "result_file",
+      "optional": true,
+      "description": "Critic pipeline smoke test on a synthetic text with a planted confound (fiscal crisis and popular unrest co-vary perfectly across all documented instances). The critic runs without error (grade B) and produces void_link and confirmed_link findings. NOTE: the critic does NOT detect the confound as a 'confound' finding \u2014 the same-model limitation (C-017) prevents detection of confounds that are also shared assumptions of the underlying Pass 3 model. This case validates the critic pipeline runs correctly, not that it catches all structural issues.\n",
+      "passed": true,
+      "skipped": false,
+      "failures": [],
+      "score": 82,
+      "grade": "B",
+      "flags_found": [],
+      "audit_summary": {
+        "score": 82,
+        "grade": "B",
+        "base_score": 100,
+        "academic_cap": 82
       }
     },
     {

@@ -51,6 +51,28 @@ cases:
         - verdict_calibration_mismatch
       must_not_flag: []
 
+  - name: critic_pipeline_confound_text
+    type: result_file
+    result_path: output/benchmark_critic_confound/result.json
+    focal_year: 1847
+    optional: true
+    description: >
+      Critic pipeline smoke test on a synthetic text with a planted confound
+      (fiscal crisis and popular unrest co-vary perfectly across all documented
+      instances). The critic runs without error (grade B) and produces void_link
+      and confirmed_link findings. NOTE: the critic does NOT detect the confound
+      as a 'confound' finding — the same-model limitation (C-017) prevents
+      detection of confounds that are also shared assumptions of the underlying
+      Pass 3 model. This case validates the critic pipeline runs correctly,
+      not that it catches all structural issues.
+    expected:
+      min_score: 70
+      max_score: 100
+      grade: null
+      must_flag: []
+      must_not_flag:
+        - overclaim
+
   - name: french_revolution_real
     type: result_file
     result_path: output/slice7_v2/result.json

@@ -342,7 +342,8 @@ def _run_case(case: dict, verbose: bool = False) -> dict[str, Any]:
             html = generate_report(pt_result)
         elif case_type == "result_file":
             result_path = _REPO_ROOT / case["result_path"]
-            report_path = _REPO_ROOT / case.get("report_path", "")
+            report_path_str = case.get("report_path", "")
+            report_path = (_REPO_ROOT / report_path_str) if report_path_str else None
             if not result_path.exists():
                 if optional:
                     result_record["skipped"] = True
@@ -355,7 +356,7 @@ def _run_case(case: dict, verbose: bool = False) -> dict[str, Any]:
             with result_path.open("r", encoding="utf-8") as f:
                 pt_result = ProcessTracingResult.model_validate(_json.load(f))
             html = ""
-            if report_path and report_path.exists():
+            if report_path is not None and report_path.exists():
                 with report_path.open("r", encoding="utf-8") as f:
                     html = f.read()
             else:
