@@ -4,8 +4,8 @@ scope: repo
 status: active
 git_commit: "60a0476"
 git_branch: "master"
-summary: "Plan 003 complete. 208 deterministic tests. Post-plan audit: C-017 correctly reopened (critic missed planted confound — confirmed risk), C-018 correctly downgraded to mitigated (live verify deferred). last_scorecard.json untracked. --critic-model documented in FUTURE_WORK.md."
-next_action: "Highest-value: implement --critic-model flag (C-017-critic-model). Or start hypothesis partition audit (FUTURE_WORK.md #1). Or live-verify C-018 data-driven acyclicity fix."
+summary: "C-017 fully resolved. --critic-model implemented and E2E verified: independent critic detects confounds same-model critic misses (confound=high, re_elicitation=True). 210 deterministic tests. Only open concern: C-018-live-verify."
+next_action: "C-018-live-verify: run pt.multi data-driven on 2+ texts to confirm acyclic DAG. Then: hypothesis partition audit (FUTURE_WORK.md #1) or trace_eval integration."
 
 completed:
   - "Audit of Slices 3-6: all verified (previous session)"
@@ -52,13 +52,12 @@ completed:
     # test_multi_contracts.py: type: ignore[arg-type] for int→Literal[0,1] test helpers
   - "C-018 resolved (commit ba0876a): propose_model prompt hardened against cyclic DAGs"
     # Added concrete cycle example, FORBIDDEN vs VALID chain, before-you-submit self-check
-  - "C-017 resolved (commits 87a9132, 60a0476): critic benchmark case added"
-    # input_text/benchmark/confound_planted.txt: planted-confound synthetic text
-    # output/benchmark_critic_confound/: E2E result (grade B, 8 findings, no confound detected)
-    # benchmark_config.yaml: critic_pipeline_confound_text case (optional, must_not_flag=overclaim)
-    # run_benchmark.py: fixed report_path="" bug (Path/_REPO_ROOT/"" == repo root dir → Is a directory)
-    # scripts/__init__.py: added so Pyright resolves scripts.run_benchmark
-    # 208 deterministic tests pass
+  - "C-017 resolved (commits 87a9132, 60a0476, 959c594)"
+    # Same-model critic confirmed miss: output/benchmark_critic_confound/ → 0 confound findings
+    # --critic-model implemented: pt/cli.py + pt/pipeline.py + 2 new tests
+    # Independent-model E2E: output/critic_model_confound/ → confound=high + too_strong=high×2 + re_elicitation=True
+    # benchmark_config.yaml: both cases as optional result_file entries (before/after comparison)
+    # 210 deterministic tests pass
 
 pending:
   - id: P3
@@ -69,16 +68,8 @@ pending:
       Cap-84 source-lineage inflation path (audit_result_quality.py lines 421-452) cannot be
       exercised by the French Revolution Wikipedia corpus. Deferred to future work with multi-source corpus.
 
-  - id: C-017-critic-model
-    priority: medium
-    effort: medium
-    summary: "Implement --critic-model flag for independent critic (C-017 open)"
-    details: >
-      C-017 is open (risk confirmed, not reduced). The same-model critic missed a planted confound
-      even when explicitly stated in the text. Implement --critic-model flag to run Pass 3.7 with a
-      distinct model. Add critic_model field to PipelineConfig, thread through pass_critic.run_critic(),
-      update CLI. See FUTURE_WORK.md for spec. After implementation, run on confound_planted.txt and
-      verify confound detection improves. Only then close C-017.
+  - id: C-018-live-verify
+    # (C-017 is now resolved — see completed section)
 
   - id: C-018-live-verify
     priority: low

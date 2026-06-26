@@ -64,12 +64,6 @@ starts.
 
 ## Methodology Extensions
 
-- **`--critic-model` flag for independent critic (C-017):** Run Pass 3.7 structural
-  critic with a distinct model (e.g. `--critic-model openrouter/anthropic/claude-opus-4-8`)
-  to eliminate same-model rationalization blindspots. Live E2E on planted-confound text
-  confirmed current same-model critic misses confounds shared with Pass 3's assumptions.
-  Implementation: add `critic_model` field to `PipelineConfig`, thread through
-  `pass_critic.run_critic()`, update CLI to accept `--critic-model`.
 - **Qualitative structural critic:** implement the white paper's local causal-graph
   critic as a categorical, directional audit of posterior-moving evidence. The
   graph should identify missing pathways, confounds, and too-strong likelihood
