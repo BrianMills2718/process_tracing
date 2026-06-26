@@ -23,7 +23,7 @@ def main() -> None:
     parser.add_argument("--from-result", default=None, help="Path to existing result.json; skips passes 1-2, implies --refine")
     parser.add_argument("--source-packet", default=None, help="Path to source-packet JSON or assistant source-packet artifact. Pins research question and source-scope metadata.")
     parser.add_argument("--priors", default=None, help="Path to JSON file mapping hypothesis_id -> prior weight (need not sum to 1). Default: uniform.")
-    parser.add_argument("--critic", action="store_true", default=False, help="Run structural critic pass (Pass 3.7) after diagnostic matrix. Writes result_base.json, result_critic.json, and critic_delta.json. Re-elicits Pass 3 when high-severity findings are present.")
+    parser.add_argument("--critic", action="store_true", default=False, help="Run structural critic pass (Pass 3.7) after diagnostic matrix. Writes result_base.json and critic_delta.json (ablation pair: result_base.json pre-critic vs result.json post-critic). Re-elicits Pass 3 when high-severity findings are present.")
     parser.add_argument("--max-budget", type=float, default=None, help="Per-call LLM budget cap in dollars (default: PT_MAX_BUDGET or 1.0)")
     args = parser.parse_args()
 

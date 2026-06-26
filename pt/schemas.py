@@ -644,11 +644,19 @@ class CriticFinding(BaseModel):
                 "Use target_type='causal_edge' for edge targets, or split into separate "
                 "hypothesis findings."
             )
-        if self.target_type == "causal_edge" and "->" not in self.target:
-            raise ValueError(
-                f"target '{self.target}' has no '->' but target_type='causal_edge'. "
-                "Causal edge targets must use format 'source_id->target_id'."
-            )
+        if self.target_type == "causal_edge":
+            count = self.target.count("->")
+            if count == 0:
+                raise ValueError(
+                    f"target '{self.target}' has no '->' but target_type='causal_edge'. "
+                    "Causal edge targets must use format 'source_id->target_id'."
+                )
+            if count > 1:
+                raise ValueError(
+                    f"target '{self.target}' contains {count} '->' tokens but causal_edge "
+                    "targets must reference exactly one edge: 'source_id->target_id'. "
+                    "Multi-hop chains are not valid — create separate findings for each edge."
+                )
         return self
 
 

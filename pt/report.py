@@ -1595,7 +1595,7 @@ def generate_report(result: ProcessTracingResult) -> str:
         detail_id = _dom_id("detail", hid)
 
         h_rows.append(f"""
-        <tr>
+        <tr id="hyp-{_esc(hid)}">
           <td>{rank}</td>
           <td><strong>{_esc(hid)}</strong></td>
           <td>{_esc(hyp.description)}</td>
@@ -2004,52 +2004,74 @@ def generate_report(result: ProcessTracingResult) -> str:
             reelicit_note = (
                 '<div class="alert alert-info mt-2 mb-2 py-2 px-3">'
                 '<strong>Pass 3 was re-elicited</strong> after high-severity findings. '
-                'result_critic.json contains updated posteriors; result_base.json has the pre-critic snapshot.'
+                'result.json contains updated posteriors; result_base.json has the pre-critic snapshot.'
                 '</div>'
             )
 
         # Build findings table
         ev_ids = {ev.id for ev in result.extraction.evidence}
         hyp_ids = {h.id for h in result.hypothesis_space.hypotheses}
-        finding_rows = []
+        defect_rows = []
+        confirmed_rows = []
         for f in cr.findings:
             sev_color = _CRITIC_SEVERITY_COLOR.get(f.severity, "secondary")
             type_color = _CRITIC_TYPE_COLOR.get(f.finding_type, "secondary")
-            # Link target to evidence/hypothesis anchor if it exists in the report
             target_html = _esc(f.target)
             if f.target_type == "evidence" and f.target in ev_ids:
                 target_html = f'<a href="#ev-{_esc(f.target)}">{_esc(f.target)}</a>'
             elif f.target_type == "hypothesis" and f.target in hyp_ids:
                 target_html = f'<a href="#hyp-{_esc(f.target)}">{_esc(f.target)}</a>'
 
-            finding_rows.append(f"""
+            row = f"""
             <tr>
               <td><span class="badge bg-{type_color}">{_esc(f.finding_type)}</span></td>
               <td class="small font-monospace">{target_html}</td>
               <td><span class="badge bg-{sev_color}">{_esc(f.severity)}</span></td>
               <td class="small">{_esc(f.reasoning)}</td>
               <td class="small">{_esc(f.recommendation)}</td>
-            </tr>""")
+            </tr>"""
+
+            if f.finding_type == "confirmed_link":
+                confirmed_rows.append(row)
+            else:
+                defect_rows.append(row)
 
         findings_html = ""
-        if finding_rows:
+        if defect_rows:
             findings_html = f"""
           <div class="table-responsive mt-3">
             <table class="table table-sm table-striped">
               <thead><tr>
                 <th>Type</th><th>Target</th><th>Severity</th><th>Reasoning</th><th>Recommendation</th>
               </tr></thead>
-              <tbody>{''.join(finding_rows)}</tbody>
+              <tbody>{''.join(defect_rows)}</tbody>
             </table>
           </div>"""
         else:
-            findings_html = '<p class="text-muted small mt-2">No findings.</p>'
+            findings_html = '<p class="text-muted small mt-2">No structural defects found.</p>'
 
-        n_high = sum(1 for f in cr.findings if f.severity == "high")
+        confirmed_html = ""
+        if confirmed_rows:
+            confirmed_html = f"""
+          <div class="mt-3">
+            <h6 class="text-success">&#10003; Structural Anchors (confirmed_link)</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered border-success">
+                <thead class="table-success"><tr>
+                  <th>Type</th><th>Target</th><th>Severity</th><th>Reasoning</th><th>Recommendation</th>
+                </tr></thead>
+                <tbody>{''.join(confirmed_rows)}</tbody>
+              </table>
+            </div>
+          </div>"""
+
+        # Badge counts only defects (confirmed_link is positive, not a problem)
+        n_high = sum(1 for f in cr.findings if f.severity == "high" and f.finding_type != "confirmed_link")
+        n_defects = sum(1 for f in cr.findings if f.finding_type != "confirmed_link")
         n_finding_badge = (
             f'<span class="badge bg-danger ms-2">{n_high} high</span>'
             if n_high else
-            f'<span class="badge bg-secondary ms-2">{len(cr.findings)} findings</span>'
+            f'<span class="badge bg-secondary ms-2">{n_defects} findings</span>'
         )
 
         critic_section = f"""
@@ -2065,6 +2087,7 @@ def generate_report(result: ProcessTracingResult) -> str:
           {reelicit_note}
           <p class="small text-muted mb-2">{_esc(cr.summary)}</p>
           {findings_html}
+          {confirmed_html}
         </div>
       </div>
     </div>"""
@@ -2102,7 +2125,7 @@ def generate_report(result: ProcessTracingResult) -> str:
         )
         group_html = f'<span class="small text-muted">{_esc(ev.source_group)}</span>' if ev.source_group else ""
         ev_rows.append(f"""
-        <tr>
+        <tr id="ev-{_esc(ev.id)}">
           <td><code class="small">{_esc(ev.id)}</code></td>
           <td>{_esc(ev.description)}</td>
           <td>{type_badge}</td>

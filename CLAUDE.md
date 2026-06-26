@@ -216,6 +216,8 @@ build plan: `docs/BUILDPLAN_pragmatic_process_tracing.md`; historical rebuild lo
 3. **Dependence is partial** — scalar dependence clusters reduce double-counting, but per-hypothesis redundancy, source-lineage graphs, and trace-production model averaging remain planned.
 4. **Absence remains qualitative** — Pass 3b evaluates missing predicted evidence for synthesis, but observability-weighted absence does not yet enter Bayesian updating.
 5. **Cross-case estimation needs real variation** — CausalQueries requires comparable cases with variation in outcomes and covariates; all-positive/all-ones revolution corpora are not enough for effect estimation.
+6. **Structural critic uses same model as Pass 3** — same-model self-critique risks rationalization over genuine structural challenge: the critic may flag surface-level issues (diagnostic label strength, isolated void links) while missing deeper blindspots shared with the model that produced Pass 3. Treat critic findings as structural hypotheses, not ground truth. A future `--critic-model` flag to run the critic with a different model (e.g. a stronger or architecturally distinct model) would provide genuine independence.
+7. **`missing_pathway` is overloaded** — used for two distinct problems: (a) a hypothesis has no supporting evidence in the matrix (evidence gap at the hypothesis level, `target_type="hypothesis"`), and (b) a specific causal graph edge is unsupported (structural gap, `target_type="causal_edge"`). These require different remedies. The distinction is encoded in `target_type` but not in the finding_type name. Consider `hypothesis_unsupported` as a separate type in a future schema revision.
 
 ---
 

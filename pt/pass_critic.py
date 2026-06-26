@@ -21,6 +21,7 @@ from llm_client import render_prompt
 
 from pt.llm import call_llm
 from pt.schemas import (
+    AbsenceResult,
     CriticResult,
     DiagnosticMatrix,
     ExtractionResult,
@@ -36,6 +37,7 @@ def run_critic(
     hypothesis_space: HypothesisSpace,
     testing: TestingResult,
     diagnostic_matrix: DiagnosticMatrix,
+    absence: AbsenceResult | None = None,
     *,
     model: str | None = None,
     trace_id: str | None = None,
@@ -44,6 +46,9 @@ def run_critic(
 
     The critic never modifies likelihood values. Any numeric change must be
     achieved by re-running Pass 3 with the critic summary injected as context.
+
+    absence: Pass 3b findings. Provided so the critic can avoid duplicating
+    absence-of-evidence flags already raised there.
     """
     if trace_id is None:
         trace_id = uuid4().hex[:8]
@@ -78,6 +83,16 @@ def run_critic(
         for rpd in diagnostic_matrix.rival_pair_diagnostics
     ]
 
+    # Compact absence summary so the critic can avoid duplicating Pass 3b findings.
+    absence_summary = []
+    if absence:
+        for ev in absence.evaluations:
+            absence_summary.append({
+                "hypothesis_id": ev.hypothesis_id,
+                "missing_evidence": ev.missing_evidence,
+                "severity": ev.severity,
+            })
+
     messages = render_prompt(
         PROMPTS_DIR / "pass_critic.yaml",
         research_question=hypothesis_space.research_question,
@@ -105,6 +120,7 @@ def run_critic(
         ),
         likelihood_matrix_json=json.dumps(lr_matrix, indent=2),
         diagnostic_matrix_json=json.dumps(dm_summary, indent=2),
+        absence_findings_json=json.dumps(absence_summary, indent=2),
     )
 
     result = call_llm(

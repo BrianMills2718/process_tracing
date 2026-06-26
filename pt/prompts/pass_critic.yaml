@@ -46,7 +46,9 @@ messages:
         only the `summary`. Phrase recommendations as: "collect evidence of X", "downgrade diagnostic
         label from smoking_gun to straw_in_the_wind", "merge h2 into h3", "add edge A→B".
       - Do NOT invent evidence not present in the likelihood matrix.
-      - Do NOT flag absences already evaluated in the absence-of-evidence pass.
+      - Do NOT flag absences already evaluated in the absence-of-evidence pass (Pass 3b findings
+        are listed below under "Absence findings already evaluated"). A void_link or missing_pathway
+        finding is only warranted if the structural gap is NOT already covered by a Pass 3b entry.
       - Do NOT flag hypothesis quality issues (tautology, overlap, complementarity) — those were
         handled in the partition audit.
       - Do NOT flag every causal edge as a void link without first checking the justifications in
@@ -99,3 +101,6 @@ messages:
 
       ### Diagnostic matrix summary (rival pairs and discriminator counts)
       {{ diagnostic_matrix_json }}
+
+      ### Absence findings already evaluated (Pass 3b — do NOT duplicate these as void_link or missing_pathway)
+      {{ absence_findings_json }}

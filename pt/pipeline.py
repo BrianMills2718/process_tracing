@@ -237,14 +237,6 @@ def _compute_critic_delta(
     base_map = {p.hypothesis_id: p for p in base_bayesian.posteriors}
     critic_map = {p.hypothesis_id: p for p in critic_bayesian.posteriors}
 
-    # Which evidence IDs does each critic finding target?
-    ev_targets_by_hyp: dict[str, set[str]] = {}
-    for f in critic_result.findings:
-        if f.target_type == "evidence":
-            # Evidence-level findings affect all hypotheses
-            for h in base_map:
-                ev_targets_by_hyp.setdefault(h, set()).add(f.target)
-
     deltas = []
     all_hyp_ids = sorted(set(base_map) | set(critic_map))
     for hyp_id in all_hyp_ids:
@@ -424,6 +416,14 @@ def run_pipeline(
             if verbose:
                 print(f"  Partition audit: {partition_path}")
 
+    if critic and refine:
+        raise ValueError(
+            "--critic and --refine cannot be used together. "
+            "critic_delta.json is computed against the pre-refine bayesian result; "
+            "if refinement then overwrites it, the delta becomes inconsistent with result.json. "
+            "Run --critic alone to get the ablation pair, or --refine alone for analytical refinement."
+        )
+
     # Run passes 3-4 (initial)
     critic_result: CriticResult | None = None
 
@@ -468,7 +468,7 @@ def run_pipeline(
         if verbose:
             print("Pass 3.7: Structural critic review...")
         critic_result = run_critic(
-            extraction, hypothesis_space, testing, diagnostic_matrix,
+            extraction, hypothesis_space, testing, diagnostic_matrix, absence,
             model=model, trace_id=f"{trace_id}-critic",
         )
         base_bayesian = bayesian  # save for delta computation

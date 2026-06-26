@@ -114,6 +114,15 @@ class TestCriticFindingTargetValidation:
         )
         assert f.target_type == "causal_edge"
 
+    def test_causal_edge_rejects_multi_hop_chain(self):
+        """target_type='causal_edge' with more than one '->' must fail validation."""
+        with pytest.raises(ValidationError, match="exactly one edge"):
+            _make_critic_finding(
+                finding_type="confirmed_link",
+                target="evt_a->evt_b->evt_c",
+                target_type="causal_edge",
+            )
+
 
 class TestCriticFinding:
     def test_valid_all_fields(self):
@@ -492,6 +501,11 @@ class TestCriticPipelineOn:
 
         # _run_core_passes called twice: once for base, once for re-elicitation
         assert mock_core.call_count == 2
+        # Second call must inject the critic summary as critic_context
+        second_call_kwargs = mock_core.call_args_list[1].kwargs
+        assert second_call_kwargs.get("critic_context") == high_critic.summary, (
+            f"Re-elicitation must pass critic_context=critic.summary; got {second_call_kwargs.get('critic_context')!r}"
+        )
         # run_synthesize called twice: once for base snapshot, once post-critic
         assert mock_synth.call_count == 2
 
