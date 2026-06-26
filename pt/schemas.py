@@ -631,7 +631,25 @@ class CriticFinding(BaseModel):
         "'low' if informational only."
     )
     reasoning: str = Field(description="Why this is a structural problem and what supports the concern.")
-    recommendation: str = Field(description="Concrete action: re-elicit, cluster, merge, or discard.")
+    recommendation: str = Field(
+        description="Structural action only: collect specific evidence, add/remove a graph edge, "
+        "merge hypotheses, or downgrade a diagnostic label. Do NOT suggest specific likelihood values."
+    )
+
+    @model_validator(mode="after")
+    def _validate_target_consistency(self) -> "CriticFinding":
+        if self.target_type == "hypothesis" and "->" in self.target:
+            raise ValueError(
+                f"target '{self.target}' contains '->' but target_type='hypothesis'. "
+                "Use target_type='causal_edge' for edge targets, or split into separate "
+                "hypothesis findings."
+            )
+        if self.target_type == "causal_edge" and "->" not in self.target:
+            raise ValueError(
+                f"target '{self.target}' has no '->' but target_type='causal_edge'. "
+                "Causal edge targets must use format 'source_id->target_id'."
+            )
+        return self
 
 
 class CriticResult(BaseModel):

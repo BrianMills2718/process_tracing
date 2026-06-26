@@ -261,10 +261,14 @@ def _compute_critic_delta(
             + [f"removed:{eid}" for eid in sorted(base_drivers - critic_drivers)]
         )
 
-        # Count critic findings that target this hypothesis or its top drivers
+        # Count critic findings that target this hypothesis or its evidence top-drivers.
+        # causal_edge findings are graph-level and not attributed to a specific hypothesis.
         hyp_finding_count = sum(
             1 for f in critic_result.findings
-            if f.target == hyp_id or f.target in (base_drivers | critic_drivers)
+            if (
+                (f.target_type == "hypothesis" and f.target == hyp_id)
+                or (f.target_type == "evidence" and f.target in (base_drivers | critic_drivers))
+            )
         )
 
         deltas.append(CriticDelta(
@@ -480,15 +484,22 @@ def run_pipeline(
                 critic_context=critic_result.summary,
             )
 
-        # Final synthesis (after re-elicitation if it happened, or base data if not)
-        if verbose:
-            print("Pass 4 (critic): Final synthesis...")
-        synthesis = run_synthesize(
-            extraction, hypothesis_space, testing, bayesian, absence,
-            model=model, trace_id=f"{trace_id}-critic-synth",
-        )
-        if verbose:
-            print(f"  Narrative: {len(synthesis.analytical_narrative)} chars")
+        # Final synthesis: only re-run if inputs changed via re-elicitation.
+        # When re_elicitation_needed=False, testing/bayesian/absence are unchanged
+        # so synthesis_base is identical — reuse it to avoid a redundant LLM call.
+        if critic_result.re_elicitation_needed:
+            if verbose:
+                print("Pass 4 (critic): Final synthesis...")
+            synthesis = run_synthesize(
+                extraction, hypothesis_space, testing, bayesian, absence,
+                model=model, trace_id=f"{trace_id}-critic-synth",
+            )
+            if verbose:
+                print(f"  Narrative: {len(synthesis.analytical_narrative)} chars")
+        else:
+            if verbose:
+                print("Pass 4 (critic): Reusing base synthesis (no re-elicitation).")
+            synthesis = synthesis_base
 
         # Compute and write critic delta
         if output_dir:
@@ -500,26 +511,9 @@ def run_pipeline(
                 n_moved = sum(1 for d in deltas if abs(d.delta) > 0.001)
                 print(f"  Critic delta: {delta_path} ({n_moved}/{len(deltas)} hypotheses moved)")
 
-        # Write result_critic.json (snapshot after critic intervention)
-        if output_dir:
-            critic_result_obj = ProcessTracingResult(
-                source_text_sha256=source_text_sha256,
-                extraction=extraction,
-                hypothesis_space=hypothesis_space,
-                partition_audit=partition_audit,
-                diagnostic_matrix=diagnostic_matrix,
-                testing=testing,
-                absence=absence,
-                bayesian=bayesian,
-                synthesis=synthesis,
-                source_packet=source_packet_summary,
-                critic=critic_result,
-            )
-            critic_path = os.path.join(output_dir, "result_critic.json")
-            with open(critic_path, "w", encoding="utf-8") as f:
-                json.dump(critic_result_obj.model_dump(), f, indent=2)
-            if verbose:
-                print(f"  Critic snapshot: {critic_path}")
+        # result.json (the canonical output written at the bottom) IS the post-critic result.
+        # result_critic.json would be identical — skip it. The ablation pair is:
+        #   result_base.json  (pre-critic) vs  result.json  (post-critic).
 
     else:
         # Standard flow: no critic

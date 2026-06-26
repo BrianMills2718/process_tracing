@@ -41,13 +41,19 @@ messages:
 
       ## What NOT to do
 
-      - Do NOT re-assign likelihood values or suggest specific numeric corrections.
+      - Do NOT suggest specific likelihood values in recommendations (e.g. "reduce from 1.5 to 1.3").
+        The `recommendation` field is human-facing structural guidance; the pipeline re-elicits using
+        only the `summary`. Phrase recommendations as: "collect evidence of X", "downgrade diagnostic
+        label from smoking_gun to straw_in_the_wind", "merge h2 into h3", "add edge A→B".
       - Do NOT invent evidence not present in the likelihood matrix.
       - Do NOT flag absences already evaluated in the absence-of-evidence pass.
       - Do NOT flag hypothesis quality issues (tautology, overlap, complementarity) — those were
         handled in the partition audit.
       - Do NOT flag every causal edge as a void link without first checking the justifications in
         the likelihood matrix; evidence frequently mentions mechanisms without using the exact edge IDs.
+      - For confound findings targeting a relationship between two hypotheses, set `target_type` to
+        `"causal_edge"` with `target` in "h1->h2" format. Do NOT set `target_type="hypothesis"` for
+        multi-hypothesis targets.
 
       ## Severity guide
 

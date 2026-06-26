@@ -69,6 +69,52 @@ def _make_critic_result(findings: list[CriticFinding] | None = None) -> CriticRe
 
 # ── Schema: CriticFinding ──────────────────────────────────────────────────
 
+class TestCriticFindingTargetValidation:
+    """CriticFinding model_validator enforces target_type/target consistency."""
+
+    def test_causal_edge_target_requires_arrow(self):
+        with pytest.raises(ValidationError, match="no '->'"):
+            _make_critic_finding(
+                finding_type="void_link",
+                target="h1",  # bare ID — not an edge
+                target_type="causal_edge",
+            )
+
+    def test_hypothesis_target_rejects_compound_with_arrow(self):
+        with pytest.raises(ValidationError, match="contains '->'"):
+            _make_critic_finding(
+                finding_type="confound",
+                target="h1->h5",  # compound — must use causal_edge type
+                target_type="hypothesis",
+            )
+
+    def test_valid_causal_edge_target(self):
+        f = _make_critic_finding(
+            finding_type="void_link",
+            target="mech_fiscal_crisis->evt_storming_bastille",
+            target_type="causal_edge",
+        )
+        assert f.target_type == "causal_edge"
+        assert "->" in f.target
+
+    def test_valid_hypothesis_target_bare_id(self):
+        f = _make_critic_finding(
+            finding_type="missing_pathway",
+            target="h1",
+            target_type="hypothesis",
+        )
+        assert f.target == "h1"
+
+    def test_confound_between_hypotheses_uses_causal_edge_type(self):
+        """A confound between h1 and h5 should use causal_edge target_type."""
+        f = _make_critic_finding(
+            finding_type="confound",
+            target="h1->h5",
+            target_type="causal_edge",  # correct type for compound target
+        )
+        assert f.target_type == "causal_edge"
+
+
 class TestCriticFinding:
     def test_valid_all_fields(self):
         f = _make_critic_finding()
@@ -97,8 +143,14 @@ class TestCriticFinding:
             )
 
     def test_target_type_accepts_all_valid_literals(self):
-        for tt in ["evidence", "hypothesis", "causal_edge"]:
-            f = _make_critic_finding(target_type=tt)
+        # Each target_type needs a compatible target to pass the model_validator
+        valid_combinations = [
+            ("evidence", "evi_debt"),
+            ("hypothesis", "h1"),
+            ("causal_edge", "mech_a->evt_b"),
+        ]
+        for tt, tgt in valid_combinations:
+            f = _make_critic_finding(target_type=tt, target=tgt)
             assert f.target_type == tt
 
     def test_target_type_rejects_invalid(self):
@@ -336,3 +388,288 @@ class TestCriticPipelineOff:
         assert not (tmp_path / "result_base.json").exists()
         assert not (tmp_path / "result_critic.json").exists()
         assert not (tmp_path / "critic_delta.json").exists()
+
+
+# ── Pipeline integration: critic flag on ─────────────────────────────────
+
+class TestCriticPipelineOn:
+    """critic=True path: synthesis reuse, double _run_core_passes, correct artifacts."""
+
+    def _build_mocks(self):
+        """Return the standard mock fixture objects needed across tests."""
+        from tests.test_pipeline_integration import (
+            _make_extraction, _make_hypothesis_space, _make_testing,
+            _make_absence, _make_synthesis,
+        )
+        from pt.bayesian import run_bayesian_update
+        from pt.pass_diagnostic import compute_diagnostic_matrix
+
+        extraction = _make_extraction()
+        hs = _make_hypothesis_space()
+        testing = _make_testing()
+        absence = _make_absence()
+        bayesian = run_bayesian_update(testing, ["h1", "h2"])
+        synthesis = _make_synthesis()
+        dm = compute_diagnostic_matrix(testing, hs)
+        return extraction, hs, testing, absence, bayesian, synthesis, dm
+
+    def _common_patches(self, extraction, hs, testing, absence, bayesian, synthesis, dm):
+        """Return a dict of patch targets → return values used in all critic-on tests."""
+        from pt.schemas import PartitionAudit
+        partition_audit = PartitionAudit(
+            research_question_adequate=True,
+            rival_pairs=[],
+            hypotheses_flagged=[],
+            overall_quality="adequate",
+            summary="No issues.",
+        )
+        return {
+            "pt.pipeline.run_extract": extraction,
+            "pt.pipeline.run_hypothesize": hs,
+            "pt.pipeline.run_partition": partition_audit,
+            "pt.pipeline.run_synthesize": synthesis,
+        }
+
+    def test_synthesis_reused_when_no_re_elicitation(self, tmp_path):
+        """When critic finds no high-severity issues, synthesis is NOT re-run."""
+        from pt.pipeline import run_pipeline
+        extraction, hs, testing, absence, bayesian, synthesis, dm = self._build_mocks()
+
+        low_critic = _make_critic_result([_make_critic_finding(severity="low")])
+        # re_elicitation_needed is False (only low-severity)
+        assert low_critic.re_elicitation_needed is False
+
+        with (
+            patch("pt.pipeline.run_extract", return_value=extraction),
+            patch("pt.pipeline.run_hypothesize", return_value=hs),
+            patch("pt.pipeline.run_partition") as mock_partition,
+            patch("pt.pipeline._run_core_passes", return_value=(testing, absence, bayesian, dm)) as mock_core,
+            patch("pt.pipeline.run_critic", return_value=low_critic),
+            patch("pt.pipeline.run_synthesize", return_value=synthesis) as mock_synth,
+        ):
+            from pt.schemas import PartitionAudit
+            mock_partition.return_value = PartitionAudit(
+                research_question_adequate=True, rival_pairs=[],
+                hypotheses_flagged=[], overall_quality="adequate", summary="ok",
+            )
+            run_pipeline(
+                " ".join(["word"] * 350),
+                output_dir=str(tmp_path),
+                critic=True,
+            )
+
+        # _run_core_passes called exactly once (no re-elicitation)
+        assert mock_core.call_count == 1
+        # run_synthesize called exactly once (base snapshot only; critic reuses it)
+        assert mock_synth.call_count == 1
+
+    def test_core_passes_called_twice_when_re_elicitation_triggered(self, tmp_path):
+        """When critic finds a high-severity issue, _run_core_passes is called twice."""
+        from pt.pipeline import run_pipeline
+        extraction, hs, testing, absence, bayesian, synthesis, dm = self._build_mocks()
+
+        high_critic = _make_critic_result([_make_critic_finding(severity="high")])
+        assert high_critic.re_elicitation_needed is True
+
+        with (
+            patch("pt.pipeline.run_extract", return_value=extraction),
+            patch("pt.pipeline.run_hypothesize", return_value=hs),
+            patch("pt.pipeline.run_partition") as mock_partition,
+            patch("pt.pipeline._run_core_passes", return_value=(testing, absence, bayesian, dm)) as mock_core,
+            patch("pt.pipeline.run_critic", return_value=high_critic),
+            patch("pt.pipeline.run_synthesize", return_value=synthesis) as mock_synth,
+        ):
+            from pt.schemas import PartitionAudit
+            mock_partition.return_value = PartitionAudit(
+                research_question_adequate=True, rival_pairs=[],
+                hypotheses_flagged=[], overall_quality="adequate", summary="ok",
+            )
+            run_pipeline(
+                " ".join(["word"] * 350),
+                output_dir=str(tmp_path),
+                critic=True,
+            )
+
+        # _run_core_passes called twice: once for base, once for re-elicitation
+        assert mock_core.call_count == 2
+        # run_synthesize called twice: once for base snapshot, once post-critic
+        assert mock_synth.call_count == 2
+
+    def test_result_base_written_result_critic_not_written(self, tmp_path):
+        """result_base.json must exist; result_critic.json must NOT exist."""
+        from pt.pipeline import run_pipeline
+        extraction, hs, testing, absence, bayesian, synthesis, dm = self._build_mocks()
+
+        low_critic = _make_critic_result([])
+
+        with (
+            patch("pt.pipeline.run_extract", return_value=extraction),
+            patch("pt.pipeline.run_hypothesize", return_value=hs),
+            patch("pt.pipeline.run_partition") as mock_partition,
+            patch("pt.pipeline._run_core_passes", return_value=(testing, absence, bayesian, dm)),
+            patch("pt.pipeline.run_critic", return_value=low_critic),
+            patch("pt.pipeline.run_synthesize", return_value=synthesis),
+        ):
+            from pt.schemas import PartitionAudit
+            mock_partition.return_value = PartitionAudit(
+                research_question_adequate=True, rival_pairs=[],
+                hypotheses_flagged=[], overall_quality="adequate", summary="ok",
+            )
+            run_pipeline(
+                " ".join(["word"] * 350),
+                output_dir=str(tmp_path),
+                critic=True,
+            )
+
+        assert (tmp_path / "result_base.json").exists(), "result_base.json missing"
+        assert (tmp_path / "critic_delta.json").exists(), "critic_delta.json missing"
+        assert not (tmp_path / "result_critic.json").exists(), "result_critic.json must NOT exist"
+
+    def test_critic_result_stored_in_pipeline_result(self, tmp_path):
+        """result.critic must be populated with the CriticResult object."""
+        from pt.pipeline import run_pipeline
+        extraction, hs, testing, absence, bayesian, synthesis, dm = self._build_mocks()
+
+        medium_critic = _make_critic_result([_make_critic_finding(severity="medium")])
+
+        with (
+            patch("pt.pipeline.run_extract", return_value=extraction),
+            patch("pt.pipeline.run_hypothesize", return_value=hs),
+            patch("pt.pipeline.run_partition") as mock_partition,
+            patch("pt.pipeline._run_core_passes", return_value=(testing, absence, bayesian, dm)),
+            patch("pt.pipeline.run_critic", return_value=medium_critic),
+            patch("pt.pipeline.run_synthesize", return_value=synthesis),
+        ):
+            from pt.schemas import PartitionAudit
+            mock_partition.return_value = PartitionAudit(
+                research_question_adequate=True, rival_pairs=[],
+                hypotheses_flagged=[], overall_quality="adequate", summary="ok",
+            )
+            result = run_pipeline(
+                " ".join(["word"] * 350),
+                output_dir=str(tmp_path),
+                critic=True,
+            )
+
+        assert result.critic is not None
+        assert result.critic.re_elicitation_needed is False
+        assert len(result.critic.findings) == 1
+        assert result.critic.findings[0].severity == "medium"
+
+
+# ── _compute_critic_delta finding count logic ─────────────────────────────
+
+class TestComputeCriticDeltaFindingCounts:
+    """Unit tests for the type-dispatched finding count logic in _compute_critic_delta."""
+
+    def _make_bayesian_result(
+        self,
+        h_ids: list[str],
+        posteriors: list[float],
+        driver_override: dict[str, list[str]] | None = None,
+    ) -> "BayesianResult":
+        """Build a minimal BayesianResult with controlled top_drivers per hypothesis."""
+        from pt.schemas import BayesianResult, HypothesisPosterior, EvidenceUpdate
+        assert len(h_ids) == len(posteriors)
+        n = len(h_ids)
+        prior = 1.0 / n
+        return BayesianResult(
+            posteriors=[
+                HypothesisPosterior(
+                    hypothesis_id=hid,
+                    prior=prior,
+                    updates=[
+                        EvidenceUpdate(
+                            evidence_id=f"evi_{hid}_a",
+                            likelihood_ratio=1.0,
+                            prior=prior,
+                            posterior=p,
+                        )
+                    ],
+                    final_posterior=p,
+                    robustness="moderate",
+                    top_drivers=(
+                        driver_override[hid]
+                        if driver_override and hid in driver_override
+                        else [f"evi_{hid}_a", f"evi_{hid}_b"]
+                    ),
+                )
+                for hid, p in zip(h_ids, posteriors)
+            ],
+            ranking=h_ids,
+        )
+
+    def test_hypothesis_finding_counts_by_exact_id(self):
+        """hypothesis-type findings count only when target == hypothesis_id exactly."""
+        from pt.pipeline import _compute_critic_delta
+        from pt.schemas import CriticResult
+
+        base = self._make_bayesian_result(["h1", "h2"], [0.6, 0.4])
+        critic = self._make_bayesian_result(["h1", "h2"], [0.55, 0.45])
+        findings = [
+            _make_critic_finding(target="h1", target_type="hypothesis", severity="medium"),
+            _make_critic_finding(target="h1", target_type="hypothesis", severity="low"),
+            _make_critic_finding(target="h2", target_type="hypothesis", severity="low"),
+        ]
+        cr = CriticResult(findings=findings, summary="test")
+        deltas = _compute_critic_delta(base, critic, cr)
+
+        h1_delta = next(d for d in deltas if d.hypothesis_id == "h1")
+        h2_delta = next(d for d in deltas if d.hypothesis_id == "h2")
+        assert h1_delta.critic_findings_count == 2  # two hypothesis findings for h1
+        assert h2_delta.critic_findings_count == 1  # one hypothesis finding for h2
+
+    def test_causal_edge_findings_not_attributed_to_any_hypothesis(self):
+        """causal_edge findings must not count toward any hypothesis's finding count."""
+        from pt.pipeline import _compute_critic_delta
+        from pt.schemas import CriticResult
+
+        base = self._make_bayesian_result(["h1", "h2"], [0.6, 0.4])
+        critic = self._make_bayesian_result(["h1", "h2"], [0.55, 0.45])
+        findings = [
+            _make_critic_finding(target="h1->h2", target_type="causal_edge", severity="high"),
+        ]
+        cr = CriticResult(findings=findings, summary="test")
+        deltas = _compute_critic_delta(base, critic, cr)
+
+        for d in deltas:
+            assert d.critic_findings_count == 0, (
+                f"{d.hypothesis_id} got count {d.critic_findings_count} from causal_edge finding"
+            )
+
+    def test_compound_hypothesis_target_with_arrow_would_have_been_miscounted(self):
+        """Verifies schema now rejects compound hypothesis targets (they'd never match)."""
+        # This tests that the old bug path can't happen — the schema validator
+        # prevents 'target_type=hypothesis' with '->' in target from being constructed.
+        with pytest.raises(ValidationError, match="contains '->'"):
+            _make_critic_finding(
+                target="h1->h5",
+                target_type="hypothesis",
+                severity="high",
+            )
+
+    def test_evidence_finding_counts_toward_hypotheses_sharing_driver(self):
+        """Evidence-type findings count toward hypotheses that have the evidence as a top driver."""
+        from pt.pipeline import _compute_critic_delta
+        from pt.schemas import CriticResult
+
+        # Give h1 a unique driver (evi_shared is NOT in h1's drivers); h2 doesn't have evi_h1_only
+        base = self._make_bayesian_result(
+            ["h1", "h2"], [0.6, 0.4],
+            driver_override={"h1": ["evi_h1_only", "evi_common"], "h2": ["evi_h2_only", "evi_common"]},
+        )
+        critic = self._make_bayesian_result(
+            ["h1", "h2"], [0.55, 0.45],
+            driver_override={"h1": ["evi_h1_only", "evi_common"], "h2": ["evi_h2_only", "evi_common"]},
+        )
+        findings = [
+            # targets evi_h1_only — only h1 has this as a top driver
+            _make_critic_finding(target="evi_h1_only", target_type="evidence", severity="medium"),
+        ]
+        cr = CriticResult(findings=findings, summary="test")
+        deltas = _compute_critic_delta(base, critic, cr)
+
+        h1_delta = next(d for d in deltas if d.hypothesis_id == "h1")
+        h2_delta = next(d for d in deltas if d.hypothesis_id == "h2")
+        assert h1_delta.critic_findings_count == 1
+        assert h2_delta.critic_findings_count == 0
