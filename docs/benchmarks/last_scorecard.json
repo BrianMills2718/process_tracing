@@ -1,0 +1,62 @@
+{
+  "total": 3,
+  "passed": 2,
+  "failed": 1,
+  "skipped": 0,
+  "required_failures": 1,
+  "all_required_pass": false,
+  "cases": [
+    {
+      "name": "adversarial_fragile_overclaim",
+      "type": "fixture",
+      "optional": false,
+      "description": "Planted failure: 12 weak background items dominate, fragile winner, broad legitimacy-vacuum hypothesis. Audit must flag broad_winning_hypothesis and cap at grade C.\n",
+      "passed": false,
+      "skipped": false,
+      "failures": [
+        "Loading failed: 1 validation error for Mechanism\nid\n  Field required [type=missing, input_value={'description': 'power va...: ['evi_background_00']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"
+      ],
+      "score": null,
+      "grade": null,
+      "flags_found": []
+    },
+    {
+      "name": "adversarial_calibration_mismatch",
+      "type": "fixture",
+      "optional": false,
+      "description": "Planted failure: synthesis assigns strongly_supported to a hypothesis with posterior 0.30, below the STRONG_SUPPORT_FLOOR of 0.50. Audit must flag the calibration mismatch.\n",
+      "passed": true,
+      "skipped": false,
+      "failures": [],
+      "score": 76,
+      "grade": "C",
+      "flags_found": [
+        "verdict_calibration_mismatch"
+      ],
+      "audit_summary": {
+        "score": 76,
+        "grade": "C",
+        "base_score": 94,
+        "academic_cap": 76
+      }
+    },
+    {
+      "name": "french_revolution_real",
+      "type": "result_file",
+      "optional": true,
+      "description": "Real E2E output on French Revolution text (Wikipedia). Critic ablation pass (22 findings). Should grade B with no overclaim flagged.\n",
+      "passed": true,
+      "skipped": false,
+      "failures": [],
+      "score": 82,
+      "grade": "B",
+      "flags_found": [],
+      "audit_summary": {
+        "score": 82,
+        "grade": "B",
+        "base_score": 100,
+        "academic_cap": 82
+      }
+    }
+  ]
+}

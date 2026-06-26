@@ -349,6 +349,14 @@ WORKBENCH_PORT ?= 8501
 workbench:  ## Start local process-tracing workbench (WORKBENCH_PORT=8501)
 	@PYTHONPATH=. python -m pt.workbench --host "$(WORKBENCH_HOST)" --port "$(WORKBENCH_PORT)"
 
+BENCHMARK_CONFIG ?= docs/benchmarks/benchmark_config.yaml
+BENCHMARK_OUTPUT ?= docs/benchmarks/last_scorecard.json
+
+benchmark:  ## Run frozen benchmark suite (BENCHMARK_CONFIG=... BENCHMARK_OUTPUT=...)
+	@PYTHONPATH=. python scripts/run_benchmark.py \
+		--config "$(BENCHMARK_CONFIG)" \
+		--output "$(BENCHMARK_OUTPUT)"
+
 dead-code:  ## Run dead code detection
 	@python $(SCRIPTS_META)/check_dead_code.py
 
