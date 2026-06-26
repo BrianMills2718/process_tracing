@@ -1,5 +1,11 @@
 # Overview
 
+**Authority boundary:** this is the active OKF orientation bundle for the
+current `process_tracing` repo. Use it for current-state orientation, then
+verify against active code, tests, `CLAUDE.md`, and repo docs before changing
+behavior. Archive material is history only unless promoted back into active
+docs.
+
 * [Overview](overview.md) - current-state synthesis for the active process tracing repo.
 
 # Architecture
