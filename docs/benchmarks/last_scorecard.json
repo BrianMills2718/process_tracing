@@ -14,11 +14,19 @@
       "passed": false,
       "skipped": false,
       "failures": [
-        "Loading failed: 1 validation error for Mechanism\nid\n  Field required [type=missing, input_value={'description': 'power va...: ['evi_background_00']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"
+        "expected flag 'broad_winning_hypothesis' not raised by audit"
       ],
-      "score": null,
-      "grade": null,
-      "flags_found": []
+      "score": 76,
+      "grade": "C",
+      "flags_found": [
+        "verdict_calibration_mismatch"
+      ],
+      "audit_summary": {
+        "score": 76,
+        "grade": "C",
+        "base_score": 100,
+        "academic_cap": 76
+      }
     },
     {
       "name": "adversarial_calibration_mismatch",
