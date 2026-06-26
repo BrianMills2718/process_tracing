@@ -471,7 +471,9 @@ def _academic_caps(
     from collections import defaultdict
     group_to_top_drivers: dict[str, list[str]] = defaultdict(list)
     for ev in result.extraction.evidence:
-        if ev.id in top_driver_ids and ev.source_group and ev.source_group != "Main text":
+        # Include any explicitly annotated source_group (even "Main text").
+        # source_group=None means the LLM made no source annotation — skip those.
+        if ev.id in top_driver_ids and ev.source_group:
             group_to_top_drivers[ev.source_group].append(ev.id)
     unclustered_shared = {
         grp: eids

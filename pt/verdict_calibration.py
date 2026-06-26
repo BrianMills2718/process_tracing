@@ -32,7 +32,12 @@ def calibrate_synthesis_verdicts(
     synthesis: SynthesisResult,
     bayesian: BayesianResult,
 ) -> SynthesisResult:
-    """Downgrade synthesis status labels that contradict computed posteriors."""
+    """Downgrade synthesis status labels that contradict computed posteriors.
+
+    Also overwrites posterior_robustness with the mechanically computed value
+    from the Bayesian result — the LLM is instructed to copy this field, but if
+    it ignores the instruction the default ("robust") would be silently wrong.
+    """
     posterior_by_id = {p.hypothesis_id: p for p in bayesian.posteriors}
     verdicts: list[HypothesisVerdict] = []
     for verdict in synthesis.verdicts:
@@ -45,19 +50,36 @@ def calibrate_synthesis_verdicts(
             posterior=posterior.final_posterior,
             prior=posterior.prior,
         )
-        if calibrated == verdict.status:
+
+        updates: dict = {}
+        notes: list[str] = []
+
+        if calibrated != verdict.status:
+            updates["status"] = calibrated
+            notes.append(
+                f"Status label calibrated from {verdict.status} to {calibrated} because "
+                f"computed comparative support is {posterior.final_posterior:.3f} "
+                f"against prior {posterior.prior:.3f}."
+            )
+
+        # Always enforce the mechanically computed robustness label.
+        if verdict.posterior_robustness != posterior.robustness:
+            updates["posterior_robustness"] = posterior.robustness
+            notes.append(
+                f"posterior_robustness overwritten from {verdict.posterior_robustness!r} "
+                f"to {posterior.robustness!r} (mechanically computed)."
+            )
+
+        if not updates:
             verdicts.append(verdict)
             continue
-        note = (
-            f" Status label calibrated from {verdict.status} to {calibrated} because "
-            f"computed comparative support is {posterior.final_posterior:.3f} "
-            f"against prior {posterior.prior:.3f}."
-        )
+
+        combined_note = " " + " ".join(notes)
         verdicts.append(
             verdict.model_copy(
                 update={
-                    "status": calibrated,
-                    "reasoning": f"{verdict.reasoning.rstrip()}{note}",
+                    **updates,
+                    "reasoning": f"{verdict.reasoning.rstrip()}{combined_note}",
                 }
             )
         )

@@ -178,17 +178,21 @@ def _pool_clusters(
     return out
 
 
-def _compute_robustness(updates: list[EvidenceUpdate]) -> str:
+def _compute_robustness(individual_lrs: list[float]) -> str:
     """Classify a posterior as 'robust', 'fragile', or 'moderate' from its LR spread.
+
+    Must be called with INDIVIDUAL (pre-pool) LRs — not cluster-pooled LRs.
+    Cluster-pooled LRs are raised to k_eff power, which artificially inflates
+    their |log(LR)| and biases robustness toward 'robust'.
 
     Robust: driven by a few decisive LRs (|log(LR)| > 1.6).
     Fragile: driven by many *informative-but-weak* LRs (0 < |log(LR)| < 0.7).
     Uninformative (LR≈1) items are excluded from the weak count.
     """
-    if not updates:
+    if not individual_lrs:
         return "unknown"
 
-    log_lrs = [abs(math.log(u.likelihood_ratio)) for u in updates if u.likelihood_ratio > 0]
+    log_lrs = [abs(math.log(lr)) for lr in individual_lrs if lr > 0]
     if not log_lrs:
         return "unknown"
 
@@ -302,9 +306,15 @@ def run_bayesian_update(
     prior_by_id = {h: weights[h] / total_prior for h in hypothesis_ids}
 
     # Partially pool dependence clusters so correlated evidence isn't double-counted.
-    matrix = _pool_clusters(
-        lr_matrix(testing, hypothesis_ids, caps), testing.dependence_clusters, hypothesis_ids
-    )
+    # Keep the individual (pre-pool) matrix for robustness classification — pooled LRs
+    # are artificially large (raised to k_eff power), which biases robustness toward "robust".
+    individual_matrix = lr_matrix(testing, hypothesis_ids, caps)
+    matrix = _pool_clusters(individual_matrix, testing.dependence_clusters, hypothesis_ids)
+
+    # Per-hypothesis individual LRs for robustness (extracted once, before pooling).
+    individual_lrs_by_hyp: dict[str, list[float]] = {
+        h: [lrs[h] for _, lrs in individual_matrix] for h in hypothesis_ids
+    }
 
     # Joint update: accumulate log weights and softmax-normalize after every item.
     # The trail records the *joint* (normalized) posterior of each hypothesis after
@@ -340,7 +350,7 @@ def run_bayesian_update(
             prior=round(prior_by_id[h], 6),
             updates=trails[h],
             final_posterior=round(final_post[h], 6),
-            robustness=_compute_robustness(trails[h]),
+            robustness=_compute_robustness(individual_lrs_by_hyp[h]),
             top_drivers=_top_drivers(trails[h]),
         )
         for h in hypothesis_ids

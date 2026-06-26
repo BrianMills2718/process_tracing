@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from llm_client import render_prompt
 
+from pt.bayesian import RELEVANCE_GATE
 from pt.llm import call_llm
 from pt.schemas import (
     AbsenceResult,
@@ -28,7 +29,7 @@ def _build_testing_summary(testing: TestingResult) -> dict:
     hypothesis that evidence favored — that would invite confirmation bias.
     """
     substantive = sorted(
-        {item.evidence_id for item in testing.evidence_likelihoods if item.relevance >= 0.6}
+        {item.evidence_id for item in testing.evidence_likelihoods if item.relevance >= RELEVANCE_GATE}
     )
     return {"substantive_evidence_ids": substantive}
 

@@ -315,6 +315,14 @@ def run_pipeline(
             output_dir. Re-elicits Pass 3 when high-severity findings are present.
     """
     t0 = time.time()
+    if critic and refine:
+        raise ValueError(
+            "--critic and --refine cannot be used together. "
+            "critic_delta.json is computed against the pre-refine bayesian result; "
+            "if refinement then overwrites it, the delta becomes inconsistent with result.json. "
+            "Run --critic alone to get the ablation pair, or --refine alone for analytical refinement."
+        )
+
     if trace_id is None:
         trace_id = uuid4().hex[:8]
     source_text_sha256 = _source_text_sha256(text)
@@ -416,14 +424,6 @@ def run_pipeline(
                 json.dump(partition_audit.model_dump(), f, indent=2)
             if verbose:
                 print(f"  Partition audit: {partition_path}")
-
-    if critic and refine:
-        raise ValueError(
-            "--critic and --refine cannot be used together. "
-            "critic_delta.json is computed against the pre-refine bayesian result; "
-            "if refinement then overwrites it, the delta becomes inconsistent with result.json. "
-            "Run --critic alone to get the ablation pair, or --refine alone for analytical refinement."
-        )
 
     # Run passes 3-4 (initial)
     critic_result: CriticResult | None = None
