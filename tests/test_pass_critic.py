@@ -570,6 +570,75 @@ class TestCriticPipelineOn:
         assert len(result.critic.findings) == 1
         assert result.critic.findings[0].severity == "medium"
 
+    def test_critic_model_override_passed_to_run_critic(self, tmp_path):
+        """critic_model overrides the main model for the critic pass only."""
+        from pt.pipeline import run_pipeline
+        extraction, hs, testing, absence, bayesian, synthesis, dm = self._build_mocks()
+
+        low_critic = _make_critic_result([_make_critic_finding(severity="low")])
+
+        with (
+            patch("pt.pipeline.run_extract", return_value=extraction),
+            patch("pt.pipeline.run_hypothesize", return_value=hs),
+            patch("pt.pipeline.run_partition") as mock_partition,
+            patch("pt.pipeline._run_core_passes", return_value=(testing, absence, bayesian, dm)),
+            patch("pt.pipeline.run_critic", return_value=low_critic) as mock_critic,
+            patch("pt.pipeline.run_synthesize", return_value=synthesis),
+        ):
+            from pt.schemas import PartitionAudit
+            mock_partition.return_value = PartitionAudit(
+                research_question_adequate=True, rival_pairs=[],
+                hypotheses_flagged=[], overall_quality="adequate", summary="ok",
+            )
+            run_pipeline(
+                " ".join(["word"] * 350),
+                output_dir=str(tmp_path),
+                model="main-model",
+                critic=True,
+                critic_model="critic-model-override",
+            )
+
+        # run_critic must be called with critic_model, not the main model
+        call_kwargs = mock_critic.call_args.kwargs
+        assert call_kwargs.get("model") == "critic-model-override", (
+            f"run_critic was called with model={call_kwargs.get('model')!r}; "
+            "expected 'critic-model-override'"
+        )
+
+    def test_critic_model_falls_back_to_main_model_when_not_set(self, tmp_path):
+        """When critic_model is None, run_critic receives the main model."""
+        from pt.pipeline import run_pipeline
+        extraction, hs, testing, absence, bayesian, synthesis, dm = self._build_mocks()
+
+        low_critic = _make_critic_result([_make_critic_finding(severity="low")])
+
+        with (
+            patch("pt.pipeline.run_extract", return_value=extraction),
+            patch("pt.pipeline.run_hypothesize", return_value=hs),
+            patch("pt.pipeline.run_partition") as mock_partition,
+            patch("pt.pipeline._run_core_passes", return_value=(testing, absence, bayesian, dm)),
+            patch("pt.pipeline.run_critic", return_value=low_critic) as mock_critic,
+            patch("pt.pipeline.run_synthesize", return_value=synthesis),
+        ):
+            from pt.schemas import PartitionAudit
+            mock_partition.return_value = PartitionAudit(
+                research_question_adequate=True, rival_pairs=[],
+                hypotheses_flagged=[], overall_quality="adequate", summary="ok",
+            )
+            run_pipeline(
+                " ".join(["word"] * 350),
+                output_dir=str(tmp_path),
+                model="main-model",
+                critic=True,
+                # critic_model not set → should fall back to main model
+            )
+
+        call_kwargs = mock_critic.call_args.kwargs
+        assert call_kwargs.get("model") == "main-model", (
+            f"run_critic was called with model={call_kwargs.get('model')!r}; "
+            "expected 'main-model' fallback"
+        )
+
 
 # ── _compute_critic_delta finding count logic ─────────────────────────────
 

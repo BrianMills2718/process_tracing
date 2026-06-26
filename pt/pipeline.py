@@ -291,6 +291,7 @@ def run_pipeline(
     trace_id: str | None = None,
     priors: dict[str, float] | None = None,
     critic: bool = False,
+    critic_model: str | None = None,
 ) -> ProcessTracingResult:
     """Run the full process tracing pipeline.
 
@@ -469,7 +470,7 @@ def run_pipeline(
             print("Pass 3.7: Structural critic review...")
         critic_result = run_critic(
             extraction, hypothesis_space, testing, diagnostic_matrix, absence,
-            model=model, trace_id=f"{trace_id}-critic",
+            model=critic_model or model, trace_id=f"{trace_id}-critic",
         )
         base_bayesian = bayesian  # save for delta computation
 
