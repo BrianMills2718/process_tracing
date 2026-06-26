@@ -1,11 +1,11 @@
-updated: "2026-06-25T22:00:00"
+updated: "2026-06-25T23:30:00"
 project: process_tracing
 scope: repo
 status: active
-git_commit: "564be28"
+git_commit: "fb23ec7"
 git_branch: "master"
-summary: "Slice 7 fully complete. 172 deterministic tests. Concern register triaged (C-015, C-016, C-017 added). Entering Slice 8."
-next_action: "Implement Slice 8: synthesis calibration and report regression gates."
+summary: "Slice 8 complete. 178 deterministic tests. Synthesis overclaim check, verdict calibration threshold, 7 new regression tests."
+next_action: "Slice 9: Cross-case eligibility and quantitative bridge. Refresh spec before implementing."
 
 completed:
   - "Audit of Slices 3-6: all verified (previous session)"
@@ -31,6 +31,11 @@ completed:
   - "P2 resolved (commit 564be28): pass3b SOURCE TO ACQUIRE disambiguation assertion added"
   - "P4 resolved (commit ff5e746): pt/schemas_view.py and docs/plans/005d_*.html committed"
   - "Concern register triaged: C-015 (same-model critic accepted), C-016 (missing_pathway accepted), C-017 (open — frozen benchmark not yet run)"
+  - "Slice 8 — Synthesis calibration and report regression (commit fb23ec7): 178 tests pass"
+    # _synthesis_overclaim_check: flags certainty words in fragile-winner context (-3 audit points)
+    # _verdict_calibration_issues: extended with strongly_supported < 0.50 threshold
+    # 5 TestAuditSynthesisCalibration tests + 2 TestReportConsistency regression tests
+    # E2E check: slice7_v2 narrative correctly hedged — no overclaim detected, score remains B (80)
 
 pending:
   - id: P3
