@@ -1,11 +1,11 @@
-updated: "2026-06-25T08:00:00"
+updated: "2026-06-26T08:15:00"
 project: process_tracing
 scope: repo
 status: active
-git_commit: "a1921ab"
+git_commit: "60a0476"
 git_branch: "master"
-summary: "Plan 003 complete. 207 deterministic tests. All slices 0-10 done. Benchmark fixture bugs fixed (relevance_to_hypothesis → relevance, Mechanism extra fields removed)."
-next_action: "C-018: Harden pass_propose_model prompt against cyclic DAG proposals. C-017-critic-benchmark: Add critic-specific frozen benchmark case."
+summary: "Plan 003 + all open concerns complete. 208 deterministic tests. C-018 prompt hardened against cyclic DAGs. C-017 critic benchmark added (confound miss documented as Known Gap #6 confirmation)."
+next_action: "Start new methodology slice: --critic-model flag for independent critic (Known Gap #6), trace-production modeling (Known Gap #3), or multi-source corpus for P3."
 
 completed:
   - "Audit of Slices 3-6: all verified (previous session)"
@@ -50,6 +50,15 @@ completed:
     # run_benchmark.py: relevance_to_hypothesis → relevance (Pydantic was silently dropping)
     # run_benchmark.py: Mechanism extra fields removed (hypothesis_link, evidence_ids don't exist)
     # test_multi_contracts.py: type: ignore[arg-type] for int→Literal[0,1] test helpers
+  - "C-018 resolved (commit ba0876a): propose_model prompt hardened against cyclic DAGs"
+    # Added concrete cycle example, FORBIDDEN vs VALID chain, before-you-submit self-check
+  - "C-017 resolved (commits 87a9132, 60a0476): critic benchmark case added"
+    # input_text/benchmark/confound_planted.txt: planted-confound synthetic text
+    # output/benchmark_critic_confound/: E2E result (grade B, 8 findings, no confound detected)
+    # benchmark_config.yaml: critic_pipeline_confound_text case (optional, must_not_flag=overclaim)
+    # run_benchmark.py: fixed report_path="" bug (Path/_REPO_ROOT/"" == repo root dir → Is a directory)
+    # scripts/__init__.py: added so Pyright resolves scripts.run_benchmark
+    # 208 deterministic tests pass
 
 pending:
   - id: P3
@@ -107,7 +116,7 @@ warnings:
 
 sanity_checks:
   - cmd: "PYTHONPATH=. pytest tests/test_pt_bayesian.py tests/test_pt_schemas.py tests/test_extraction_quality.py tests/test_pass_diagnostic.py tests/test_pass_critic.py tests/test_multi_contracts.py tests/test_benchmark.py -q"
-    expect: "207 passed"
+    expect: "208 passed"
   - cmd: "python3 -c \"from pt.pass_critic import run_critic; print('ok')\""
     expect: "ok"
   - cmd: "python3 -c \"from pt.schemas import CriticResult, CriticFinding, CriticDelta; r = CriticResult(findings=[], summary='ok'); print(r.re_elicitation_needed)\""
