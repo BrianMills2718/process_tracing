@@ -72,7 +72,7 @@ def _build_adversarial_stress_fixture():
                     diagnostic_type="straw_in_the_wind",
                 ),
             ],
-            relevance_to_hypothesis=relevance,
+            relevance=relevance,
         )
 
     evidence: list[Evidence] = []
@@ -105,8 +105,7 @@ def _build_adversarial_stress_fixture():
     ]
     edges = [CausalEdge(source_id="evi_background_00", target_id="event_coup",
                         relationship="enables")]
-    mechanisms = [Mechanism(id="mech_01", description="power vacuum", hypothesis_link="h1",
-                            evidence_ids=["evi_background_00"])]
+    mechanisms = [Mechanism(id="mech_01", description="power vacuum — legitimacy-vacuum mechanism")]
     extraction = ExtractionResult(
         summary="The crisis culminated in a military coup in 1799 after a decade of legitimacy loss.",
         evidence=evidence,

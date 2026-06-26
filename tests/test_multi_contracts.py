@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import os
-
 import pytest
 from pydantic import ValidationError
 
@@ -41,7 +40,7 @@ _ORDER = ["fiscal_crisis", "state_breakdown", "revolution"]
 
 def _coding(name: str, value: int, confidence: float = 0.9) -> VariableCoding:
     return VariableCoding(
-        variable_name=name, value=value, confidence=confidence, justification="x"
+        variable_name=name, value=value, confidence=confidence, justification="x"  # type: ignore[arg-type]
     )
 
 
@@ -49,7 +48,7 @@ def _case(case_id: str, pairs: list[tuple[str, int]]) -> CaseBinarization:
     return CaseBinarization(
         case_id=case_id,
         source_file=f"{case_id}.txt",
-        codings=[_coding(n, v) for n, v in pairs],
+        codings=[_coding(n, v) for n, v in pairs],  # type: ignore[arg-type]
     )
 
 
@@ -173,7 +172,7 @@ class TestCrossCaseValidation:
         with pytest.raises(ValidationError):
             VariableCoding(
                 variable_name="fiscal_crisis",
-                value=2,
+                value=2,  # type: ignore[arg-type]  # intentionally invalid — testing rejection
                 confidence=0.9,
                 justification="x",
             )
@@ -379,7 +378,7 @@ def _binarizations_from_rows(
         codings = [
             VariableCoding(
                 variable_name=k,
-                value=v,
+                value=v,  # type: ignore[arg-type]
                 confidence=conf.get(k, 0.9),
                 justification="test",
             )
