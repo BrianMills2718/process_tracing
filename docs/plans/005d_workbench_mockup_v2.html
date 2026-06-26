@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Process Tracing Workbench — Pipeline Explorer Mockup v2</title>
+<style>
+:root{
+  --sidebar-w:220px;
+  --sidebar-bg:#111d2b;
+  --sidebar-hover:#1c2f44;
+  --sidebar-active:#1c4f7a;
+  --ink:#1a2330;--muted:#5e6e82;--faint:#9aaabb;
+  --line:#dce3ed;--band:#edf1f7;--ground:#f5f7fa;--panel:#fff;
+  --accent:#1c4f7a;--accent-lt:#d4e4f2;
+  --green:#28714a;--green-lt:#d2eedf;
+  --amber:#9a620c;--amber-lt:#fcecd5;
+  --red:#b02820;--red-lt:#fde9e8;
+  --demo-badge:#7c3aed;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font:13.5px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* ── Top bar ── */
+.topbar{height:44px;background:var(--accent);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;z-index:10}
+.topbar-title{color:#fff;font-weight:700;font-size:14px;letter-spacing:.01em}
+.topbar-run{color:rgba(255,255,255,.6);font-size:12px;margin-left:4px}
+.mode-toggle{margin-left:auto;display:flex;background:rgba(0,0,0,.25);border-radius:99px;padding:2px;gap:2px}
+.mode-btn{font:600 11px system-ui;letter-spacing:.04em;text-transform:uppercase;padding:3px 12px;border:none;border-radius:99px;cursor:pointer;color:rgba(255,255,255,.6);background:transparent;transition:all .15s}
+.mode-btn.active{background:#fff;color:var(--accent)}
+.mode-btn.active.demo{background:#ede9fe;color:var(--demo-badge)}
+
+/* ── Layout shell ── */
+.shell{display:flex;flex:1;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar-section{padding:10px 0 4px}
+.sidebar-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:0 14px 4px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 14px;cursor:pointer;color:rgba(255,255,255,.65);font-size:12.5px;transition:background .1s,color .1s;border-radius:0;user-select:none}
+.nav-item:hover{background:var(--sidebar-hover);color:#fff}
+.nav-item.active{background:var(--sidebar-active);color:#fff;font-weight:600}
+.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-complete{background:var(--green)}
+.dot-pending{background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.3)}
+.dot-running{background:#3b82f6;animation:pulse 1.2s infinite}
+.dot-skip{background:rgba(255,255,255,.12)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.nav-stage-info{font-size:10.5px;color:rgba(255,255,255,.35);margin-top:1px}
+
+/* ── Main content ── */
+.main{flex:1;overflow-y:auto;background:var(--ground)}
+.page{display:none;padding:22px 24px;max-width:1100px}
+.page.active{display:block}
+
+/* ── Page elements ── */
+h1{font-size:18px;font-weight:800;margin-bottom:4px}
+h2{font-size:14px;font-weight:700;margin-bottom:10px}
+h3{font-size:13px;font-weight:700;margin-bottom:6px;color:var(--accent)}
+.subtitle{font-size:13px;color:var(--muted);margin-bottom:18px}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-bottom:14px}
+.card h2{margin-bottom:8px}
+
+/* ── Stage page layout ── */
+.stage-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.stage-title{font-size:17px;font-weight:800}
+.stage-sub{font-size:12.5px;color:var(--muted)}
+.status-pill{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 10px;border-radius:99px;border:1px solid}
+.sp-complete{background:var(--green-lt);color:var(--green);border-color:var(--green-lt)}
+.sp-pending{background:var(--band);color:var(--muted);border-color:var(--line)}
+.sp-running{background:#dbeafe;color:#1e40af;border-color:#bfdbfe}
+
+.section-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:780px){.section-row{grid-template-columns:1fr}}
+
+.io-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.io-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+.io-stat{font-size:13.5px;font-weight:700;color:var(--ink)}
+.io-stat small{font-size:11.5px;font-weight:400;color:var(--muted)}
+
+.what-card{background:var(--accent-lt);border:1px solid #b8d4ea;border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.what-card p{font-size:13px;line-height:1.6;color:#1a3550;margin-bottom:6px}
+.what-card p:last-child{margin-bottom:0}
+
+.run-btn{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:9px 18px;font:600 13px system-ui;cursor:pointer;transition:opacity .15s}
+.run-btn:hover{opacity:.88}
+.run-btn.demo-disabled{background:var(--band);color:var(--muted);cursor:default;opacity:1}
+.run-btn .ico{font-size:14px}
+
+.demo-note{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--demo-badge);background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:6px 12px;margin-left:10px}
+
+/* ── Overview bullets ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:680px){.two-col{grid-template-columns:1fr}}
+ul.bullets{padding-left:18px;font-size:13px;line-height:1.7;color:var(--ink)}
+ul.bullets li{margin-bottom:3px}
+ul.bullets li span{color:var(--muted)}
+
+.stage-table{width:100%;border-collapse:collapse;font-size:13px}
+.stage-table th{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:5px 10px;text-align:left;border-bottom:1px solid var(--line)}
+.stage-table td{padding:7px 10px;border-bottom:1px solid var(--band);vertical-align:top}
+.stage-table td:first-child{font-weight:600;white-space:nowrap}
+.stage-table td.pass{color:var(--muted);font-size:12px}
+.stage-table tr:last-child td{border-bottom:none}
+
+/* ── Pipeline graph ── */
+.pipe-graph{display:flex;flex-direction:column;align-items:flex-start;gap:0;max-width:480px}
+.pipe-node{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--panel);border:1.5px solid var(--line);border-radius:8px;cursor:pointer;width:100%;transition:border-color .15s,box-shadow .15s;text-align:left}
+.pipe-node:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(28,79,122,.12)}
+.pipe-node.active-node{border-color:var(--accent);background:var(--accent-lt)}
+.pipe-node-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.pipe-node-text h3{font-size:13.5px;font-weight:700;margin-bottom:1px;color:var(--ink)}
+.pipe-node-text p{font-size:11.5px;color:var(--muted);line-height:1.4}
+.pipe-arrow{display:flex;align-items:center;justify-content:flex-start;padding:0 0 0 33px;color:var(--faint);font-size:18px;line-height:1;margin:0;height:22px}
+.node-status{margin-left:auto;flex-shrink:0}
+.pipe-flow-label{font-size:10.5px;color:var(--faint);padding:0 0 0 33px;margin-top:-18px;margin-bottom:4px;font-style:italic}
+
+/* ── Matrix mini ── */
+.matrix-mini{overflow-x:auto;margin-top:10px}
+table.mx{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
+.mx th{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:4px 8px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:center}
+.mx th.lh{text-align:left}
+.mx td{padding:3px 8px;border-bottom:1px solid var(--band);vertical-align:middle}
+.lrc{display:inline-flex;align-items:center;justify-content:center;min-width:38px;padding:2px 4px;border-radius:4px;font-size:11px;font-weight:600}
+
+/* ── Support mini ── */
+.bar-row{display:grid;grid-template-columns:160px 1fr 62px;align-items:center;gap:8px;margin-bottom:7px;font-variant-numeric:tabular-nums}
+.bar-track{height:22px;background:var(--band);border-radius:5px;position:relative;overflow:hidden}
+.bar-fill{height:100%;border-radius:5px;position:absolute;left:0;top:0}
+.bar-sens{height:100%;position:absolute;top:0;opacity:.25;border-radius:5px}
+.bar-val{font-size:12px;font-weight:700;text-align:right}
+
+/* ── Alert ── */
+.alert{border-radius:6px;padding:9px 13px;font-size:12.5px;margin-bottom:12px;display:flex;gap:8px}
+.alert-crit{background:#fdeded;border:1px solid #c63028;color:#7a0e08}
+.alert-warn{background:#fff3cd;border:1px solid #e6a817;color:#7a4a00}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <span class="topbar-title">Process Tracing Workbench</span>
+  <span class="topbar-run" id="run-label">· Brumaire 18 (demo)</span>
+  <div class="mode-toggle">
+    <button class="mode-btn active demo" onclick="setMode('demo')">Demo</button>
+    <button class="mode-btn" onclick="setMode('real')">Real</button>
+  </div>
+</div>
+
+<div class="shell">
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Navigation</div>
+    <div class="nav-item active" onclick="show('overview')">
+      <div class="nav-dot dot-complete"></div>
+      <div><div>Overview</div></div>
+    </div>
+    <div class="nav-item" onclick="show('graph')">
+      <div class="nav-dot dot-complete"></div>
+      <div><div>Pipeline Graph</div></div>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Stages</div>
+    <div class="nav-item" onclick="show('extract')">
+      <div class="nav-dot dot-complete" id="dot-extract"></div>
+      <div>
+        <div>1 · Extract</div>
+        <div class="nav-stage-info" id="info-extract">59 evidence items</div>
+      </div>
+    </div>
+    <div class="nav-item" onclick="show('hypothesize')">
+      <div class="nav-dot dot-complete" id="dot-hypothesize"></div>
+      <div>
+        <div>2 · Hypothesize</div>
+        <div class="nav-stage-info" id="info-hypothesize">5 hypotheses</div>
+      </div>
+    </div>
+    <div class="nav-item" onclick="show('test')">
+      <div class="nav-dot dot-complete" id="dot-test"></div>
+      <div>
+        <div>3 · Test</div>
+        <div class="nav-stage-info" id="info-test">LR matrix · 59×5</div>
+      </div>
+    </div>
+    <div class="nav-item" onclick="show('absence')">
+      <div class="nav-dot dot-complete" id="dot-absence"></div>
+      <div>
+        <div>3b · Absence</div>
+        <div class="nav-stage-info" id="info-absence">3 failed hoop tests</div>
+      </div>
+    </div>
+    <div class="nav-item" onclick="show('update')">
+      <div class="nav-dot dot-complete" id="dot-update"></div>
+      <div>
+        <div>4 · Update</div>
+        <div class="nav-stage-info" id="info-update">h2 = 0.994 (fragile)</div>
+      </div>
+    </div>
+    <div class="nav-item" onclick="show('synthesize')">
+      <div class="nav-dot dot-complete" id="dot-synthesize"></div>
+      <div>
+        <div>5 · Synthesize</div>
+        <div class="nav-stage-info" id="info-synthesize">narrative + verdicts</div>
+      </div>
+    </div>
+    <div class="nav-item" onclick="show('refine')">
+      <div class="nav-dot dot-skip" id="dot-refine"></div>
+      <div>
+        <div>6 · Refine</div>
+        <div class="nav-stage-info" id="info-refine">not run (--refine flag)</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Main -->
+<main class="main">
+
+<!-- ── OVERVIEW ─────────────────────────────────────────────── -->
+<div id="page-overview" class="page active">
+  <h1>Van Evera Process Tracing Pipeline</h1>
+  <p class="subtitle">LLM-first within-case causal inference · automated PhD-quality qualitative analysis</p>
+
+  <div class="two-col">
+    <div class="card">
+      <h2>What this is</h2>
+      <ul class="bullets">
+        <li><strong>Input:</strong> any historical/political text</li>
+        <li><strong>Output:</strong> <code>result.json</code> + <code>report.html</code></li>
+        <li><strong>Method:</strong> Van Evera process tracing — hoop, smoking gun, doubly decisive tests</li>
+        <li><strong>Architecture:</strong> 6 sequential LLM passes + deterministic Bayesian math</li>
+        <li><strong>LLM-first:</strong> all semantic work is LLM; all math is pure Python</li>
+        <li><strong>Fail-loud:</strong> raises on LLM failure, never silently returns empty</li>
+        <li><strong>Generalist:</strong> no dataset hardcoding — works on any text</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>How to use this workbench</h2>
+      <ul class="bullets">
+        <li><strong>Demo mode:</strong> <span>all stages pre-run, Brumaire 18 fixture data — explore freely, zero LLM cost</span></li>
+        <li><strong>Real mode:</strong> <span>load a text, run stages one-by-one, inspect live outputs</span></li>
+        <li><strong>Pipeline Graph tab:</strong> <span>visual flow — click any node to jump to that stage</span></li>
+        <li><strong>Each stage page:</strong> <span>input summary, what it does, run button, output viewer</span></li>
+        <li><strong>Ordering:</strong> <span>stages must run in sequence in real mode; demo mode is freely navigable</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Stage quick-reference</h2>
+    <table class="stage-table">
+      <thead><tr><th>Stage</th><th>Module</th><th>Input</th><th>Output</th><th>LLM?</th></tr></thead>
+      <tbody>
+        <tr><td>1 · Extract</td><td>pass_extract.py</td><td>Source text</td><td>Evidence items, actors, events, mechanisms, causal edges</td><td class="pass">Yes</td></tr>
+        <tr><td>2 · Hypothesize</td><td>pass_hypothesize.py</td><td>Extraction</td><td>Competing causal hypotheses with observable predictions</td><td class="pass">Yes</td></tr>
+        <tr><td>3 · Test</td><td>pass_test.py</td><td>Extraction + hypotheses</td><td>LR vector per evidence item across all hypotheses (one matrix call)</td><td class="pass">Yes</td></tr>
+        <tr><td>3b · Absence</td><td>pass_absence.py</td><td>Hypotheses + extraction</td><td>Missing predicted evidence — failed hoop tests (qualitative only)</td><td class="pass">Yes</td></tr>
+        <tr><td>4 · Update</td><td>bayesian.py</td><td>LR matrix + priors</td><td>Posterior distribution, sensitivity bands, robustness labels</td><td class="pass">No — pure math</td></tr>
+        <tr><td>5 · Synthesize</td><td>pass_synthesize.py</td><td>All prior outputs</td><td>Written narrative, per-hypothesis verdicts, steelman cases</td><td class="pass">Yes</td></tr>
+        <tr><td>6 · Refine</td><td>pass_refine.py</td><td>Source text + first-pass results</td><td>Delta (new evidence, reinterpretations) → re-runs passes 3–5</td><td class="pass">Yes (optional)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── PIPELINE GRAPH ─────────────────────────────────────────── -->
+<div id="page-graph" class="page">
+  <h1>Pipeline Graph</h1>
+  <p class="subtitle">Click any stage to inspect its inputs, outputs, and run it.</p>
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start">
+    <div class="pipe-graph" id="pipe-graph">
+      <!-- nodes injected by JS -->
+    </div>
+    <div class="card" id="graph-detail" style="max-width:420px">
+      <div style="color:var(--faint);font-size:13px;padding:20px 0">← Click a stage node to see its description here.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── EXTRACT ────────────────────────────────────────────────── -->
+<div id="page-extract" class="page">
+  <div class="stage-header">
+    <div>
+      <div class="stage-title">1 · Extract</div>
+      <div class="stage-sub">pass_extract.py · LLM call · ~2–4 min</div>
+    </div>
+    <span class="status-pill sp-complete" id="pill-extract">Complete</span>
+  </div>
+
+  <div class="section-row">
+    <div class="io-card">
+      <div class="io-label">Input</div>
+      <div class="io-stat">Source text <small>· 47,000 words</small></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">
+        brumaire_18.txt · Source packet: 6 markers (A–F)<br>
+        Research question: "Why did the 18 Brumaire coup succeed?"
+      </div>
+    </div>
+    <div class="io-card">
+      <div class="io-label">Output</div>
+      <div class="io-stat">59 evidence items <small>· 14 actors · 11 events · 4 mechanisms</small></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">
+        12 causal edges · outcome: "Bonaparte consolidated power as First Consul"
+      </div>
+    </div>
+  </div>
+
+  <div class="what-card">
+    <p><strong>What this does:</strong> Reads the source text in one LLM call and extracts all historically observable items — evidence quotes, named actors and their roles, discrete events with dates, causal mechanisms, and directed causal edges. Each evidence item gets a relevance score and a diagnostic type (hoop / smoking gun / doubly decisive / straw in the wind).</p>
+    <p>Source fidelity rule: every evidence item must quote or closely paraphrase the input text. No hallucinated evidence. Circular evidence (derived from interpretation) is flagged.</p>
+  </div>
+
+  <div style="display:flex;align-items:center;margin-bottom:16px">
+    <button class="run-btn demo-disabled" id="btn-extract"><span class="ico">▶</span> Run Extract</button>
+    <span class="demo-note" id="demo-note-extract">★ Demo — showing Brumaire fixture data</span>
+  </div>
+
+  <div class="card">
+    <h2>Evidence sample (top 5 of 59)</h2>
+    <table class="stage-table">
+      <thead><tr><th>ID</th><th>Source text</th><th>Type</th><th>Relevance</th></tr></thead>
+      <tbody>
+        <tr><td style="font-family:monospace;font-size:11px">evi_murat_grenadiers</td><td>19 Brumaire: Murat entered the Orangerie and announced that the Council was dissolved</td><td>Smoking gun</td><td>0.92</td></tr>
+        <tr><td style="font-family:monospace;font-size:11px">evi_sieyes_director</td><td>May 1799: Sieyès elected to Directory after years of republican constitutional drafting</td><td>Straw</td><td>0.88</td></tr>
+        <tr><td style="font-family:monospace;font-size:11px">evi_first_consul_powers</td><td>Dec 1799: First Consul promulgated laws; other consuls advisory only</td><td>Hoop</td><td>0.95</td></tr>
+        <tr><td style="font-family:monospace;font-size:11px">evi_conspirators_rue_victoire</td><td>Evening 17 Brumaire: Conspirators assembled at rue de la Victoire</td><td>Smoking gun</td><td>0.94</td></tr>
+        <tr><td style="font-family:monospace;font-size:11px">evi_ancient_regime_1789</td><td>1789: Estates-General convened; Third Estate declared National Assembly</td><td>Straw</td><td>0.22 (below threshold)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── HYPOTHESIZE ─────────────────────────────────────────────── -->
+<div id="page-hypothesize" class="page">
+  <div class="stage-header">
+    <div>
+      <div class="stage-title">2 · Hypothesize</div>
+      <div class="stage-sub">pass_hypothesize.py · LLM call · ~1–2 min</div>
+    </div>
+    <span class="status-pill sp-complete" id="pill-hypothesize">Complete</span>
+  </div>
+
+  <div class="section-row">
+    <div class="io-card">
+      <div class="io-label">Input</div>
+      <div class="io-stat">ExtractionResult <small>· 59 items · outcome defined</small></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Optional: --theories file (legitimacy vacuum framework injected)</div>
+    </div>
+    <div class="io-card">
+      <div class="io-label">Output</div>
+      <div class="io-stat">5 hypotheses <small>· 3 observable predictions each</small></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">At least one agency hypothesis (named individuals). Opposite-prediction check passed.</div>
+    </div>
+  </div>
+
+  <div class="what-card">
+    <p><strong>What this does:</strong> Generates 3–6 competing causal hypotheses from the extraction. Each must specify a causal mechanism (not just an outcome description), name at least one observable prediction, and be genuinely rivalrous — if two hypotheses predict the same evidence in the same direction, they must merge.</p>
+    <p>Guardrails: anti-tautology (no outcome-description hypotheses), anti-circularity (no hypothesis derived from its own interpretive evidence), mandatory agency hypothesis, mutual-exclusion self-check.</p>
+  </div>
+
+  <div style="display:flex;align-items:center;margin-bottom:16px">
+    <button class="run-btn demo-disabled"><span class="ico">▶</span> Run Hypothesize</button>
+    <span class="demo-note">★ Demo — showing Brumaire fixture data</span>
+  </div>
+
+  <div class="card">
+    <h2>Hypotheses</h2>
+    <table class="stage-table">
+      <thead><tr><th>ID</th><th>Label</th><th>Mechanism</th></tr></thead>
+      <tbody>
+        <tr><td style="font-family:monospace;font-size:11px">h1</td><td><strong>Civilian revision</strong></td><td>Sieyès-led constitutional redesign; Bonaparte was the military guarantor Sieyès needed</td></tr>
+        <tr><td style="font-family:monospace;font-size:11px">h2</td><td><strong>Military conversion</strong></td><td>Bonaparte's personalist military authority converted directly into political dominance via 18 Brumaire</td></tr>
+        <tr><td style="font-family:monospace;font-size:11px">h3</td><td><strong>Path closure</strong></td><td>Contingent institutional failures progressively closed alternatives until coup was only viable exit</td></tr>
+        <tr><td style="font-family:monospace;font-size:11px">h4</td><td><strong>Legal engineering</strong></td><td>Elite legal-engineering by experienced jurists produced constitutional institutionalization of personal rule</td></tr>
+        <tr><td style="font-family:monospace;font-size:11px">h5</td><td><strong>Popular endorsement</strong></td><td>Broad popular demand for order and stability provided the legitimating base for Bonapartist rule</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── TEST ───────────────────────────────────────────────────── -->
+<div id="page-test" class="page">
+  <div class="stage-header">
+    <div>
+      <div class="stage-title">3 · Test</div>
+      <div class="stage-sub">pass_test.py · one matrix LLM call · ~3–5 min</div>
+    </div>
+    <span class="status-pill sp-complete">Complete</span>
+  </div>
+
+  <div class="section-row">
+    <div class="io-card">
+      <div class="io-label">Input</div>
+      <div class="io-stat">59 evidence items + 5 hypotheses</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Single matrix call: for each evidence item, emit one LR vector across all hypotheses simultaneously</div>
+    </div>
+    <div class="io-card">
+      <div class="io-label">Output</div>
+      <div class="io-stat">59 × 5 LR matrix <small>· 6 below threshold</small></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Relative likelihood per (evidence, hypothesis) pair. Pairwise LR cap = 20×.</div>
+    </div>
+  </div>
+
+  <div class="what-card">
+    <p><strong>What this does:</strong> For each evidence item, asks the LLM: "How likely is this evidence under each hypothesis, relative to the others?" Returns a likelihood vector, not independent pairwise scores — so ratios between hypotheses are coherent by construction.</p>
+    <p>Relevance gate: items with relevance &lt; 0.4 are forced to LR = 1.0 (uninformative). Relevance = min(temporal, causal-domain). Cluster detection groups dependent evidence (e.g. all evidence from a single chain of events).</p>
+  </div>
+
+  <div style="display:flex;align-items:center;margin-bottom:16px">
+    <button class="run-btn demo-disabled"><span class="ico">▶</span> Run Test</button>
+    <span class="demo-note">★ Demo — showing Brumaire fixture data</span>
+  </div>
+
+  <div class="alert alert-warn">
+    <span>⚠</span>
+    <div><strong>Cluster A detected:</strong> 8 Bonaparte military-career evidence items grouped as dependent (strength 0.70). These are pooled in the Bayesian update to avoid double-counting.</div>
+  </div>
+
+  <div class="card">
+    <h2>Likelihood matrix (top 8 rows by discriminating power)</h2>
+    <div class="matrix-mini" id="matrix-output"></div>
+    <p style="font-size:11.5px;color:var(--muted);margin-top:8px">6 rows with relevance &lt;0.40 greyed (LR forced to 1.0). Rows sorted by max|log LR| descending.</p>
+  </div>
+</div>
+
+<!-- ── ABSENCE ─────────────────────────────────────────────────── -->
+<div id="page-absence" class="page">
+  <div class="stage-header">
+    <div>
+      <div class="stage-title">3b · Absence</div>
+      <div class="stage-sub">pass_absence.py · LLM call · ~1 min</div>
+    </div>
+    <span class="status-pill sp-complete">Complete</span>
+  </div>
+  <div class="section-row">
+    <div class="io-card">
+      <div class="io-label">Input</div>
+      <div class="io-stat">5 hypotheses + 59 evidence items</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Each hypothesis's observable predictions checked against what was actually extracted</div>
+    </div>
+    <div class="io-card">
+      <div class="io-label">Output</div>
+      <div class="io-stat">3 failed hoop tests <small>· qualitative severity ratings</small></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Findings feed synthesis narrative only — NOT Bayesian updating (speculative LR assignment avoided)</div>
+    </div>
+  </div>
+  <div class="what-card">
+    <p><strong>What this does:</strong> Evaluates what predicted evidence is <em>missing</em> from the text. If h5 predicts popular demonstrations of support but the text contains none, that is a failed hoop test. Each absence finding is rated "damaging", "notable", or "minor" with a reasoning note about whether the text would contain this evidence if it existed.</p>
+    <p>Design constraint: absence findings are qualitative only. They inform the synthesis narrative but do not receive speculative LR values — which would add noise to the Bayesian update.</p>
+  </div>
+  <div style="display:flex;align-items:center;margin-bottom:16px">
+    <button class="run-btn demo-disabled"><span class="ico">▶</span> Run Absence</button>
+    <span class="demo-note">★ Demo — showing Brumaire fixture data</span>
+  </div>
+  <div class="card">
+    <h2>Absence findings</h2>
+    <table class="stage-table">
+      <thead><tr><th>Hypothesis</th><th>Missing prediction</th><th>Severity</th><th>Reasoning</th></tr></thead>
+      <tbody>
+        <tr><td>h5 · Popular endorsement</td><td>Popular demonstrations of active support for Bonaparte</td><td style="color:var(--red);font-weight:700">Damaging</td><td>A text this detailed about the coup would mention mass rallies if they occurred; their absence is informative.</td></tr>
+        <tr><td>h1 · Civilian revision</td><td>Sieyès drafting sessions with jurists post-coup</td><td style="color:var(--amber);font-weight:700">Notable</td><td>Post-coup constitution was drafted quickly; evidence of Sieyès-led sessions may exist in sources not covered.</td></tr>
+        <tr><td>h3 · Path closure</td><td>Documented attempts at non-coup constitutional reform in 1799</td><td style="color:var(--amber);font-weight:700">Notable</td><td>Text focuses on coup itself; reform attempts might appear in broader political history sources.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── UPDATE ─────────────────────────────────────────────────── -->
+<div id="page-update" class="page">
+  <div class="stage-header">
+    <div>
+      <div class="stage-title">4 · Bayesian Update</div>
+      <div class="stage-sub">bayesian.py · pure math, no LLM · &lt;1 sec</div>
+    </div>
+    <span class="status-pill sp-complete">Complete</span>
+  </div>
+  <div class="section-row">
+    <div class="io-card">
+      <div class="io-label">Input</div>
+      <div class="io-stat">LR matrix + priors <small>· dependence clusters</small></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Uniform priors (default). Dependence pooling applied to Cluster A. H0 residual included.</div>
+    </div>
+    <div class="io-card">
+      <div class="io-label">Output</div>
+      <div class="io-stat">Posterior distribution <small>· sensitivity bands · robustness labels</small></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Log-space softmax update. Order-invariant. Prior sensitivity: ±2× swing, rank stable.</div>
+    </div>
+  </div>
+  <div class="what-card">
+    <p><strong>What this does:</strong> Applies a coherent joint Bayesian update in log space: <code>post_i = softmax(log prior_i + Σ log LR_i)</code>. Order-invariant. Per-evidence LRs are derived from the likelihood vectors as <code>relative_likelihood / geomean(vector)</code>, so pairwise ratios are coherent by construction.</p>
+    <p>Then runs sensitivity analysis: for each hypothesis, perturbs its top 3 driver LRs ±50% and reports the posterior range. Robustness classification (robust / moderate / fragile) is mechanical — not LLM judgment.</p>
+  </div>
+
+  <div style="display:flex;align-items:center;margin-bottom:16px">
+    <button class="run-btn demo-disabled"><span class="ico">▶</span> Run Update</button>
+    <span class="demo-note">★ Demo — showing Brumaire fixture data</span>
+  </div>
+
+  <div class="alert alert-crit">
+    <span>⚠</span>
+    <div><strong>Fragile dominant result.</strong> h2 leads at 0.994 but is <em>fragile</em> — driven by many weak LRs, not decisive smoking-gun tests. Under perturbation h1 can reach 0.44. Treat as a ranking, not a settled causal conclusion.</div>
+  </div>
+
+  <div class="card">
+    <h2>Comparative support (posteriors + sensitivity bands)</h2>
+    <div id="support-output" style="max-width:680px;margin-top:10px"></div>
+    <p style="font-size:11.5px;color:var(--muted);margin-top:10px">Shaded band = posterior range under ±50% perturbation of top LR drivers. Not a probability of truth — a comparative ranking.</p>
+  </div>
+</div>
+
+<!-- ── SYNTHESIZE ─────────────────────────────────────────────── -->
+<div id="page-synthesize" class="page">
+  <div class="stage-header">
+    <div>
+      <div class="stage-title">5 · Synthesize</div>
+      <div class="stage-sub">pass_synthesize.py · LLM call · ~2–3 min</div>
+    </div>
+    <span class="status-pill sp-complete">Complete</span>
+  </div>
+  <div class="section-row">
+    <div class="io-card">
+      <div class="io-label">Input</div>
+      <div class="io-stat">All prior outputs <small>· posteriors · absence findings</small></div>
+    </div>
+    <div class="io-card">
+      <div class="io-label">Output</div>
+      <div class="io-stat">Written narrative <small>· per-hypothesis verdicts · steelmans</small></div>
+    </div>
+  </div>
+  <div class="what-card">
+    <p><strong>What this does:</strong> Writes the analytical narrative. The LLM has access to all evidence, hypotheses, LR vectors, posteriors, sensitivity ranges, and absence findings. It produces: a synthesis paragraph, a verdict for each hypothesis ("supported / partially supported / not supported / eliminated"), and a mandatory steelman case for every hypothesis — even eliminated ones.</p>
+    <p>Verdict calibration: <code>verdict_calibration.py</code> deterministically downgrades any verdict label that overstates the computed comparative support. The LLM writes reasoning; it does not have final authority on verdict labels.</p>
+  </div>
+  <div style="display:flex;align-items:center;margin-bottom:16px">
+    <button class="run-btn demo-disabled"><span class="ico">▶</span> Run Synthesize</button>
+    <span class="demo-note">★ Demo — showing Brumaire fixture data</span>
+  </div>
+  <div class="card">
+    <h2>Synthesis narrative (excerpt)</h2>
+    <p style="font-size:13px;line-height:1.7;color:var(--ink)">The evidence overwhelmingly supports h2 (Bonaparte's personalist military conversion) as the decisive causal mechanism of 18 Brumaire. The concentration of military command, the rue de la Victoire conspiracy, and Murat's use of grenadiers to dissolve the Council of Five Hundred all point to deliberate military agency rather than civilian constitutional revision. However, this result is classified <strong>fragile</strong>: it rests on a broad accumulation of weak-to-moderate LRs rather than a few decisive smoking-gun tests. The hypothesis cannot be considered settled absent higher-diagnosticity primary sources documenting Bonaparte's intent and planning.</p>
+    <p style="font-size:13px;line-height:1.7;color:var(--ink);margin-top:8px">h4 (Legal engineering) receives marginal support: the constitutional architecture of Year VIII does show elite legal craftsmanship, but this appears to be a consequence of the coup rather than its cause. h1 (Civilian revision) has a non-trivial sensitivity range (up to 0.44 under perturbation) and should not be dismissed without stronger discriminatory tests.</p>
+  </div>
+  <div class="card" style="margin-top:0">
+    <h2>Verdicts</h2>
+    <table class="stage-table">
+      <thead><tr><th>Hypothesis</th><th>Verdict</th><th>Posterior</th><th>Robustness</th></tr></thead>
+      <tbody>
+        <tr><td>h2 · Military conversion</td><td><strong style="color:var(--green)">Supported (fragile)</strong></td><td>0.9942</td><td style="color:var(--red)">Fragile</td></tr>
+        <tr><td>h1 · Civilian revision</td><td><strong style="color:var(--amber)">Partially supported</strong></td><td>0.0047</td><td style="color:var(--red)">Fragile</td></tr>
+        <tr><td>h4 · Legal engineering</td><td><strong style="color:var(--muted)">Not supported</strong></td><td>0.0008</td><td style="color:var(--amber)">Moderate</td></tr>
+        <tr><td>h3 · Path closure</td><td><strong style="color:var(--muted)">Not supported</strong></td><td>0.0003</td><td style="color:var(--red)">Fragile</td></tr>
+        <tr><td>h5 · Popular endorsement</td><td><strong style="color:var(--red)">Eliminated</strong></td><td>&lt;0.0001</td><td style="color:var(--green)">Robust</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── REFINE ─────────────────────────────────────────────────── -->
+<div id="page-refine" class="page">
+  <div class="stage-header">
+    <div>
+      <div class="stage-title">6 · Refine</div>
+      <div class="stage-sub">pass_refine.py · LLM call · ~5–7 min · optional (--refine flag)</div>
+    </div>
+    <span class="status-pill sp-pending">Not run</span>
+  </div>
+  <div class="section-row">
+    <div class="io-card">
+      <div class="io-label">Input</div>
+      <div class="io-stat">Source text + condensed first-pass results</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">~33K tokens. Second reading with full analytical context loaded.</div>
+    </div>
+    <div class="io-card">
+      <div class="io-label">Output</div>
+      <div class="io-stat">Delta <small>· re-run of passes 3–5</small></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">New evidence (evi_ref_ prefix), reinterpretations, spurious removals, hypothesis refinements</div>
+    </div>
+  </div>
+  <div class="what-card">
+    <p><strong>What this does:</strong> Second reading of the source text with the full first-pass context loaded. The LLM produces a structured delta: new evidence items it missed on the first pass, reinterpretations of existing items, spurious items to remove, and hypothesis refinements. Then passes 3–5 re-run on the updated extraction.</p>
+    <p>Pre-refinement artifacts are saved to <code>pre_refine/</code> before being overwritten, enabling the Delta Board in the workbench to show before/after posterior comparison.</p>
+  </div>
+  <div style="display:flex;align-items:center;margin-bottom:16px">
+    <button class="run-btn" id="btn-refine"><span class="ico">▶</span> Run Refine</button>
+    <span style="font-size:12px;color:var(--muted);margin-left:10px">Runs passes 3–5 again after delta is applied. ~$0.15 additional cost.</span>
+  </div>
+  <div style="background:var(--band);border:1.5px dashed var(--line);border-radius:8px;padding:24px;text-align:center;color:var(--faint);font-size:13px;max-width:480px">
+    Refine stage not yet run for this session.<br>Run it above to see the delta board and before/after posteriors.
+  </div>
+</div>
+
+</main>
+</div><!-- /shell -->
+
+<script>
+const STAGES = [
+  {id:'overview', icon:'🏠'},
+  {id:'graph',    icon:'🗺'},
+  {id:'extract',     icon:'📄', title:'1 · Extract',    sub:'pass_extract.py',        desc:'Reads the source text and identifies all observable items: evidence quotes, actors, events, mechanisms, causal edges. One LLM call. Source fidelity enforced.'},
+  {id:'hypothesize', icon:'🔀', title:'2 · Hypothesize', sub:'pass_hypothesize.py',   desc:'Generates 3–6 competing causal hypotheses with mechanisms and observable predictions. Anti-tautology, anti-circularity, mandatory agency hypothesis, mutual-exclusion check.'},
+  {id:'test',        icon:'⚖️', title:'3 · Test',        sub:'pass_test.py',           desc:'One matrix LLM call: for every evidence item, a likelihood vector across all hypotheses simultaneously. Coherent pairwise ratios. Relevance gate < 0.4 forces LR = 1.0.'},
+  {id:'absence',     icon:'🔍', title:'3b · Absence',   sub:'pass_absence.py',        desc:'Evaluates what predicted evidence is missing (failed hoop tests). Qualitative severity only — absence findings feed synthesis narrative but NOT Bayesian updating.'},
+  {id:'update',      icon:'📊', title:'4 · Update',      sub:'bayesian.py',            desc:'Log-space softmax Bayesian update. Pure math, no LLM. Computes posteriors, sensitivity bands (±50% driver perturbation), and mechanical robustness labels.'},
+  {id:'synthesize',  icon:'📝', title:'5 · Synthesize',  sub:'pass_synthesize.py',    desc:'Writes the analytical narrative, per-hypothesis verdicts, and mandatory steelman cases. Verdict calibration deterministically downgrades labels that overstate computed support.'},
+  {id:'refine',      icon:'🔄', title:'6 · Refine',      sub:'pass_refine.py (opt.)', desc:'Second reading with full context. Produces a structured delta (new evidence, reinterpretations, removals), then re-runs passes 3–5. Saves pre_refine/ artifacts for delta comparison.'},
+];
+
+const GRAPH_STAGES = STAGES.slice(2); // skip overview + graph nav items
+
+// Build pipeline graph
+const graph = document.getElementById('pipe-graph');
+GRAPH_STAGES.forEach((s, i) => {
+  const node = document.createElement('div');
+  node.className = 'pipe-node';
+  node.dataset.id = s.id;
+  const isComplete = s.id !== 'refine';
+  node.innerHTML = `
+    <div class="pipe-node-icon" style="background:${isComplete?'var(--accent-lt)':'var(--band)'};">${s.icon}</div>
+    <div class="pipe-node-text">
+      <h3>${s.title}</h3>
+      <p>${s.sub}</p>
+    </div>
+    <div class="node-status">
+      <div class="nav-dot ${isComplete?'dot-complete':'dot-skip'}" style="width:10px;height:10px"></div>
+    </div>`;
+  node.onclick = () => {
+    show(s.id);
+    // highlight clicked node
+    document.querySelectorAll('.pipe-node').forEach(n=>n.classList.remove('active-node'));
+    node.classList.add('active-node');
+    // show detail
+    document.getElementById('graph-detail').innerHTML = `
+      <div style="font-size:18px;margin-bottom:8px">${s.icon}</div>
+      <h2 style="margin-bottom:4px">${s.title}</h2>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">${s.sub}</div>
+      <p style="font-size:13px;line-height:1.6;color:var(--ink)">${s.desc}</p>
+      <div style="margin-top:14px">
+        <button class="run-btn" style="font-size:12px;padding:7px 14px" onclick="show('${s.id}')">Open stage page →</button>
+      </div>`;
+  };
+  graph.appendChild(node);
+  if (i < GRAPH_STAGES.length - 1) {
+    const arr = document.createElement('div');
+    arr.className = 'pipe-arrow';
+    arr.innerHTML = '↓';
+    graph.appendChild(arr);
+  }
+});
+
+// Navigation
+function show(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id)?.classList.add('active');
+  // find nav item — crude but works
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')?.includes("'"+id+"'")) n.classList.add('active');
+  });
+}
+
+// Mode toggle
+function setMode(mode) {
+  const isDe = mode==='demo';
+  document.querySelectorAll('.mode-btn').forEach(b=>{
+    b.classList.remove('active');
+    if(isDe) b.classList.remove('demo');
+  });
+  const btn = isDe ? document.querySelector('.mode-btn:first-child') : document.querySelector('.mode-btn:last-child');
+  btn.classList.add('active');
+  if(isDe) btn.classList.add('demo');
+
+  document.querySelectorAll('.run-btn').forEach(b=>{
+    if(b.id==='btn-refine') return; // refine always enabled
+    b.classList.toggle('demo-disabled', isDe);
+  });
+  document.querySelectorAll('.demo-note').forEach(n=> n.style.display = isDe?'':'none');
+  document.getElementById('run-label').textContent = isDe ? '· Brumaire 18 (demo)' : '· Brumaire 18 (real)';
+
+  if(!isDe) {
+    // In real mode, grey out stages that depend on order
+    document.getElementById('dot-refine').className = 'nav-dot dot-skip';
+  }
+}
+
+// ── Matrix mini render ──
+function lrBg(lr, off) {
+  if(off) return {bg:'#d0d8e2',text:'#7a8a99'};
+  const l = Math.log(lr);
+  if(Math.abs(l)<0.05) return {bg:'#eff1f4',text:'#5e6e82'};
+  if(l>0){const t=Math.min(l/Math.log(9),1);return{bg:`rgb(${Math.round(247-103*t)},${Math.round(228-146*t)},${Math.round(217-186*t)})`,text:t>.55?'#fff':'#1a2330'};}
+  const t=Math.min(-l/Math.log(9),1);return{bg:t>.55?'#2756a3':t>.25?'#6a9fd8':'#d5e3f5',text:t>.55?'#fff':'#1a2330'};
+}
+const MX_DATA = [
+  {id:'evi_murat_grenadiers',    src:'Murat entered the Orangerie…',         rel:0.92, lrs:{h1:1.5,h2:9.0,h3:2.0,h4:1.2,h5:1.0}},
+  {id:'evi_conspirators',        src:'Conspirators at rue de la Victoire…',   rel:0.94, lrs:{h1:1.5,h2:8.5,h3:1.8,h4:2.0,h5:1.0}},
+  {id:'evi_first_consul_powers', src:'First Consul promulgated laws…',         rel:0.95, lrs:{h1:2.0,h2:3.5,h3:2.2,h4:8.5,h5:1.2}},
+  {id:'evi_sieyes_director',     src:'Sieyès elected to Directory, May 1799', rel:0.88, lrs:{h1:7.0,h2:1.2,h3:2.0,h4:2.5,h5:1.0}},
+  {id:'evi_brumaire_decree',     src:'Brumaire Decree: three-consul commission', rel:0.95, lrs:{h1:2.5,h2:2.0,h3:3.0,h4:8.0,h5:1.0}},
+  {id:'evi_constitution_yr8',    src:'Constitution of Year VIII: citizenship lists', rel:0.92, lrs:{h1:2.0,h2:1.2,h3:2.5,h4:8.0,h5:1.5}},
+  {id:'evi_directory_1795',      src:'1795: Directory established under Year III', rel:0.35, lrs:{h1:1.0,h2:1.0,h3:1.0,h4:1.0,h5:1.0}, off:true},
+];
+const HYPS = ['h1','h2','h3','h4','h5'];
+const mxEl = document.getElementById('matrix-output');
+let mxHtml = `<table class="mx"><thead><tr><th class="lh">Evidence</th><th>Rel.</th>${HYPS.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+MX_DATA.forEach(r=>{
+  mxHtml += `<tr><td style="font-family:monospace;font-size:11px;color:var(--muted)">${r.id}<br><span style="font-family:system-ui;color:var(--ink);font-size:11px">${r.src.substring(0,45)}…</span></td>`;
+  mxHtml += `<td style="font-size:11px;color:${r.off?'var(--faint)':'var(--ink)'}">${r.rel.toFixed(2)}</td>`;
+  HYPS.forEach(h=>{
+    const {bg,text}=lrBg(r.lrs[h],r.off||false);
+    mxHtml+=`<td><span class="lrc" style="background:${bg};color:${text}">${r.off?'—':r.lrs[h].toFixed(1)}</span></td>`;
+  });
+  mxHtml += '</tr>';
+});
+mxHtml += '</tbody></table>';
+mxEl.innerHTML = mxHtml;
+
+// ── Support bars render ──
+const SUP = [
+  {id:'h2',label:'Military conversion', post:0.9942,lo:0.481,hi:1.000,rob:'fragile',  color:'#b02820'},
+  {id:'h1',label:'Civilian revision',   post:0.0047,lo:0.000,hi:0.439,rob:'fragile',  color:'#b02820'},
+  {id:'h4',label:'Legal engineering',   post:0.0008,lo:0.000,hi:0.216,rob:'moderate', color:'#9a620c'},
+  {id:'h3',label:'Path closure',        post:0.0003,lo:0.000,hi:0.017,rob:'fragile',  color:'#b02820'},
+  {id:'h5',label:'Popular endorsement', post:0.00001,lo:0.000,hi:0.00001,rob:'robust',color:'#28714a'},
+];
+const supEl = document.getElementById('support-output');
+SUP.forEach(d=>{
+  const div = document.createElement('div');
+  div.className = 'bar-row';
+  div.style.marginBottom='10px';
+  div.innerHTML = `
+    <div style="font-size:12.5px;line-height:1.3">
+      <span style="font-family:monospace;font-size:11px;color:var(--faint)">${d.id}</span>&ensp;${d.label}
+      <span style="font-size:10.5px;font-weight:700;color:${d.color};margin-left:4px">${d.rob}</span>
+    </div>
+    <div>
+      <div class="bar-track">
+        <div class="bar-sens" style="left:${d.lo*100}%;width:${Math.max(0,(d.hi-d.lo)*100)}%;background:${d.color}"></div>
+        <div class="bar-fill" style="width:${d.post*100}%;background:${d.color}"></div>
+      </div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:2px">band: ${d.lo<0.001?'<0.001':d.lo.toFixed(3)} – ${d.hi.toFixed(3)}</div>
+    </div>
+    <div class="bar-val">${d.post<0.0001?'<0.0001':d.post.toFixed(4)}</div>`;
+  supEl.appendChild(div);
+});
+</script>
+</body>
+</html>

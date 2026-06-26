@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Process Tracing — Visual Audit Panels Mockup (Slice 005d)</title>
+<style>
+/* ── Design tokens ── */
+:root {
+  --ground:    #f5f7fa;
+  --panel:     #ffffff;
+  --ink:       #1a2330;
+  --muted:     #5e6e82;
+  --faint:     #9aaabb;
+  --line:      #dce3ed;
+  --band:      #edf1f7;
+  --accent:    #1c4f7a;
+  --accent-lt: #d4e4f2;
+
+  /* LR cell scales */
+  --lr-warm-hi:  #c4521f;
+  --lr-warm-md:  #e8946a;
+  --lr-warm-lo:  #f7e4d9;
+  --lr-neut:     #eff1f4;
+  --lr-cool-lo:  #d5e3f5;
+  --lr-cool-md:  #6a9fd8;
+  --lr-cool-hi:  #2756a3;
+  --lr-off:      #c8d2dc;  /* below threshold */
+
+  /* Robustness */
+  --robust:    #28714a;
+  --robust-lt: #d2eedf;
+  --moderate:  #9a620c;
+  --moderate-lt: #fcecd5;
+  --fragile:   #b02820;
+  --fragile-lt: #fde9e8;
+
+  --warn-bg:   #fff3cd;
+  --warn-bd:   #e6a817;
+  --warn-ink:  #7a4a00;
+  --crit-bg:   #fdeded;
+  --crit-bd:   #c63028;
+  --crit-ink:  #7a0e08;
+
+  --radius:    8px;
+  --radius-sm: 5px;
+  font-synthesis: none;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font: 13.5px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--ground);
+  min-height: 100vh;
+}
+
+/* ── Page header ── */
+.page-header {
+  background: var(--accent);
+  color: #fff;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.page-header h1 {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: .01em;
+}
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.18);
+  color: rgba(255,255,255,.88);
+}
+.meta-bar {
+  font-size: 11.5px;
+  color: rgba(255,255,255,.65);
+  margin-left: auto;
+}
+
+/* ── Tab strip ── */
+.tab-strip {
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  padding: 0 20px;
+  display: flex;
+  gap: 0;
+}
+.tab-btn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .12s, border-color .12s;
+}
+.tab-btn:hover { color: var(--ink); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Content pane ── */
+.pane { display: none; padding: 18px 20px; max-width: 1400px; }
+.pane.active { display: block; }
+
+/* ── Section header ── */
+.section-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.section-hd h2 { font-size: 14px; font-weight: 700; }
+.chip {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.chip-muted  { color: var(--muted);    border-color: var(--line);    background: var(--band); }
+.chip-accent { color: var(--accent);   border-color: var(--accent-lt); background: var(--accent-lt); }
+.chip-fragile  { color: var(--fragile);  border-color: var(--fragile-lt); background: var(--fragile-lt); }
+.chip-moderate { color: var(--moderate); border-color: var(--moderate-lt); background: var(--moderate-lt); }
+.chip-robust   { color: var(--robust);   border-color: var(--robust-lt); background: var(--robust-lt); }
+.chip-warn   { color: var(--warn-ink); border-color: var(--warn-bd); background: var(--warn-bg); }
+.chip-off    { color: #7a8a99;         border-color: var(--line);    background: #f0f2f5; }
+
+/* ── Alert banners ── */
+.alert {
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 12.5px;
+  margin-bottom: 14px;
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+}
+.alert-crit { background: var(--crit-bg); border: 1px solid var(--crit-bd); color: var(--crit-ink); }
+.alert-warn { background: var(--warn-bg); border: 1px solid var(--warn-bd); color: var(--warn-ink); }
+.alert-icon { font-size: 14px; line-height: 1.4; flex-shrink: 0; }
+.alert strong { font-weight: 700; }
+
+/* ── Matrix ── */
+.matrix-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.matrix-wrap { overflow-x: auto; }
+table.matrix {
+  border-collapse: collapse;
+  font-size: 12px;
+  width: 100%;
+  min-width: 640px;
+  font-variant-numeric: tabular-nums;
+}
+.matrix th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 5px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.matrix th.col-ev { text-align: left; min-width: 220px; }
+.matrix td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--band);
+  vertical-align: middle;
+}
+.matrix td.ev-id {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 11px;
+  color: var(--muted);
+  max-width: 220px;
+}
+.matrix td.ev-src {
+  font-size: 11px;
+  color: var(--ink);
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.matrix tr.cluster-start td { border-top: 2px solid var(--accent-lt); }
+.cluster-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 3px 8px 1px;
+  background: var(--accent-lt);
+  border-top: 1px solid var(--accent-lt);
+}
+.lr-cell {
+  width: 52px;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 4px;
+}
+.lr-cell.off { color: #7a8a99; background: var(--lr-off); }
+.lr-cell.neut { color: var(--muted); background: var(--lr-neut); }
+.dtype-pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: 1px 6px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.dtype-hoop  { background: #e3edf7; color: #1c4f7a; }
+.dtype-sg    { background: #fde9e8; color: #8a1e18; }
+.dtype-sw    { background: var(--band); color: var(--muted); }
+.dtype-dd    { background: #d2eedf; color: #1a5035; }
+.rel-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.rel-pip {
+  height: 6px;
+  border-radius: 99px;
+  background: var(--accent);
+}
+
+/* ── Support bars ── */
+.support-grid {
+  display: grid;
+  gap: 10px;
+  max-width: 780px;
+}
+.support-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 70px;
+  align-items: center;
+  gap: 10px;
+}
+.hyp-label {
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+.hyp-label .hyp-id {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 11px;
+  color: var(--faint);
+  font-weight: 400;
+}
+.bar-track {
+  height: 28px;
+  background: var(--band);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: var(--radius-sm);
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.bar-sens {
+  height: 100%;
+  position: absolute;
+  top: 0;
+  opacity: .28;
+  border-radius: var(--radius-sm);
+}
+.bar-post {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.bar-post small {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.sens-range {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  padding-left: 180px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Provenance ── */
+table.prov {
+  border-collapse: collapse;
+  font-size: 12.5px;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+.prov th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 5px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.prov td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--band);
+  vertical-align: top;
+}
+.prov td.mono {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+.prov td.quote {
+  font-size: 12px;
+  color: var(--ink);
+  max-width: 360px;
+}
+.prov td.quote em { color: var(--muted); font-style: normal; }
+.marker-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 99px;
+  white-space: nowrap;
+  background: var(--accent-lt);
+  color: var(--accent);
+}
+.no-marker { color: var(--faint); font-size: 11px; }
+.peak-lr {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 650;
+}
+.lr-pos { color: var(--lr-warm-hi); }
+.lr-neut { color: var(--muted); }
+
+/* ── Delta ── */
+.delta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+  max-width: 700px;
+}
+.delta-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.delta-card .num {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+.delta-card .lbl { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+
+table.shifts {
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  max-width: 560px;
+  width: 100%;
+}
+.shifts th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+}
+.shifts th:first-child { text-align: left; }
+.shifts td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--band);
+  text-align: right;
+}
+.shifts td:first-child { text-align: left; }
+.delta-pos { color: var(--robust);  font-weight: 700; }
+.delta-neg { color: var(--fragile); font-weight: 700; }
+.delta-zero { color: var(--faint); }
+
+/* ── Empty state ── */
+.empty-state {
+  background: var(--band);
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  color: var(--faint);
+  font-size: 13px;
+}
+
+/* ── Legend ── */
+.legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  font-size: 11.5px;
+  color: var(--muted);
+  align-items: center;
+}
+.legend-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Process Tracing Workbench</h1>
+  <span class="badge">Visual Audit Mockup</span>
+  <span class="badge" style="background:rgba(255,255,255,.10)">Slice 005d · Brumaire 18 · 5 hyp · 59 evi</span>
+  <span class="meta-bar">docs/plans/005d_visual_audit_mockup.html — requires human review before implementation</span>
+</header>
+
+<!-- Tab strip -->
+<nav class="tab-strip" role="tablist">
+  <button class="tab-btn active" data-tab="matrix"    role="tab">Evidence × Hypothesis Matrix</button>
+  <button class="tab-btn"        data-tab="support"   role="tab">Support + Sensitivity</button>
+  <button class="tab-btn"        data-tab="provenance" role="tab">Evidence Provenance</button>
+  <button class="tab-btn"        data-tab="delta"     role="tab">Refinement Delta</button>
+</nav>
+
+<!-- ────────────── TAB 1: MATRIX ────────────────────────────────────────────── -->
+<div id="pane-matrix" class="pane active">
+
+  <div class="section-hd">
+    <h2>Evidence × Hypothesis Likelihood Matrix</h2>
+    <span class="chip chip-muted">stage: test</span>
+    <span class="chip chip-accent">59 items · 5 hypotheses</span>
+    <span class="chip chip-off">6 below relevance threshold</span>
+  </div>
+
+  <div class="legend">
+    <span><span class="legend-swatch" style="background:var(--lr-warm-hi)"></span>Strongly favors hypothesis (LR ≫ 1)</span>
+    <span><span class="legend-swatch" style="background:var(--lr-warm-lo)"></span>Mildly favors</span>
+    <span><span class="legend-swatch" style="background:var(--lr-neut)"></span>Neutral (≈ 1.0)</span>
+    <span><span class="legend-swatch" style="background:var(--lr-cool-lo)"></span>Mildly disfavors</span>
+    <span><span class="legend-swatch" style="background:var(--lr-cool-hi)"></span>Strongly disfavors</span>
+    <span><span class="legend-swatch" style="background:var(--lr-off)"></span>Below relevance threshold (LR forced = 1.0)</span>
+  </div>
+
+  <p class="matrix-meta">
+    <span>Rows sorted by discriminating power (max |log LR|). Cluster bands group dependent evidence.</span>
+    <span>Showing top 10 + 2 below-threshold rows. Full run: 59 items.</span>
+  </p>
+
+  <div class="matrix-wrap">
+    <table class="matrix" id="matrix-table">
+      <thead>
+        <tr>
+          <th class="col-ev">Evidence ID</th>
+          <th class="col-ev">Source text</th>
+          <th>Type</th>
+          <th>Rel.</th>
+          <th>h1<br><small style="font-weight:400;text-transform:none;letter-spacing:0">Civilian revision</small></th>
+          <th>h2<br><small style="font-weight:400;text-transform:none;letter-spacing:0">Military conversion</small></th>
+          <th>h3<br><small style="font-weight:400;text-transform:none;letter-spacing:0">Path closure</small></th>
+          <th>h4<br><small style="font-weight:400;text-transform:none;letter-spacing:0">Legal engineering</small></th>
+          <th>h5<br><small style="font-weight:400;text-transform:none;letter-spacing:0">Popular endorsement</small></th>
+        </tr>
+      </thead>
+      <tbody id="matrix-body"></tbody>
+    </table>
+  </div>
+
+  <p style="margin-top:10px; font-size:11.5px; color:var(--muted)">
+    6 rows with relevance &lt; 0.40 are greyed (LR forced to 1.0 — uninformative for all hypotheses). Cluster A groups 8 linked Bonaparte military-career items (dependence strength 0.70).
+  </p>
+</div>
+
+<!-- ────────────── TAB 2: SUPPORT ────────────────────────────────────────────── -->
+<div id="pane-support" class="pane">
+
+  <div class="section-hd">
+    <h2>Comparative Support + Sensitivity Bands</h2>
+    <span class="chip chip-muted">stage: update</span>
+  </div>
+
+  <!-- Critical warning -->
+  <div class="alert alert-crit" id="fragile-alert">
+    <span class="alert-icon">⚠</span>
+    <div>
+      <strong>Fragile dominant result — treat as a ranking, not a settled conclusion.</strong><br>
+      h2 leads at 0.994 but is classified <em>fragile</em>: the posterior is driven by many weak LRs, not a few decisive smoking-gun tests.
+      Read the sensitivity bands: under evidence perturbation, h1's support can rise to 0.44.
+      Do not claim a settled causal conclusion from this run without acquiring higher-diagnosticity sources.
+    </div>
+  </div>
+
+  <div class="alert alert-warn" id="rankstab-alert">
+    <span class="alert-icon">↕</span>
+    <div>
+      <strong>Rank instability.</strong>
+      h1, h3, h4 have <code>rank_stable = false</code> — their rank among hypotheses changes under ±50 % perturbation of top LR drivers.
+      Prior sensitivity is stable (top hypothesis unchanged under ±2× prior swing).
+    </div>
+  </div>
+
+  <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">
+    Bars show computed posterior (comparative support, not a truth probability).
+    Shaded bands show the posterior range under ±50 % perturbation of each hypothesis's top driving LRs.
+  </p>
+
+  <div class="support-grid" id="support-grid"></div>
+
+  <p style="font-size:11.5px; color:var(--muted); margin-top:14px;">
+    Robustness key: <span class="chip chip-fragile">fragile</span> driven by many weak LRs ·
+    <span class="chip chip-moderate">moderate</span> mixed ·
+    <span class="chip chip-robust">robust</span> driven by a few decisive tests.
+    Sensitivity range = posterior under favorable perturbation of top 3 drivers.
+  </p>
+</div>
+
+<!-- ────────────── TAB 3: PROVENANCE ────────────────────────────────────────── -->
+<div id="pane-provenance" class="pane">
+
+  <div class="section-hd">
+    <h2>Evidence Provenance</h2>
+    <span class="chip chip-muted">stage: synthesize</span>
+    <span class="chip chip-accent">49 / 59 items traceable to source marker</span>
+  </div>
+
+  <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+    Sorted by |peak LR| descending. Source marker links each item to the source packet entry that contributed it.
+    Items without a marker were extracted from the input text but could not be matched to a packet source.
+  </p>
+
+  <div style="overflow-x:auto;">
+    <table class="prov" id="prov-table">
+      <thead>
+        <tr>
+          <th>Evidence ID</th>
+          <th>Source text (snippet)</th>
+          <th>Packet source</th>
+          <th>Favors</th>
+          <th style="text-align:right">Peak LR</th>
+        </tr>
+      </thead>
+      <tbody id="prov-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ────────────── TAB 4: DELTA ─────────────────────────────────────────────── -->
+<div id="pane-delta" class="pane">
+
+  <div class="section-hd">
+    <h2>Refinement Delta Board</h2>
+    <span class="chip chip-muted">stage: refine</span>
+  </div>
+
+  <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">
+    Second-reading pass: new evidence discovered, prior evidence reinterpreted, spurious items removed,
+    hypotheses refined, then passes 3–4 re-run. Before/after posteriors compare the pre-refinement
+    and post-refinement Bayesian results.
+  </p>
+
+  <div class="delta-grid">
+    <div class="delta-card"><div class="num">3</div><div class="lbl">New evidence items</div></div>
+    <div class="delta-card"><div class="num">5</div><div class="lbl">Reinterpreted items</div></div>
+    <div class="delta-card"><div class="num">1</div><div class="lbl">Spurious removals</div></div>
+    <div class="delta-card"><div class="num">2</div><div class="lbl">Hypotheses refined</div></div>
+  </div>
+
+  <div class="section-hd" style="margin-top:6px;">
+    <h2 style="font-size:13px;">Posterior Shifts (pre → post refinement)</h2>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="shifts">
+      <thead>
+        <tr>
+          <th>Hypothesis</th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Δ</th>
+        </tr>
+      </thead>
+      <tbody id="delta-body"></tbody>
+    </table>
+  </div>
+
+  <p style="font-size:11.5px; color:var(--muted); margin-top:12px;">
+    These shifts are only meaningful when the pre_refine/ artifacts exist (written by the host before the second pass overwrites stage artifacts).
+    Empty state below: what appears if the run was created before this feature was added.
+  </p>
+
+  <div class="empty-state" style="margin-top:14px; max-width:480px;">
+    No pre-refinement artifacts found for this run.<br>
+    Re-run the refine stage to generate before/after comparison.
+  </div>
+</div>
+
+<script>
+/* ── Tab switching ── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('pane-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ── Color helpers ── */
+function lrToColor(lr, belowThreshold) {
+  if (belowThreshold) return { bg: 'var(--lr-off)', text: '#7a8a99' };
+  const logLR = Math.log(Math.max(lr, 0.001));
+  const maxLog = Math.log(9);
+  if (Math.abs(logLR) < 0.05) return { bg: 'var(--lr-neut)', text: 'var(--muted)' };
+  if (logLR > 0) {
+    const t = Math.min(logLR / maxLog, 1);
+    const r = Math.round(196 + (100 - 196) * 0 + (1 - t) * (247 - 196));
+    const g = Math.round(228 - t * (228 - 82));
+    const b = Math.round(217 - t * (217 - 31));
+    return { bg: `rgb(${Math.round(196 + (247-196)*(1-t))},${Math.round(82 + (228-82)*(1-t))},${Math.round(31+(217-31)*(1-t))})`, text: t > 0.55 ? '#fff' : 'var(--ink)' };
+  } else {
+    const t = Math.min(-logLR / maxLog, 1);
+    return { bg: t > 0.55 ? `rgb(39,86,163)` : t > 0.25 ? `rgb(106,159,216)` : 'var(--lr-cool-lo)', text: t > 0.55 ? '#fff' : 'var(--ink)' };
+  }
+}
+
+/* ── Matrix data ── */
+const HYPS = ['h1','h2','h3','h4','h5'];
+const MATRIX_ROWS = [
+  { id:'evi_murat_and_grenadiers', src:'19 Brumaire: Murat entered the Orangerie and announced that the Council was dissolved (Source D)', dtype:'smoking_gun', rel:0.92, lrs:{h1:1.5, h2:9.0, h3:2.0, h4:1.2, h5:1.0}, cluster:null },
+  { id:'evi_first_consul_powers',   src:'Dec 1799: First Consul promulgated laws; other consuls advisory only (Source C)', dtype:'hoop', rel:0.95, lrs:{h1:2.0, h2:3.5, h3:2.2, h4:8.5, h5:1.2}, cluster:null },
+  { id:'evi_generals_assembled_morning', src:'18 Brumaire morning: Bourrienne found many generals assembled at Bonaparte\'s house (Source F)', dtype:'hoop', rel:0.85, lrs:{h1:2.0, h2:8.0, h3:2.5, h4:1.5, h5:1.2}, cluster:'A' },
+  { id:'evi_constitution_citizenship', src:'Dec 1799: Constitution of Year VIII created citizenship lists and notables system (Source C)', dtype:'hoop', rel:0.92, lrs:{h1:2.0, h2:1.2, h3:2.5, h4:8.0, h5:1.5}, cluster:null },
+  { id:'evi_brumaire_decree_commissions', src:'10 Nov 1799: Brumaire Decree dissolved Directory; created three-consul commission (Source B)', dtype:'hoop', rel:0.95, lrs:{h1:2.5, h2:2.0, h3:3.0, h4:8.0, h5:1.0}, cluster:null },
+  { id:'evi_bonaparte_command_17th', src:'18 Brumaire: Bonaparte received command of the army\'s 17th division (Source D)', dtype:'straw_in_the_wind', rel:0.90, lrs:{h1:2.0, h2:8.0, h3:2.5, h4:1.5, h5:1.2}, cluster:'A' },
+  { id:'evi_conservative_senate_powers', src:'Dec 1799: Conservative Senate had eighty life members with veto powers (Source C)', dtype:'hoop', rel:0.90, lrs:{h1:2.0, h2:1.5, h3:2.2, h4:7.5, h5:1.2}, cluster:null },
+  { id:'evi_sieyes_elected_director', src:'May 1799: Sieyès elected to Directory after years of republican constitution drafting (Source A)', dtype:'straw_in_the_wind', rel:0.88, lrs:{h1:7.0, h2:1.2, h3:2.0, h4:2.5, h5:1.0}, cluster:null },
+  { id:'evi_aboukir_victory_july1799', src:'July 1799: Bonaparte won Battle of Aboukir before leaving Egypt without permission (Source D)', dtype:'straw_in_the_wind', rel:0.82, lrs:{h1:1.2, h2:6.5, h3:1.5, h4:1.0, h5:2.5}, cluster:'A' },
+  { id:'evi_conspirators_rue_victoire', src:'Evening 17 Brumaire: Conspirators assembled at rue de la Victoire for planning session (Source F)', dtype:'smoking_gun', rel:0.94, lrs:{h1:1.5, h2:8.5, h3:1.8, h4:2.0, h5:1.0}, cluster:'A' },
+  /* Below-threshold examples */
+  { id:'evi_ancient_regime_estates_1789', src:'1789: Estates-General convened; Third Estate declared National Assembly', dtype:'straw_in_the_wind', rel:0.22, lrs:{h1:1.0, h2:1.0, h3:1.0, h4:1.0, h5:1.0}, cluster:null, belowThreshold:true },
+  { id:'evi_directory_established_1795', src:'1795: Directory government established under Constitution of Year III', dtype:'straw_in_the_wind', rel:0.35, lrs:{h1:1.0, h2:1.0, h3:1.0, h4:1.0, h5:1.0}, cluster:null, belowThreshold:true },
+];
+
+function dtypePill(dtype) {
+  const map = {
+    smoking_gun: ['Smoking gun','chip-fragile dtype-sg'],
+    hoop: ['Hoop','dtype-hoop'],
+    doubly_decisive: ['Doubly decisive','dtype-dd'],
+    straw_in_the_wind: ['Straw','dtype-sw'],
+  };
+  const [label, cls] = map[dtype] || [dtype, 'dtype-sw'];
+  return `<span class="dtype-pill ${cls}">${label}</span>`;
+}
+
+const tbody = document.getElementById('matrix-body');
+let lastCluster = null;
+MATRIX_ROWS.forEach(row => {
+  if (row.cluster && row.cluster !== lastCluster) {
+    const clRow = document.createElement('tr');
+    clRow.innerHTML = `<td colspan="9" class="cluster-label">Cluster ${row.cluster} — Bonaparte military career sequence (dependence strength 0.70)</td>`;
+    tbody.appendChild(clRow);
+    lastCluster = row.cluster;
+  } else if (!row.cluster) {
+    lastCluster = null;
+  }
+
+  const tr = document.createElement('tr');
+  if (row.cluster) tr.classList.add('cluster-start');
+
+  const relBarW = Math.round(row.rel * 44);
+  const threshold = !!row.belowThreshold;
+
+  let cells = `
+    <td class="ev-id">${row.id}</td>
+    <td class="ev-src">${row.src}</td>
+    <td style="white-space:nowrap">${dtypePill(row.dtype)}</td>
+    <td>
+      <div class="rel-bar">
+        <div class="rel-pip" style="width:${relBarW}px;opacity:${threshold?0.4:1}"></div>
+        <span style="${threshold?'color:var(--faint)':''}">${row.rel.toFixed(2)}</span>
+      </div>
+    </td>`;
+
+  HYPS.forEach(h => {
+    const lr = row.lrs[h];
+    const { bg, text } = lrToColor(lr, threshold);
+    cells += `<td><div class="lr-cell" style="${threshold?'background:var(--lr-off);color:#7a8a99':('background:'+bg+';color:'+text)}">${threshold ? '—' : lr.toFixed(1)}</div></td>`;
+  });
+
+  tr.innerHTML = cells;
+  tbody.appendChild(tr);
+});
+
+/* ── Support data ── */
+const SUPPORT_DATA = [
+  { id:'h2', label:'Military conversion', sub:'Bonaparte personalist', post:0.9942, lo:0.481, hi:1.000, rob:'fragile', rank_stable:true,  drivers:['evi_conspirators_rue_victoire','evi_13_vendemiaire','evi_murat_grenadiers'] },
+  { id:'h1', label:'Civilian revision',   sub:'Sieyès-led',            post:0.0047, lo:0.000028, hi:0.439, rob:'fragile', rank_stable:false, drivers:['evi_sieyes_elected_director','evi_13_vendemiaire'] },
+  { id:'h4', label:'Legal engineering',   sub:'Elite constitutional',  post:0.0008, lo:0.000, hi:0.216, rob:'moderate', rank_stable:false, drivers:['evi_brumaire_decree_commissions','evi_13_vendemiaire'] },
+  { id:'h3', label:'Path closure',        sub:'Contingent institutional', post:0.0003, lo:0.000, hi:0.017, rob:'fragile', rank_stable:false, drivers:['evi_crook_near_miscarriage','evi_sieyes_elected_director'] },
+  { id:'h5', label:'Popular endorsement', sub:'Broad demand for order', post:0.0000, lo:0.000, hi:0.00001, rob:'robust',   rank_stable:true,  drivers:['evi_conspirators_rue_victoire','evi_brumaire_decree_commissions'] },
+];
+const ROB_COLOR = { fragile: 'var(--fragile)', moderate: 'var(--moderate)', robust: 'var(--robust)' };
+const ROB_CHIP = { fragile: 'chip-fragile', moderate: 'chip-moderate', robust: 'chip-robust' };
+
+const sgrid = document.getElementById('support-grid');
+SUPPORT_DATA.forEach(d => {
+  const barW  = (d.post * 100).toFixed(2);
+  const loW   = (d.lo   * 100).toFixed(2);
+  const hiW   = (d.hi   * 100).toFixed(2);
+  const color = ROB_COLOR[d.rob];
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <div class="support-row">
+      <div class="hyp-label">
+        <span class="hyp-id">${d.id}</span>&ensp;${d.label}<br>
+        <span style="font-size:11px;color:var(--muted)">${d.sub}</span>
+        <span class="chip ${ROB_CHIP[d.rob]}" style="margin-left:6px;vertical-align:2px">${d.rob}</span>
+        ${!d.rank_stable ? '<span class="chip chip-warn" style="margin-left:4px;vertical-align:2px">↕ rank unstable</span>' : ''}
+      </div>
+      <div>
+        <div class="bar-track">
+          <div class="bar-sens"  style="left:${loW}%;width:${Math.max(0,hiW-loW)}%;background:${color}"></div>
+          <div class="bar-fill"  style="width:${barW}%;background:${color}"></div>
+        </div>
+        <div class="sens-range" style="padding-left:0;margin-top:2px;">
+          Sensitivity band: ${d.lo < 0.0001 ? '<0.0001' : d.lo.toFixed(4)} – ${d.hi.toFixed(4)}
+        </div>
+      </div>
+      <div class="bar-post">
+        ${d.post < 0.0001 ? '<0.0001' : d.post.toFixed(4)}
+        <small>posterior</small>
+      </div>
+    </div>`;
+  sgrid.appendChild(div);
+});
+
+/* ── Provenance data ── */
+const PROV_DATA = [
+  { id:'evi_murat_and_grenadiers', quote:'19 Brumaire: Murat entered the Orangerie and announced that the Council was dissolved', marker:'Source D', favors:'h2', peakLr:9.0 },
+  { id:'evi_conspirators_rue_victoire', quote:'Evening of 17 Brumaire: Conspirators assembled at rue de la Victoire for planning session', marker:'Source F', favors:'h2', peakLr:8.5 },
+  { id:'evi_sieyes_elected_director', quote:'May 1799: Sieyès elected to Directory after years of republican constitutional drafting', marker:'Source A', favors:'h1', peakLr:7.0 },
+  { id:'evi_first_consul_powers', quote:'Dec 1799: First Consul promulgated laws; other consuls advisory only under new constitution', marker:'Source C', favors:'h4', peakLr:8.5 },
+  { id:'evi_brumaire_decree_commissions', quote:'10 Nov 1799: Brumaire Decree dissolved Directory and established three-consul provisional commission', marker:'Source B', favors:'h4', peakLr:8.0 },
+  { id:'evi_ancient_regime_estates_1789', quote:'1789: Estates-General convened; Third Estate declared National Assembly in June', marker:null, favors:'h3', peakLr:1.05 },
+];
+const pbody = document.getElementById('prov-body');
+PROV_DATA.forEach(r => {
+  const lr = r.peakLr;
+  const lrClass = lr > 2.0 ? 'lr-pos' : 'lr-neut';
+  pbody.innerHTML += `
+    <tr>
+      <td class="mono">${r.id}</td>
+      <td class="quote">${r.quote}</td>
+      <td>${r.marker ? `<span class="marker-pill">${r.marker}</span>` : '<span class="no-marker">unmatched</span>'}</td>
+      <td><span class="chip chip-accent" style="font-family:ui-monospace,monospace">${r.favors}</span></td>
+      <td style="text-align:right"><span class="peak-lr ${lrClass}">${lr.toFixed(2)}×</span></td>
+    </tr>`;
+});
+
+/* ── Delta data ── */
+const DELTA_DATA = [
+  { id:'h1', label:'Civilian revision',   before:0.0031, after:0.0047, },
+  { id:'h2', label:'Military conversion', before:0.9961, after:0.9942, },
+  { id:'h3', label:'Path closure',        before:0.0002, after:0.0003, },
+  { id:'h4', label:'Legal engineering',   before:0.0005, after:0.0008, },
+  { id:'h5', label:'Popular endorsement', before:0.0001, after:0.0000, },
+];
+const dbody = document.getElementById('delta-body');
+DELTA_DATA.forEach(d => {
+  const delta = d.after - d.before;
+  const dStr = (delta >= 0 ? '+' : '') + delta.toFixed(5);
+  const dClass = Math.abs(delta) < 0.0001 ? 'delta-zero' : delta > 0 ? 'delta-pos' : 'delta-neg';
+  dbody.innerHTML += `
+    <tr>
+      <td><span style="font-family:ui-monospace,monospace;font-size:11px;color:var(--muted)">${d.id}</span>&ensp;${d.label}</td>
+      <td>${d.before.toFixed(5)}</td>
+      <td>${d.after.toFixed(5)}</td>
+      <td class="${dClass}">${dStr}</td>
+    </tr>`;
+});
+</script>
+</body>
+</html>
