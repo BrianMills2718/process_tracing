@@ -19,10 +19,23 @@ messages:
       1. ALL variables must be BINARY (0/1). Define what 1 means and what 0 means.
       2. Maximum 10 variables (CausalQueries has exponential complexity).
       3. Include exactly ONE outcome variable.
-      4. The DAG must be ACYCLIC.
+      4. The DAG must be ACYCLIC — a strict directed acyclic graph with NO directed cycles.
+         A cycle means A → B → C → A (any path that returns to its starting node).
+         Example of a FORBIDDEN cycle: fiscal_crisis → state_weakness → fiscal_crisis.
+         Example of a VALID chain: fiscal_crisis → state_weakness → regime_collapse.
       5. Variable names must be valid R identifiers (lowercase, underscores, no spaces).
       6. Variables must be GENERAL — applicable across all {{ num_cases }} cases, not specific to any single case.
       7. Include observable_indicators for each variable — concrete things a coder should look for in texts.
+
+      ## Before You Submit — Acyclicity Self-Check
+
+      After drafting your edge list, mentally trace each variable: can you follow edges and return
+      to where you started? If yes, you have a cycle — remove or reverse the offending edge.
+      Common cycle traps:
+      - Two variables that "reinforce" each other (A → B and B → A). Pick the dominant direction or
+        add a mediator.
+      - A → B → C → A (three-node cycle). Break by removing the weakest edge or collapsing two nodes.
+      Only submit when you are certain every path is one-directional from causes to effects.
 
       ## Guidelines
 
