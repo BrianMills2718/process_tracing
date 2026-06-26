@@ -1,11 +1,11 @@
-updated: "2026-06-25T23:30:00"
+updated: "2026-06-25T06:30:00"
 project: process_tracing
 scope: repo
 status: active
-git_commit: "fb23ec7"
+git_commit: "29df252"
 git_branch: "master"
-summary: "Slice 8 complete. 178 deterministic tests. Synthesis overclaim check, verdict calibration threshold, 7 new regression tests."
-next_action: "Slice 9: Cross-case eligibility and quantitative bridge. Refresh spec before implementing."
+summary: "Slices 9+10 complete. 207 deterministic tests. CrossCaseEligibility schema, eligibility gate, benchmark runner, 3 benchmark cases, make benchmark target."
+next_action: "C-018: Harden pass_propose_model prompt against cyclic DAG proposals. Or start fresh methodology slice."
 
 completed:
   - "Audit of Slices 3-6: all verified (previous session)"
@@ -30,12 +30,22 @@ completed:
     # No re-elicitation; all target_type/target combos pass model_validator; 334.9s
   - "P2 resolved (commit 564be28): pass3b SOURCE TO ACQUIRE disambiguation assertion added"
   - "P4 resolved (commit ff5e746): pt/schemas_view.py and docs/plans/005d_*.html committed"
-  - "Concern register triaged: C-015 (same-model critic accepted), C-016 (missing_pathway accepted), C-017 (open — frozen benchmark not yet run)"
+  - "Concern register triaged: C-015 (same-model critic accepted), C-016 (missing_pathway accepted), C-017 (open → mitigated in Slice 10)"
   - "Slice 8 — Synthesis calibration and report regression (commit fb23ec7): 178 tests pass"
     # _synthesis_overclaim_check: flags certainty words in fragile-winner context (-3 audit points)
     # _verdict_calibration_issues: extended with strongly_supported < 0.50 threshold
     # 5 TestAuditSynthesisCalibration tests + 2 TestReportConsistency regression tests
     # E2E check: slice7_v2 narrative correctly hedged — no overclaim detected, score remains B (80)
+  - "Slice 9 — CrossCaseEligibility schema and CQ gate (commit 369d001): 201 tests pass"
+    # CrossCaseEligibility gates CQ on outcome variation, n_cases, outcome coverage
+    # E2E: French+American revolution (Skocpol model) → outcome=1 for all → INELIGIBLE, CQ blocked
+    # C-018 opened: pass_propose_model proposes cyclic DAGs — use theory-driven mode for now
+  - "Slice 10 — Frozen benchmark suite (commits 60289fb,b4e490e,29df252): 207 tests pass"
+    # scripts/run_benchmark.py, docs/benchmarks/benchmark_config.yaml, make benchmark
+    # 3 cases: adversarial_fragile_overclaim (grade C, flags broad_winning_hypothesis),
+    #          adversarial_calibration_mismatch (flags verdict_calibration_mismatch),
+    #          french_revolution_real (grade B, no overclaim) — all pass
+    # C-017 mitigated (benchmark infra exists; critic-specific case still needed)
 
 pending:
   - id: P3
@@ -44,8 +54,24 @@ pending:
     summary: "Audit coverage gap — cap-84 source-lineage inflation needs multi-source E2E"
     details: >
       Cap-84 source-lineage inflation path (audit_result_quality.py lines 421-452) cannot be
-      exercised by the French Revolution Wikipedia corpus. Deferred to Slice 10 (frozen benchmark
-      suite). Log in concern register.
+      exercised by the French Revolution Wikipedia corpus. Deferred to future work with multi-source corpus.
+
+  - id: C-017-critic-benchmark
+    priority: medium
+    effort: medium
+    summary: "Add critic-specific frozen benchmark case to docs/benchmarks/benchmark_config.yaml"
+    details: >
+      Run python -m pt ... --critic on a text with a planted confound, save result.json,
+      add result_file case to benchmark config checking that critic finds a 'confound' finding.
+      This will verify the critic catches real structural issues, not just generic void-link flags.
+
+  - id: C-018
+    priority: medium
+    effort: small
+    summary: "Harden pass_propose_model prompt against cyclic DAG proposals"
+    details: >
+      Data-driven mode proposes cyclic DAGs that fail CausalModelSpec validation.
+      Fix: add explicit acyclicity examples and before-you-submit check to pass_propose_model.yaml.
 
 uncertainties: []
 
