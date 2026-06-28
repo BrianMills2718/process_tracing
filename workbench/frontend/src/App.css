@@ -1,0 +1,123 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.app-logo {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.3px;
+  color: var(--accent);
+}
+
+.session-badge {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.session-badge code {
+  color: #c5c9e0;
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Pass nav sidebar ── */
+.pass-nav {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 12px 0;
+}
+
+.pass-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+  transition: background 0.1s, color 0.1s;
+  position: relative;
+}
+
+.pass-nav-item:hover:not(.disabled) {
+  background: var(--surface2);
+  color: #e2e8f0;
+}
+
+.pass-nav-item.active {
+  background: var(--surface2);
+  color: #e2e8f0;
+  border-left: 2px solid var(--accent);
+  padding-left: 14px;
+}
+
+.pass-nav-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.pass-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pass-nav-label {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.pass-done-tick {
+  font-size: 11px;
+  color: var(--done);
+  font-weight: 700;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Main panel ── */
+.main-panel {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.error-banner {
+  background: var(--error-bg);
+  border-bottom: 1px solid var(--error);
+  color: #f08080;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
